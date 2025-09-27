@@ -47,14 +47,14 @@ function DiffViewScreen() {
     setDraftNote({ title: filename, content: selectedContent });
 
     try {
-      await saveNote();
-      Alert.alert('保存完了', 'ノートが保存されました。');
-      navigation.navigate('NoteList');
-    } catch (error) {
-      console.error(error);
-      Alert.alert('エラー', 'ノートの保存に失敗しました。');
-    }
-  };
+                await saveNote();
+                Alert.alert('保存完了', 'ノートが保存されました。');
+                // Go back to the NoteEdit screen
+                navigation.goBack();
+              } catch (error) {
+                console.error(error);
+                Alert.alert('エラー', 'ノートの保存に失敗しました。');
+              }  };
 
   const handleCancel = () => {
     // Clear the draft note when cancelling
