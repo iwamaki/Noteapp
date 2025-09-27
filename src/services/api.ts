@@ -1,6 +1,6 @@
 /**
- * qAPIµüÓ¹
- * âXnAPIµüÓ¹hLLMµüÓ¹’q
+ * APIé–¢é€£
+ * LLMé–¢é€£ã®APIé–¢é€£
  */
 
 import { LLMService, ChatContext, LLMResponse } from './llmService';
@@ -28,7 +28,7 @@ export interface UpdateNoteRequest {
 }
 
 /**
- * ÎüÈ¢#nAPIµüÓ¹
+ * ãƒãƒ¼ãƒˆAPIé–¢é€£
  */
 export class NoteAPI {
   private static baseUrl = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:8000';
@@ -97,11 +97,11 @@ export class NoteAPI {
 }
 
 /**
- * qAPIµüÓ¹
- * LLMµüÓ¹hÎüÈAPI’q
+ * APIé–¢é€£
+ * LLMé–¢é€£ã®APIé–¢é€£
  */
 export class APIService {
-  // LLMµüÓ¹ná½ÃÉ’¨¯¹İüÈ
+  // LLMé–¢é€£ã®APIé–¢é€£
   static async sendChatMessage(message: string, context?: ChatContext): Promise<LLMResponse> {
     return LLMService.sendChatMessage(message, context);
   }
@@ -134,7 +134,7 @@ export class APIService {
     return LLMService.getAvailableProviders();
   }
 
-  // ÎüÈAPIná½ÃÉ’¨¯¹İüÈ
+  // ãƒãƒ¼ãƒˆAPIé–¢é€£
   static async createNote(request: CreateNoteRequest): Promise<Note> {
     return NoteAPI.createNote(request);
   }
