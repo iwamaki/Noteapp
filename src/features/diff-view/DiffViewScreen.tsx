@@ -1,25 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
 import { DiffView } from './components/DiffView';
-import { DiffLine, DiffUtils, DiffManager } from './utils/diffUtils';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { DiffUtils, DiffManager } from './utils/diffUtils';
+import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
+import { useNoteStore } from '../../store/noteStore';
 
-type DiffViewScreenRouteProp = RouteProp<RootStackParamList, 'DiffView'>;
-type DiffViewScreenNavigationProp = StackNavigationProp<RootStackParamList, 'DiffView'>;
+function DiffViewScreen() {
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const { activeNote, draftNote, saveNote, setDraftNote } = useNoteStore();
 
-interface DiffViewScreenProps {
-  route: DiffViewScreenRouteProp;
-  navigation: DiffViewScreenNavigationProp;
-}
+  const originalContent = activeNote?.content ?? '';
+  const newContent = draftNote?.content ?? '';
+  const filename = draftNote?.title ?? '差分プレビュー';
 
-function DiffViewScreen({ route, navigation }: DiffViewScreenProps) {
-  const { originalContent, newContent, filename } = route.params;
-
-  // 差分を生成
-  const diff = DiffUtils.generateDiff(originalContent, newContent);
-  DiffManager.initializeDiff(diff);
+  // useMemo to prevent re-calculating the diff on every render
+  const diff = useMemo(() => {
+    const d = DiffUtils.generateDiff(originalContent, newContent);
+    DiffManager.initializeDiff(d);
+    return d;
+  }, [originalContent, newContent]);
 
   const [selectedBlocks, setSelectedBlocks] = useState<Set<number>>(
     new Set(DiffManager.getSelectedBlocks())
@@ -35,22 +36,29 @@ function DiffViewScreen({ route, navigation }: DiffViewScreenProps) {
     setSelectedBlocks(new Set(DiffManager.getSelectedBlocks()));
   };
 
-  const handleApply = () => {
+  const handleApply = async () => {
     const selectedContent = DiffManager.generateSelectedContent(diff);
     if (selectedContent === null) {
       Alert.alert('エラー', '内容の生成に失敗しました');
       return;
     }
 
-    // 選択された差分を適用して前の画面に戻る
-    navigation.navigate('NoteEdit', {
-      filename,
-      content: selectedContent,
-      saved: true, // 保存完了を示すフラグ
-    });
+    // Update the draftNote in the store with the content selected in the diff view
+    setDraftNote({ title: filename, content: selectedContent });
+
+    try {
+      await saveNote();
+      Alert.alert('保存完了', 'ノートが保存されました。');
+      navigation.navigate('NoteList');
+    } catch (error) {
+      console.error(error);
+      Alert.alert('エラー', 'ノートの保存に失敗しました。');
+    }
   };
 
   const handleCancel = () => {
+    // Clear the draft note when cancelling
+    setDraftNote(null);
     navigation.goBack();
   };
 

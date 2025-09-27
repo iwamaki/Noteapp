@@ -1,7 +1,7 @@
 ---
 title: "DiffViewScreen の画面遷移の改善"
 id: 5
-status: new
+status: done
 priority: high
 attempt_count: 0
 tags: [UI, navigation, bug]
@@ -20,8 +20,8 @@ tags: [UI, navigation, bug]
 
 > このissueが「完了」と見なされるための具体的な条件をチェックリスト形式で記述します。
 >
-> - [ ] `DiffViewScreen` からの差分適用後、元の `NoteEditScreen` に適切に戻ることで、ユーザーが違和感なく編集を継続できること。
-> - [ ] 画面遷移の挙動が、ユーザーが期待する「戻る」または「更新された画面に遷移する」体験と一致すること。
+> - [x] `DiffViewScreen` からの差分適用後、元の `NoteEditScreen` に適切に戻ることで、ユーザーが違和感なく編集を継続できること。
+> - [x] 画面遷移の挙動が、ユーザーが期待する「戻る」または「更新された画面に遷移する」体験と一致すること。
 
 ## 関連ファイル (Related Files)
 
