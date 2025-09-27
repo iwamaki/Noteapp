@@ -29,6 +29,7 @@ interface FileEditorProps {
   onModeChange: (mode: ViewMode) => void;
   onSave: (content: string) => void;
   onClose: () => void;
+  onContentChange?: (content: string) => void; // 追加：コンテンツ変更時のコールバック
 }
 
 // ファイル形式別の設定
@@ -66,6 +67,7 @@ export const FileEditor: React.FC<FileEditorProps> = ({
   onModeChange,
   onSave,
   onClose,
+  onContentChange,
 }) => {
   const [currentContent, setCurrentContent] = useState(initialContent);
   const [originalContent] = useState(initialContent);
@@ -236,7 +238,13 @@ export const FileEditor: React.FC<FileEditorProps> = ({
             <TextInput
               style={styles.textEditor}
               value={currentContent}
-              onChangeText={setCurrentContent}
+              onChangeText={(text) => {
+                setCurrentContent(text);
+                // 親コンポーネントにも変更を通知
+                if (onContentChange) {
+                  onContentChange(text);
+                }
+              }}
               multiline
               placeholder="ファイルの内容を編集してください..."
               placeholderTextColor="#999"
