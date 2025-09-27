@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
-import { FileEditor, ViewMode } from '../components/editor/FileEditor';
-import { ChatComponent } from '../components/chat/ChatComponent';
-import { ChatContext } from '../services/llmService';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { FileEditor, ViewMode } from './components/FileEditor'; 
+import { ChatPanel } from '../chat/ChatPanel';
+import { ChatContext } from '../../services/llmService';
+import { RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../navigation/types';
+import { RootStackParamList } from '../../navigation/types';
 
 type NoteEditScreenRouteProp = RouteProp<RootStackParamList, 'NoteEdit'>;
 type NoteEditScreenNavigationProp = StackNavigationProp<RootStackParamList, 'NoteEdit'>;
@@ -16,10 +16,10 @@ interface NoteEditScreenProps {
 }
 
 function NoteEditScreen({ route, navigation }: NoteEditScreenProps) {
-  const { noteId, filename = 'untitled.md', content: initialContent = '', saved } = route.params || {};
+  const { filename = 'untitled.md', content: initialContent = '', saved } = route.params || {};
 
   const [currentContent, setCurrentContent] = useState(initialContent);
-  const [viewMode, setViewMode] = useState<ViewMode>('content');
+  const [viewMode, setViewMode] = useState<ViewMode>('content'); 
   const [isChatVisible, setIsChatVisible] = useState(false);
 
   useEffect(() => {
@@ -77,7 +77,7 @@ function NoteEditScreen({ route, navigation }: NoteEditScreenProps) {
         onClose={handleClose}
       />
 
-      <ChatComponent
+      <ChatPanel
         context={chatContext}
         onCommandReceived={handleCommandReceived}
         isVisible={isChatVisible}

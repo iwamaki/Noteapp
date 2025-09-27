@@ -25,7 +25,7 @@ interface ChatComponentProps {
   onClose: () => void;
 }
 
-export const ChatComponent: React.FC<ChatComponentProps> = ({
+export const ChatPanel: React.FC<ChatComponentProps> = ({
   context = {},
   onCommandReceived,
   isVisible,
