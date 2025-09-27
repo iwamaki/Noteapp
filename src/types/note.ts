@@ -1,1 +1,1 @@
-export * from '../../../shared/types/note';
+export * from '../../shared/types/note';

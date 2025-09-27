@@ -1,31 +1,46 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
 import { FileEditor, ViewMode } from '../components/editor/FileEditor';
 import { ChatComponent } from '../components/chat/ChatComponent';
 import { ChatContext } from '../services/llmService';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../navigation/types';
+
+type NoteEditScreenRouteProp = RouteProp<RootStackParamList, 'NoteEdit'>;
+type NoteEditScreenNavigationProp = StackNavigationProp<RootStackParamList, 'NoteEdit'>;
 
 interface NoteEditScreenProps {
-  route: {
-    params: {
-      filename?: string;
-      content?: string;
-      noteId?: string;
-    };
-  };
-  navigation: any;
+  route: NoteEditScreenRouteProp;
+  navigation: NoteEditScreenNavigationProp;
 }
 
 function NoteEditScreen({ route, navigation }: NoteEditScreenProps) {
-  const { filename = 'untitled.md', content = '', noteId } = route.params || {};
+  const { noteId, filename = 'untitled.md', content: initialContent = '', saved } = route.params || {};
 
+  const [currentContent, setCurrentContent] = useState(initialContent);
   const [viewMode, setViewMode] = useState<ViewMode>('content');
   const [isChatVisible, setIsChatVisible] = useState(false);
+
+  useEffect(() => {
+    if (saved) {
+      Alert.alert('保存完了', 'ノートが保存されました');
+      // 必要であれば、ここでNoteListScreenに戻るなどの処理を追加
+      // navigation.navigate('NoteList');
+    }
+  }, [saved]);
 
   const handleSave = (newContent: string) => {
     // TODO: ここで実際の保存処理を実装
     // noteStoreを使用してノートを保存
     console.log('Saving content:', newContent);
-    Alert.alert('保存完了', 'ノートが保存されました');
+    // DiffViewScreenへ遷移
+    navigation.navigate('DiffView', {
+      originalContent: currentContent,
+      newContent: newContent,
+      filename: filename,
+    });
+    setCurrentContent(newContent);
   };
 
   const handleClose = () => {
@@ -43,8 +58,8 @@ function NoteEditScreen({ route, navigation }: NoteEditScreenProps) {
     currentFile: filename,
     currentFileContent: {
       filename,
-      content,
-      size: `${content.length} characters`,
+      content: currentContent,
+      size: `${currentContent.length} characters`,
       type: 'file'
     },
     isEditMode: viewMode === 'edit',
@@ -55,7 +70,7 @@ function NoteEditScreen({ route, navigation }: NoteEditScreenProps) {
     <View style={styles.container}>
       <FileEditor
         filename={filename}
-        initialContent={content}
+        initialContent={currentContent}
         mode={viewMode}
         onModeChange={setViewMode}
         onSave={handleSave}

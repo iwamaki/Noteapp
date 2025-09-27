@@ -13,6 +13,8 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
+  ViewStyle, // 追加
+  TextStyle, // 追加
 } from 'react-native';
 import { ChatMessage, LLMService, ChatContext } from '../../services/llmService';
 
@@ -93,9 +95,13 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
 
     } catch (error) {
       console.error('Chat error:', error);
+      let errorMessageContent = '不明なエラーが発生しました。\n\nサーバーが起動していることを確認してください。';
+      if (error instanceof Error) {
+        errorMessageContent = `❌ エラーが発生しました: ${error.message}\n\nサーバーが起動していることを確認してください。`;
+      }
       const errorMessage: ChatMessage = {
         role: 'system',
-        content: `❌ エラーが発生しました: ${error.message}\n\nサーバーが起動していることを確認してください。`,
+        content: errorMessageContent,
         timestamp: new Date(),
       };
       addMessage(errorMessage);
@@ -105,8 +111,8 @@ export const ChatComponent: React.FC<ChatComponentProps> = ({
   }, [inputText, isLoading, context, onCommandReceived, addMessage]);
 
   const renderMessage = useCallback((message: ChatMessage, index: number) => {
-    let messageStyle = styles.message;
-    let textStyle = styles.messageText;
+    let messageStyle: ViewStyle[] = [styles.message]; // 型アサーションを追加
+    let textStyle: TextStyle[] = [styles.messageText]; // 型アサーションを追加
 
     switch (message.role) {
       case 'user':

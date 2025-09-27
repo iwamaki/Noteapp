@@ -2,16 +2,16 @@ import React, { useState } from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
 import { DiffView } from '../components/diff/DiffView';
 import { DiffLine, DiffUtils, DiffManager } from '../utils/diffUtils';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../navigation/types';
+
+type DiffViewScreenRouteProp = RouteProp<RootStackParamList, 'DiffView'>;
+type DiffViewScreenNavigationProp = StackNavigationProp<RootStackParamList, 'DiffView'>;
 
 interface DiffViewScreenProps {
-  route: {
-    params: {
-      originalContent: string;
-      newContent: string;
-      filename: string;
-    };
-  };
-  navigation: any;
+  route: DiffViewScreenRouteProp;
+  navigation: DiffViewScreenNavigationProp;
 }
 
 function DiffViewScreen({ route, navigation }: DiffViewScreenProps) {
@@ -46,6 +46,7 @@ function DiffViewScreen({ route, navigation }: DiffViewScreenProps) {
     navigation.navigate('NoteEdit', {
       filename,
       content: selectedContent,
+      saved: true, // 保存完了を示すフラグ
     });
   };
 
