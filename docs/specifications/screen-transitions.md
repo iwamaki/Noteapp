@@ -9,7 +9,7 @@
 *   **ノート保存フロー**:
     1.  `NoteEditScreen` でノートを編集後、「保存」ボタンをタップ。
     2.  `DiffViewScreen` (差分表示適用画面) が表示され、現在の内容と保存前の内容との差分を視覚的に確認できる。
-    3.  `DiffViewScreen` で変更内容を確認し、「適用」ボタンをタップすることで、ノートが保存され、`NoteListScreen` または `NoteEditScreen` に戻る。
+    3.  `DiffViewScreen` で変更内容を確認し、「適用」ボタンをタップすることで、ノートが保存され、`NoteEditScreen` に戻る。
 
 *   **プレビュー機能**:
     1.  `NoteEditScreen` に設置された「プレビュー」ボタンをタップ。
