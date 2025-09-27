@@ -12,7 +12,7 @@ import {
   StyleSheet,
   ViewStyle, // 追加
 } from 'react-native';
-import { DiffLine, DiffManager } from '../../utils/diffUtils';
+import { DiffLine, DiffManager } from '../utils/diffUtils';
 
 interface DiffViewProps {
   diff: DiffLine[];

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
-import { DiffView } from '../components/diff/DiffView';
-import { DiffLine, DiffUtils, DiffManager } from '../utils/diffUtils';
+import { DiffView } from './components/DiffView';
+import { DiffLine, DiffUtils, DiffManager } from './utils/diffUtils';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../navigation/types';
+import { RootStackParamList } from '../../navigation/types';
 
 type DiffViewScreenRouteProp = RouteProp<RootStackParamList, 'DiffView'>;
 type DiffViewScreenNavigationProp = StackNavigationProp<RootStackParamList, 'DiffView'>;

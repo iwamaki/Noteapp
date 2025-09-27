@@ -12,13 +12,13 @@
 1.  ユーザーから指示された issueファイル `docs/issues/[id]_[title].md`を読み込み、今回の主目的を正確に定義します。
 
 ### STEP 2: 全体構想のインプット (Why?)
-1.  タスクの背景と全体像を理解するため、`docs/仕様書/` フォルダから以下のコアなドキュメントを読み込みます。
+1.  タスクの背景と全体像を理解するため、`docs/specifications/` フォルダから以下のコアなドキュメントを読み込みます。
     *   `requirements.md` （アプリケーションの要件）
     *   `screen-transitions.md` （画面遷移の全体像）
     *   `user-stories.md` （ユーザー体験）
 
 ### STEP 3: 現状のコードベース分析 (How is it now?)
-1.  `docs/仕様書/directory-structure.md` をプロジェクトの地図として参照し、全体構造を把握します。
+1.  `docs/specifications/directory-structure.md` をプロジェクトの地図として参照し、全体構造を把握します。
 2.  ここまでの情報に基づき、関連する可能性の高いソースコードを特定します。
 3.  `glob` や `read_file` ツールを用いて、特定した**実際のソースコードを直接読み込み**、現在の実装を分析します。
 

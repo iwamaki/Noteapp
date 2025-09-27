@@ -12,8 +12,8 @@ import {
   StyleSheet,
   Alert,
 } from 'react-native';
-import { DiffLine, DiffUtils, DiffManager } from '../../utils/diffUtils';
-import { DiffView } from '../diff/DiffView';
+import { DiffLine, DiffUtils, DiffManager } from '../../diff-view/utils/diffUtils';
+import { DiffView } from '../../diff-view/components/DiffView';
 
 export type ViewMode = 'content' | 'edit' | 'preview' | 'diff';
 

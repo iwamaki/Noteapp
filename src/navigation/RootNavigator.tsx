@@ -3,11 +3,11 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { RootStackParamList } from './types';
 
-import NoteListScreen from '../screens/NoteListScreen';
-import NoteEditScreen from '../screens/NoteEditScreen';
-import DiffViewScreen from '../screens/DiffViewScreen';
-import VersionHistoryScreen from '../screens/VersionHistoryScreen';
-import SettingsScreen from '../screens/SettingsScreen';
+import NoteListScreen from '../features/note-list/NoteListScreen';
+import NoteEditScreen from '../features/note-edit/NoteEditScreen';
+import DiffViewScreen from '../features/diff-view/DiffViewScreen';
+import VersionHistoryScreen from '../features/version-history/VersionHistoryScreen';
+import SettingsScreen from '../features/settings/SettingsScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 
