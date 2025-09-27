@@ -14,13 +14,13 @@ tags: [UI, navigation, bug]
 ## 背景 (Background)
 
 > `DiffViewScreen` から `NoteEditScreen` への遷移に `navigation.navigate` が使用されており、新しい `NoteEdit` 画面がスタックに積まれるため、ユーザー体験が期待と異なる可能性があります。
-> 仕様書 (`screen-transitions.md`) には「ノートが保存され、`NoteListScreen` または `NoteEditScreen` に戻る」とありますが、現在の実装では「戻る」というよりは「新しい `NoteEditScreen` を開く」に近い状態です。
+> 仕様書 (`screen-transitions.md`) には「ノートが保存され、`NoteEditScreen` に戻る」とありますが、現在の実装では「戻る」というよりは「新しい `NoteEditScreen` を開く」に近い状態です。
 
 ## 受け入れ条件 (Acceptance Criteria)
 
 > このissueが「完了」と見なされるための具体的な条件をチェックリスト形式で記述します。
 >
-> - [ ] `DiffViewScreen` からの差分適用後、元の `NoteEditScreen` に適切に戻るか、または `DiffViewScreen` を置き換える形で `NoteEditScreen` が表示され、ユーザーが違和感なく編集を継続できること。
+> - [ ] `DiffViewScreen` からの差分適用後、元の `NoteEditScreen` に適切に戻ることで、ユーザーが違和感なく編集を継続できること。
 > - [ ] 画面遷移の挙動が、ユーザーが期待する「戻る」または「更新された画面に遷移する」体験と一致すること。
 
 ## 関連ファイル (Related Files)
