@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
+  ViewStyle, // 追加
 } from 'react-native';
 import { DiffLine, DiffManager } from '../../utils/diffUtils';
 
@@ -46,10 +47,10 @@ export const DiffView: React.FC<DiffViewProps> = ({
       !processedBlocks.has(line.changeBlockId);
 
     if (showCheckbox) {
-      processedBlocks.add(line.changeBlockId);
+      processedBlocks.add(line.changeBlockId as number); // 型アサーションを追加
     }
 
-    let lineStyle = styles.diffLine;
+    let lineStyle: ViewStyle[] = [styles.diffLine]; // 型アサーションを追加
     let prefix = '';
     let prefixColor = '#666';
 
@@ -76,16 +77,16 @@ export const DiffView: React.FC<DiffViewProps> = ({
         <Text style={styles.lineNumber}>{lineNumber}</Text>
         <Text style={[styles.prefix, { color: prefixColor }]}>{prefix}</Text>
         <Text style={styles.content}>{line.content}</Text>
-        {showCheckbox ? (
+        {showCheckbox && line.changeBlockId !== null ? (
           <TouchableOpacity
             style={[
               styles.checkbox,
-              selectedBlocks.has(line.changeBlockId!) && styles.checkboxSelected
+              selectedBlocks.has(line.changeBlockId as number) && styles.checkboxSelected // 型アサーションを追加
             ]}
-            onPress={() => onBlockToggle(line.changeBlockId!)}
+            onPress={() => onBlockToggle(line.changeBlockId as number)} // 型アサーションを追加
           >
             <Text style={styles.checkboxText}>
-              {selectedBlocks.has(line.changeBlockId!) ? '☑' : '☐'}
+              {selectedBlocks.has(line.changeBlockId as number) ? '☑' : '☐'} // 型アサーションを追加
             </Text>
           </TouchableOpacity>
         ) : (

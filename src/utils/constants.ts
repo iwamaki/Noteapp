@@ -1,1 +1,1 @@
-export * from '../../../shared/utils/constants';
+export * from '../../shared/utils/constants';
