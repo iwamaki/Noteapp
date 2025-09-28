@@ -1,4 +1,4 @@
-import { NoteStorageService } from './storageService';
+import { NoteStorageService } from '../services/storageService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import 'react-native-get-random-values'; // Import for uuid
 
