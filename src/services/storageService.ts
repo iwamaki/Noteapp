@@ -161,17 +161,3 @@ export class NoteStorageService {
   }
 }
 
-// 後方互換性のための関数エクスポート
-export const saveNote = async (note: Note): Promise<Note> => {
-  const existingNote = await NoteStorageService.getNoteById(note.id);
-  
-  if (existingNote) {
-    return NoteStorageService.updateNote(note);
-  } else {
-    return NoteStorageService.createNote(note);
-  }
-};
-
-export const getNoteById = NoteStorageService.getNoteById;
-export const getAllNotes = NoteStorageService.getAllNotes;
-export const deleteNoteById = NoteStorageService.deleteNote;
