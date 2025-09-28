@@ -1,4 +1,4 @@
-// 修正版 ChatPanel.tsx - 型アサーション削除と可読性向上
+
 import React, { useState, useRef, useCallback, useMemo } from 'react';
 import {
   View,

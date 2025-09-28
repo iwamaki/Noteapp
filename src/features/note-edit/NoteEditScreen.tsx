@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useLayoutEffect } from 'react';
-import { View, StyleSheet, Alert, Text, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useLayoutEffect, useState } from 'react';
+import { View, StyleSheet, Text, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
-import { useNoteStore } from '../../store/noteStore';
 import { FileEditor, ViewMode } from './components/FileEditor';
+import { useNoteEditor } from './hooks/useNoteEditor';
 
 type NoteEditScreenRouteProp = RouteProp<RootStackParamList, 'NoteEdit'>;
 
@@ -13,35 +13,19 @@ function NoteEditScreen() {
   const route = useRoute<NoteEditScreenRouteProp>();
   const { noteId } = route.params || {};
 
-  const { activeNote, selectNote, setDraftNote } = useNoteStore();
+  // 新しいカスタムフックを使用してエディタのロジックを管理
+  const {
+    activeNote,
+    title,
+    setTitle,
+    content,
+    setContent,
+    handleGoToDiff,
+  } = useNoteEditor(noteId);
 
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('edit');
 
-  useEffect(() => {
-    if (noteId) {
-      selectNote(noteId);
-    } else {
-      selectNote(null);
-    }
-  }, [noteId, selectNote]);
-
-  useEffect(() => {
-    if (activeNote) {
-      setTitle(activeNote.title);
-      setContent(activeNote.content);
-    } else {
-      setTitle('新しいノート');
-      setContent('');
-    }
-  }, [activeNote]);
-
-  const handleGoToDiff = () => {
-    setDraftNote({ title, content });
-    navigation.navigate('DiffView'); // パラメーターからコールバック関数を削除
-  };
-
+  // ヘッダーのレイアウトエフェクトは残すが、フックから提供される状態を使用
   useLayoutEffect(() => {
     navigation.setOptions({
       headerTitle: () => (
@@ -68,10 +52,10 @@ function NoteEditScreen() {
         </TouchableOpacity>
       ),
     });
-  }, [navigation, title, content, activeNote]);
+  }, [navigation, title, activeNote, handleGoToDiff]);
 
   return (
-    <KeyboardAvoidingView 
+    <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.container}
     >
@@ -80,9 +64,9 @@ function NoteEditScreen() {
         initialContent={content}
         mode={viewMode}
         onModeChange={setViewMode}
-        onSave={handleGoToDiff} // Pass the save handler
+        onSave={handleGoToDiff}
         onClose={() => navigation.goBack()}
-        onContentChange={setContent} // Assuming FileEditor supports this to update content
+        onContentChange={setContent}
       />
     </KeyboardAvoidingView>
   );

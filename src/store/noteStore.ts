@@ -1,4 +1,3 @@
-// 修正版 noteStore.ts - 型安全性とエラーハンドリング向上
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { NoteStorageService, Note, CreateNoteData, UpdateNoteData, StorageError } from '../services/storageService';
