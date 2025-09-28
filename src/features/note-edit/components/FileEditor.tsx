@@ -12,11 +12,12 @@ import {
   StyleSheet,
   Alert,
 } from 'react-native';
-import { DiffLine, DiffUtils, DiffManager } from '../../diff-view/utils/diffUtils';
-import { DiffView } from '../../diff-view/components/DiffView';
+import { generateDiff, DiffLine } from '../../../services/diffService';
+import { useDiffManager } from '../../../hooks/useDiffManager';
+import { DiffViewer } from '../../diff-view/components/DiffViewer';
 
 // 表示モードの型定義
-export type ViewMode = 'content' | 'edit' | 'preview' | 'diff'; 
+export type ViewMode = 'content' | 'edit' | 'preview' | 'diff';
 
 // ファイルビューアの設定
 export interface FileViewerConfig {
@@ -32,35 +33,17 @@ interface FileEditorProps {
   onModeChange: (mode: ViewMode) => void;
   onSave: (content: string) => void;
   onClose: () => void;
-  onContentChange?: (content: string) => void; 
+  onContentChange?: (content: string) => void;
 }
 
 // ファイル形式別の設定
 const FILE_VIEWERS: Record<string, FileViewerConfig> = {
-  text: {
-    extensions: ['txt', 'log', 'cfg', 'ini'],
-    editable: true,
-  },
-  markdown: {
-    extensions: ['md', 'markdown'],
-    editable: true,
-  },
-  code: {
-    extensions: ['js', 'ts', 'py', 'java', 'c', 'cpp', 'css', 'html', 'json', 'xml', 'yaml', 'yml'],
-    editable: true,
-  },
-  image: {
-    extensions: ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg'],
-    editable: false,
-  },
-  pdf: {
-    extensions: ['pdf'],
-    editable: false,
-  },
-  default: {
-    extensions: [],
-    editable: false,
-  },
+  text: { extensions: ['txt', 'log', 'cfg', 'ini'], editable: true },
+  markdown: { extensions: ['md', 'markdown'], editable: true },
+  code: { extensions: ['js', 'ts', 'py', 'java', 'c', 'cpp', 'css', 'html', 'json', 'xml', 'yaml', 'yml'], editable: true },
+  image: { extensions: ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg'], editable: false },
+  pdf: { extensions: ['pdf'], editable: false },
+  default: { extensions: [], editable: false },
 };
 
 // ファイルエディタコンポーネント
@@ -73,44 +56,49 @@ export const FileEditor: React.FC<FileEditorProps> = ({
   onClose,
   onContentChange,
 }) => {
-  const [currentContent, setCurrentContent] = useState(initialContent);         // 編集中の内容
-  const [originalContent] = useState(initialContent);                           // 元の内容（初期状態）
-  const [currentDiff, setCurrentDiff] = useState<DiffLine[] | null>(null);      // 差分情報
-  const [selectedBlocks, setSelectedBlocks] = useState<Set<number>>(new Set()); // 選択された差分ブロック
+  const [currentContent, setCurrentContent] = useState(initialContent);
+  const [originalContent] = useState(initialContent);
 
   // ファイル形式の判定
   const viewerConfig = useMemo(() => {
     if (!filename) return FILE_VIEWERS.default;
-
     const ext = filename.split('.').pop()?.toLowerCase();
     if (!ext) return FILE_VIEWERS.default;
-
-    for (const [type, config] of Object.entries(FILE_VIEWERS)) {
+    for (const [, config] of Object.entries(FILE_VIEWERS)) {
       if (config.extensions.includes(ext)) {
         return config;
       }
     }
-
     return FILE_VIEWERS.default;
   }, [filename]);
 
-  // 変更状態の判定
+  const diff = useMemo(() =>
+    originalContent !== currentContent
+      ? generateDiff(originalContent, currentContent)
+      : [],
+    [originalContent, currentContent]
+  );
+
+  const {
+    selectedBlocks,
+    toggleBlockSelection,
+    toggleAllSelection,
+    generateSelectedContent,
+    allChangeBlockIds
+  } = useDiffManager(diff);
+
   const isModified = useMemo(() => {
     return currentContent !== originalContent;
   }, [currentContent, originalContent]);
 
-  // 差分生成
-  const generateDiff = useCallback(() => {
-    if (originalContent !== currentContent) {
-      const diff = DiffUtils.generateDiff(originalContent, currentContent);
-      setCurrentDiff(diff);
-      DiffManager.initializeDiff(diff);
-      setSelectedBlocks(new Set(DiffManager.getSelectedBlocks()));
-      onModeChange('diff');
+  const handleSavePress = useCallback(() => {
+    if (!isModified) {
+      Alert.alert('情報', '変更がないため保存をスキップしました');
+      return;
     }
-  }, [originalContent, currentContent, onModeChange]);
+    onModeChange('diff');
+  }, [isModified, onModeChange]);
 
-  // 編集モードに切り替え
   const switchToEditMode = useCallback(() => {
     if (!viewerConfig.editable) {
       Alert.alert('エラー', 'このファイル形式は編集できません');
@@ -119,59 +107,18 @@ export const FileEditor: React.FC<FileEditorProps> = ({
     onModeChange('edit');
   }, [viewerConfig.editable, onModeChange]);
 
-  // 保存処理
-  const handleSave = useCallback(() => {
-    if (!isModified) {
-      Alert.alert('情報', '変更がないため保存をスキップしました');
-      return;
-    }
-
-    if (mode === 'edit') {
-      // 差分確認モードに移行
-      generateDiff();
-    } else {
-      // 直接保存
-      onSave(currentContent);
-    }
-  }, [isModified, mode, currentContent, generateDiff, onSave]);
-
-  // 差分適用
   const handleApplyDiff = useCallback(() => {
-    if (!currentDiff) return;
-
-    const selectedContent = DiffManager.generateSelectedContent(currentDiff);
-    if (selectedContent === null) {
-      Alert.alert('エラー', '内容の生成に失敗しました');
-      return;
-    }
-
+    const selectedContent = generateSelectedContent();
     onSave(selectedContent);
     onModeChange('content');
-  }, [currentDiff, onSave, onModeChange]);
+  }, [generateSelectedContent, onSave, onModeChange]);
 
-  // 差分キャンセル
   const handleCancelDiff = useCallback(() => {
-    setCurrentDiff(null);
-    DiffManager.reset();
-    setSelectedBlocks(new Set());
     onModeChange('edit');
   }, [onModeChange]);
 
-  // ブロック選択切り替え
-  const handleBlockToggle = useCallback((blockId: number) => {
-    DiffManager.toggleBlockSelection(blockId);
-    setSelectedBlocks(new Set(DiffManager.getSelectedBlocks()));
-  }, []);
+  const allSelected = allChangeBlockIds.size > 0 && selectedBlocks.size === allChangeBlockIds.size;
 
-  // 全選択切り替え
-  const handleAllToggle = useCallback(() => {
-    if (currentDiff) {
-      DiffManager.toggleAllSelection(currentDiff);
-      setSelectedBlocks(new Set(DiffManager.getSelectedBlocks()));
-    }
-  }, [currentDiff]);
-
-  // ヘッダーボタンの表示制御
   const renderHeaderButtons = () => {
     return (
       <View style={styles.headerButtons}>
@@ -197,7 +144,7 @@ export const FileEditor: React.FC<FileEditorProps> = ({
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.headerButton, styles.saveButton, !isModified && styles.disabledButton]}
-              onPress={handleSave}
+              onPress={handleSavePress}
               disabled={!isModified}
             >
               <Text style={[styles.headerButtonText, styles.saveButtonText]}>
@@ -226,7 +173,6 @@ export const FileEditor: React.FC<FileEditorProps> = ({
     );
   };
 
-  // コンテンツのレンダリング
   const renderContent = () => {
     switch (mode) {
       case 'content':
@@ -244,7 +190,6 @@ export const FileEditor: React.FC<FileEditorProps> = ({
               value={currentContent}
               onChangeText={(text) => {
                 setCurrentContent(text);
-                // 親コンポーネントにも変更を通知
                 if (onContentChange) {
                   onContentChange(text);
                 }
@@ -265,15 +210,25 @@ export const FileEditor: React.FC<FileEditorProps> = ({
         );
 
       case 'diff':
-        return currentDiff ? (
-          <DiffView
-            diff={currentDiff}
-            selectedBlocks={selectedBlocks}
-            onBlockToggle={handleBlockToggle}
-            onAllToggle={handleAllToggle}
-            onApply={handleApplyDiff}
-            onCancel={handleCancelDiff}
-          />
+        return diff.length > 0 ? (
+          <View style={{ flex: 1 }}>
+            <DiffViewer
+              diff={diff}
+              selectedBlocks={selectedBlocks}
+              onBlockToggle={toggleBlockSelection}
+            />
+            <View style={styles.footer}>
+              <TouchableOpacity style={styles.controlButton} onPress={toggleAllSelection}>
+                <Text style={styles.controlButtonText}>{allSelected ? '☑ All' : '☐ All'}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.controlButton, styles.applyButton]} onPress={handleApplyDiff}>
+                <Text style={[styles.controlButtonText, styles.applyButtonText]}>✅ 適用</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.controlButton, styles.cancelButton]} onPress={handleCancelDiff}>
+                <Text style={styles.controlButtonText}>❌ キャンセル</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         ) : null;
 
       default:
@@ -283,99 +238,34 @@ export const FileEditor: React.FC<FileEditorProps> = ({
 
   return (
     <View style={styles.container}>
-      {/* ヘッダー */}
       <View style={styles.header}>
         <Text style={styles.filename}>{filename}</Text>
         {renderHeaderButtons()}
       </View>
-
-      {/* コンテンツ */}
       {renderContent()}
     </View>
   );
 };
 
-// スタイル定義
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#f8f9fa',
-    borderBottomWidth: 1,
-    borderBottomColor: '#dee2e6',
-  },
-  filename: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#495057',
-    flex: 1,
-  },
-  headerButtons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  headerButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    marginLeft: 8,
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ced4da',
-    borderRadius: 6,
-  },
-  headerButtonText: {
-    fontSize: 12,
-    color: '#495057',
-    fontWeight: '500',
-  },
-  saveButton: {
-    backgroundColor: '#28a745',
-    borderColor: '#28a745',
-  },
-  saveButtonText: {
-    color: '#fff',
-  },
-  closeButton: {
-    backgroundColor: '#6c757d',
-    borderColor: '#6c757d',
-  },
-  disabledButton: {
-    opacity: 0.5,
-    backgroundColor: '#e9ecef',
-  },
-  contentContainer: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  previewText: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: '#495057',
-    fontFamily: 'monospace',
-  },
-  editContainer: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  textEditor: {
-    flex: 1,
-    fontSize: 14,
-    lineHeight: 20,
-    fontFamily: 'monospace',
-    borderWidth: 1,
-    borderColor: '#ced4da',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    backgroundColor: '#fff',
-  },
+  container: { flex: 1, backgroundColor: '#fff' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#f8f9fa', borderBottomWidth: 1, borderBottomColor: '#dee2e6' },
+  filename: { fontSize: 16, fontWeight: '600', color: '#495057', flex: 1 },
+  headerButtons: { flexDirection: 'row', alignItems: 'center' },
+  headerButton: { paddingHorizontal: 12, paddingVertical: 6, marginLeft: 8, backgroundColor: '#fff', borderWidth: 1, borderColor: '#ced4da', borderRadius: 6 },
+  headerButtonText: { fontSize: 12, color: '#495057', fontWeight: '500' },
+  saveButton: { backgroundColor: '#28a745', borderColor: '#28a745' },
+  saveButtonText: { color: '#fff' },
+  closeButton: { backgroundColor: '#6c757d', borderColor: '#6c757d' },
+  disabledButton: { opacity: 0.5, backgroundColor: '#e9ecef' },
+  contentContainer: { flex: 1, paddingHorizontal: 16, paddingVertical: 12 },
+  previewText: { fontSize: 14, lineHeight: 20, color: '#495057', fontFamily: 'monospace' },
+  editContainer: { flex: 1, paddingHorizontal: 16, paddingVertical: 12 },
+  textEditor: { flex: 1, fontSize: 14, lineHeight: 20, fontFamily: 'monospace', borderWidth: 1, borderColor: '#ced4da', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 12, backgroundColor: '#fff' },
+  footer: { flexDirection: 'row', justifyContent: 'space-around', backgroundColor: '#f8f9fa', paddingVertical: 12, borderTopWidth: 1, borderTopColor: '#dee2e6' },
+  controlButton: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 6, borderWidth: 1, borderColor: '#dee2e6' },
+  controlButtonText: { fontSize: 14, fontWeight: '500', color: '#495057' },
+  applyButton: { backgroundColor: '#28a745', borderColor: '#28a745' },
+  applyButtonText: { color: '#fff' },
+  cancelButton: { backgroundColor: '#f8f9fa' },
 });
