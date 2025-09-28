@@ -341,8 +341,6 @@ export class LLMService {
   }
 }
 
-// デフォルトインスタンス（後方互換性のため）
-export const defaultLLMService = new LLMService();
 
 // パスユーティリティ
 export class PathUtils {
