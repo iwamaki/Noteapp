@@ -1,3 +1,7 @@
+/**
+ *  AIチャットパネル
+ *  ユーザーとAIの対話を表示し、メッセージの送受信を管理するコンポーネントです。
+ */
 
 import React, { useState, useRef, useCallback, useMemo } from 'react';
 import {
@@ -13,6 +17,7 @@ import {
 import APIService, { ChatContext } from '../../services/api';
 import { ChatMessage, LLMCommand } from '../../services/llmService';
 
+// スタイル定義
 interface ChatPanelProps {
   context?: ChatContext;
   onCommandReceived?: (commands: LLMCommand[]) => void;
@@ -26,6 +31,7 @@ interface MessageStyles {
   text: object;
 }
 
+// チャットパネルコンポーネント
 export const ChatPanel: React.FC<ChatPanelProps> = ({
   context = {},
   onCommandReceived,
@@ -96,6 +102,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
     }
   }, [createMessage, addMessage, onCommandReceived]);
 
+  // エラーハンドリング
   const handleError = useCallback((error: unknown) => {
     console.error('Chat error:', error);
     
@@ -109,6 +116,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
     addMessage(errorMessage);
   }, [createMessage, addMessage]);
 
+  // メッセージ送信処理
   const sendMessage = useCallback(async () => {
     const trimmedInput = inputText.trim();
     if (!trimmedInput || isLoading) return;
@@ -128,6 +136,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
     }
   }, [inputText, isLoading, context, createMessage, addMessage, handleLLMResponse, handleError]);
 
+  // メッセージレンダラー
   const renderMessage = useCallback((message: ChatMessage, index: number) => {
     const styles = messageStyles[message.role];
     
@@ -141,12 +150,14 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
     );
   }, [messageStyles]);
 
+  // 送信ボタンの活性化条件
   const canSendMessage = useMemo(() => {
     return inputText.trim().length > 0 && !isLoading;
   }, [inputText, isLoading]);
 
   if (!isVisible) return null;
 
+  // メインレンダリング
   return (
     <View style={styles.overlay}>
       <View style={styles.container}>

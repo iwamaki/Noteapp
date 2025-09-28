@@ -1,6 +1,6 @@
 /**
  * ファイルエディタコンポーネント
- * プロトタイプのFileEditorクラスをReact Nativeコンポーネントに変換
+ * ユーザーがファイルを編集できるインターフェースを提供します。
  */
 
 import React, { useState, useCallback, useMemo } from 'react';
@@ -15,13 +15,16 @@ import {
 import { DiffLine, DiffUtils, DiffManager } from '../../diff-view/utils/diffUtils';
 import { DiffView } from '../../diff-view/components/DiffView';
 
-export type ViewMode = 'content' | 'edit' | 'preview' | 'diff';
+// 表示モードの型定義
+export type ViewMode = 'content' | 'edit' | 'preview' | 'diff'; 
 
+// ファイルビューアの設定
 export interface FileViewerConfig {
   extensions: string[];
   editable: boolean;
 }
 
+// コンポーネントのプロパティ定義
 interface FileEditorProps {
   filename: string;
   initialContent: string;
@@ -29,7 +32,7 @@ interface FileEditorProps {
   onModeChange: (mode: ViewMode) => void;
   onSave: (content: string) => void;
   onClose: () => void;
-  onContentChange?: (content: string) => void; // 追加：コンテンツ変更時のコールバック
+  onContentChange?: (content: string) => void; 
 }
 
 // ファイル形式別の設定
@@ -60,6 +63,7 @@ const FILE_VIEWERS: Record<string, FileViewerConfig> = {
   },
 };
 
+// ファイルエディタコンポーネント
 export const FileEditor: React.FC<FileEditorProps> = ({
   filename,
   initialContent,
@@ -69,10 +73,10 @@ export const FileEditor: React.FC<FileEditorProps> = ({
   onClose,
   onContentChange,
 }) => {
-  const [currentContent, setCurrentContent] = useState(initialContent);
-  const [originalContent] = useState(initialContent);
-  const [currentDiff, setCurrentDiff] = useState<DiffLine[] | null>(null);
-  const [selectedBlocks, setSelectedBlocks] = useState<Set<number>>(new Set());
+  const [currentContent, setCurrentContent] = useState(initialContent);         // 編集中の内容
+  const [originalContent] = useState(initialContent);                           // 元の内容（初期状態）
+  const [currentDiff, setCurrentDiff] = useState<DiffLine[] | null>(null);      // 差分情報
+  const [selectedBlocks, setSelectedBlocks] = useState<Set<number>>(new Set()); // 選択された差分ブロック
 
   // ファイル形式の判定
   const viewerConfig = useMemo(() => {
@@ -291,6 +295,7 @@ export const FileEditor: React.FC<FileEditorProps> = ({
   );
 };
 
+// スタイル定義
 const styles = StyleSheet.create({
   container: {
     flex: 1,

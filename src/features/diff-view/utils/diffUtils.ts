@@ -1,6 +1,6 @@
 /**
- * 差分表示に関する型定義
- * 
+ *  差分表示ユーティリティ
+ *  差分表示に関する各種機能を提供します。
  */
 
 export interface DiffLine {
@@ -101,9 +101,7 @@ export class DiffManager {
   }
 }
 
-/**
- * 差分生成ユーティリティ
- */
+// 差分生成ユーティリティクラス
 export class DiffUtils {
   /**
    * 2つのテキストの差分を生成する

@@ -1,3 +1,8 @@
+/*
+* ルートナビゲーターの設定
+* 主要な画面（ノート一覧、ノート編集、差分表示、バージョン履歴、設定）をスタックナビゲーションで管理
+*/
+
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -9,8 +14,10 @@ import DiffViewScreen from '../features/diff-view/DiffViewScreen';
 import VersionHistoryScreen from '../features/version-history/VersionHistoryScreen';
 import SettingsScreen from '../features/settings/SettingsScreen';
 
+// スタックナビゲーターの作成
 const Stack = createStackNavigator<RootStackParamList>();
 
+// RootNavigatorコンポーネント
 function RootNavigator() {
   return (
     <NavigationContainer>

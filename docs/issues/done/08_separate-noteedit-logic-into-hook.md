@@ -1,7 +1,7 @@
 ---
 title: "NoteEditScreenのロジックをカスタムフックに分離する"
 id: 8
-status: new
+status: done
 priority: medium
 attempt_count: 0
 tags: [refactoring, hooks, state-management]
@@ -17,11 +17,11 @@ tags: [refactoring, hooks, state-management]
 
 ## 受け入れ条件 (Acceptance Criteria)
 
-- [ ] `src/hooks/useNoteEditor.ts` ファイルが作成される。
-- [ ] `NoteEditScreen.tsx` 内の、ノートの状態管理（`activeNote`, `draftNote`）、タイトル管理（`title`）、コンテンツ管理（`content`）に関するロジックが `useNoteEditor.ts` に移動される。
-- [ ] `NoteEditScreen.tsx` 内の `handleGoToDiff` やヘッダー設定などのロジックが `useNoteEditor.ts` から提供される関数や状態を利用する形にリファクタリングされる。
-- [ ] `NoteEditScreen.tsx` はリファクタリング後も、以前と同様にノートの編集、保存（差分表示への遷移）ができる。
-- [ ] アプリケーションが正常にビルドされ、関連する機能が正しく動作する。
+- [x] `src/hooks/useNoteEditor.ts` ファイルが作成される。
+- [x] `NoteEditScreen.tsx` 内の、ノートの状態管理（`activeNote`, `draftNote`）、タイトル管理（`title`）、コンテンツ管理（`content`）に関するロジックが `useNoteEditor.ts` に移動される。
+- [x] `NoteEditScreen.tsx` 内の `handleGoToDiff` やヘッダー設定などのロジックが `useNoteEditor.ts` から提供される関数や状態を利用する形にリファクタリングされる。
+- [x] `NoteEditScreen.tsx` はリファクタリング後も、以前と同様にノートの編集、保存（差分表示への遷移）ができる。
+- [x] アプリケーションが正常にビルドされ、関連する機能が正しく動作する。
 
 ## 関連ファイル (Related Files)
 

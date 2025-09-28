@@ -1,3 +1,8 @@
+/**
+ *  ノート編集画面
+ *  ノートの内容を編集する画面です。
+ */
+
 import React, { useLayoutEffect, useState } from 'react';
 import { View, StyleSheet, Text, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -8,6 +13,7 @@ import { useNoteEditor } from './hooks/useNoteEditor';
 
 type NoteEditScreenRouteProp = RouteProp<RootStackParamList, 'NoteEdit'>;
 
+// NoteEditScreenコンポーネント
 function NoteEditScreen() {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const route = useRoute<NoteEditScreenRouteProp>();
@@ -23,7 +29,7 @@ function NoteEditScreen() {
     handleGoToDiff,
   } = useNoteEditor(noteId);
 
-  const [viewMode, setViewMode] = useState<ViewMode>('edit');
+  const [viewMode, setViewMode] = useState<ViewMode>('edit'); 
 
   // ヘッダーのレイアウトエフェクトは残すが、フックから提供される状態を使用
   useLayoutEffect(() => {
@@ -54,6 +60,7 @@ function NoteEditScreen() {
     });
   }, [navigation, title, activeNote, handleGoToDiff]);
 
+  // メインのレンダリング部分
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
