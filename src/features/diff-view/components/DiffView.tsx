@@ -1,6 +1,6 @@
 /**
  * 差分表示コンポーネント
- * プロトタイプのfile-editor.jsの差分表示機能をReact Nativeコンポーネントに変換
+ * ノートの内容の差分を視覚的に表示し、変更ブロックごとに選択・適用できるようにするコンポーネントです。
  */
 
 import React from 'react';
@@ -10,7 +10,7 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-  ViewStyle, // 追加
+  ViewStyle, 
 } from 'react-native';
 import { DiffLine, DiffManager } from '../utils/diffUtils';
 
@@ -23,6 +23,7 @@ interface DiffViewProps {
   onCancel: () => void;
 }
 
+// 差分表示コンポーネント
 export const DiffView: React.FC<DiffViewProps> = ({
   diff,
   selectedBlocks,
@@ -41,6 +42,7 @@ export const DiffView: React.FC<DiffViewProps> = ({
 
   const processedBlocks = new Set<number>();
 
+  // 各行のレンダラー
   const renderDiffLine = (line: DiffLine, index: number) => {
     const lineNumber = line.originalLineNumber || line.newLineNumber || '';
     const showCheckbox = line.changeBlockId !== null &&
@@ -72,6 +74,7 @@ export const DiffView: React.FC<DiffViewProps> = ({
         break;
     }
 
+    // 型アサーションを追加
     return (
       <View key={index} style={lineStyle}>
         <Text style={styles.lineNumber}>{lineNumber}</Text>
@@ -96,6 +99,7 @@ export const DiffView: React.FC<DiffViewProps> = ({
     );
   };
 
+  // メインレンダリング
   return (
     <View style={styles.container}>
       <ScrollView style={styles.diffContainer}>
@@ -143,6 +147,7 @@ export const DiffView: React.FC<DiffViewProps> = ({
   );
 };
 
+// スタイル定義
 const styles = StyleSheet.create({
   container: {
     flex: 1,

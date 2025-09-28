@@ -1,3 +1,8 @@
+/**
+ *  差分表示画面
+ *  ノートの内容の差分を表示する画面です。
+ */
+
 import React, { useState, useMemo } from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
 import { DiffView } from './components/DiffView';
@@ -7,35 +12,39 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
 import { useNoteStore } from '../../store/noteStore';
 
+// DiffViewScreenコンポーネント
 function DiffViewScreen() {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { activeNote, draftNote, saveDraftNote, setDraftNote } = useNoteStore();
-
   const originalContent = activeNote?.content ?? '';
   const newContent = draftNote?.content ?? '';
   const filename = draftNote?.title ?? '差分プレビュー';
 
-  // useMemo to prevent re-calculating the diff on every render
+  // 差分の計算とDiffManagerの初期化
   const diff = useMemo(() => {
     const d = DiffUtils.generateDiff(originalContent, newContent);
     DiffManager.initializeDiff(d);
     return d;
   }, [originalContent, newContent]);
 
+  // 選択されたブロックの状態管理
   const [selectedBlocks, setSelectedBlocks] = useState<Set<number>>(
     new Set(DiffManager.getSelectedBlocks())
   );
 
+  // ブロック選択のトグル処理
   const handleBlockToggle = (blockId: number) => {
     DiffManager.toggleBlockSelection(blockId);
     setSelectedBlocks(new Set(DiffManager.getSelectedBlocks()));
   };
 
+  // 全選択・全解除のトグル処理
   const handleAllToggle = () => {
     DiffManager.toggleAllSelection(diff);
     setSelectedBlocks(new Set(DiffManager.getSelectedBlocks()));
   };
 
+  // 適用処理
   const handleApply = async () => {
     const selectedContent = DiffManager.generateSelectedContent(diff);
     if (selectedContent === null) {
@@ -43,21 +52,21 @@ function DiffViewScreen() {
       return;
     }
 
-    // Update the draftNote in the store with the content selected in the diff view
+    // 差分表示から選択された内容でドラフトノートを更新
     setDraftNote({ title: filename, content: selectedContent });
 
     try {
-                await saveDraftNote();
-                Alert.alert('保存完了', 'ノートが保存されました。');
-                // Go back to the NoteEdit screen
-                navigation.goBack();
-              } catch (error) {
-                console.error(error);
-                Alert.alert('エラー', 'ノートの保存に失敗しました。');
-              }  };
+      await saveDraftNote();
+      Alert.alert('保存完了', 'ノートが保存されました。');
+      navigation.goBack();  // 差分表示画面を閉じてノート編集画面に戻る
+    } catch (error) {
+      console.error(error);
+      Alert.alert('エラー', 'ノートの保存に失敗しました。');
+    }
+  };
 
+  // キャンセル処理
   const handleCancel = () => {
-    // Clear the draft note when cancelling
     setDraftNote(null);
     navigation.goBack();
   };

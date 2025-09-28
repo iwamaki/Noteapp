@@ -1,20 +1,29 @@
+/**
+ * ノート一覧画面
+ *
+ * ノートの一覧を表示し、選択や新規作成を行う画面です。
+ */
+
 import React, { useEffect, useLayoutEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useNavigation, NavigationProp, useIsFocused } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/types';
 import { useNoteStore } from '../../store/noteStore';
 
+// NoteListScreenコンポーネント
 function NoteListScreen() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const { notes, loading, fetchNotes, createNote } = useNoteStore();
   const isFocused = useIsFocused();
 
+  // フォーカスされたときにノートを再取得
   useEffect(() => {
     if (isFocused) {
       fetchNotes();
     }
   }, [isFocused]);
 
+  // ヘッダーに設定ボタンを追加
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
@@ -30,10 +39,12 @@ function NoteListScreen() {
     });
   }, [navigation]);
 
+  // ノート選択と新規作成のハンドラ
   const handleSelectNote = (noteId: string) => {
     navigation.navigate('NoteEdit', { noteId });
   };
 
+  // 新規作成のハンドラ
   const handleCreateNote = async () => {
     try {
       const newNote = await createNote({ title: '新しいノート', content: '' });
@@ -51,6 +62,7 @@ function NoteListScreen() {
     );
   }
 
+  // ノートアイテムのレンダラー
   const renderItem = ({ item }: { item: (typeof notes)[0] }) => (
     <TouchableOpacity
       style={styles.noteItem}
@@ -61,6 +73,7 @@ function NoteListScreen() {
     </TouchableOpacity>
   );
 
+  // メインレンダリング
   return (
     <View style={styles.container}>
       {notes.length === 0 && !loading.isLoading ? (
@@ -88,6 +101,7 @@ function NoteListScreen() {
   );
 }
 
+// スタイル定義
 const styles = StyleSheet.create({
   container: {
     flex: 1,
