@@ -9,7 +9,7 @@ import { useNoteStore } from '../../store/noteStore';
 
 function DiffViewScreen() {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
-  const { activeNote, draftNote, saveNote, setDraftNote } = useNoteStore();
+  const { activeNote, draftNote, saveDraftNote, setDraftNote } = useNoteStore();
 
   const originalContent = activeNote?.content ?? '';
   const newContent = draftNote?.content ?? '';
@@ -47,7 +47,7 @@ function DiffViewScreen() {
     setDraftNote({ title: filename, content: selectedContent });
 
     try {
-                await saveNote();
+                await saveDraftNote();
                 Alert.alert('保存完了', 'ノートが保存されました。');
                 // Go back to the NoteEdit screen
                 navigation.goBack();

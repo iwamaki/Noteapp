@@ -6,7 +6,7 @@ import { useNoteStore } from '../../store/noteStore';
 
 function NoteListScreen() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
-  const { notes, isLoading, fetchNotes, createNewNote } = useNoteStore();
+  const { notes, loading, fetchNotes, createNote } = useNoteStore();
   const isFocused = useIsFocused();
 
   useEffect(() => {
@@ -34,12 +34,16 @@ function NoteListScreen() {
     navigation.navigate('NoteEdit', { noteId });
   };
 
-  const handleCreateNewNote = () => {
-    createNewNote();
-    navigation.navigate('NoteEdit', {});
+  const handleCreateNote = async () => {
+    try {
+      const newNote = await createNote({ title: '新しいノート', content: '' });
+      navigation.navigate('NoteEdit', { noteId: newNote.id });
+    } catch (error) {
+      console.error("Failed to create note:", error);
+    }
   };
 
-  if (isLoading && notes.length === 0) {
+  if (loading.isLoading && notes.length === 0) {
     return (
       <View style={[styles.container, styles.centered]}>
         <ActivityIndicator size="large" />
@@ -59,7 +63,7 @@ function NoteListScreen() {
 
   return (
     <View style={styles.container}>
-      {notes.length === 0 && !isLoading ? (
+      {notes.length === 0 && !loading.isLoading ? (
         <View style={[styles.container, styles.centered]}>
           <Text style={styles.emptyMessage}>ノートがありません。</Text>
           <Text style={styles.emptyMessage}>下の「+」ボタンから新しいノートを作成しましょう。</Text>
@@ -71,12 +75,12 @@ function NoteListScreen() {
           keyExtractor={(item) => item.id}
           style={styles.list}
           onRefresh={fetchNotes}
-          refreshing={isLoading}
+          refreshing={loading.isLoading}
         />
       )}
       <TouchableOpacity
         style={styles.fab}
-        onPress={handleCreateNewNote}
+        onPress={handleCreateNote}
       >
         <Text style={styles.fabText}>+</Text>
       </TouchableOpacity>

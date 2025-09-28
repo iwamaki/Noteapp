@@ -1,31 +1,33 @@
-import { saveNote, getNoteById, getAllNotes, deleteNoteById } from './storageService';
+import { NoteStorageService } from './storageService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import 'react-native-get-random-values'; // Import for uuid
 
-describe('storageService', () => {
+describe('NoteStorageService', () => {
   // Clear mock storage before each test to ensure isolation
   beforeEach(async () => {
     await AsyncStorage.clear();
   });
 
-  it('should save a new note and retrieve it by ID', async () => {
-    const newNote = { title: 'Test Note', content: 'This is a test.' };
-    const savedNote = await saveNote(newNote);
+  it('should create a new note and retrieve it by ID', async () => {
+    const newNoteData = { title: 'Test Note', content: 'This is a test.' };
+    const savedNote = await NoteStorageService.createNote(newNoteData);
 
-    // Check if it has an ID and timestamps
+    // Check if it has an ID, timestamps, and version
     expect(savedNote.id).toBeDefined();
     expect(savedNote.createdAt).toBeDefined();
     expect(savedNote.updatedAt).toBeDefined();
+    expect(savedNote.version).toBe(1);
+    expect(savedNote.title).toBe(newNoteData.title);
 
-    const retrievedNote = await getNoteById(savedNote.id);
+    const retrievedNote = await NoteStorageService.getNoteById(savedNote.id);
 
     // Compare all properties
     expect(retrievedNote).toEqual(savedNote);
   });
 
   it('should update an existing note', async () => {
-    const newNote = { title: 'Original Title', content: 'Original content' };
-    const savedNote = await saveNote(newNote);
+    const newNoteData = { title: 'Original Title', content: 'Original content' };
+    const savedNote = await NoteStorageService.createNote(newNoteData);
 
     // Introduce a small delay to ensure the timestamp changes
     await new Promise(resolve => setTimeout(resolve, 10));
@@ -35,45 +37,46 @@ describe('storageService', () => {
       title: 'Updated Title',
       content: 'Updated content',
     };
-    const updatedNote = await saveNote(updatedNoteData);
+    const updatedNote = await NoteStorageService.updateNote(updatedNoteData);
 
     expect(updatedNote.id).toBe(savedNote.id);
     expect(updatedNote.title).toBe('Updated Title');
+    expect(updatedNote.version).toBe(2);
     expect(updatedNote.createdAt).toEqual(savedNote.createdAt); // createdAt should not change
-    expect(updatedNote.updatedAt).not.toEqual(savedNote.updatedAt); // updatedAt should have changed
+    expect(updatedNote.updatedAt.getTime()).toBeGreaterThan(savedNote.updatedAt.getTime()); // updatedAt should have changed
 
-    const retrievedNote = await getNoteById(savedNote.id);
+    const retrievedNote = await NoteStorageService.getNoteById(savedNote.id);
     expect(retrievedNote).toEqual(updatedNote);
   });
 
   it('should retrieve all notes, sorted by updatedAt descending', async () => {
-    await saveNote({ title: 'Note 1', content: 'Content 1' });
+    await NoteStorageService.createNote({ title: 'Note 1', content: 'Content 1' });
     // Ensure timestamps are different for sorting
     await new Promise(resolve => setTimeout(resolve, 10));
-    await saveNote({ title: 'Note 2', content: 'Content 2' });
+    await NoteStorageService.createNote({ title: 'Note 2', content: 'Content 2' });
 
-    const allNotes = await getAllNotes();
+    const allNotes = await NoteStorageService.getAllNotes();
     expect(allNotes.length).toBe(2);
-    expect(allNotes[0].title).toBe('Note 2'); // Note 2 was saved last
+    expect(allNotes[0].title).toBe('Note 2'); // Note 2 was created last
     expect(allNotes[1].title).toBe('Note 1');
   });
 
   it('should delete a note by ID', async () => {
-    const note1 = await saveNote({ title: 'Note 1', content: 'Content 1' });
-    await saveNote({ title: 'Note 2', content: 'Content 2' });
+    const note1 = await NoteStorageService.createNote({ title: 'Note 1', content: 'Content 1' });
+    await NoteStorageService.createNote({ title: 'Note 2', content: 'Content 2' });
 
-    await deleteNoteById(note1.id);
+    await NoteStorageService.deleteNote(note1.id);
 
-    const allNotes = await getAllNotes();
+    const allNotes = await NoteStorageService.getAllNotes();
     expect(allNotes.length).toBe(1);
     expect(allNotes[0].title).toBe('Note 2');
 
-    const deletedNote = await getNoteById(note1.id);
+    const deletedNote = await NoteStorageService.getNoteById(note1.id);
     expect(deletedNote).toBeNull();
   });
 
   it('should return null for a non-existent note ID', async () => {
-    const nonExistentNote = await getNoteById('non-existent-id');
+    const nonExistentNote = await NoteStorageService.getNoteById('non-existent-id');
     expect(nonExistentNote).toBeNull();
   });
 });

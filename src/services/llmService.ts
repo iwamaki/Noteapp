@@ -1,8 +1,4 @@
-/**
- * LLMサービス
- * バックエンドと連携
- */
-
+// 修正版 llmService.ts - メモリリーク防止と型安全性向上
 export interface ChatMessage {
   role: 'user' | 'ai' | 'system';
   content: string;
@@ -46,19 +42,21 @@ export interface LLMProvider {
   status: 'available' | 'unavailable' | 'error';
 }
 
+export interface LLMCommand {
+  action: string;
+  path?: string;
+  content?: string;
+  description?: string;
+  source?: string;
+  destination?: string;
+  paths?: string[];
+  sources?: string[];
+}
+
 export interface LLMResponse {
   message: string;
   response?: string;
-  commands?: Array<{
-    action: string;
-    path?: string;
-    content?: string;
-    description?: string;
-    source?: string;
-    destination?: string;
-    paths?: string[];
-    sources?: string[];
-  }>;
+  commands?: LLMCommand[];
   provider?: string;
   model?: string;
   historyCount?: number;
@@ -71,27 +69,45 @@ export interface LLMHealthStatus {
   providers: Record<string, LLMProvider>;
 }
 
+export interface LLMConfig {
+  maxHistorySize: number;
+  apiTimeout: number;
+  baseUrl: string;
+}
+
+// エラークラス
+export class LLMError extends Error {
+  constructor(
+    message: string,
+    public code: string,
+    public statusCode?: number
+  ) {
+    super(message);
+    this.name = 'LLMError';
+  }
+}
+
 /**
- * 会話履歴管理
+ * 会話履歴管理クラス（インスタンス化対応）
  */
 export class ConversationHistory {
-  private static history: ChatMessage[] = [];
-  private static maxHistorySize = 100;
+  private history: ChatMessage[] = [];
+  private maxHistorySize: number;
 
-  static getHistory(): ChatMessage[] {
+  constructor(maxHistorySize = 100) {
+    this.maxHistorySize = maxHistorySize;
+  }
+
+  getHistory(): ChatMessage[] {
     return [...this.history];
   }
 
-  static addMessage(message: ChatMessage): void {
+  addMessage(message: ChatMessage): void {
     this.history.push(message);
-
-    // 履歴サイズ制限
-    if (this.history.length > this.maxHistorySize) {
-      this.history = this.history.slice(-this.maxHistorySize);
-    }
+    this.trimHistory();
   }
 
-  static addExchange(userMessage: string, aiResponse: string): void {
+  addExchange(userMessage: string, aiResponse: string): void {
     const timestamp = new Date();
 
     this.addMessage({
@@ -107,76 +123,163 @@ export class ConversationHistory {
     });
   }
 
-  static clear(): void {
+  clear(): void {
     this.history = [];
   }
 
-  static getHistoryStatus(): { count: number; totalChars: number } {
+  getHistoryStatus(): { count: number; totalChars: number } {
     const totalChars = this.history.reduce((sum, msg) => sum + msg.content.length, 0);
     return {
       count: this.history.length,
       totalChars
     };
   }
+
+  private trimHistory(): void {
+    if (this.history.length > this.maxHistorySize) {
+      this.history = this.history.slice(-this.maxHistorySize);
+    }
+  }
 }
 
 /**
- * LLMサービスのメインクラス
+ * コマンド検証ユーティリティ
+ */
+export class CommandValidator {
+  private static readonly ALLOWED_ACTIONS = [
+    'create_file', 'create_directory', 'delete_file', 'copy_file', 'move_file',
+    'read_file', 'edit_file', 'list_files',
+    'batch_delete', 'batch_copy', 'batch_move'
+  ] as const;
+
+  static validate(command: LLMCommand): void {
+    if (!command.action) {
+      throw new LLMError('アクションが指定されていません', 'MISSING_ACTION');
+    }
+
+    if (!this.ALLOWED_ACTIONS.includes(command.action as any)) {
+      throw new LLMError(`許可されていないアクション: ${command.action}`, 'INVALID_ACTION');
+    }
+
+    // パスの安全性をチェック
+    const paths = [command.path, command.source, command.destination].filter(Boolean);
+    for (const path of paths) {
+      this.validatePath(path!);
+    }
+
+    // バッチ操作のパス配列をチェック
+    if (command.paths || command.sources) {
+      const pathArray = command.paths || command.sources;
+      if (!Array.isArray(pathArray)) {
+        throw new LLMError('バッチ操作のパスは配列である必要があります', 'INVALID_BATCH_PATHS');
+      }
+      pathArray.forEach(this.validatePath);
+    }
+  }
+
+  private static validatePath(path: string): void {
+    if (typeof path !== 'string' || path.includes('..')) {
+      throw new LLMError(`不正なパス: ${path}`, 'INVALID_PATH');
+    }
+  }
+}
+
+/**
+ * LLMサービスメインクラス（インスタンス化対応）
  */
 export class LLMService {
-  private static baseUrl = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:8000';
-  private static availableProviders: Record<string, LLMProvider> = {};
-  private static currentProvider = 'openai';
-  private static currentModel = 'gpt-3.5-turbo';
+  private config: LLMConfig;
+  private conversationHistory: ConversationHistory;
+  private availableProviders: Record<string, LLMProvider> = {};
+  private currentProvider: string;
+  private currentModel: string;
 
-  /**
-   * チャットメッセージを送信
-   */
-  static async sendChatMessage(
+  constructor(config?: Partial<LLMConfig>) {
+    this.config = {
+      maxHistorySize: 100,
+      apiTimeout: 30000,
+      baseUrl: process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:8000',
+      ...config
+    };
+
+    this.conversationHistory = new ConversationHistory(this.config.maxHistorySize);
+    this.currentProvider = 'openai';
+    this.currentModel = 'gpt-3.5-turbo';
+  }
+
+  async sendChatMessage(
     message: string,
     context: ChatContext = {}
   ): Promise<LLMResponse> {
     try {
       // 会話履歴をコンテキストに追加
-      context.conversationHistory = ConversationHistory.getHistory();
+      const enrichedContext = {
+        ...context,
+        conversationHistory: this.conversationHistory.getHistory()
+      };
 
-      const response = await fetch(`${this.baseUrl}/api/chat`, {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), this.config.apiTimeout);
+
+      const response = await fetch(`${this.config.baseUrl}/api/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          message: message,
+          message,
           provider: this.currentProvider,
           model: this.currentModel,
-          context: context
-        })
+          context: enrichedContext
+        }),
+        signal: controller.signal
       });
 
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new LLMError(
+          `HTTP error! status: ${response.status}`,
+          'HTTP_ERROR',
+          response.status
+        );
       }
 
       const data: LLMResponse = await response.json();
 
+      // コマンドの検証
+      if (data.commands) {
+        data.commands.forEach(CommandValidator.validate);
+      }
+
       // 会話履歴に追加
-      ConversationHistory.addExchange(message, data.message || data.response || '');
+      this.conversationHistory.addExchange(
+        message,
+        data.message || data.response || ''
+      );
 
       return data;
     } catch (error) {
-      console.error('LLM Service Error:', error);
-      throw error;
+      if (error instanceof LLMError) {
+        throw error;
+      }
+      
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new LLMError('ネットワークエラーが発生しました', 'NETWORK_ERROR');
+      }
+
+      throw new LLMError(
+        `予期しないエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`,
+        'UNKNOWN_ERROR'
+      );
     }
   }
 
-  /**
-   * 利用可能なプロバイダーを読み込み
-   */
-  static async loadProviders(): Promise<Record<string, LLMProvider>> {
+  async loadProviders(): Promise<Record<string, LLMProvider>> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/llm-providers`);
+      const response = await fetch(`${this.config.baseUrl}/api/llm-providers`);
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new LLMError(`HTTP error! status: ${response.status}`, 'HTTP_ERROR', response.status);
       }
 
       this.availableProviders = await response.json();
@@ -188,28 +291,23 @@ export class LLMService {
 
       return this.availableProviders;
     } catch (error) {
-      console.error('Failed to load providers:', error);
-      return {};
+      if (error instanceof LLMError) {
+        throw error;
+      }
+      throw new LLMError('プロバイダー読み込みに失敗しました', 'PROVIDER_LOAD_ERROR');
     }
   }
 
-  /**
-   * ヘルスチェック
-   */
-  static async checkHealth(): Promise<LLMHealthStatus> {
+  async checkHealth(): Promise<LLMHealthStatus> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/health`);
+      const response = await fetch(`${this.config.baseUrl}/api/health`);
       return await response.json();
     } catch (error) {
-      console.error('Health check failed:', error);
       return { status: 'error', providers: {} };
     }
   }
 
-  /**
-   * プロバイダーとモデルを設定
-   */
-  static setProvider(provider: string): void {
+  setProvider(provider: string): void {
     this.currentProvider = provider;
 
     // プロバイダー変更時にデフォルトモデルを設定
@@ -218,67 +316,36 @@ export class LLMService {
     }
   }
 
-  static setModel(model: string): void {
+  setModel(model: string): void {
     this.currentModel = model;
   }
 
-  static getCurrentProvider(): string {
+  getCurrentProvider(): string {
     return this.currentProvider;
   }
 
-  static getCurrentModel(): string {
+  getCurrentModel(): string {
     return this.currentModel;
   }
 
-  static getAvailableProviders(): Record<string, LLMProvider> {
+  getAvailableProviders(): Record<string, LLMProvider> {
     return this.availableProviders;
+  }
+
+  getConversationHistory(): ConversationHistory {
+    return this.conversationHistory;
+  }
+
+  clearHistory(): void {
+    this.conversationHistory.clear();
   }
 }
 
-/**
- * メッセージ処理ユーティリティ
- */
-export class MessageProcessor {
-  /**
-   * コマンドの妥当性を検証
-   */
-  static validateCommand(command: any): boolean {
-    if (!command.action) {
-      throw new Error('アクションが指定されていません');
-    }
+// デフォルトインスタンス（後方互換性のため）
+export const defaultLLMService = new LLMService();
 
-    const allowedActions = [
-      'create_file', 'create_directory', 'delete_file', 'copy_file', 'move_file',
-      'read_file', 'edit_file', 'list_files',
-      'batch_delete', 'batch_copy', 'batch_move'
-    ];
-
-    if (!allowedActions.includes(command.action)) {
-      throw new Error(`許可されていないアクション: ${command.action}`);
-    }
-
-    // パスの安全性をチェック
-    const paths = [command.path, command.source, command.destination].filter(Boolean);
-    for (const path of paths) {
-      if (typeof path !== 'string' || path.includes('..')) {
-        throw new Error(`不正なパス: ${path}`);
-      }
-    }
-
-    // バッチ操作のパス配列をチェック
-    if (command.paths || command.sources) {
-      const pathArray = command.paths || command.sources;
-      if (!Array.isArray(pathArray)) {
-        throw new Error('バッチ操作のパスは配列である必要があります');
-      }
-    }
-
-    return true;
-  }
-
-  /**
-   * パス結合ユーティリティ
-   */
+// パスユーティリティ
+export class PathUtils {
   static joinPath(basePath: string, ...segments: string[]): string {
     let result = basePath.replace(/\/+$/, ''); // 末尾のスラッシュを除去
     for (const segment of segments) {
