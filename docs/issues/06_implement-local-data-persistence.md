@@ -1,7 +1,7 @@
 ---
 title: "ローカルデータ永続化の実装"
 id: 6
-status: in-progress
+status: completed
 priority: high
 attempt_count: 1
 tags: ["persistence", "storage", "bug"]
@@ -21,10 +21,10 @@ tags: ["persistence", "storage", "bug"]
 >
 > - [x] データストレージに `AsyncStorage` が使用されている。
 > - [x] `storageService.ts` の単体テストがすべてパスする。
-> - [ ] ノートを新規作成でき、アプリを再起動してもデータが残っている。
-> - [ ] 既存のノートを編集でき、変更が永続化される。
-> - [ ] ノートを一覧から削除できる。
-> - [ ] 上記のCRUD操作が、ユーザーによる手動テストで問題なく実行できる。
+> - [x] ノートを新規作成でき、アプリを再起動してもデータが残っている。
+> - [x ] 既存のノートを編集でき、変更が永続化される。
+> - [x] ノートを一覧から削除できる。
+> - [x] 上記のCRUD操作が、ユーザーによる手動テストで問題なく実行できる。
 
 ## 関連ファイル (Related Files)
 

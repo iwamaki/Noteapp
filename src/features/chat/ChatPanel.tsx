@@ -1,9 +1,5 @@
-/**
- * チャット機能コンポーネント
- * プロトタイプのmessage-processor.jsのチャット機能をReact Nativeコンポーネントに変換
- */
-
-import React, { useState, useRef, useCallback } from 'react';
+// 修正版 ChatPanel.tsx - 型アサーション削除と可読性向上
+import React, { useState, useRef, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -13,19 +9,24 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
-  ViewStyle, // 追加
-  TextStyle, // 追加
 } from 'react-native';
-import { ChatMessage, LLMService, ChatContext } from '../../services/llmService';
+import APIService, { ChatContext } from '../../services/api';
+import { ChatMessage, LLMCommand } from '../../services/llmService';
 
-interface ChatComponentProps {
+interface ChatPanelProps {
   context?: ChatContext;
-  onCommandReceived?: (commands: any[]) => void;
+  onCommandReceived?: (commands: LLMCommand[]) => void;
   isVisible: boolean;
   onClose: () => void;
 }
 
-export const ChatPanel: React.FC<ChatComponentProps> = ({
+// メッセージスタイルの型定義
+interface MessageStyles {
+  container: object;
+  text: object;
+}
+
+export const ChatPanel: React.FC<ChatPanelProps> = ({
   context = {},
   onCommandReceived,
   isVisible,
@@ -36,6 +37,22 @@ export const ChatPanel: React.FC<ChatComponentProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
 
+  // メッセージスタイルのメモ化
+  const messageStyles = useMemo((): Record<string, MessageStyles> => ({
+    user: {
+      container: [styles.message, styles.userMessage],
+      text: [styles.messageText, styles.userMessageText],
+    },
+    ai: {
+      container: [styles.message, styles.aiMessage],
+      text: [styles.messageText, styles.aiMessageText],
+    },
+    system: {
+      container: [styles.message, styles.systemMessage],
+      text: [styles.messageText, styles.systemMessageText],
+    },
+  }), []);
+
   const addMessage = useCallback((message: ChatMessage) => {
     setMessages(prev => [...prev, message]);
     // 新しいメッセージが追加されたら一番下にスクロール
@@ -44,100 +61,89 @@ export const ChatPanel: React.FC<ChatComponentProps> = ({
     }, 100);
   }, []);
 
+  const createMessage = useCallback(( 
+    role: ChatMessage['role'],
+    content: string
+  ): ChatMessage => ({
+    role,
+    content,
+    timestamp: new Date(),
+  }), []);
+
+  const handleLLMResponse = useCallback((response: any) => {
+    // AI応答を追加
+    const aiMessage = createMessage('ai', response.message || response.response || '');
+    addMessage(aiMessage);
+
+    // コマンドがある場合は親コンポーネントに通知
+    if (response.commands && response.commands.length > 0 && onCommandReceived) {
+      onCommandReceived(response.commands);
+    }
+
+    // 警告がある場合は表示
+    if (response.warning) {
+      const warningMessage = createMessage('system', `⚠️ ${response.warning}`);
+      addMessage(warningMessage);
+    }
+
+    // プロバイダー情報を表示（デバッグ用）
+    if (response.provider && response.model) {
+      const debugMessage = createMessage(
+        'system',
+        `🔧 via ${response.provider} (${response.model}) | 履歴: ${response.historyCount || 0}件`
+      );
+      addMessage(debugMessage);
+    }
+  }, [createMessage, addMessage, onCommandReceived]);
+
+  const handleError = useCallback((error: unknown) => {
+    console.error('Chat error:', error);
+    
+    let errorMessageContent = '不明なエラーが発生しました。\n\nサーバーが起動していることを確認してください。';
+    
+    if (error instanceof Error) {
+      errorMessageContent = `❌ エラーが発生しました: ${error.message}\n\nサーバーが起動していることを確認してください。`;
+    }
+    
+    const errorMessage = createMessage('system', errorMessageContent);
+    addMessage(errorMessage);
+  }, [createMessage, addMessage]);
+
   const sendMessage = useCallback(async () => {
-    if (!inputText.trim() || isLoading) return;
+    const trimmedInput = inputText.trim();
+    if (!trimmedInput || isLoading) return;
 
-    const userMessage: ChatMessage = {
-      role: 'user',
-      content: inputText.trim(),
-      timestamp: new Date(),
-    };
-
+    const userMessage = createMessage('user', trimmedInput);
     addMessage(userMessage);
     setInputText('');
     setIsLoading(true);
 
     try {
-      const response = await LLMService.sendChatMessage(inputText.trim(), context);
-
-      // AI応答を追加
-      const aiMessage: ChatMessage = {
-        role: 'ai',
-        content: response.message || response.response || '',
-        timestamp: new Date(),
-      };
-      addMessage(aiMessage);
-
-      // コマンドがある場合は親コンポーネントに通知
-      if (response.commands && response.commands.length > 0 && onCommandReceived) {
-        onCommandReceived(response.commands);
-      }
-
-      // 警告がある場合は表示
-      if (response.warning) {
-        const warningMessage: ChatMessage = {
-          role: 'system',
-          content: `⚠️ ${response.warning}`,
-          timestamp: new Date(),
-        };
-        addMessage(warningMessage);
-      }
-
-      // プロバイダー情報を表示（デバッグ用）
-      if (response.provider && response.model) {
-        const debugMessage: ChatMessage = {
-          role: 'system',
-          content: `🔧 via ${response.provider} (${response.model}) | 履歴: ${response.historyCount || 0}件`,
-          timestamp: new Date(),
-        };
-        addMessage(debugMessage);
-      }
-
+      const response = await APIService.sendChatMessage(trimmedInput, context);
+      handleLLMResponse(response);
     } catch (error) {
-      console.error('Chat error:', error);
-      let errorMessageContent = '不明なエラーが発生しました。\n\nサーバーが起動していることを確認してください。';
-      if (error instanceof Error) {
-        errorMessageContent = `❌ エラーが発生しました: ${error.message}\n\nサーバーが起動していることを確認してください。`;
-      }
-      const errorMessage: ChatMessage = {
-        role: 'system',
-        content: errorMessageContent,
-        timestamp: new Date(),
-      };
-      addMessage(errorMessage);
+      handleError(error);
     } finally {
       setIsLoading(false);
     }
-  }, [inputText, isLoading, context, onCommandReceived, addMessage]);
+  }, [inputText, isLoading, context, createMessage, addMessage, handleLLMResponse, handleError]);
 
   const renderMessage = useCallback((message: ChatMessage, index: number) => {
-    let messageStyle: ViewStyle[] = [styles.message]; // 型アサーションを追加
-    let textStyle: TextStyle[] = [styles.messageText]; // 型アサーションを追加
-
-    switch (message.role) {
-      case 'user':
-        messageStyle = [styles.message, styles.userMessage];
-        textStyle = [styles.messageText, styles.userMessageText];
-        break;
-      case 'ai':
-        messageStyle = [styles.message, styles.aiMessage];
-        textStyle = [styles.messageText, styles.aiMessageText];
-        break;
-      case 'system':
-        messageStyle = [styles.message, styles.systemMessage];
-        textStyle = [styles.messageText, styles.systemMessageText];
-        break;
-    }
-
+    const styles = messageStyles[message.role];
+    
     return (
-      <View key={index} style={messageStyle}>
-        <Text style={textStyle}>{message.content}</Text>
-        <Text style={styles.timestamp}>
+      <View key={index} style={styles.container}>
+        <Text style={styles.text}>{message.content}</Text>
+        <Text style={messageTimestampStyle}>
           {message.timestamp.toLocaleTimeString()}
         </Text>
       </View>
     );
-  }, []);
+  }, [messageStyles]);
+
+  const canSendMessage = useMemo(() => {
+    return inputText.trim().length > 0 && !isLoading;
+  }, [inputText, isLoading]);
 
   if (!isVisible) return null;
 
@@ -178,13 +184,21 @@ export const ChatPanel: React.FC<ChatComponentProps> = ({
             multiline
             maxLength={2000}
             editable={!isLoading}
+            onSubmitEditing={sendMessage}
+            returnKeyType="send"
           />
           <TouchableOpacity
-            style={[styles.sendButton, (!inputText.trim() || isLoading) && styles.disabledButton]}
+            style={[
+              styles.sendButton,
+              !canSendMessage && styles.disabledButton
+            ]}
             onPress={sendMessage}
-            disabled={!inputText.trim() || isLoading}
+            disabled={!canSendMessage}
           >
-            <Text style={[styles.sendButtonText, (!inputText.trim() || isLoading) && styles.disabledButtonText]}>
+            <Text style={[
+              styles.sendButtonText,
+              !canSendMessage && styles.disabledButtonText
+            ]}>
               送信
             </Text>
           </TouchableOpacity>
@@ -192,6 +206,14 @@ export const ChatPanel: React.FC<ChatComponentProps> = ({
       </View>
     </View>
   );
+};
+
+// メッセージタイムスタンプスタイル（定数として定義）
+const messageTimestampStyle = {
+  fontSize: 10,
+  color: '#6c757d',
+  marginTop: 4,
+  textAlign: 'right' as const,
 };
 
 const styles = StyleSheet.create({
@@ -283,12 +305,6 @@ const styles = StyleSheet.create({
   systemMessageText: {
     color: '#856404',
   },
-  timestamp: {
-    fontSize: 10,
-    color: '#6c757d',
-    marginTop: 4,
-    textAlign: 'right',
-  },
   loadingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -319,6 +335,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     maxHeight: 100,
     marginRight: 8,
+    textAlignVertical: 'top',
   },
   sendButton: {
     backgroundColor: '#007bff',
@@ -327,6 +344,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
+    minWidth: 60,
   },
   sendButtonText: {
     color: '#fff',

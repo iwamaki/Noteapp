@@ -23,9 +23,9 @@ function NoteEditScreen() {
     if (noteId) {
       selectNote(noteId);
     } else {
-      useNoteStore.getState().createNewNote();
+      selectNote(null);
     }
-  }, [noteId]);
+  }, [noteId, selectNote]);
 
   useEffect(() => {
     if (activeNote) {

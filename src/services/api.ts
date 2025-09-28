@@ -101,37 +101,39 @@ export class NoteAPI {
  * LLM関連のAPI関連
  */
 export class APIService {
+  private static llmServiceInstance = new LLMService();
+
   // LLM関連のAPI関連
   static async sendChatMessage(message: string, context?: ChatContext): Promise<LLMResponse> {
-    return LLMService.sendChatMessage(message, context);
+    return this.llmServiceInstance.sendChatMessage(message, context);
   }
 
   static async loadLLMProviders() {
-    return LLMService.loadProviders();
+    return this.llmServiceInstance.loadProviders();
   }
 
   static async checkLLMHealth() {
-    return LLMService.checkHealth();
+    return this.llmServiceInstance.checkHealth();
   }
 
   static setLLMProvider(provider: string) {
-    LLMService.setProvider(provider);
+    this.llmServiceInstance.setProvider(provider);
   }
 
   static setLLMModel(model: string) {
-    LLMService.setModel(model);
+    this.llmServiceInstance.setModel(model);
   }
 
   static getCurrentLLMProvider(): string {
-    return LLMService.getCurrentProvider();
+    return this.llmServiceInstance.getCurrentProvider();
   }
 
   static getCurrentLLMModel(): string {
-    return LLMService.getCurrentModel();
+    return this.llmServiceInstance.getCurrentModel();
   }
 
   static getAvailableLLMProviders() {
-    return LLMService.getAvailableProviders();
+    return this.llmServiceInstance.getAvailableProviders();
   }
 
   // ノートAPI関連
