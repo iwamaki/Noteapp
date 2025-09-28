@@ -1,4 +1,3 @@
-// 修正版 llmService.ts - メモリリーク防止と型安全性向上
 export interface ChatMessage {
   role: 'user' | 'ai' | 'system';
   content: string;
