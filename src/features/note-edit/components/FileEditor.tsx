@@ -3,7 +3,7 @@
  * ユーザーがファイルを編集できるインターフェースを提供します。
  */
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -53,7 +53,13 @@ export const FileEditor: React.FC<FileEditorProps> = ({
   onContentChange,
 }) => {
   const [currentContent, setCurrentContent] = useState(initialContent);
-  const [originalContent] = useState(initialContent);
+  const [originalContent, setOriginalContent] = useState(initialContent);
+
+  // initialContentプロパティの変更を監視し、内部状態を更新する
+  useEffect(() => {
+    setCurrentContent(initialContent);
+    setOriginalContent(initialContent);
+  }, [initialContent]);
 
   // ファイル形式の判定
   const viewerConfig = useMemo(() => {
