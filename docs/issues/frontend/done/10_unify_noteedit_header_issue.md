@@ -1,7 +1,7 @@
 ---
 title: "NoteEditScreenにヘッダーボタンを統合し、FileEditorのヘッダーを削除する"
 id: 10
-status: new
+status: done
 priority: medium
 attempt_count: 0
 tags: [UI, refactor, usability]
@@ -17,10 +17,10 @@ NoteEditScreenとFileEditorでヘッダー（操作ボタン）が二重表示�
 
 ## 受け入れ条件 (Acceptance Criteria)
 
-- [ ] FileEditor.tsxのヘッダー（ファイル名・ボタン部分）が削除されている
-- [ ] NoteEditScreen.tsxのヘッダーに必要な操作ボタン（保存・閉じる・編集/プレビュー切替等）が統合されている
-- [ ] UIがすっきりし、操作の重複がなくなっている
-- [ ] 既存の機能（保存・編集・プレビュー・履歴など）が問題なく動作する
+- [x] FileEditor.tsxのヘッダー（ファイル名・ボタン部分）が削除されている
+- [x] NoteEditScreen.tsxのヘッダーに必要な操作ボタン（保存・閉じる・編集/プレビュー切替等）が統合されている
+- [x] UIがすっきりし、操作の重複がなくなっている
+- [x] 既存の機能（保存・編集・プレビュー・履歴など）が問題なく動作する
 
 ## 関連ファイル (Related Files)
 
