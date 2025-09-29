@@ -13,6 +13,50 @@ export interface DiffLine {
 }
 
 /**
+ * データ整合性を検証する
+ * @param originalText 元のテキスト
+ * @param newText 新しいテキスト
+ * @param diffLines 生成された差分行
+ * @returns 整合性チェック結果
+ */
+export const validateDataConsistency = (originalText: string, newText: string, diffLines: DiffLine[]): { isValid: boolean; error?: string } => {
+  // 差分から元テキストを再構築
+  const reconstructedOriginal: string[] = [];
+  const reconstructedNew: string[] = [];
+
+  diffLines.forEach(line => {
+    switch (line.type) {
+      case 'common':
+        reconstructedOriginal.push(line.content);
+        reconstructedNew.push(line.content);
+        break;
+      case 'deleted':
+        reconstructedOriginal.push(line.content);
+        break;
+      case 'added':
+        reconstructedNew.push(line.content);
+        break;
+      case 'hunk-header':
+        // ハンクヘッダーは無視
+        break;
+    }
+  });
+
+  const reconstructedOriginalText = reconstructedOriginal.join('\n');
+  const reconstructedNewText = reconstructedNew.join('\n');
+
+  if (reconstructedOriginalText !== originalText) {
+    return { isValid: false, error: `元テキストの再構築に失敗: 期待値と実際値が不一致` };
+  }
+
+  if (reconstructedNewText !== newText) {
+    return { isValid: false, error: `新テキストの再構築に失敗: 期待値と実際値が不一致` };
+  }
+
+  return { isValid: true };
+};
+
+/**
  * 2つのテキストの差分を生成する（Git Unified Diff形式）
  * 行ベースでの差分を計算し、文字レベルの分割問題を回避
  * @param originalText 元のテキスト
@@ -20,186 +64,108 @@ export interface DiffLine {
  * @param contextLines コンテキスト行数（デフォルト: 3）
  * @returns 差分行の配列
  */
+/**
+ * 行ベースのLCS（Longest Common Subsequence）アルゴリズムを使用した差分計算
+ */
+const calculateLineDiff = (originalLines: string[], newLines: string[]): { type: 'equal' | 'delete' | 'insert'; content: string; }[] => {
+  const m = originalLines.length;
+  const n = newLines.length;
+
+  // LCSテーブルを構築
+  const lcs: number[][] = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
+
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      if (originalLines[i - 1] === newLines[j - 1]) {
+        lcs[i][j] = lcs[i - 1][j - 1] + 1;
+      } else {
+        lcs[i][j] = Math.max(lcs[i - 1][j], lcs[i][j - 1]);
+      }
+    }
+  }
+
+  // バックトラッキングで差分を構築
+  const changes: { type: 'equal' | 'delete' | 'insert'; content: string; }[] = [];
+  let i = m, j = n;
+
+  while (i > 0 || j > 0) {
+    if (i > 0 && j > 0 && originalLines[i - 1] === newLines[j - 1]) {
+      changes.unshift({ type: 'equal', content: originalLines[i - 1] });
+      i--;
+      j--;
+    } else if (i > 0 && (j === 0 || lcs[i - 1][j] >= lcs[i][j - 1])) {
+      changes.unshift({ type: 'delete', content: originalLines[i - 1] });
+      i--;
+    } else if (j > 0) {
+      changes.unshift({ type: 'insert', content: newLines[j - 1] });
+      j--;
+    }
+  }
+
+  return changes;
+};
+
 export const generateDiff = (originalText: string, newText: string, contextLines: number = 3): DiffLine[] => {
-  const dmp = new diff_match_patch();
-  const diffs = dmp.diff_main(originalText || '', newText || '');
-  dmp.diff_cleanupSemantic(diffs);
+  // 入力テキストの正規化
+  const normalizedOriginal = (originalText || '').replace(/\r\n/g, '\n');
+  const normalizedNew = (newText || '').replace(/\r\n/g, '\n');
 
-  const originalLines = (originalText || '').split('\n');
-  const newLines = (newText || '').split('\n');
-  const diffLines: DiffLine[] = [];
-
-  let originalLineNumber = 1;
-  let newLineNumber = 1;
-  let changeBlockId = 1;
-
-  // diff-match-patchの結果を行単位に変換
-  const lineChanges: { type: 'equal' | 'delete' | 'insert'; content: string; }[] = [];
-
-  for (const [op, text] of diffs) {
-    const lines = text.split('\n');
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      if (i === lines.length - 1 && line === '' && text.endsWith('\n')) {
-        continue; // 最後の空行は無視
-      }
-
-      const changeType = op === DIFF_EQUAL ? 'equal' : op === DIFF_DELETE ? 'delete' : 'insert';
-      lineChanges.push({ type: changeType, content: line });
-    }
-  }
-
-  // 変更ブロック（ハンク）を特定
-  const hunks: { start: number; end: number; originalStart: number; newStart: number; originalCount: number; newCount: number; }[] = [];
-  let currentHunk: { start: number; end: number; } | null = null;
-
-  for (let i = 0; i < lineChanges.length; i++) {
-    const change = lineChanges[i];
-    if (change.type !== 'equal') {
-      if (currentHunk === null) {
-        currentHunk = { start: Math.max(0, i - contextLines), end: i };
-      }
-      currentHunk.end = Math.min(lineChanges.length - 1, i + contextLines);
-    } else if (currentHunk !== null) {
-      // 等価行が続く場合、コンテキスト行数以上離れていればハンクを終了
-      let nextChangeIndex = -1;
-      for (let j = i + 1; j < lineChanges.length; j++) {
-        if (lineChanges[j].type !== 'equal') {
-          nextChangeIndex = j;
-          break;
-        }
-      }
-
-      if (nextChangeIndex === -1 || nextChangeIndex > i + contextLines * 2) {
-        // ハンクを終了
-        currentHunk.end = Math.min(lineChanges.length - 1, i + contextLines);
-
-        // ハンクの行数を計算
-        let originalCount = 0;
-        let newCount = 0;
-        let originalStart = originalLineNumber;
-        let newStart = newLineNumber;
-        let tempOrigLine = 1;
-        let tempNewLine = 1;
-
-        for (let j = 0; j < currentHunk.start; j++) {
-          if (lineChanges[j].type === 'equal' || lineChanges[j].type === 'delete') tempOrigLine++;
-          if (lineChanges[j].type === 'equal' || lineChanges[j].type === 'insert') tempNewLine++;
-        }
-        originalStart = tempOrigLine;
-        newStart = tempNewLine;
-
-        for (let j = currentHunk.start; j <= currentHunk.end; j++) {
-          if (lineChanges[j].type === 'equal' || lineChanges[j].type === 'delete') originalCount++;
-          if (lineChanges[j].type === 'equal' || lineChanges[j].type === 'insert') newCount++;
-        }
-
-        hunks.push({
-          start: currentHunk.start,
-          end: currentHunk.end,
-          originalStart,
-          newStart,
-          originalCount,
-          newCount
-        });
-
-        currentHunk = null;
-      }
-    }
-  }
-
-  // 最後のハンクが残っている場合
-  if (currentHunk !== null) {
-    let originalCount = 0;
-    let newCount = 0;
-    let originalStart = 1;
-    let newStart = 1;
-    let tempOrigLine = 1;
-    let tempNewLine = 1;
-
-    for (let j = 0; j < currentHunk.start; j++) {
-      if (lineChanges[j].type === 'equal' || lineChanges[j].type === 'delete') tempOrigLine++;
-      if (lineChanges[j].type === 'equal' || lineChanges[j].type === 'insert') tempNewLine++;
-    }
-    originalStart = tempOrigLine;
-    newStart = tempNewLine;
-
-    for (let j = currentHunk.start; j <= currentHunk.end; j++) {
-      if (lineChanges[j].type === 'equal' || lineChanges[j].type === 'delete') originalCount++;
-      if (lineChanges[j].type === 'equal' || lineChanges[j].type === 'insert') newCount++;
-    }
-
-    hunks.push({
-      start: currentHunk.start,
-      end: currentHunk.end,
-      originalStart,
-      newStart,
-      originalCount,
-      newCount
-    });
-  }
-
-  // ハンクがない場合は空配列を返す
-  if (hunks.length === 0) {
+  // テキストが同一の場合は空配列を返す
+  if (normalizedOriginal === normalizedNew) {
     return [];
   }
 
-  // ハンクごとに差分行を生成
-  for (const hunk of hunks) {
-    // ハンクヘッダーを追加
-    const hunkHeader = `@@ -${hunk.originalStart},${hunk.originalCount} +${hunk.newStart},${hunk.newCount} @@`;
-    diffLines.push({
-      type: 'hunk-header',
-      content: hunkHeader,
-      originalLineNumber: null,
-      newLineNumber: null,
-      changeBlockId: null
-    });
+  // 行ベースで差分を計算（文字レベル処理を完全に排除）
+  const originalLines = normalizedOriginal.split('\n');
+  const newLines = normalizedNew.split('\n');
 
-    // ハンク内の行を処理
-    let origLineNum = hunk.originalStart;
-    let newLineNum = hunk.newStart;
-    let currentChangeBlockId: number | null = null;
+  // LCSアルゴリズムで行レベル差分を計算
+  const lineChanges = calculateLineDiff(originalLines, newLines);
 
-    for (let i = hunk.start; i <= hunk.end; i++) {
-      const change = lineChanges[i];
+  // ハンクを使わず、全ての行を差分に含める（簡略化）
+  const diffLines: DiffLine[] = [];
+  let changeBlockId = 1;
+  let origLineNum = 1;
+  let newLineNum = 1;
+  let currentChangeBlockId: number | null = null;
 
-      switch (change.type) {
-        case 'equal':
-          diffLines.push({
-            type: 'common',
-            content: change.content,
-            originalLineNumber: origLineNum++,
-            newLineNumber: newLineNum++,
-            changeBlockId: null
-          });
-          currentChangeBlockId = null;
-          break;
-        case 'delete':
-          if (currentChangeBlockId === null) {
-            currentChangeBlockId = changeBlockId++;
-          }
-          diffLines.push({
-            type: 'deleted',
-            content: change.content,
-            originalLineNumber: origLineNum++,
-            newLineNumber: null,
-            changeBlockId: currentChangeBlockId
-          });
-          break;
-        case 'insert':
-          if (currentChangeBlockId === null) {
-            currentChangeBlockId = changeBlockId++;
-          }
-          diffLines.push({
-            type: 'added',
-            content: change.content,
-            originalLineNumber: null,
-            newLineNumber: newLineNum++,
-            changeBlockId: currentChangeBlockId
-          });
-          break;
-      }
+  // 全ての行変更を差分行に変換
+  for (const change of lineChanges) {
+    switch (change.type) {
+      case 'equal':
+        diffLines.push({
+          type: 'common',
+          content: change.content,
+          originalLineNumber: origLineNum++,
+          newLineNumber: newLineNum++,
+          changeBlockId: null
+        });
+        currentChangeBlockId = null;
+        break;
+      case 'delete':
+        if (currentChangeBlockId === null) {
+          currentChangeBlockId = changeBlockId++;
+        }
+        diffLines.push({
+          type: 'deleted',
+          content: change.content,
+          originalLineNumber: origLineNum++,
+          newLineNumber: null,
+          changeBlockId: currentChangeBlockId
+        });
+        break;
+      case 'insert':
+        if (currentChangeBlockId === null) {
+          currentChangeBlockId = changeBlockId++;
+        }
+        diffLines.push({
+          type: 'added',
+          content: change.content,
+          originalLineNumber: null,
+          newLineNumber: newLineNum++,
+          changeBlockId: currentChangeBlockId
+        });
+        break;
     }
   }
 
