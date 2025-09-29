@@ -45,28 +45,50 @@ export const useDiffManager = (diff: DiffLine[]) => {
   // 選択された内容から新しいコンテンツを生成する
   const generateSelectedContent = useCallback(() => {
     const newLines: string[] = [];
-    diff.forEach(line => {
+
+    console.log('=== generateSelectedContent デバッグ ===');
+    console.log('diff.length:', diff.length);
+    console.log('selectedBlocks:', Array.from(selectedBlocks));
+
+    diff.forEach((line, index) => {
+      console.log(`Line ${index}:`, {
+        type: line.type,
+        content: JSON.stringify(line.content),
+        changeBlockId: line.changeBlockId,
+        willInclude: false
+      });
+
+      let willInclude = false;
       switch (line.type) {
         case 'common':
           newLines.push(line.content);
+          willInclude = true;
           break;
         case 'added':
           if (line.changeBlockId !== null && line.changeBlockId !== undefined && selectedBlocks.has(line.changeBlockId)) {
             newLines.push(line.content);
+            willInclude = true;
           }
           break;
         case 'deleted':
           // 選択されていない削除ブロックは元のコンテンツとして残す
           if (line.changeBlockId === null || line.changeBlockId === undefined || !selectedBlocks.has(line.changeBlockId)) {
             newLines.push(line.content);
+            willInclude = true;
           }
           break;
         case 'hunk-header':
           // ハンクヘッダーは無視
           break;
       }
+
+      console.log(`  → willInclude: ${willInclude}, newLines.length: ${newLines.length}`);
     });
-    return newLines.join('\n');
+
+    const result = newLines.join('\n');
+    console.log('Final newLines:', newLines);
+    console.log('Final result:', JSON.stringify(result));
+    return result;
   }, [diff, selectedBlocks]);
 
   return {

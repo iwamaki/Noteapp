@@ -9,7 +9,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
 import { useNoteStore } from '../../store/noteStore';
-import { generateDiff } from '../../services/diffService';
+import { generateDiff, validateDataConsistency } from '../../services/diffService';
 import { useDiffManager } from '../../hooks/useDiffManager';
 import { DiffViewer } from './components/DiffViewer';
 import { HeaderButton } from '../../components/HeaderButton';
@@ -38,16 +38,41 @@ function DiffViewScreen() {
   const allSelected = selectedBlocks.size === allChangeBlockIds.size && allChangeBlockIds.size > 0;
 
   const handleApply = async () => {
-    const selectedContent = generateSelectedContent();
-    setDraftNote({ title: filename, content: selectedContent });
-
     try {
+      const selectedContent = generateSelectedContent();
+
+      // デバッグ用ログ出力
+      console.log('=== 保存時のデータ確認 ===');
+      console.log('originalContent (元テキスト):');
+      console.log(JSON.stringify(originalContent));
+      console.log('newContent (編集後テキスト):');
+      console.log(JSON.stringify(newContent));
+      console.log('selectedContent (差分適用後テキスト):');
+      console.log(JSON.stringify(selectedContent));
+      console.log('originalContent.length:', originalContent.length);
+      console.log('newContent.length:', newContent.length);
+      console.log('selectedContent.length:', selectedContent.length);
+
+      // 保存前の安全性チェック: 生成されたコンテンツが適切かを確認
+      const tempDiff = generateDiff(originalContent, selectedContent);
+      const validation = validateDataConsistency(originalContent, selectedContent, tempDiff);
+
+      if (!validation.isValid) {
+        console.log('=== 整合性エラー詳細 ===');
+        console.log('validation.error:', validation.error);
+        console.log('tempDiff:');
+        console.log(JSON.stringify(tempDiff, null, 2));
+        Alert.alert('データエラー', `保存データの整合性に問題があります: ${validation.error}`);
+        return;
+      }
+
+      setDraftNote({ title: filename, content: selectedContent });
       await saveDraftNote();
       Alert.alert('保存完了', 'ノートが保存されました。');
       navigation.goBack();
     } catch (error) {
-      console.error(error);
-      Alert.alert('エラー', 'ノートの保存に失敗しました。');
+      console.error('保存エラー:', error);
+      Alert.alert('エラー', 'ノートの保存に失敗しました。データの整合性を確認してください。');
     }
   };
 
