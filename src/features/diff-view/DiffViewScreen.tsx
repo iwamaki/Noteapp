@@ -5,21 +5,40 @@
  */
 import React, { useMemo, useLayoutEffect } from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
 import { useNoteStore } from '../../store/noteStore';
 import { generateDiff, validateDataConsistency } from '../../services/diffService';
+import { NoteStorageService } from '../../services/storageService';
 import { useDiffManager } from '../../hooks/useDiffManager';
 import { DiffViewer } from './components/DiffViewer';
 import { HeaderButton } from '../../components/HeaderButton';
 
-function DiffViewScreen() {
-  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
-  const { activeNote, draftNote, saveDraftNote, setDraftNote } = useNoteStore();
+type DiffViewScreenNavigationProp = StackNavigationProp<RootStackParamList, 'DiffView'>;
+type DiffViewScreenRouteProp = ReturnType<typeof useRoute<import('@react-navigation/native').RouteProp<RootStackParamList, 'DiffView'>>>;
 
-  const originalContent = activeNote?.content ?? '';
-  const newContent = draftNote?.content ?? '';
+function DiffViewScreen() {
+  const navigation = useNavigation<DiffViewScreenNavigationProp>();
+  const route = useRoute<DiffViewScreenRouteProp>();
+  const { activeNote, draftNote, saveDraftNote, setDraftNote, selectNote } = useNoteStore();
+
+  const mode = route.params?.mode ?? 'save';
+  
+  const originalContent = useMemo(() => {
+    if (mode === 'restore' && route.params?.originalContent) {
+      return route.params.originalContent;
+    }
+    return activeNote?.content ?? '';
+  }, [mode, route.params, activeNote]);
+
+  const newContent = useMemo(() => {
+    if (mode === 'restore' && route.params?.newContent) {
+      return route.params.newContent;
+    }
+    return draftNote?.content ?? '';
+  }, [mode, route.params, draftNote]);
+
   const filename = draftNote?.title ?? '差分プレビュー';
 
   const diff = useMemo(() => generateDiff(originalContent, newContent), [
@@ -38,52 +57,56 @@ function DiffViewScreen() {
   const allSelected = selectedBlocks.size === allChangeBlockIds.size && allChangeBlockIds.size > 0;
 
   const handleApply = async () => {
-    try {
-      const selectedContent = generateSelectedContent();
-
-      // デバッグ用ログ出力
-      console.log('=== 保存時のデータ確認 ===');
-      console.log('originalContent (元テキスト):');
-      console.log(JSON.stringify(originalContent));
-      console.log('newContent (編集後テキスト):');
-      console.log(JSON.stringify(newContent));
-      console.log('selectedContent (差分適用後テキスト):');
-      console.log(JSON.stringify(selectedContent));
-      console.log('originalContent.length:', originalContent.length);
-      console.log('newContent.length:', newContent.length);
-      console.log('selectedContent.length:', selectedContent.length);
-
-      // 保存前の安全性チェック: 生成されたコンテンツが適切かを確認
-      const tempDiff = generateDiff(originalContent, selectedContent);
-      const validation = validateDataConsistency(originalContent, selectedContent, tempDiff);
-
-      if (!validation.isValid) {
-        console.log('=== 整合性エラー詳細 ===');
-        console.log('validation.error:', validation.error);
-        console.log('tempDiff:');
-        console.log(JSON.stringify(tempDiff, null, 2));
-        Alert.alert('データエラー', `保存データの整合性に問題があります: ${validation.error}`);
+    if (mode === 'restore') {
+      const { noteId, versionId } = route.params ?? {};
+      if (!noteId || !versionId) {
+        Alert.alert('エラー', '復元に必要な情報が不足しています。');
         return;
       }
+      try {
+        const restoredNote = await NoteStorageService.restoreNoteVersion(noteId, versionId);
+        await selectNote(restoredNote.id); // Update the store with the restored note
+        Alert.alert('復元完了', 'ノートが指定されたバージョンに復元されました。');
+        navigation.navigate('NoteEdit', { noteId: restoredNote.id, saved: true });
+      } catch (error) {
+        console.error('復元エラー:', error);
+        Alert.alert('エラー', 'ノートの復元に失敗しました。');
+      }
+    } else { // 'save' mode
+      try {
+        const selectedContent = generateSelectedContent();
+        const tempDiff = generateDiff(originalContent, selectedContent);
+        const validation = validateDataConsistency(originalContent, selectedContent, tempDiff);
 
-      setDraftNote({ title: filename, content: selectedContent });
-      await saveDraftNote();
-      Alert.alert('保存完了', 'ノートが保存されました。');
-      navigation.goBack();
-    } catch (error) {
-      console.error('保存エラー:', error);
-      Alert.alert('エラー', 'ノートの保存に失敗しました。データの整合性を確認してください。');
+        if (!validation.isValid) {
+          console.log('=== 整合性エラー詳細 ===');
+          console.log('validation.error:', validation.error);
+          Alert.alert('データエラー', `保存データの整合性に問題があります: ${validation.error}`);
+          return;
+        }
+
+        setDraftNote({ title: filename, content: selectedContent });
+        await saveDraftNote();
+        Alert.alert('保存完了', 'ノートが保存されました。');
+        navigation.goBack();
+      } catch (error) {
+        console.error('保存エラー:', error);
+        Alert.alert('エラー', 'ノートの保存に失敗しました。');
+      }
     }
   };
 
   const handleCancel = () => {
-    setDraftNote(null);
+    if (mode === 'save') {
+      setDraftNote(null);
+    }
     navigation.goBack();
   };
 
   useLayoutEffect(() => {
+    const isRestoreMode = mode === 'restore';
     navigation.setOptions({
-      headerTitle: 'DiffView',
+      headerTitle: isRestoreMode ? 'Restore Version' : 'Apply Changes',
       headerLeft: () => (
         <HeaderButton
           title="←"
@@ -93,21 +116,23 @@ function DiffViewScreen() {
       ),
       headerRight: () => (
         <View style={styles.headerRightContainer}>
+          {!isRestoreMode && (
+            <HeaderButton
+              title={allSelected ? '☑ 全選択' : '☐ 全選択'}
+              onPress={toggleAllSelection}
+              variant="secondary"
+            />
+          )}
           <HeaderButton
-            title={allSelected ? '☑ 全選択' : '☐ 全選択'}
-            onPress={toggleAllSelection}
-            variant="secondary"
-          />
-          <HeaderButton
-            title={`適用 (${selectedBlocks.size})`}
+            title={isRestoreMode ? '復元' : `適用 (${selectedBlocks.size})`}
             onPress={handleApply}
-            disabled={selectedBlocks.size === 0}
+            disabled={!isRestoreMode && selectedBlocks.size === 0}
             variant="primary"
           />
         </View>
       ),
     });
-  }, [navigation, handleApply, handleCancel, toggleAllSelection, allSelected, selectedBlocks.size]);
+  }, [navigation, handleApply, handleCancel, toggleAllSelection, allSelected, selectedBlocks.size, mode]);
 
   return (
     <View style={styles.container}>
@@ -115,6 +140,7 @@ function DiffViewScreen() {
         diff={diff}
         selectedBlocks={selectedBlocks}
         onBlockToggle={toggleBlockSelection}
+        isReadOnly={mode === 'restore'} // In restore mode, diff is for viewing only
       />
     </View>
   );
