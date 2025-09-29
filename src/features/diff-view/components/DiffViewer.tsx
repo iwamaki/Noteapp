@@ -10,7 +10,6 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-  ViewStyle,
 } from 'react-native';
 import { DiffLine } from '../../../services/diffService';
 
@@ -18,9 +17,10 @@ interface DiffViewerProps {
   diff: DiffLine[];
   selectedBlocks: Set<number>;
   onBlockToggle: (blockId: number) => void;
+  isReadOnly?: boolean; // Add isReadOnly prop
 }
 
-export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, selectedBlocks, onBlockToggle }) => {
+export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, selectedBlocks, onBlockToggle, isReadOnly = false }) => {
   const processedBlocks = new Set<number>();
 
   const renderDiffLine = (line: DiffLine, index: number) => {
@@ -30,7 +30,6 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, selectedBlocks, on
       processedBlocks.add(line.changeBlockId);
     }
 
-    // ハンクヘッダーの場合
     if (line.type === 'hunk-header') {
       return (
         <View key={index} style={styles.hunkHeader}>
@@ -61,14 +60,8 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, selectedBlocks, on
 
     return (
       <View key={index} style={lineStyle}>
-        {/* 旧ファイル行番号 */}
-        <Text style={styles.lineNumber}>
-          {line.originalLineNumber || ''}
-        </Text>
-        {/* 新ファイル行番号 */}
-        <Text style={styles.lineNumber}>
-          {line.newLineNumber || ''}
-        </Text>
+        <Text style={styles.lineNumber}>{line.originalLineNumber || ''}</Text>
+        <Text style={styles.lineNumber}>{line.newLineNumber || ''}</Text>
         <Text style={[styles.prefix, { color: prefixColor }]}>{prefix}</Text>
         <Text style={styles.content}>{line.content}</Text>
         {showCheckbox && line.changeBlockId !== null ? (
@@ -76,10 +69,16 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, selectedBlocks, on
             style={[
               styles.checkbox,
               selectedBlocks.has(line.changeBlockId!) && styles.checkboxSelected,
+              isReadOnly && styles.checkboxDisabled,
             ]}
             onPress={() => onBlockToggle(line.changeBlockId!)}
+            disabled={isReadOnly}
           >
-            <Text style={styles.checkboxText}>
+            <Text style={[
+              styles.checkboxText,
+              selectedBlocks.has(line.changeBlockId!) && styles.checkboxTextSelected,
+              isReadOnly && styles.checkboxTextDisabled
+            ]}>
               {selectedBlocks.has(line.changeBlockId!) ? '☑' : '☐'}
             </Text>
           </TouchableOpacity>
@@ -171,9 +170,19 @@ const styles = StyleSheet.create({
   checkboxSelected: {
     backgroundColor: '#007bff',
   },
+  checkboxDisabled: {
+    borderColor: '#ccc',
+    backgroundColor: '#f0f0f0',
+  },
   checkboxText: {
     fontSize: 16,
     color: '#007bff',
+  },
+  checkboxTextSelected: {
+    color: '#fff',
+  },
+  checkboxTextDisabled: {
+    color: '#aaa',
   },
   checkboxPlaceholder: {
     width: 32,

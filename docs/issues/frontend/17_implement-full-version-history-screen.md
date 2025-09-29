@@ -1,9 +1,9 @@
 ---
 title: "バージョン履歴画面の全機能実装"
 id: 17
-status: new
+status: done
 priority: high
-attempt_count: 0
+attempt_count: 1
 tags: [UI, versioning, data]
 ---
 
@@ -17,12 +17,12 @@ tags: [UI, versioning, data]
 
 ## 受け入れ条件 (Acceptance Criteria)
 
-- [ ] `VersionHistoryScreen`で、選択されたノートの全バージョンが時系列順に表示されること。
-- [ ] 各バージョンについて、作成日時、更新日時、簡単な内容プレビューなどが表示されること。
-- [ ] ユーザーが特定のバージョンを選択すると、現在のノート内容とそのバージョンとの差分が`DiffViewScreen`で表示されること。
-- [ ] `DiffViewScreen`で差分を確認後、ユーザーが選択したバージョンにノートを復元できること。
-- [ ] 復元操作が成功した後、`NoteEditScreen`に復元された内容が反映されて表示されること。
-- [ ] バージョン管理のデータが`storageService`または専用のサービスで適切に管理されていること。
+- [x] `VersionHistoryScreen`で、選択されたノートの全バージョンが時系列順に表示されること。
+- [x] 各バージョンについて、作成日時、更新日時、簡単な内容プレビューなどが表示されること。
+- [x] ユーザーが特定のバージョンを選択すると、現在のノート内容とそのバージョンとの差分が`DiffViewScreen`で表示されること。
+- [x] `DiffViewScreen`で差分を確認後、ユーザーが選択したバージョンにノートを復元できること。
+- [x] 復元操作が成功した後、`NoteEditScreen`に復元された内容が反映されて表示されること。
+- [x] バージョン管理のデータが`storageService`または専用のサービスで適切に管理されていること。
 
 ## 関連ファイル (Related Files)
 
@@ -68,7 +68,16 @@ tags: [UI, versioning, data]
 ### 試行 #1
 
 - **試みたこと:**
+  - `storageService.ts`を拡張してバージョン管理機能（作成、取得、復元）を追加。
+  - `VersionHistoryScreen.tsx`を実装し、バージョン一覧を表示。
+  - `DiffViewScreen.tsx`を修正し、バージョン復元モードを追加。
+  - 関連する型定義(`navigation/types.ts`)とコンポーネント(`DiffViewer.tsx`)を更新。
 - **結果:**
+  - 実装は成功。
+  - 型チェックで`date-fns`の不足が判明したため、パッケージを追加インストール。
+  - `npm run type-check`は成功。
+  - `npm test`はプロジェクトにテストが未設定のため失敗したが、コード変更自体に問題はないと判断。
 - **メモ:**
+  - 新しい依存関係として `date-fns` を追加しました。
 
 ---
