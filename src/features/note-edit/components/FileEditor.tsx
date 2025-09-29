@@ -11,7 +11,9 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  ScrollView,
 } from 'react-native';
+import Markdown from 'react-native-markdown-display';
 import { generateDiff, DiffLine } from '../../../services/diffService';
 import { useDiffManager } from '../../../hooks/useDiffManager';
 import { DiffViewer } from '../../diff-view/components/DiffViewer';
@@ -139,9 +141,9 @@ export const FileEditor: React.FC<FileEditorProps> = ({
 
       case 'preview':
         return (
-          <View style={styles.contentContainer}>
-            <Text style={styles.previewText}>{currentContent}</Text>
-          </View>
+          <ScrollView style={styles.previewContainer}>
+            <Markdown>{currentContent}</Markdown>
+          </ScrollView>
         );
 
       case 'diff':
@@ -181,6 +183,7 @@ export const FileEditor: React.FC<FileEditorProps> = ({
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
   contentContainer: { flex: 1, paddingHorizontal: 16, paddingVertical: 12 },
+  previewContainer: { flex: 1, paddingHorizontal: 16, paddingVertical: 12 },
   previewText: { fontSize: 14, lineHeight: 20, color: '#495057', fontFamily: 'monospace' },
   editContainer: { flex: 1, paddingHorizontal: 16, paddingVertical: 12 },
   textEditor: { flex: 1, fontSize: 14, lineHeight: 20, fontFamily: 'monospace', borderWidth: 1, borderColor: '#ced4da', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 12, backgroundColor: '#fff' },
