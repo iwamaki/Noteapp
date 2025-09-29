@@ -1,0 +1,53 @@
+<svg width="700" height="220" xmlns="http://www.w3.org/2000/svg">
+  <rect width="100%" height="100%" fill="#f6f8fa"/>
+  <style>
+    .line { font-family: monospace; font-size: 14px; }
+    .lineNumber { fill: #6e7681; text-anchor: end; }
+    .content { fill: #24292e; }
+    .del-bg { fill: #ffeef0; }
+    .add-bg { fill: #e6ffed; }
+    .hunk { fill: #6e7681; }
+    .prefix { font-weight: bold; }
+    .checkbox { font-family: sans-serif; font-size: 18px; fill: #0366d6; text-anchor: middle; }
+  </style>
+
+  <text x="10" y="25" class="line hunk">@@ -1,4 +1,5 @@</text>
+
+  <!-- Line 1 (context) -->
+  <text x="30" y="50" class="line lineNumber">1</text>
+  <text x="60" y="50" class="line lineNumber">1</text>
+  <text x="75" y="50" class="line content"><tspan class="prefix" fill-opacity="0.7"> </tspan> これは変更のない行です。</text>
+
+  <!-- Line 2 (deletion) -->
+  <rect x="0" y="60" width="100%" height="22" class="del-bg" />
+  <text x="30" y="75" class="line lineNumber">2</text>
+  <text x="75" y="75" class="line content"><tspan class="prefix" fill="#c93c37">-</tspan> あいうえお</text>
+
+  <!-- Line 3 (addition) -->
+  <rect x="0" y="82" width="100%" height="22" class="add-bg" />
+  <text x="60" y="97" class="line lineNumber">2</text>
+  <text x="75" y="97" class="line content"><tspan class="prefix" fill="#22863a">+</tspan> あいうえ</text>
+  <text x="680" y="98" class="checkbox">☑</text>
+
+  <!-- Line 4 (context) -->
+  <text x="30" y="122" class="line lineNumber">3</text>
+  <text x="60" y="122" class="line lineNumber">3</text>
+  <text x="75" y="122" class="line content"><tspan class="prefix" fill-opacity="0.7"> </tspan> これは別の変更のない行です。</text>
+
+  <!-- Line 5 (deletion) -->
+  <rect x="0" y="132" width="100%" height="22" class="del-bg" />
+  <text x="30" y="147" class="line lineNumber">4</text>
+  <text x="75" y="147" class="line content"><tspan class="prefix" fill="#c93c37">-</tspan> 削除される行です。</text>
+
+  <!-- Line 6 (addition) -->
+  <rect x="0" y="154" width="100%" height="22" class="add-bg" />
+  <text x="60" y="169" class="line lineNumber">4</text>
+  <text x="75" y="169" class="line content"><tspan class="prefix" fill="#22863a">+</tspan> 追加される行です。</text>
+  <text x="680" y="170" class="checkbox">☐</text>
+
+  <!-- Line 7 (addition) -->
+  <rect x="0" y="176" width="100%" height="22" class="add-bg" />
+  <text x="60" y="191" class="line lineNumber">5</text>
+  <text x="75" y="191" class="line content"><tspan class="prefix" fill="#22863a">+</tspan> さらに追加される行です。</text>
+  <text x="680" y="192" class="checkbox">☐</text>
+</svg>

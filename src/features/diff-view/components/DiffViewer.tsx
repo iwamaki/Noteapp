@@ -24,11 +24,19 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, selectedBlocks, on
   const processedBlocks = new Set<number>();
 
   const renderDiffLine = (line: DiffLine, index: number) => {
-    const lineNumber = line.originalLineNumber || line.newLineNumber || '';
-    const showCheckbox = line.changeBlockId !== null && !processedBlocks.has(line.changeBlockId);
+    const showCheckbox = line.changeBlockId !== null && line.changeBlockId !== undefined && !processedBlocks.has(line.changeBlockId);
 
     if (showCheckbox && line.changeBlockId) {
       processedBlocks.add(line.changeBlockId);
+    }
+
+    // ハンクヘッダーの場合
+    if (line.type === 'hunk-header') {
+      return (
+        <View key={index} style={styles.hunkHeader}>
+          <Text style={styles.hunkHeaderText}>{line.content}</Text>
+        </View>
+      );
     }
 
     let lineStyle: any = styles.diffLine;
@@ -53,19 +61,26 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, selectedBlocks, on
 
     return (
       <View key={index} style={lineStyle}>
-        <Text style={styles.lineNumber}>{lineNumber}</Text>
+        {/* 旧ファイル行番号 */}
+        <Text style={styles.lineNumber}>
+          {line.originalLineNumber || ''}
+        </Text>
+        {/* 新ファイル行番号 */}
+        <Text style={styles.lineNumber}>
+          {line.newLineNumber || ''}
+        </Text>
         <Text style={[styles.prefix, { color: prefixColor }]}>{prefix}</Text>
         <Text style={styles.content}>{line.content}</Text>
         {showCheckbox && line.changeBlockId !== null ? (
           <TouchableOpacity
             style={[
               styles.checkbox,
-              selectedBlocks.has(line.changeBlockId) && styles.checkboxSelected,
+              selectedBlocks.has(line.changeBlockId!) && styles.checkboxSelected,
             ]}
             onPress={() => onBlockToggle(line.changeBlockId!)}
           >
             <Text style={styles.checkboxText}>
-              {selectedBlocks.has(line.changeBlockId) ? '☑' : '☐'}
+              {selectedBlocks.has(line.changeBlockId!) ? '☑' : '☐'}
             </Text>
           </TouchableOpacity>
         ) : (
@@ -107,13 +122,28 @@ const styles = StyleSheet.create({
   diffCommon: {
     backgroundColor: '#f8f9fa',
   },
+  hunkHeader: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: '#f1f8ff',
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: '#c8e1ff',
+    marginVertical: 4,
+  },
+  hunkHeaderText: {
+    fontSize: 12,
+    color: '#666',
+    fontFamily: 'monospace',
+    fontWeight: 'bold',
+  },
   lineNumber: {
-    width: 40,
+    width: 30,
     fontSize: 12,
     color: '#666',
     fontFamily: 'monospace',
     textAlign: 'right',
-    marginRight: 8,
+    marginRight: 4,
   },
   prefix: {
     width: 20,

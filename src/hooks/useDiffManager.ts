@@ -6,7 +6,7 @@ export const useDiffManager = (diff: DiffLine[]) => {
   const allChangeBlockIds = useMemo(() => {
     const blockIds = new Set<number>();
     diff.forEach(line => {
-      if (line.changeBlockId !== null) {
+      if (line.changeBlockId !== null && line.changeBlockId !== undefined) {
         blockIds.add(line.changeBlockId);
       }
     });
@@ -51,15 +51,18 @@ export const useDiffManager = (diff: DiffLine[]) => {
           newLines.push(line.content);
           break;
         case 'added':
-          if (line.changeBlockId !== null && selectedBlocks.has(line.changeBlockId)) {
+          if (line.changeBlockId !== null && line.changeBlockId !== undefined && selectedBlocks.has(line.changeBlockId)) {
             newLines.push(line.content);
           }
           break;
         case 'deleted':
           // 選択されていない削除ブロックは元のコンテンツとして残す
-          if (line.changeBlockId === null || !selectedBlocks.has(line.changeBlockId)) {
+          if (line.changeBlockId === null || line.changeBlockId === undefined || !selectedBlocks.has(line.changeBlockId)) {
             newLines.push(line.content);
           }
+          break;
+        case 'hunk-header':
+          // ハンクヘッダーは無視
           break;
       }
     });

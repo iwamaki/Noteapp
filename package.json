@@ -14,6 +14,8 @@
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-navigation/native": "^7.1.17",
     "@react-navigation/stack": "^7.4.8",
+    "@types/diff-match-patch": "^1.0.36",
+    "diff-match-patch": "^1.0.5",
     "expo": "~54.0.10",
     "expo-status-bar": "~3.0.8",
     "react": "19.1.0",
