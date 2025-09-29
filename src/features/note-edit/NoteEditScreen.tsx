@@ -4,12 +4,14 @@
  */
 
 import React, { useLayoutEffect, useState } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, StyleSheet, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
 import { FileEditor, ViewMode } from './components/FileEditor';
 import { useNoteEditor } from './hooks/useNoteEditor';
+import { useCustomHeader } from '../../components/CustomHeader';
+import { commonStyles, colors, typography, responsive } from '../../utils/commonStyles';
 
 type NoteEditScreenRouteProp = RouteProp<RootStackParamList, 'NoteEdit'>;
 
@@ -18,6 +20,7 @@ function NoteEditScreen() {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const route = useRoute<NoteEditScreenRouteProp>();
   const { noteId } = route.params || {};
+  const { createHeaderConfig } = useCustomHeader();
 
   // 新しいカスタムフックを使用してエディタのロジックを管理
   const {
@@ -33,38 +36,45 @@ function NoteEditScreen() {
 
   // ヘッダーのレイアウトエフェクトは残すが、フックから提供される状態を使用
   useLayoutEffect(() => {
-    navigation.setOptions({
-      headerTitle: () => (
-        <TextInput
-          value={title}
-          onChangeText={setTitle}
-          style={styles.headerTitle}
-          placeholder="ノートのタイトル"
-        />
-      ),
-      headerRight: () => (
-        <View style={{ flexDirection: 'row', marginRight: 10 }}>
-          <TouchableOpacity onPress={handleGoToDiff} style={{ paddingHorizontal: 10 }}>
-            <Text style={styles.headerButton}>保存</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate('VersionHistory', { noteId: activeNote?.id || '' })} style={{ paddingHorizontal: 10 }}>
-            <Text style={styles.headerButton}>履歴</Text>
-          </TouchableOpacity>
-        </View>
-      ),
-      headerLeft: () => (
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingHorizontal: 10 }}>
-          <Text style={styles.headerButton}>戻る</Text>
-        </TouchableOpacity>
-      ),
-    });
-  }, [navigation, title, activeNote, handleGoToDiff]);
+    navigation.setOptions(
+      createHeaderConfig({
+        title: (
+          <TextInput
+            value={title}
+            onChangeText={setTitle}
+            style={styles.headerTitle}
+            placeholder="ノートのタイトル"
+            placeholderTextColor={colors.textSecondary}
+          />
+        ),
+        leftButtons: [
+          {
+            title: '戻る',
+            onPress: () => navigation.goBack(),
+            variant: 'secondary',
+          },
+        ],
+        rightButtons: [
+          {
+            title: '保存',
+            onPress: handleGoToDiff,
+            variant: 'primary',
+          },
+          {
+            title: '履歴',
+            onPress: () => navigation.navigate('VersionHistory', { noteId: activeNote?.id || '' }),
+            variant: 'secondary',
+          },
+        ],
+      })
+    );
+  }, [navigation, title, activeNote, handleGoToDiff, createHeaderConfig]);
 
   // メインのレンダリング部分
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={styles.container}
+      style={commonStyles.container}
     >
       <FileEditor
         filename={title}
@@ -80,20 +90,12 @@ function NoteEditScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: 'black',
-    width: 200,
+    ...typography.title,
+    color: colors.text,
+    width: responsive.getResponsiveSize(180, 200, 220),
+    textAlign: 'center',
   },
-  headerButton: {
-      color: '#007AFF',
-      fontSize: 16,
-  }
 });
 
 export default NoteEditScreen;

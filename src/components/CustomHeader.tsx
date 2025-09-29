@@ -1,0 +1,121 @@
+import React from 'react';
+import { View, StyleSheet } from 'react-native';
+import { HeaderButton } from './HeaderButton';
+import { spacing } from '../utils/commonStyles';
+
+export interface HeaderConfig {
+  title?: React.ReactNode;
+  leftButtons?: Array<{
+    title: string;
+    onPress: () => void;
+    variant?: 'primary' | 'secondary' | 'danger';
+  }>;
+  rightButtons?: Array<{
+    title: string;
+    onPress: () => void;
+    variant?: 'primary' | 'secondary' | 'danger';
+  }>;
+}
+
+interface CustomHeaderProps extends HeaderConfig {}
+
+export const CustomHeader: React.FC<CustomHeaderProps> = ({
+  title,
+  leftButtons = [],
+  rightButtons = [],
+}) => {
+  const renderButtons = (buttons: HeaderConfig['leftButtons']) => {
+    if (!buttons || buttons.length === 0) return null;
+
+    return (
+      <View style={styles.buttonContainer}>
+        {buttons.map((button, index) => (
+          <HeaderButton
+            key={index}
+            title={button.title}
+            onPress={button.onPress}
+            variant={button.variant}
+          />
+        ))}
+      </View>
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.leftSection}>
+        {renderButtons(leftButtons)}
+      </View>
+
+      <View style={styles.centerSection}>
+        {title}
+      </View>
+
+      <View style={styles.rightSection}>
+        {renderButtons(rightButtons)}
+      </View>
+    </View>
+  );
+};
+
+export const useCustomHeader = () => {
+  const createHeaderConfig = (config: HeaderConfig) => ({
+    headerTitle: () => config.title || null,
+    headerLeft: () => {
+      if (!config.leftButtons?.length) return null;
+      return (
+        <View style={styles.buttonContainer}>
+          {config.leftButtons.map((button, index) => (
+            <HeaderButton
+              key={index}
+              title={button.title}
+              onPress={button.onPress}
+              variant={button.variant}
+            />
+          ))}
+        </View>
+      );
+    },
+    headerRight: () => {
+      if (!config.rightButtons?.length) return null;
+      return (
+        <View style={styles.buttonContainer}>
+          {config.rightButtons.map((button, index) => (
+            <HeaderButton
+              key={index}
+              title={button.title}
+              onPress={button.onPress}
+              variant={button.variant}
+            />
+          ))}
+        </View>
+      );
+    },
+  });
+
+  return { createHeaderConfig };
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 44,
+  },
+  leftSection: {
+    flex: 1,
+    alignItems: 'flex-start',
+  },
+  centerSection: {
+    flex: 2,
+    alignItems: 'center',
+  },
+  rightSection: {
+    flex: 1,
+    alignItems: 'flex-end',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    marginHorizontal: spacing.md,
+  },
+});
