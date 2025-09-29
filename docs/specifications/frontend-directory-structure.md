@@ -8,8 +8,6 @@
 src/
 ├── App.tsx
 ├── index.ts
-├── __tests__/
-│   └── storageService.test.ts
 ├── components/
 │   └── ChatButton.tsx
 ├── features/
@@ -20,11 +18,9 @@ src/
 │   ├── diff-view/
 │   │   ├── DiffViewScreen.tsx
 │   │   ├── components/
-│   │   │   └── DiffView.tsx
+│   │   │   └── DiffViewer.tsx
 │   │   ├── hooks/
-│   │   │   └── useDiff.ts
 │   │   └── utils/
-│   │       └── diffUtils.ts
 │   ├── note-edit/
 │   │   ├── NoteEditScreen.tsx
 │   │   ├── components/
@@ -39,11 +35,14 @@ src/
 │   │   └── SettingsScreen.tsx
 │   └── version-history/
 │       └── VersionHistoryScreen.tsx
+├── hooks/
+│   └── useDiffManager.ts
 ├── navigation/
 │   ├── RootNavigator.tsx
 │   └── types.ts
 ├── services/
 │   ├── api.ts
+│   ├── diffService.ts
 │   ├── llmService.ts
 │   └── storageService.ts
 ├── store/
@@ -54,39 +53,41 @@ src/
 │   ├── api.ts
 │   ├── index.ts
 │   └── note.ts
-└── utils/
-    ├── constants.ts
-    └── formatUtils.ts
+├── utils/
+│   ├── constants.ts
+│   └── formatUtils.ts
+└── __tests__/
+    └── storageService.test.ts
 ```
 
 ## 実装方針
 
 このディレクトリ構造は、メンテナンス性と開発効率の向上を目的とした**機能ベース (Feature-Based)** のアーキテクチャを採用しています。
 
-- **`App.tsx`**:
-  - アプリケーションのエントリポイントであり、主要なコンポーネントやナビゲーションのルートを定義します。
+- **`components/` (トップレベル)**:  
+  複数の機能（feature）で再利用される汎用的なUIコンポーネントを配置
 
-- **`index.ts`**:
-  - アプリケーションの起動スクリプトや、Expoの登録処理などを担当します。
+- **`features/`**:  
+  アプリケーションの各機能を配置。各機能フォルダは画面コンポーネントと、その機能固有の `components/` や `hooks/` を含む
 
-- **`__tests__/`**:
-  - ユニットテストや統合テストを配置し、コードの品質と信頼性を保証します。
+- **`hooks/` (トップレベル)**:  
+  複数の機能で共有される汎用的なカスタムフックを配置
 
-- **`features/`**:
-  - アプリケーションの各機能（主に画面単位）をこのディレクトリ内に配置します。
-  - 各機能フォルダは、画面コンポーネント（例: `NoteListScreen.tsx`）と、その画面でのみ使用される `components/` を含みます。
-  - 機能固有のロジック（カスタムフックなど）も、必要に応じて各機能フォルダ内に `hooks/` を作成して配置できます。
+- **`navigation/`**:  
+  React Navigationを用いた画面遷移の定義（ナビゲーター）や関連する型定義を配置
 
-- **`components/` (トップレベル)**:
-  - `Button`や`Input`など、複数の機能（feature）で再利用される汎用的なUIコンポーネントを配置します。
+- **`services/`**:  
+  APIクライアントや外部サービスとの通信など、非同期処理や副作用を伴うロジックを集約
 
-- **`store/`**:
-  - 状態管理ライブラリとして **Zustand** を使用します。
-  - `noteStore.ts` のように複数の機能をまたいで共有される状態や、`chatStore.ts` のようにアプリケーション全体に影響するUI（チャットパネルの開閉など）の状態を管理します。
+- **`store/`**:  
+  状態管理ライブラリとして **Zustand** を使用。複数の機能をまたいで共有される状態やアプリケーション全体に影響するUIの状態を管理
 
-- **`services/`**:
-  - APIクライアントや外部サービスとの通信など、非同期処理や副作用を伴うロジックを集約します。
+- **`types/`**:  
+  TypeScriptの型定義ファイルを配置
 
-- **`navigation/`**:
-  - React Navigationを用いた画面遷移の定義（ナビゲーター）や、関連する型定義を配置します。
+- **`utils/`**:  
+  汎用的なユーティリティ関数を配置
+
+- **`__tests__/`**:  
+  ユニットテストや統合テストを配置し、コードの品質と信頼性を保証
   

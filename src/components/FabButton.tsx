@@ -1,0 +1,78 @@
+import React from 'react';
+import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { colors, spacing, shadows, responsive } from '../utils/commonStyles';
+
+interface FabButtonProps {
+  onPress: () => void;
+  icon?: string;
+  disabled?: boolean;
+  backgroundColor?: string;
+  size?: 'small' | 'medium' | 'large';
+}
+
+export const FabButton: React.FC<FabButtonProps> = ({
+  onPress,
+  icon = '+',
+  disabled = false,
+  backgroundColor = colors.primary,
+  size = 'medium',
+}) => {
+  const fabSize = getFabSize(size);
+
+  return (
+    <TouchableOpacity
+      style={[
+        styles.fab,
+        {
+          width: fabSize,
+          height: fabSize,
+          borderRadius: fabSize / 2,
+          backgroundColor: disabled ? colors.textSecondary : backgroundColor,
+        },
+        disabled && styles.disabled,
+      ]}
+      onPress={onPress}
+      disabled={disabled}
+    >
+      <Text style={[styles.fabText, { fontSize: getFontSize(size) }]}>
+        {icon}
+      </Text>
+    </TouchableOpacity>
+  );
+};
+
+const getFabSize = (size: 'small' | 'medium' | 'large'): number => {
+  const baseSizes = { small: 40, medium: 56, large: 72 };
+  return responsive.getResponsiveSize(
+    baseSizes[size] - 8,
+    baseSizes[size],
+    baseSizes[size] + 8
+  );
+};
+
+const getFontSize = (size: 'small' | 'medium' | 'large'): number => {
+  const fontSizes = { small: 18, medium: 24, large: 30 };
+  return responsive.getResponsiveSize(
+    fontSizes[size] - 2,
+    fontSizes[size],
+    fontSizes[size] + 2
+  );
+};
+
+const styles = StyleSheet.create({
+  fab: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
+    right: spacing.xl,
+    bottom: spacing.xl,
+    ...shadows.large,
+  },
+  fabText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  disabled: {
+    opacity: 0.5,
+  },
+});

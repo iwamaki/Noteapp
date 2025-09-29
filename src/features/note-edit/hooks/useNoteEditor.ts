@@ -1,3 +1,10 @@
+/*
+* ノートエディタの状態管理フック
+* - noteIdに基づいてノートを選択し、エディタの状態を初期化
+* - エディタの状態を管理（タイトル、内容）
+* - 保存処理として差分表示画面への遷移を提供
+*/
+
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';

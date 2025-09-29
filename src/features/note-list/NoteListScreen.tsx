@@ -1,20 +1,24 @@
 /**
- * ノート一覧画面
- *
- * ノートの一覧を表示し、選択や新規作成を行う画面です。
- */
+ * ノート一覧画面コンポーネント
+ * 
+ */  
 
 import React, { useEffect, useLayoutEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
 import { useNavigation, NavigationProp, useIsFocused } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/types';
 import { useNoteStore } from '../../store/noteStore';
+import { FabButton } from '../../components/FabButton';
+import { ListItem } from '../../components/ListItem';
+import { useCustomHeader } from '../../components/CustomHeader';
+import { commonStyles, colors, spacing } from '../../utils/commonStyles';
 
 // NoteListScreenコンポーネント
 function NoteListScreen() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const { notes, loading, fetchNotes, createNote } = useNoteStore();
   const isFocused = useIsFocused();
+  const { createHeaderConfig } = useCustomHeader();
 
   // フォーカスされたときにノートを再取得
   useEffect(() => {
@@ -25,19 +29,18 @@ function NoteListScreen() {
 
   // ヘッダーに設定ボタンを追加
   useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <View style={{ flexDirection: 'row', marginRight: 10 }}>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('Settings')}
-            style={{ marginLeft: 15 }}
-          >
-            <Text style={{ color: 'blue' }}>設定</Text>
-          </TouchableOpacity>
-        </View>
-      ),
-    });
-  }, [navigation]);
+    navigation.setOptions(
+      createHeaderConfig({
+        rightButtons: [
+          {
+            title: '設定',
+            onPress: () => navigation.navigate('Settings'),
+            variant: 'primary',
+          },
+        ],
+      })
+    );
+  }, [navigation, createHeaderConfig]);
 
   // ノート選択と新規作成のハンドラ
   const handleSelectNote = (noteId: string) => {
@@ -56,28 +59,26 @@ function NoteListScreen() {
 
   if (loading.isLoading && notes.length === 0) {
     return (
-      <View style={[styles.container, styles.centered]}>
-        <ActivityIndicator size="large" />
+      <View style={[commonStyles.container, commonStyles.centered]}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   // ノートアイテムのレンダラー
   const renderItem = ({ item }: { item: (typeof notes)[0] }) => (
-    <TouchableOpacity
-      style={styles.noteItem}
+    <ListItem
+      title={item.title}
+      subtitle={item.content}
       onPress={() => handleSelectNote(item.id)}
-    >
-      <Text style={styles.noteTitle}>{item.title || '無題のノート'}</Text>
-      <Text style={styles.noteContent} numberOfLines={1}>{item.content}</Text>
-    </TouchableOpacity>
+    />
   );
 
   // メインレンダリング
   return (
-    <View style={styles.container}>
+    <View style={commonStyles.container}>
       {notes.length === 0 && !loading.isLoading ? (
-        <View style={[styles.container, styles.centered]}>
+        <View style={[commonStyles.container, commonStyles.centered]}>
           <Text style={styles.emptyMessage}>ノートがありません。</Text>
           <Text style={styles.emptyMessage}>下の「+」ボタンから新しいノートを作成しましょう。</Text>
         </View>
@@ -89,75 +90,24 @@ function NoteListScreen() {
           style={styles.list}
           onRefresh={fetchNotes}
           refreshing={loading.isLoading}
+          contentContainerStyle={{ padding: spacing.md }}
         />
       )}
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={handleCreateNote}
-      >
-        <Text style={styles.fabText}>+</Text>
-      </TouchableOpacity>
+      <FabButton onPress={handleCreateNote} />
     </View>
   );
 }
 
 // スタイル定義
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  centered: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   emptyMessage: {
     fontSize: 16,
-    color: '#666',
+    color: colors.textSecondary,
+    textAlign: 'center',
+    paddingHorizontal: spacing.xl,
   },
   list: {
     flex: 1,
-    padding: 10,
-  },
-  noteItem: {
-    backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 8,
-    marginBottom: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
-  },
-  noteTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 5,
-  },
-  noteContent: {
-    fontSize: 14,
-    color: '#666',
-  },
-  fab: {
-    position: 'absolute',
-    width: 56,
-    height: 56,
-    alignItems: 'center',
-    justifyContent: 'center',
-    right: 20,
-    bottom: 20,
-    backgroundColor: '#007AFF',
-    borderRadius: 28,
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4.65,
-  },
-  fabText: {
-    fontSize: 24,
-    color: 'white',
   },
 });
 
