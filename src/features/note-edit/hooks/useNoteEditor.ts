@@ -17,28 +17,38 @@ export const useNoteEditor = (noteId: string | undefined) => {
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
 
-  // 1. noteIdに基づいてノートを選択する
+  // 1. noteIdに基づいてノートを選択し、ローディング状態を管理する
   useEffect(() => {
-    if (noteId) {
-      selectNote(noteId);
-    } else {
-      // 新規ノートの場合はアクティブなノートをクリア
-      selectNote(null);
-    }
+    setIsLoading(true);
+    selectNote(noteId ?? null).finally(() => {
+      // selectNoteが完了しても、activeNoteの更新は非同期なので、
+      // ここではすぐにローディングを解除しない
+    });
   }, [noteId, selectNote]);
 
-  // 2. activeNoteからエディタの状態をセットする
+  // 2. activeNoteの変更を監視し、エディタの状態をセットする
   useEffect(() => {
-    if (activeNote) {
-      setTitle(activeNote.title);
-      setContent(activeNote.content);
+    if (noteId) {
+      // 既存ノートの場合
+      if (activeNote && activeNote.id === noteId) {
+        setTitle(activeNote.title);
+        setContent(activeNote.content);
+        setIsLoading(false);
+      } else {
+        // IDが一致しない場合（まだ新しいノートが読み込まれていない）
+        setTitle('');
+        setContent('');
+        setIsLoading(true);
+      }
     } else {
-      // 新規ノートのデフォルト値
+      // 新規ノートの場合
       setTitle('新しいノート');
       setContent('');
+      setIsLoading(false);
     }
-  }, [activeNote]);
+  }, [activeNote, noteId]);
 
   // 3. 保存処理（差分表示画面への遷移）のハンドラ
   const handleGoToDiff = useCallback(() => {
@@ -52,6 +62,7 @@ export const useNoteEditor = (noteId: string | undefined) => {
     setTitle,
     content,
     setContent,
+    isLoading,
     handleGoToDiff,
   };
 };

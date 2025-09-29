@@ -4,7 +4,7 @@
  */
 
 import React, { useLayoutEffect, useState } from 'react';
-import { View, StyleSheet, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, StyleSheet, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
@@ -29,10 +29,11 @@ function NoteEditScreen() {
     setTitle,
     content,
     setContent,
+    isLoading, // isLoading状態を受け取る
     handleGoToDiff,
   } = useNoteEditor(noteId);
 
-  const [viewMode, setViewMode] = useState<ViewMode>('edit'); 
+  const [viewMode, setViewMode] = useState<ViewMode>('edit');
 
   // ヘッダーのレイアウトエフェクトは残すが、フックから提供される状態を使用
   useLayoutEffect(() => {
@@ -42,42 +43,42 @@ function NoteEditScreen() {
       variant?: 'primary' | 'secondary' | 'danger';
     }> = [];
 
+    if (!isLoading) { // ローディングが完了したらボタンを表示
+      if (viewMode === 'content') {
+        rightButtons.push({
+          title: '編集',
+          onPress: () => setViewMode('edit'),
+          variant: 'primary',
+        });
+      } else if (viewMode === 'edit') {
+        rightButtons.push({
+          title: 'プレビュー',
+          onPress: () => setViewMode('preview'),
+          variant: 'secondary',
+        });
+        rightButtons.push({
+          title: '保存',
+          onPress: handleGoToDiff, // NoteEditScreenの保存ロジック
+          variant: 'primary',
+        });
+      } else if (viewMode === 'preview') {
+        rightButtons.push({
+          title: '編集に戻る',
+          onPress: () => setViewMode('edit'),
+          variant: 'secondary',
+        });
+      } else if (viewMode === 'diff') {
+        // diffモードでは、FileEditorのフッターにボタンがあるため、ヘッダーには表示しない
+        // 必要であれば、ここにdiffモード用のボタンを追加することも可能
+      }
 
-
-    if (viewMode === 'content') {
+      // 履歴ボタンは常に表示
       rightButtons.push({
-        title: '編集',
-        onPress: () => setViewMode('edit'),
-        variant: 'primary',
-      });
-    } else if (viewMode === 'edit') {
-      rightButtons.push({
-        title: 'プレビュー',
-        onPress: () => setViewMode('preview'),
+        title: '履歴',
+        onPress: () => navigation.navigate('VersionHistory', { noteId: activeNote?.id || '' }),
         variant: 'secondary',
       });
-      rightButtons.push({
-        title: '保存',
-        onPress: handleGoToDiff, // NoteEditScreenの保存ロジック
-        variant: 'primary',
-      });
-    } else if (viewMode === 'preview') {
-      rightButtons.push({
-        title: '編集に戻る',
-        onPress: () => setViewMode('edit'),
-        variant: 'secondary',
-      });
-    } else if (viewMode === 'diff') {
-      // diffモードでは、FileEditorのフッターにボタンがあるため、ヘッダーには表示しない
-      // 必要であれば、ここにdiffモード用のボタンを追加することも可能
     }
-
-    // 履歴ボタンは常に表示
-    rightButtons.push({
-      title: '履歴',
-      onPress: () => navigation.navigate('VersionHistory', { noteId: activeNote?.id || '' }),
-      variant: 'secondary',
-    });
 
     navigation.setOptions(
       createHeaderConfig({
@@ -88,7 +89,7 @@ function NoteEditScreen() {
             style={styles.headerTitle}
             placeholder="ノートのタイトル"
             placeholderTextColor={colors.textSecondary}
-            editable={viewMode === 'edit'}
+            editable={viewMode === 'edit' && !isLoading}
           />
         ),
         leftButtons: [
@@ -101,7 +102,7 @@ function NoteEditScreen() {
         rightButtons: rightButtons, // 動的に生成したrightButtonsをセット
       })
     );
-  }, [navigation, title, activeNote, handleGoToDiff, createHeaderConfig, viewMode, setViewMode]);
+  }, [navigation, title, activeNote, handleGoToDiff, createHeaderConfig, viewMode, setViewMode, isLoading]);
 
   // メインのレンダリング部分
   return (
@@ -109,13 +110,19 @@ function NoteEditScreen() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={commonStyles.container}
     >
-      <FileEditor
-        filename={title}
-        initialContent={content}
-        mode={viewMode}
-        onModeChange={setViewMode}
-        onContentChange={setContent}
-      />
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      ) : (
+        <FileEditor
+          filename={title}
+          initialContent={content}
+          mode={viewMode}
+          onModeChange={setViewMode}
+          onContentChange={setContent}
+        />
+      )}
     </KeyboardAvoidingView>
   );
 }
@@ -126,6 +133,11 @@ const styles = StyleSheet.create({
     color: colors.text,
     width: responsive.getResponsiveSize(180, 200, 220),
     textAlign: 'left',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
