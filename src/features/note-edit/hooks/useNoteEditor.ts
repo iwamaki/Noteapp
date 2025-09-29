@@ -1,3 +1,13 @@
+/**
+ *　ノートの編集画面用のカスタムフック
+ *　- noteIdに基づいてノートを選択し、ローディング状態を管理
+ *　- タイトルと内容のローカルstateを管理
+ *　- タイトル変更時にデバウンス付きで自動保存
+ *　- 保存処理（差分表示画面への遷移）のハンドラを提供
+ */
+
+
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -5,6 +15,7 @@ import { useNoteStore } from '../../../store/noteStore';
 import { Alert } from 'react-native';
 import { RootStackParamList } from '../../../navigation/types';
 
+// カスタムフックの定義
 export const useNoteEditor = (noteId: string | undefined) => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { activeNote, selectNote, setDraftNote, updateNote } = useNoteStore();

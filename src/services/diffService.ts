@@ -17,6 +17,8 @@ export interface DiffLine {
  * @param newText 新しいテキスト
  * @returns 差分行の配列
  */
+
+// 差分行を生成する
 export const generateDiff = (originalText: string, newText: string): DiffLine[] => {
   const originalLines = (originalText || '').split('\n');
   const newLines = (newText || '').split('\n');
@@ -30,6 +32,7 @@ export const generateDiff = (originalText: string, newText: string): DiffLine[] 
   let changeBlockId = 0;
   let inChangeBlock = false;
 
+  // LCSに基づいて差分を計算
   while (originalIndex < originalLines.length || newIndex < newLines.length) {
     const originalLine = originalLines[originalIndex];
     const newLine = newLines[newIndex];
@@ -40,7 +43,7 @@ export const generateDiff = (originalText: string, newText: string): DiffLine[] 
       newLine === lcs[lcsIndex]
     ) {
       // Common line
-      diff.push({
+      diff.push({             // 共通行
         type: 'common',
         content: originalLine,
         originalLineNumber: originalIndex + 1,
@@ -51,7 +54,7 @@ export const generateDiff = (originalText: string, newText: string): DiffLine[] 
       newIndex++;
       lcsIndex++;
       inChangeBlock = false;
-    } else {
+    } else {     // 追加または削除行
       if (!inChangeBlock) {
         changeBlockId++;
         inChangeBlock = true;
@@ -62,7 +65,7 @@ export const generateDiff = (originalText: string, newText: string): DiffLine[] 
       const isOriginalNext = lcsIndex < lcs.length ? lookaheadOriginal !== -1 : false;
       const isNewNext = lcsIndex < lcs.length ? lookaheadNew !== -1 : false;
 
-      if (isOriginalNext && (!isNewNext || lookaheadOriginal <= lookaheadNew)) {
+      if (isOriginalNext && (!isNewNext || lookaheadOriginal <= lookaheadNew)) {      // 削除行
         diff.push({
           type: 'deleted',
           content: originalLine,
@@ -71,7 +74,7 @@ export const generateDiff = (originalText: string, newText: string): DiffLine[] 
           changeBlockId: changeBlockId,
         });
         originalIndex++;
-      } else if (isNewNext && (!isOriginalNext || lookaheadNew < lookaheadOriginal)) {
+      } else if (isNewNext && (!isOriginalNext || lookaheadNew < lookaheadOriginal)) {    // 追加行
         diff.push({
           type: 'added',
           content: newLine,
@@ -80,7 +83,7 @@ export const generateDiff = (originalText: string, newText: string): DiffLine[] 
           changeBlockId: changeBlockId,
         });
         newIndex++;
-      } else {
+      } else {  // 両方とも次にLCSが来ない場合、両方追加
         if (originalIndex < originalLines.length) {
           diff.push({
             type: 'deleted',
@@ -91,7 +94,7 @@ export const generateDiff = (originalText: string, newText: string): DiffLine[] 
           });
           originalIndex++;
         }
-        if (newIndex < newLines.length) {
+        if (newIndex < newLines.length) { // 追加行
           diff.push({
             type: 'added',
             content: newLine,
@@ -114,6 +117,8 @@ export const generateDiff = (originalText: string, newText: string): DiffLine[] 
  * @param arr2 文字列の配列2
  * @returns 最長共通部分列
  */
+
+// LCSを計算する
 const computeLCS = (arr1: string[], arr2: string[]): string[] => {
   const m = arr1.length;
   const n = arr2.length;
@@ -129,6 +134,7 @@ const computeLCS = (arr1: string[], arr2: string[]): string[] => {
     }
   }
 
+  // 最長共通部分列を復元
   const lcs: string[] = [];
   let i = m, j = n;
   while (i > 0 && j > 0) {
