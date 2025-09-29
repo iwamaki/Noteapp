@@ -1,7 +1,7 @@
 ---
 title: "Markdownプレビュー機能の実装"
 id: 19
-status: new
+status: done
 priority: medium
 attempt_count: 0
 tags: [UI, editor, markdown]
@@ -17,11 +17,11 @@ tags: [UI, editor, markdown]
 
 ## 受け入れ条件 (Acceptance Criteria)
 
-- [ ] `FileEditor`のプレビューモードで、Markdown記法がHTMLとして適切にレンダリングされ、表示されること。
-- [ ] ヘッダー、リスト、リンク、画像、コードブロックなどの基本的なMarkdown要素が正しく表示されること。
-- [ ] プレビューはリアルタイムまたは手動で更新され、編集内容が即座に反映されること。
-- [ ] レンダリングには、React Nativeで利用可能なMarkdownレンダリングライブラリを使用すること。
-- [ ] パフォーマンスに配慮し、大規模なMarkdownファイルでもスムーズに表示されること。
+- [x] `FileEditor`のプレビューモードで、Markdown記法がHTMLとして適切にレンダリングされ、表示されること。
+- [x] ヘッダー、リスト、リンク、画像、コードブロックなどの基本的なMarkdown要素が正しく表示されること。
+- [x] プレビューはリアルタイムまたは手動で更新され、編集内容が即座に反映されること。
+- [x] レンダリングには、React Nativeで利用可能なMarkdownレンダリングライブラリを使用すること。
+- [x] パフォーマンスに配慮し、大規模なMarkdownファイルでもスムーズに表示されること。
 
 ## 関連ファイル (Related Files)
 
