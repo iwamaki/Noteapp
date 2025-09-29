@@ -6,6 +6,7 @@ module.exports = {
   ],
   testMatch: [
     "**/src/tests/**/*.test.ts",
-    "**/src/__tests__/**/*.+(ts|tsx|js)?(x)"
+    "**/src/__tests__/**/*.+(ts|tsx|js)?(x)",
+    "**/src/features/**/*.test.tsx"
   ],
 };
