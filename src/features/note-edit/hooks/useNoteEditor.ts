@@ -1,23 +1,18 @@
-/*
-* ノートエディタの状態管理フック
-* - noteIdに基づいてノートを選択し、エディタの状態を初期化
-* - エディタの状態を管理（タイトル、内容）
-* - 保存処理として差分表示画面への遷移を提供
-*/
-
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../../../navigation/types';
 import { useNoteStore } from '../../../store/noteStore';
+import { Alert } from 'react-native';
+import { RootStackParamList } from '../../../navigation/types';
 
 export const useNoteEditor = (noteId: string | undefined) => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
-  const { activeNote, selectNote, setDraftNote } = useNoteStore();
+  const { activeNote, selectNote, setDraftNote, updateNote } = useNoteStore();
 
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
+  const [title, setTitle] = useState(activeNote?.title ?? '');
+  const [content, setContent] = useState(activeNote?.content ?? '');
   const [isLoading, setIsLoading] = useState(true);
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
   // 1. noteIdに基づいてノートを選択し、ローディング状態を管理する
   useEffect(() => {
@@ -28,38 +23,55 @@ export const useNoteEditor = (noteId: string | undefined) => {
     });
   }, [noteId, selectNote]);
 
-  // 2. activeNoteの変更を監視し、エディタの状態をセットする
+  // 2. activeNoteが更新されたら、ローカルのstateを更新し、ローディングを解除する
   useEffect(() => {
-    if (noteId) {
-      // 既存ノートの場合
-      if (activeNote && activeNote.id === noteId) {
-        setTitle(activeNote.title);
-        setContent(activeNote.content);
-        setIsLoading(false);
-      } else {
-        // IDが一致しない場合（まだ新しいノートが読み込まれていない）
-        setTitle('');
-        setContent('');
-        setIsLoading(true);
-      }
-    } else {
-      // 新規ノートの場合
-      setTitle('新しいノート');
-      setContent('');
+    if (noteId === undefined || activeNote?.id === noteId) {
+      setTitle(activeNote?.title ?? '');
+      setContent(activeNote?.content ?? '');
       setIsLoading(false);
     }
   }, [activeNote, noteId]);
 
+  // タイトル変更ハンドラ（デバウンス付き自動保存）
+  const handleTitleChange = (newTitle: string) => {
+    setTitle(newTitle); // UI即時反映
+
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+
+    debounceTimer.current = setTimeout(() => {
+      if (activeNote && activeNote.title !== newTitle) {
+        updateNote({ id: activeNote.id, title: newTitle })
+          .catch(error => {
+            console.error('Failed to update title:', error);
+            Alert.alert('エラー', 'タイトルの更新に失敗しました。');
+            // エラーが発生した場合、UIを元のタイトルに戻す
+            setTitle(activeNote.title);
+          });
+      }
+    }, 500); // 500msのデバウンス
+  };
+
   // 3. 保存処理（差分表示画面への遷移）のハンドラ
   const handleGoToDiff = useCallback(() => {
+    // コンテンツが変更されていない場合はアラートを表示して遷移しない
+    if (activeNote?.content === content) {
+      Alert.alert(
+        '変更がありません',
+        'ノートの内容に変更がありません。保存は必要ありません。',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
     setDraftNote({ title, content });
     navigation.navigate('DiffView');
-  }, [title, content, setDraftNote, navigation]);
+  }, [title, content, activeNote, setDraftNote, navigation]);
 
   return {
     activeNote,
     title,
-    setTitle,
+    setTitle: handleTitleChange, // NoteEditScreenに渡す関数を新しいハンドラに
     content,
     setContent,
     isLoading,

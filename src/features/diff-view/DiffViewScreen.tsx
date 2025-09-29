@@ -39,13 +39,7 @@ function DiffViewScreen() {
 
   const handleApply = async () => {
     const selectedContent = generateSelectedContent();
-    if (draftNote) {
-      setDraftNote({ ...draftNote, content: selectedContent });
-    } else {
-      // draftNoteがない場合はエラーハンドリング、または新規作成のロジック
-      Alert.alert('エラー', '保存対象のノートが見つかりません。');
-      return;
-    }
+    setDraftNote({ title: filename, content: selectedContent });
 
     try {
       await saveDraftNote();
