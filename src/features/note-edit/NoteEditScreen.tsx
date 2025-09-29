@@ -36,6 +36,49 @@ function NoteEditScreen() {
 
   // ヘッダーのレイアウトエフェクトは残すが、フックから提供される状態を使用
   useLayoutEffect(() => {
+    const rightButtons: Array<{
+      title: string;
+      onPress: () => void;
+      variant?: 'primary' | 'secondary' | 'danger';
+    }> = [];
+
+
+
+    if (viewMode === 'content') {
+      rightButtons.push({
+        title: '編集',
+        onPress: () => setViewMode('edit'),
+        variant: 'primary',
+      });
+    } else if (viewMode === 'edit') {
+      rightButtons.push({
+        title: 'プレビュー',
+        onPress: () => setViewMode('preview'),
+        variant: 'secondary',
+      });
+      rightButtons.push({
+        title: '保存',
+        onPress: handleGoToDiff, // NoteEditScreenの保存ロジック
+        variant: 'primary',
+      });
+    } else if (viewMode === 'preview') {
+      rightButtons.push({
+        title: '編集に戻る',
+        onPress: () => setViewMode('edit'),
+        variant: 'secondary',
+      });
+    } else if (viewMode === 'diff') {
+      // diffモードでは、FileEditorのフッターにボタンがあるため、ヘッダーには表示しない
+      // 必要であれば、ここにdiffモード用のボタンを追加することも可能
+    }
+
+    // 履歴ボタンは常に表示
+    rightButtons.push({
+      title: '履歴',
+      onPress: () => navigation.navigate('VersionHistory', { noteId: activeNote?.id || '' }),
+      variant: 'secondary',
+    });
+
     navigation.setOptions(
       createHeaderConfig({
         title: (
@@ -45,30 +88,20 @@ function NoteEditScreen() {
             style={styles.headerTitle}
             placeholder="ノートのタイトル"
             placeholderTextColor={colors.textSecondary}
+            editable={viewMode === 'edit'}
           />
         ),
         leftButtons: [
           {
-            title: '戻る',
+            title: '\u2190',
             onPress: () => navigation.goBack(),
             variant: 'secondary',
           },
         ],
-        rightButtons: [
-          {
-            title: '保存',
-            onPress: handleGoToDiff,
-            variant: 'primary',
-          },
-          {
-            title: '履歴',
-            onPress: () => navigation.navigate('VersionHistory', { noteId: activeNote?.id || '' }),
-            variant: 'secondary',
-          },
-        ],
+        rightButtons: rightButtons, // 動的に生成したrightButtonsをセット
       })
     );
-  }, [navigation, title, activeNote, handleGoToDiff, createHeaderConfig]);
+  }, [navigation, title, activeNote, handleGoToDiff, createHeaderConfig, viewMode, setViewMode]);
 
   // メインのレンダリング部分
   return (
@@ -81,8 +114,6 @@ function NoteEditScreen() {
         initialContent={content}
         mode={viewMode}
         onModeChange={setViewMode}
-        onSave={handleGoToDiff}
-        onClose={() => navigation.goBack()}
         onContentChange={setContent}
       />
     </KeyboardAvoidingView>
@@ -94,7 +125,7 @@ const styles = StyleSheet.create({
     ...typography.title,
     color: colors.text,
     width: responsive.getResponsiveSize(180, 200, 220),
-    textAlign: 'center',
+    textAlign: 'left',
   },
 });
 

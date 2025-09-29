@@ -1,7 +1,7 @@
 ---
 title: "レイアウト管理の改善"
 id: 9 # issueのユニークID
-status: new # new | in-progress | blocked | pending-review | completed
+status: done # new | in-progress | blocked | pending-review | completed
 priority: high # high | medium | low
 attempt_count: 0 # このissueへの挑戦回数。失敗のたびにインクリメントする
 tags: [UI, layout, refactor] # 例: [UI, navigation, bug]
@@ -24,11 +24,11 @@ tags: [UI, layout, refactor] # 例: [UI, navigation, bug]
 
 > このissueが「完了」と見なされるための具体的な条件をチェックリスト形式で記述します。
 
-- [ ] 共通のスタイル定義を `src/utils/commonStyles.ts` などの共通ファイルに集約し、各画面コンポーネントからインポートして使用すること。
-- [ ] 汎用的に利用できるUIコンポーネント（例: `FabButton`, `ListItem` など）を `src/components/` ディレクトリに作成し、各画面コンポーネントで再利用すること。
-- [ ] ヘッダーのカスタマイズロジックを `CustomHeader` コンポーネントとして抽象化し、`navigation.setOptions` で宣言的に使用すること。
-- [ ] 主要な画面コンポーネント（例: `NoteListScreen`, `NoteEditScreen`）において、レスポンシブデザインの基本的な考慮（例: `Dimensions` APIの利用、またはレスポンシブ対応ライブラリの導入検討）が行われていること。
-- [ ] 上記の変更によって、既存のUIが正しく表示され、機能が損なわれていないこと。
+- [x] 共通のスタイル定義を `src/utils/commonStyles.ts` などの共通ファイルに集約し、各画面コンポーネントからインポートして使用すること。
+- [x] 汎用的に利用できるUIコンポーネント（例: `FabButton`, `ListItem` など）を `src/components/` ディレクトリに作成し、各画面コンポーネントで再利用すること。
+- [x] ヘッダーのカスタマイズロジックを `CustomHeader` コンポーネントとして抽象化し、`navigation.setOptions` で宣言的に使用すること。
+- [x] 主要な画面コンポーネント（例: `NoteListScreen`, `NoteEditScreen`）において、レスポンシブデザインの基本的な考慮（例: `Dimensions` APIの利用、またはレスポンシブ対応ライブラリの導入検討）が行われていること。
+- [x] 上記の変更によって、既存のUIが正しく表示され、機能が損なわれていないこと。
 
 ## 関連ファイル (Related Files)
 

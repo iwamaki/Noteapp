@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
   },
   centerSection: {
     flex: 2,
-    alignItems: 'center',
+    alignItems: 'flex-start',
   },
   rightSection: {
     flex: 1,
