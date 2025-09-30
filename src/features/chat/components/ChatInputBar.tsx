@@ -1,30 +1,17 @@
 import React from 'react';
-import {
-  View,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Text,
-} from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Text, Platform } from 'react-native';
 
 interface ChatInputBarProps {
-  onFocus: () => void;
+  onPress: () => void;
 }
 
-export const ChatInputBar: React.FC<ChatInputBarProps> = ({ onFocus }) => {
+export const ChatInputBar: React.FC<ChatInputBarProps> = ({ onPress }) => {
   return (
     <View style={styles.containerWrapper}>
-      <View style={styles.container}>
-        <TextInput
-          style={styles.textInput}
-          placeholder="AIに質問する..."
-          placeholderTextColor="#999"
-          onFocus={onFocus}
-        />
-        <TouchableOpacity style={styles.sendButton} onPress={onFocus}>
-          <Text style={styles.sendButtonText}>チャット</Text>
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity style={styles.container} onPress={onPress}>
+        <Text style={styles.icon}>🤖</Text>
+        <Text style={styles.text}>AIチャットを開始...</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -39,35 +26,27 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#dee2e6',
     paddingHorizontal: 10,
-    paddingVertical: 8,
+    paddingBottom: Platform.OS === 'ios' ? 20 : 8, // iOSのホームインジケーターを考慮
+    paddingTop: 8,
   },
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  textInput: {
-    flex: 1,
+    backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: '#ced4da',
-    borderRadius: 20,
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    fontSize: 16,
-    backgroundColor: '#fff',
-    marginRight: 8,
-    minHeight: 40,
-  },
-  sendButton: {
-    backgroundColor: '#007bff',
-    borderRadius: 20,
+    borderRadius: 25,
     paddingHorizontal: 15,
     paddingVertical: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
+    minHeight: 50,
   },
-  sendButtonText: {
-    color: '#fff',
+  icon: {
+    fontSize: 20,
+    marginRight: 10,
+  },
+  text: {
+    flex: 1,
     fontSize: 16,
-    fontWeight: '600',
+    color: '#6c757d',
   },
 });
