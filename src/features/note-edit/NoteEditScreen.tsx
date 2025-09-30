@@ -4,18 +4,21 @@
  */
 
 import React, { useLayoutEffect, useState } from 'react';
-import { View, StyleSheet, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, TextInput, Platform, ActivityIndicator } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
 import { FileEditor, ViewMode } from './components/FileEditor';
 import { useNoteEditor } from './hooks/useNoteEditor';
 import { useCustomHeader } from '../../components/CustomHeader';
-import { commonStyles, colors, typography, responsive } from '../../utils/commonStyles';
+import { commonStyles, colors, typography, responsive, spacing } from '../../utils/commonStyles';
 import { ChatInputBar } from '../chat/components/ChatInputBar';
 import { ChatContext } from '../../services/llmService';
 
 type NoteEditScreenRouteProp = RouteProp<RootStackParamList, 'NoteEdit'>;
+
+// 入力バーの高さ（概算）
+const CHAT_INPUT_HEIGHT = Platform.OS === 'ios' ? 78 : 66;
 
 function NoteEditScreen() {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
@@ -79,12 +82,8 @@ function NoteEditScreen() {
   };
 
   return (
-    <KeyboardAvoidingView 
-      behavior={Platform.OS === "ios" ? "padding" : "height"} 
-      style={commonStyles.container}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
-    >
-      <View style={styles.contentContainer}>
+    <View style={commonStyles.container}>
+      <View style={[styles.contentContainer, { paddingBottom: CHAT_INPUT_HEIGHT }]}>
         {isLoading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={colors.primary} />
@@ -100,7 +99,7 @@ function NoteEditScreen() {
         )}
       </View>
       <ChatInputBar context={chatContext} />
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 

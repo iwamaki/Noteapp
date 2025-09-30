@@ -1,7 +1,7 @@
 ---
 title: "チャットUIのナビゲーションバーへの実装"
 id: 23
-status: new
+status: :done!
 priority: medium
 attempt_count: 0
 tags: [UI, chat, navigation, prototype]

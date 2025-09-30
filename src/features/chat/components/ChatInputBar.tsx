@@ -15,6 +15,8 @@ import {
   ScrollView,
   ActivityIndicator,
   Animated,
+  Keyboard,
+  KeyboardEvent,
 } from 'react-native';
 import { ChatMessage, LLMCommand } from '../../../services/llmService';
 import { useChat } from '../hooks/useChat';
@@ -32,8 +34,43 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
   const { messages, isLoading, sendMessage } = useChat(context, onCommandReceived);
   const [inputText, setInputText] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
   const expandAnimation = useRef(new Animated.Value(0)).current;
+  const positionAnimation = useRef(new Animated.Value(0)).current;
+
+  // キーボードイベントのリスナー
+  useEffect(() => {
+    const keyboardWillShow = (e: KeyboardEvent) => {
+      const height = e.endCoordinates.height;
+      setKeyboardHeight(height);
+      Animated.timing(positionAnimation, {
+        toValue: height,
+        duration: e.duration || 250,
+        useNativeDriver: false,
+      }).start();
+    };
+
+    const keyboardWillHide = (e: KeyboardEvent) => {
+      setKeyboardHeight(0);
+      Animated.timing(positionAnimation, {
+        toValue: 0,
+        duration: e.duration || 250,
+        useNativeDriver: false,
+      }).start();
+    };
+
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSubscription = Keyboard.addListener(showEvent, keyboardWillShow);
+    const hideSubscription = Keyboard.addListener(hideEvent, keyboardWillHide);
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
 
   // メッセージが追加されたら自動スクロール
   useEffect(() => {
@@ -98,7 +135,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
   };
 
   return (
-    <View style={styles.container}>
+    <Animated.View style={[styles.container, { bottom: positionAnimation }]}>
       {/* メッセージ履歴エリア（展開可能） */}
       {isExpanded && (
         <Animated.View style={[styles.messagesArea, { height: messageAreaHeight }]}>
@@ -165,12 +202,16 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
           </Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: '#f8f9fa',
     borderTopWidth: 1,
     borderTopColor: '#dee2e6',

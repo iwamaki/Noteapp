@@ -9,7 +9,6 @@ import {
   StyleSheet,
   FlatList,
   ActivityIndicator,
-  KeyboardAvoidingView,
   Platform,
 } from 'react-native';
 import { useNavigation, NavigationProp, useIsFocused } from '@react-navigation/native';
@@ -21,6 +20,9 @@ import { useCustomHeader } from '../../components/CustomHeader';
 import { commonStyles, colors, spacing } from '../../utils/commonStyles';
 import { ChatInputBar } from '../chat/components/ChatInputBar';
 import { ChatContext } from '../../services/llmService';
+
+// 入力バーの高さ（概算）
+const CHAT_INPUT_HEIGHT = Platform.OS === 'ios' ? 78 : 66;
 
 function NoteListScreen() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
@@ -61,6 +63,7 @@ function NoteListScreen() {
     return (
       <View style={[commonStyles.container, commonStyles.centered]}>
         <ActivityIndicator size="large" color={colors.primary} />
+        <ChatInputBar />
       </View>
     );
   }
@@ -75,39 +78,30 @@ function NoteListScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={commonStyles.container}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
-    >
-      <View style={styles.contentContainer}>
-        {notes.length === 0 && !loading.isLoading ? (
-          <View style={[commonStyles.centered, styles.emptyContainer]}>
-            <Text style={styles.emptyMessage}>ノートがありません。</Text>
-            <Text style={styles.emptyMessage}>下の「+」ボタンから新しいノートを作成しましょう。</Text>
-          </View>
-        ) : (
-          <FlatList
-            data={notes}
-            renderItem={renderItem}
-            keyExtractor={(item) => item.id}
-            style={styles.list}
-            onRefresh={fetchNotes}
-            refreshing={loading.isLoading}
-            contentContainerStyle={styles.listContent}
-          />
-        )}
-        <FabButton onPress={handleCreateNote} />
-      </View>
+    <View style={commonStyles.container}>
+      {notes.length === 0 && !loading.isLoading ? (
+        <View style={[commonStyles.centered, styles.emptyContainer]}>
+          <Text style={styles.emptyMessage}>ノートがありません。</Text>
+          <Text style={styles.emptyMessage}>下の「+」ボタンから新しいノートを作成しましょう。</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={notes}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          style={styles.list}
+          onRefresh={fetchNotes}
+          refreshing={loading.isLoading}
+          contentContainerStyle={[styles.listContent, { paddingBottom: CHAT_INPUT_HEIGHT + spacing.xl }]}
+        />
+      )}
+      <FabButton onPress={handleCreateNote} />
       <ChatInputBar context={chatContext} />
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  contentContainer: {
-    flex: 1,
-  },
   emptyContainer: {
     flex: 1,
   },
@@ -122,7 +116,6 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: spacing.md,
-    paddingBottom: spacing.xxl,
   },
 });
 
