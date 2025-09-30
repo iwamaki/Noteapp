@@ -1,5 +1,7 @@
 /**
  * ノート一覧画面コンポーネント
+ * - ノートの一覧表示、選択、新規作成を行う
+ * - カスタムヘッダーとフローティングアクションボタンを使用
  */  
 
 import React, { useEffect, useLayoutEffect } from 'react';
@@ -24,6 +26,7 @@ import { ChatContext } from '../../services/llmService';
 // 入力バーの高さ（概算）
 const CHAT_INPUT_HEIGHT = Platform.OS === 'ios' ? 78 : 66;
 
+// ノート一覧画面コンポーネント
 function NoteListScreen() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const { notes, loading, fetchNotes, createNote } = useNoteStore();
@@ -36,6 +39,7 @@ function NoteListScreen() {
     }
   }, [isFocused]);
 
+  // カスタムヘッダーの設定
   useLayoutEffect(() => {
     navigation.setOptions(
       createHeaderConfig({
@@ -46,10 +50,12 @@ function NoteListScreen() {
     );
   }, [navigation, createHeaderConfig]);
 
+  // ノート選択ハンドラー
   const handleSelectNote = (noteId: string) => {
     navigation.navigate('NoteEdit', { noteId });
   };
 
+  // ノート作成ハンドラー
   const handleCreateNote = async () => {
     try {
       const newNote = await createNote({ title: '新しいノート', content: '' });
@@ -59,6 +65,7 @@ function NoteListScreen() {
     }
   };
 
+  // ローディング中の表示
   if (loading.isLoading && notes.length === 0) {
     return (
       <View style={[commonStyles.container, commonStyles.centered]}>
@@ -68,15 +75,18 @@ function NoteListScreen() {
     );
   }
 
+  // ノートリストのレンダラー
   const renderItem = ({ item }: { item: (typeof notes)[0] }) => (
     <ListItem title={item.title} subtitle={item.content} onPress={() => handleSelectNote(item.id)} />
   );
 
+  // チャットコンテキストの設定
   const chatContext: ChatContext = {
     currentPath: '/',
     fileList: notes.map(note => ({ name: note.title, type: 'file' })),
   };
 
+  // メインの表示
   return (
     <View style={commonStyles.container}>
       {notes.length === 0 && !loading.isLoading ? (
@@ -101,6 +111,7 @@ function NoteListScreen() {
   );
 }
 
+// スタイル定義
 const styles = StyleSheet.create({
   emptyContainer: {
     flex: 1,

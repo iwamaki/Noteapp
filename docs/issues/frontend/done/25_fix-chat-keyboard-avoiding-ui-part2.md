@@ -1,7 +1,7 @@
 ---
 title: "チャット入力欄のキーボード追従と入力テキスト表示の改善"
 id: 25
-status: new
+status: done
 priority: high
 attempt_count: 0
 tags: [UI, bug, chat, keyboard]
@@ -18,8 +18,8 @@ tags: [UI, bug, chat, keyboard]
 
 ## 受け入れ条件 (Acceptance Criteria)
 
-> - [ ] チャット入力欄にフォーカスし、キーボードが表示された際、入力欄がキーボードの直上に表示されること。
-> - [ ] 入力中のテキストが常に画面に表示され、キーボードに隠れないこと。
+> - [x] チャット入力欄にフォーカスし、キーボードが表示された際、入力欄がキーボードの直上に表示されること。
+> - [x] 入力中のテキストが常に画面に表示され、キーボードに隠れないこと。
 
 ## 制約事項 (Constraints)
 
