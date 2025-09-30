@@ -183,11 +183,11 @@ function NoteListScreen() {
           contentContainerStyle={[styles.listContent, { paddingBottom: CHAT_INPUT_HEIGHT + spacing.xl }]}
         />
       )}
+      <ChatInputBar context={chatContext} />
       {(() => {
         console.log('FAB render check:', { isSelectionMode, shouldShow: !isSelectionMode });
         return !isSelectionMode ? <FabButton onPress={handleCreateNote} /> : null;
       })()}
-      <ChatInputBar context={chatContext} />
     </View>
   );
 }
