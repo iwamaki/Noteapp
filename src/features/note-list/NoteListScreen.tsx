@@ -1,9 +1,8 @@
 /**
  * ノート一覧画面コンポーネント
- * 
  */  
 
-import React, { useEffect, useLayoutEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect } from 'react';
 import {
   View,
   Text,
@@ -21,7 +20,6 @@ import { ListItem } from '../../components/ListItem';
 import { useCustomHeader } from '../../components/CustomHeader';
 import { commonStyles, colors, spacing } from '../../utils/commonStyles';
 import { ChatInputBar } from '../chat/components/ChatInputBar';
-import { ChatPanel } from '../chat/ChatPanel';
 import { ChatContext } from '../../services/llmService';
 
 function NoteListScreen() {
@@ -29,7 +27,6 @@ function NoteListScreen() {
   const { notes, loading, fetchNotes, createNote } = useNoteStore();
   const isFocused = useIsFocused();
   const { createHeaderConfig } = useCustomHeader();
-  const [isChatPanelVisible, setIsChatPanelVisible] = useState(false);
 
   useEffect(() => {
     if (isFocused) {
@@ -81,37 +78,39 @@ function NoteListScreen() {
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={commonStyles.container}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
     >
-      {notes.length === 0 && !loading.isLoading ? (
-        <View style={[commonStyles.container, commonStyles.centered]}>
-          <Text style={styles.emptyMessage}>ノートがありません。</Text>
-          <Text style={styles.emptyMessage}>下の「+」ボタンから新しいノートを作成しましょう。</Text>
-        </View>
-      ) : (
-        <FlatList
-          data={notes}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id}
-          style={styles.list}
-          onRefresh={fetchNotes}
-          refreshing={loading.isLoading}
-          contentContainerStyle={{ padding: spacing.md }}
-        />
-      )}
-      <FabButton onPress={handleCreateNote} />
-      <ChatInputBar onPress={() => setIsChatPanelVisible(true)} />
-      {isChatPanelVisible && (
-        <ChatPanel
-          isVisible={isChatPanelVisible}
-          onClose={() => setIsChatPanelVisible(false)}
-          context={chatContext}
-        />
-      )}
+      <View style={styles.contentContainer}>
+        {notes.length === 0 && !loading.isLoading ? (
+          <View style={[commonStyles.centered, styles.emptyContainer]}>
+            <Text style={styles.emptyMessage}>ノートがありません。</Text>
+            <Text style={styles.emptyMessage}>下の「+」ボタンから新しいノートを作成しましょう。</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={notes}
+            renderItem={renderItem}
+            keyExtractor={(item) => item.id}
+            style={styles.list}
+            onRefresh={fetchNotes}
+            refreshing={loading.isLoading}
+            contentContainerStyle={styles.listContent}
+          />
+        )}
+        <FabButton onPress={handleCreateNote} />
+      </View>
+      <ChatInputBar context={chatContext} />
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  contentContainer: {
+    flex: 1,
+  },
+  emptyContainer: {
+    flex: 1,
+  },
   emptyMessage: {
     fontSize: 16,
     color: colors.textSecondary,
@@ -120,6 +119,10 @@ const styles = StyleSheet.create({
   },
   list: {
     flex: 1,
+  },
+  listContent: {
+    padding: spacing.md,
+    paddingBottom: spacing.xxl,
   },
 });
 

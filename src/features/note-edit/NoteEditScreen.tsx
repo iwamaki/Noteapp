@@ -13,7 +13,6 @@ import { useNoteEditor } from './hooks/useNoteEditor';
 import { useCustomHeader } from '../../components/CustomHeader';
 import { commonStyles, colors, typography, responsive } from '../../utils/commonStyles';
 import { ChatInputBar } from '../chat/components/ChatInputBar';
-import { ChatPanel } from '../chat/ChatPanel';
 import { ChatContext } from '../../services/llmService';
 
 type NoteEditScreenRouteProp = RouteProp<RootStackParamList, 'NoteEdit'>;
@@ -35,7 +34,6 @@ function NoteEditScreen() {
   } = useNoteEditor(noteId);
 
   const [viewMode, setViewMode] = useState<ViewMode>('edit');
-  const [isChatPanelVisible, setIsChatPanelVisible] = useState(false);
 
   useLayoutEffect(() => {
     const rightButtons: Array<{ title: string; onPress: () => void; variant?: 'primary' | 'secondary' | 'danger'; }> = [];
@@ -81,33 +79,35 @@ function NoteEditScreen() {
   };
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={commonStyles.container}>
-      {isLoading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      ) : (
-        <FileEditor
-          filename={title}
-          initialContent={content}
-          mode={viewMode}
-          onModeChange={setViewMode}
-          onContentChange={setContent}
-        />
-      )}
-      <ChatInputBar onPress={() => setIsChatPanelVisible(true)} />
-      {isChatPanelVisible && (
-        <ChatPanel
-          isVisible={isChatPanelVisible}
-          onClose={() => setIsChatPanelVisible(false)}
-          context={chatContext}
-        />
-      )}
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === "ios" ? "padding" : "height"} 
+      style={commonStyles.container}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+    >
+      <View style={styles.contentContainer}>
+        {isLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={colors.primary} />
+          </View>
+        ) : (
+          <FileEditor
+            filename={title}
+            initialContent={content}
+            mode={viewMode}
+            onModeChange={setViewMode}
+            onContentChange={setContent}
+          />
+        )}
+      </View>
+      <ChatInputBar context={chatContext} />
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  contentContainer: {
+    flex: 1,
+  },
   headerTitle: {
     ...typography.title,
     color: colors.text,
