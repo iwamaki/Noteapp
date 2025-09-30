@@ -6,62 +6,65 @@
 
 ```
 src/
-├─ App.tsx
-├─ index.ts
-├─ components/
-│  ├─ ChatButton.tsx
-│  ├─ CustomHeader.tsx
-│  ├─ FabButton.tsx
-│  ├─ HeaderButton.tsx
-│  └─ ListItem.tsx
-├─ features/
-│  ├─ chat/
-│  │  ├─ ChatPanel.tsx
-│  │  └─ hooks/
-│  │      └─ useChat.ts
-│  ├─ diff-view/
-│  │  ├─ DiffViewScreen.tsx
-│  │  ├─ components/
-│  │  │  └─ DiffViewer.tsx
-│  │  ├─ hooks/
-│  │  └─ utils
-│  ├─ note-edit/
-│  │  ├─ NoteEditScreen.tsx
-│  │  ├─ components/
-│  │  │  └─ FileEditor.tsx
-│  │  └─ hooks/
-│  │      └─ useNoteEditor.ts
-│  ├─ note-list/
-│  │  ├─ NoteListScreen.tsx
-│  │  └─ hooks/
-│  │      └─ useNotes.ts
-│  ├─ settings/
-│  │  └─ SettingsScreen.tsx
-│  └─ version-history/
-│      └─ VersionHistoryScreen.tsx
-├─ hooks/
-│  └─ useDiffManager.ts
-├─ navigation/
-│  ├─ RootNavigator.tsx
-│  └─ types.ts
-├─ services/
-│  ├─ api.ts
-│  ├─ diffService.ts
-│  ├─ llmService.ts
-│  └─ storageService.ts
-├─ store/
-│  ├─ index.ts
-│  ├─ noteStore.ts
-│  └─ settingsStore.ts
-├─ types/
-│  ├─ api.ts
-│  ├─ index.ts
-│  └─ note.ts
-├─ utils/
-│  ├─ commonStyles.ts
-│  ├─ constants.ts
-│  └─ formatUtils.ts
-└─ __tests__/
+├── App.tsx
+├── index.ts
+├── components/
+│   ├── CustomHeader.tsx
+│   ├── FabButton.tsx
+│   ├── HeaderButton.tsx
+│   └── ListItem.tsx
+├── features/
+│   ├── chat/
+│   │   ├── ChatInputBar.tsx
+│   │   ├── components/
+│   │   │   └── ChatButton.tsx
+│   │   └── hooks/
+│   │       └── useChat.ts
+│   ├── diff-view/
+│   │   ├── DiffViewScreen.tsx
+│   │   ├── components/
+│   │   │   └── DiffViewer.tsx
+│   │   ├── hooks/
+│   │   └── utils/
+│   ├── note-edit/
+│   │   ├── NoteEditScreen.tsx
+│   │   ├── components/
+│   │   │   ├── FileEditor.tsx
+│   │   │   └── __tests__/
+│   │   │       └── FileEditor.test.tsx
+│   │   └── hooks/
+│   │       └── useNoteEditor.ts
+│   ├── note-list/
+│   │   ├── NoteListScreen.tsx
+│   │   └── hooks/
+│   │       └── useNotes.ts
+│   ├── settings/
+│   │   └── SettingsScreen.tsx
+│   └── version-history/
+│       └── VersionHistoryScreen.tsx
+├── hooks/
+│   └── useDiffManager.ts
+├── navigation/
+│   ├── RootNavigator.tsx
+│   └── types.ts
+├── services/
+│   ├── api.ts
+│   ├── diffService.ts
+│   ├── llmService.ts
+│   └── storageService.ts
+├── store/
+│   ├── index.ts
+│   ├── noteStore.ts
+│   └── settingsStore.ts
+├── types/
+│   ├── api.ts
+│   ├── index.ts
+│   └── note.ts
+├── utils/
+│   ├── commonStyles.ts
+│   ├── constants.ts
+│   └── formatUtils.ts
+└── __tests__/
 ```
 
 ## 実装方針
