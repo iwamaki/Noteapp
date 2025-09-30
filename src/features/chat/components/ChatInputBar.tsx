@@ -4,54 +4,40 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
   Text,
 } from 'react-native';
 
 interface ChatInputBarProps {
-  onFocus: () => void; // 親コンポーネントにフォーカスイベントを通知
-  isChatPanelVisible: boolean;
+  onFocus: () => void;
 }
 
-export const ChatInputBar: React.FC<ChatInputBarProps> = ({
-  onFocus,
-  isChatPanelVisible,
-}) => {
+export const ChatInputBar: React.FC<ChatInputBarProps> = ({ onFocus }) => {
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.keyboardAvoidingContainer}
-    >
+    <View style={styles.containerWrapper}>
       <View style={styles.container}>
         <TextInput
           style={styles.textInput}
           placeholder="AIに質問する..."
           placeholderTextColor="#999"
-          onFocus={onFocus} // フォーカス時に親コンポーネントに通知
-          editable={!isChatPanelVisible} // チャットパネル表示中は編集不可
+          onFocus={onFocus}
         />
-        <TouchableOpacity
-          style={styles.sendButton}
-          onPress={onFocus} // 送信ボタンもチャットパネルを開くトリガーに
-          disabled={isChatPanelVisible} // チャットパネル表示中は無効
-        >
+        <TouchableOpacity style={styles.sendButton} onPress={onFocus}>
           <Text style={styles.sendButtonText}>チャット</Text>
         </TouchableOpacity>
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  keyboardAvoidingContainer: {
+  containerWrapper: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#f8f9fa', // 背景色をChatPanelのヘッダーと合わせる
+    backgroundColor: '#f8f9fa',
     borderTopWidth: 1,
-    borderTopColor: '#dee2e6', // ボーダー色をChatPanelのヘッダーと合わせる
+    borderTopColor: '#dee2e6',
     paddingHorizontal: 10,
     paddingVertical: 8,
   },
@@ -63,17 +49,17 @@ const styles = StyleSheet.create({
     flex: 1,
     borderWidth: 1,
     borderColor: '#ced4da',
-    borderRadius: 20, // より丸みを帯びたデザインに
+    borderRadius: 20,
     paddingHorizontal: 15,
     paddingVertical: 8,
     fontSize: 16,
     backgroundColor: '#fff',
     marginRight: 8,
-    minHeight: 40, // 最小の高さを設定
+    minHeight: 40,
   },
   sendButton: {
     backgroundColor: '#007bff',
-    borderRadius: 20, // より丸みを帯びたデザインに
+    borderRadius: 20,
     paddingHorizontal: 15,
     paddingVertical: 10,
     justifyContent: 'center',

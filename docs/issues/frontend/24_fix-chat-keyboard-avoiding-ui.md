@@ -38,13 +38,23 @@ tags: [UI, bug, chat, keyboard]
 ---
 ### 試行 #1
 
-- **試みたこと:** (未着手)
-- **結果:** (未着手)
-- **メモ (後続のAI担当者へ):**
-    - 前回のセッションで、チャット機能の大規模なリファクタリングを実施しました。`RootNavigator` から関連ロジックを分離し、`useChat` フックを作成、各画面 (`NoteListScreen`, `NoteEditScreen`) にチャットUIを統合済みです。
-    - キーボードにUIが隠れる問題は、`ChatInputBar.tsx` 内部の `KeyboardAvoidingView` の設定が不十分なことに起因する可能性が高いです。`behavior` prop (`padding` vs `height`) や `keyboardVerticalOffset` の調整を検討してください。
-    - もしくは、より堅牢なアプローチとして、`NoteListScreen` や `NoteEditScreen` のルートレベルで `KeyboardAvoidingView` を適用し、画面全体でキーボードを管理する方法も考えられます。その場合、`ChatInputBar` の `KeyboardAvoidingView` は不要になります。
-    - UIの一貫性の問題は、`ChatInputBar.tsx` 内で `isChatPanelVisible` 状態に応じて `editable` や `disabled` が切り替わり、それに伴いスタイルが変化していることが原因です。フォーカスがあたっても見た目が大きく変わらないよう、スタイル定義を見直す必要があります。
-    - まずは `ChatInputBar.tsx` の `KeyboardAvoidingView` の設定を見直すことから着手するのが効率的かと思われます。
+- **試みたこと:**
+    - `ChatInputBar.tsx` から `KeyboardAvoidingView` を削除。
+    - `NoteListScreen.tsx` と `NoteEditScreen.tsx` のルート要素を `KeyboardAvoidingView` でラップし、キーボード制御を各画面に委譲した。
+    - `ChatInputBar.tsx` から `editable` と `disabled` 属性を削除し、UIの一貫性を図った。
+- **結果:** 失敗。
+    - キーボード追従の問題は解決しなかった。チャット入力欄は依然としてキーボードに隠れたままだった。
+    - UIの一貫性も改善されなかった。
+- **メモ:**
+    - `ChatInputBar.tsx` が `position: 'absolute'` で絶対配置されているため、親コンポーネントの `KeyboardAvoidingView` がレイアウト計算の対象として認識できていない可能性が高い。これが失敗の根本原因と考えられる。
+
+---
+### 試行 #2
+
+- **計画:**
+    - **根本原因の解消:** `ChatInputBar.tsx` のスタイルから `position: 'absolute'` を削除する。
+    - **レイアウトの再構築:** `NoteListScreen.tsx` と `NoteEditScreen.tsx` のJSX構造を見直す。メインのコンテンツエリア（`FlatList`や`FileEditor`）が利用可能なスペース全体を占めるように(`flex: 1`)し、その**下**に`ChatInputBar`を通常のコンポーネントとして配置する。
+    - これにより、`KeyboardAvoidingView`が画面内のすべての要素を正しく認識し、キーボード表示時に`ChatInputBar`を適切に押し上げることが期待される。
+    - まずは `ChatInputBar.tsx` のスタイル変更から着手する。
 
 ---
