@@ -23,13 +23,33 @@ tags: [UI, bug, chat, keyboard]
 > - [ ] チャット入力欄へのフォーカス前後で、入力欄と「チャット/送信」ボタンのレイアウトやスタイルが大きく変化しないこと。
 > - [ ] 上記の修正が `NoteListScreen` と `NoteEditScreen` の両方の画面で適用されていること。
 
-## 関連ファイル (Related Files)
+## 制約事項 (Constraints)
+
+チャット機能のUIは、**テキスト入力欄と送信ボタンのみで構成してください。** LINEのチャット入力欄のような、極めてシンプルなデザインを目指します。
+
+*   **単一のUIパターンを維持**: 入力欄がフォーカスされているか否か、キーボード（IME）が表示されているか否かに関わらず、**常に単一のUIパターンを維持してください。** 異なる状態に応じてUIの見た目（レイアウト、サイズ、スタイル、要素の有無、内容）が変化するような実装は**絶対に避けてください。**
+*   **IMEへの追従（画面上の位置調整のみ）**: キーボード（IME）が表示された際には、入力欄がキーボードの直上に表示されるように、**画面上での垂直方向の位置のみを動的に調整してください。** この位置調整の際も、UI要素のレイアウトやスタイルは変更しないでください。
+
+## 理想的なUI (Ideal UI)
+
+以下は、チャット入力UIの理想的な状態を示します。
+
+### キーボード非表示時
+
+> - `docs/issues/frontend/chat_input_closed.svg`
+
+### キーボード表示時
+
+> - `docs/issues/frontend/chat_input_open.svg`
+
+## 関連ファイル (Related Files) 
 
 > - `src/features/chat/ChatPanel.tsx`
 > - `src/features/chat/components/ChatInputBar.tsx`
 > - `src/features/note-list/NoteListScreen.tsx`
 > - `src/features/note-edit/NoteEditScreen.tsx`
 > - `src/utils/commonStyles.ts`
+その他必要に応じて別のファイルも確認すること。
 
 
 ## 開発ログ (Development Log)

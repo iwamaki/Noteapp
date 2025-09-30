@@ -12,6 +12,8 @@ import {
   ScrollView,
   StyleSheet,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { ChatContext } from '../../services/api';
 import { LLMCommand, ChatMessage } from '../../services/llmService';
@@ -71,7 +73,10 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ context, onCommandReceived
 
   return (
     <View style={styles.overlay}>
-      <View style={styles.container}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.container}
+      >
         <View style={styles.header}>
           <Text style={styles.headerTitle}>AI チャット</Text>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
@@ -110,7 +115,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ context, onCommandReceived
             <Text style={[styles.sendButtonText, !canSendMessage && styles.disabledButtonText]}>送信</Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </View>
   );
 };

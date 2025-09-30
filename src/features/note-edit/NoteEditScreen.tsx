@@ -95,7 +95,7 @@ function NoteEditScreen() {
           onContentChange={setContent}
         />
       )}
-      <ChatInputBar onFocus={() => setIsChatPanelVisible(true)} />
+      <ChatInputBar onPress={() => setIsChatPanelVisible(true)} />
       {isChatPanelVisible && (
         <ChatPanel
           isVisible={isChatPanelVisible}

@@ -99,7 +99,7 @@ function NoteListScreen() {
         />
       )}
       <FabButton onPress={handleCreateNote} />
-      <ChatInputBar onFocus={() => setIsChatPanelVisible(true)} />
+      <ChatInputBar onPress={() => setIsChatPanelVisible(true)} />
       {isChatPanelVisible && (
         <ChatPanel
           isVisible={isChatPanelVisible}
