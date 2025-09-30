@@ -25,10 +25,12 @@ tags: [UI, bug, chat, keyboard]
 
 ## 関連ファイル (Related Files)
 
+> - `src/features/chat/ChatPanel.tsx`
 > - `src/features/chat/components/ChatInputBar.tsx`
 > - `src/features/note-list/NoteListScreen.tsx`
 > - `src/features/note-edit/NoteEditScreen.tsx`
 > - `src/utils/commonStyles.ts`
+
 
 ## 開発ログ (Development Log)
 
