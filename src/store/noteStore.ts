@@ -26,15 +26,19 @@ interface NoteState {
   notes: Note[];
   activeNote: Note | null;
   draftNote: DraftNote | null;
-  
+
   // 状態
   loading: LoadingState;
   error: NoteError | null;
   lastUpdated: Date | null;
-  
+
   // 検索・フィルタ
   searchQuery: string;
   filteredNotes: Note[];
+
+  // 選択モード
+  isSelectionMode: boolean;
+  selectedNoteIds: Set<string>;
   
   // アクション
   fetchNotes: () => Promise<void>;
@@ -46,7 +50,14 @@ interface NoteState {
   deleteNote: (noteId: string) => Promise<void>;
   searchNotes: (query: string) => void;
   clearError: () => void;
-  
+
+  // 選択モード関連アクション
+  toggleSelectionMode: () => void;
+  toggleNoteSelection: (noteId: string) => void;
+  clearSelectedNotes: () => void;
+  deleteSelectedNotes: () => Promise<void>;
+  copySelectedNotes: () => Promise<void>;
+
   // 編集状態管理
   isDraftModified: () => boolean;
   discardDraft: () => void;
@@ -85,6 +96,8 @@ export const useNoteStore = create<NoteState>()(
     lastUpdated: null,
     searchQuery: '',
     filteredNotes: [],
+    isSelectionMode: false,
+    selectedNoteIds: new Set<string>(),
 
     // ノート一覧取得
     fetchNotes: async () => {
@@ -334,7 +347,7 @@ export const useNoteStore = create<NoteState>()(
     // ドラフト破棄
     discardDraft: () => {
       const { activeNote } = get();
-      
+
       if (activeNote) {
         set({
           draftNote: {
@@ -345,6 +358,109 @@ export const useNoteStore = create<NoteState>()(
         });
       } else {
         set({ draftNote: null });
+      }
+    },
+
+    // 選択モード切り替え
+    toggleSelectionMode: () => {
+      const { isSelectionMode } = get();
+      set({
+        isSelectionMode: !isSelectionMode,
+        selectedNoteIds: new Set<string>()
+      });
+    },
+
+    // ノート選択状態切り替え
+    toggleNoteSelection: (noteId: string) => {
+      const { selectedNoteIds } = get();
+      const newSelectedIds = new Set(selectedNoteIds);
+
+      if (newSelectedIds.has(noteId)) {
+        newSelectedIds.delete(noteId);
+      } else {
+        newSelectedIds.add(noteId);
+      }
+
+      set({ selectedNoteIds: newSelectedIds });
+    },
+
+    // 選択解除
+    clearSelectedNotes: () => {
+      console.log('clearSelectedNotes called');
+      set({
+        selectedNoteIds: new Set<string>(),
+        isSelectionMode: false
+      });
+    },
+
+    // 選択されたノートの削除
+    deleteSelectedNotes: async () => {
+      const { selectedNoteIds } = get();
+
+      if (selectedNoteIds.size === 0) return;
+
+      const setLoading = (isLoading: boolean) =>
+        set({ loading: { isLoading, operation: 'delete' } });
+
+      setLoading(true);
+      set({ error: null });
+
+      try {
+        for (const noteId of selectedNoteIds) {
+          await NoteStorageService.deleteNote(noteId);
+        }
+
+        await get().fetchNotes();
+        set({
+          selectedNoteIds: new Set<string>(),
+          isSelectionMode: false
+        });
+      } catch (error) {
+        console.error('Failed to delete selected notes:', error);
+        const noteError = createNoteError(error, 'DELETE_SELECTED_ERROR');
+        set({ error: noteError });
+        throw noteError;
+      } finally {
+        setLoading(false);
+      }
+    },
+
+    // 選択されたノートの複製
+    copySelectedNotes: async () => {
+      const { selectedNoteIds, notes } = get();
+
+      if (selectedNoteIds.size === 0) return;
+
+      const setLoading = (isLoading: boolean) =>
+        set({ loading: { isLoading, operation: 'create' } });
+
+      setLoading(true);
+      set({ error: null });
+
+      try {
+        for (const noteId of selectedNoteIds) {
+          const originalNote = notes.find(note => note.id === noteId);
+          if (originalNote) {
+            await NoteStorageService.createNote({
+              title: `${originalNote.title} (コピー)`,
+              content: originalNote.content,
+              tags: originalNote.tags
+            });
+          }
+        }
+
+        await get().fetchNotes();
+        set({
+          selectedNoteIds: new Set<string>(),
+          isSelectionMode: false
+        });
+      } catch (error) {
+        console.error('Failed to copy selected notes:', error);
+        const noteError = createNoteError(error, 'COPY_SELECTED_ERROR');
+        set({ error: noteError });
+        throw noteError;
+      } finally {
+        setLoading(false);
       }
     },
   }))
@@ -358,14 +474,18 @@ export const useNoteStoreSelectors = () => {
   const loading = useNoteStore(state => state.loading);
   const error = useNoteStore(state => state.error);
   const isDraftModified = useNoteStore(state => state.isDraftModified());
-  
+  const isSelectionMode = useNoteStore(state => state.isSelectionMode);
+  const selectedNoteIds = useNoteStore(state => state.selectedNoteIds);
+
   return {
     notes,
     activeNote,
     draftNote,
     loading,
     error,
-    isDraftModified
+    isDraftModified,
+    isSelectionMode,
+    selectedNoteIds
   };
 };
 
@@ -381,6 +501,11 @@ export const useNoteStoreActions = () => {
   const searchNotes = useNoteStore(state => state.searchNotes);
   const clearError = useNoteStore(state => state.clearError);
   const discardDraft = useNoteStore(state => state.discardDraft);
+  const toggleSelectionMode = useNoteStore(state => state.toggleSelectionMode);
+  const toggleNoteSelection = useNoteStore(state => state.toggleNoteSelection);
+  const clearSelectedNotes = useNoteStore(state => state.clearSelectedNotes);
+  const deleteSelectedNotes = useNoteStore(state => state.deleteSelectedNotes);
+  const copySelectedNotes = useNoteStore(state => state.copySelectedNotes);
 
   return {
     fetchNotes,
@@ -392,6 +517,11 @@ export const useNoteStoreActions = () => {
     deleteNote,
     searchNotes,
     clearError,
-    discardDraft
+    discardDraft,
+    toggleSelectionMode,
+    toggleNoteSelection,
+    clearSelectedNotes,
+    deleteSelectedNotes,
+    copySelectedNotes
   };
 };

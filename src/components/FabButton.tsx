@@ -64,8 +64,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     alignItems: 'center',
     justifyContent: 'center',
-    right: spacing.xl,
-    bottom: spacing.xl,
+    right: spacing.xxl,
+    bottom: spacing.xxl + 80, 
     ...shadows.large,
   },
   fabText: {
