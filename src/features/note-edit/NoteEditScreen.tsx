@@ -12,72 +12,44 @@ import { FileEditor, ViewMode } from './components/FileEditor';
 import { useNoteEditor } from './hooks/useNoteEditor';
 import { useCustomHeader } from '../../components/CustomHeader';
 import { commonStyles, colors, typography, responsive } from '../../utils/commonStyles';
+import { ChatInputBar } from '../chat/components/ChatInputBar';
+import { ChatPanel } from '../chat/ChatPanel';
+import { ChatContext } from '../../services/llmService';
 
 type NoteEditScreenRouteProp = RouteProp<RootStackParamList, 'NoteEdit'>;
 
-// NoteEditScreenコンポーネント
 function NoteEditScreen() {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const route = useRoute<NoteEditScreenRouteProp>();
   const { noteId } = route.params || {};
   const { createHeaderConfig } = useCustomHeader();
 
-  // 新しいカスタムフックを使用してエディタのロジックを管理
   const {
     activeNote,
     title,
     setTitle,
     content,
     setContent,
-    isLoading, // isLoading状態を受け取る
+    isLoading,
     handleGoToDiff,
   } = useNoteEditor(noteId);
 
   const [viewMode, setViewMode] = useState<ViewMode>('edit');
+  const [isChatPanelVisible, setIsChatPanelVisible] = useState(false);
 
-  // ヘッダーのレイアウトエフェクトは残すが、フックから提供される状態を使用
   useLayoutEffect(() => {
-    const rightButtons: Array<{
-      title: string;
-      onPress: () => void;
-      variant?: 'primary' | 'secondary' | 'danger';
-    }> = [];
+    const rightButtons: Array<{ title: string; onPress: () => void; variant?: 'primary' | 'secondary' | 'danger'; }> = [];
 
-    if (!isLoading) { // ローディングが完了したらボタンを表示
+    if (!isLoading) {
       if (viewMode === 'content') {
-        rightButtons.push({
-          title: '編集',
-          onPress: () => setViewMode('edit'),
-          variant: 'primary',
-        });
+        rightButtons.push({ title: '編集', onPress: () => setViewMode('edit'), variant: 'primary' });
       } else if (viewMode === 'edit') {
-        rightButtons.push({
-          title: 'プレビュー',
-          onPress: () => setViewMode('preview'),
-          variant: 'secondary',
-        });
-        rightButtons.push({
-          title: '保存',
-          onPress: handleGoToDiff, // NoteEditScreenの保存ロジック
-          variant: 'primary',
-        });
+        rightButtons.push({ title: 'プレビュー', onPress: () => setViewMode('preview'), variant: 'secondary' });
+        rightButtons.push({ title: '保存', onPress: handleGoToDiff, variant: 'primary' });
       } else if (viewMode === 'preview') {
-        rightButtons.push({
-          title: '編集に戻る',
-          onPress: () => setViewMode('edit'),
-          variant: 'secondary',
-        });
-      } else if (viewMode === 'diff') {
-        // diffモードでは、FileEditorのフッターにボタンがあるため、ヘッダーには表示しない
-        // 必要であれば、ここにdiffモード用のボタンを追加することも可能
+        rightButtons.push({ title: '編集に戻る', onPress: () => setViewMode('edit'), variant: 'secondary' });
       }
-
-      // 履歴ボタンは常に表示
-      rightButtons.push({
-        title: '履歴',
-        onPress: () => navigation.navigate('VersionHistory', { noteId: activeNote?.id || '' }),
-        variant: 'secondary',
-      });
+      rightButtons.push({ title: '履歴', onPress: () => navigation.navigate('VersionHistory', { noteId: activeNote?.id || '' }), variant: 'secondary' });
     }
 
     navigation.setOptions(
@@ -92,24 +64,24 @@ function NoteEditScreen() {
             editable={viewMode === 'edit' && !isLoading}
           />
         ),
-        leftButtons: [
-          {
-            title: '\u2190',
-            onPress: () => navigation.goBack(),
-            variant: 'secondary',
-          },
-        ],
-        rightButtons: rightButtons, // 動的に生成したrightButtonsをセット
+        leftButtons: [{ title: '\u2190', onPress: () => navigation.goBack(), variant: 'secondary' }],
+        rightButtons: rightButtons,
       })
     );
   }, [navigation, title, activeNote, handleGoToDiff, createHeaderConfig, viewMode, setViewMode, isLoading]);
 
-  // メインのレンダリング部分
+  const chatContext: ChatContext = {
+    currentFile: activeNote?.id,
+    currentFileContent: {
+      filename: title,
+      content: content,
+      size: content.length.toString(),
+      type: 'text',
+    },
+  };
+
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={commonStyles.container}
-    >
+    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={commonStyles.container}>
       {isLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
@@ -121,6 +93,14 @@ function NoteEditScreen() {
           mode={viewMode}
           onModeChange={setViewMode}
           onContentChange={setContent}
+        />
+      )}
+      <ChatInputBar onFocus={() => setIsChatPanelVisible(true)} isChatPanelVisible={isChatPanelVisible} />
+      {isChatPanelVisible && (
+        <ChatPanel
+          isVisible={isChatPanelVisible}
+          onClose={() => setIsChatPanelVisible(false)}
+          context={chatContext}
         />
       )}
     </KeyboardAvoidingView>
