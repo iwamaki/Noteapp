@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { useNavigation, NavigationProp, useIsFocused } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/types';
-import { useNoteStore } from '../../store/noteStore';
+import { useNoteStore, useNoteStoreSelectors, useNoteStoreActions } from '../../store/noteStore';
 import { FabButton } from '../../components/FabButton';
 import { ListItem } from '../../components/ListItem';
 import { useCustomHeader } from '../../components/CustomHeader';
@@ -29,7 +29,19 @@ const CHAT_INPUT_HEIGHT = Platform.OS === 'ios' ? 78 : 66;
 // ノート一覧画面コンポーネント
 function NoteListScreen() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
-  const { notes, loading, fetchNotes, createNote } = useNoteStore();
+  const { notes, loading, isSelectionMode, selectedNoteIds } = useNoteStoreSelectors();
+
+  // デバッグ用ログ
+  console.log('NoteListScreen render:', { isSelectionMode, selectedCount: selectedNoteIds.size });
+  const {
+    fetchNotes,
+    createNote,
+    toggleSelectionMode,
+    toggleNoteSelection,
+    clearSelectedNotes,
+    deleteSelectedNotes,
+    copySelectedNotes
+  } = useNoteStoreActions();
   const isFocused = useIsFocused();
   const { createHeaderConfig } = useCustomHeader();
 
@@ -39,21 +51,80 @@ function NoteListScreen() {
     }
   }, [isFocused]);
 
-  // カスタムヘッダーの設定
-  useLayoutEffect(() => {
-    navigation.setOptions(
-      createHeaderConfig({
-        rightButtons: [
-          { title: '設定', onPress: () => navigation.navigate('Settings'), variant: 'primary' },
-        ],
-      })
-    );
-  }, [navigation, createHeaderConfig]);
-
   // ノート選択ハンドラー
   const handleSelectNote = (noteId: string) => {
-    navigation.navigate('NoteEdit', { noteId });
+    if (isSelectionMode) {
+      toggleNoteSelection(noteId);
+    } else {
+      navigation.navigate('NoteEdit', { noteId });
+    }
   };
+
+  // ノート長押しハンドラー
+  const handleLongPressNote = (noteId: string) => {
+    if (!isSelectionMode) {
+      toggleSelectionMode();
+      toggleNoteSelection(noteId);
+    }
+  };
+
+  // 選択キャンセルハンドラー
+  const handleCancelSelection = () => {
+    clearSelectedNotes();
+  };
+
+  // 選択ノート削除ハンドラー
+  const handleDeleteSelected = async () => {
+    try {
+      await deleteSelectedNotes();
+    } catch (error) {
+      console.error("Failed to delete selected notes:", error);
+    }
+  };
+
+  // 選択ノートコピーハンドラー
+  const handleCopySelected = async () => {
+    try {
+      await copySelectedNotes();
+    } catch (error) {
+      console.error("Failed to copy selected notes:", error);
+    }
+  };
+
+  // カスタムヘッダーの設定
+  useLayoutEffect(() => {
+    if (isSelectionMode) {
+      const selectedCount = selectedNoteIds.size;
+      navigation.setOptions(
+        createHeaderConfig({
+          title: <Text>{selectedCount}件選択中</Text>,
+          leftButtons: [
+            { title: 'キャンセル', onPress: handleCancelSelection, variant: 'secondary' },
+          ],
+          rightButtons: [
+            {
+              title: 'コピー',
+              onPress: handleCopySelected,
+              variant: 'primary'
+            },
+            {
+              title: '削除',
+              onPress: handleDeleteSelected,
+              variant: 'danger'
+            },
+          ],
+        })
+      );
+    } else {
+      navigation.setOptions(
+        createHeaderConfig({
+          rightButtons: [
+            { title: '設定', onPress: () => navigation.navigate('Settings'), variant: 'primary' },
+          ],
+        })
+      );
+    }
+  }, [navigation, createHeaderConfig, isSelectionMode, selectedNoteIds.size, handleCancelSelection, handleCopySelected, handleDeleteSelected]);
 
   // ノート作成ハンドラー
   const handleCreateNote = async () => {
@@ -77,7 +148,14 @@ function NoteListScreen() {
 
   // ノートリストのレンダラー
   const renderItem = ({ item }: { item: (typeof notes)[0] }) => (
-    <ListItem title={item.title} subtitle={item.content} onPress={() => handleSelectNote(item.id)} />
+    <ListItem
+      title={item.title}
+      subtitle={item.content}
+      onPress={() => handleSelectNote(item.id)}
+      onLongPress={() => handleLongPressNote(item.id)}
+      isSelected={selectedNoteIds.has(item.id)}
+      isSelectionMode={isSelectionMode}
+    />
   );
 
   // チャットコンテキストの設定
@@ -105,7 +183,10 @@ function NoteListScreen() {
           contentContainerStyle={[styles.listContent, { paddingBottom: CHAT_INPUT_HEIGHT + spacing.xl }]}
         />
       )}
-      <FabButton onPress={handleCreateNote} />
+      {(() => {
+        console.log('FAB render check:', { isSelectionMode, shouldShow: !isSelectionMode });
+        return !isSelectionMode ? <FabButton onPress={handleCreateNote} /> : null;
+      })()}
       <ChatInputBar context={chatContext} />
     </View>
   );
