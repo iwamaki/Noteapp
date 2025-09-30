@@ -4,9 +4,13 @@
 */
 
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import {
+  NavigationContainer,
+  useNavigationContainerRef,
+} from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { RootStackParamList } from './types';
+import { View, StyleSheet } from 'react-native';
 
 import NoteListScreen from '../features/note-list/NoteListScreen';
 import NoteEditScreen from '../features/note-edit/NoteEditScreen';
@@ -19,17 +23,27 @@ const Stack = createStackNavigator<RootStackParamList>();
 
 // RootNavigatorコンポーネント
 function RootNavigator() {
+  const navigationRef = useNavigationContainerRef();
+
   return (
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName="NoteList">
-        <Stack.Screen name="NoteList" component={NoteListScreen} options={{ title: 'Notes' }} />
-        <Stack.Screen name="NoteEdit" component={NoteEditScreen} options={{ title: 'Edit Note' }} />
-        <Stack.Screen name="DiffView" component={DiffViewScreen} options={{ title: 'View Diff' }} />
-        <Stack.Screen name="VersionHistory" component={VersionHistoryScreen} options={{ title: 'Version History' }} />
-        <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <View style={styles.container}>
+      <NavigationContainer ref={navigationRef}>
+        <Stack.Navigator initialRouteName="NoteList">
+          <Stack.Screen name="NoteList" component={NoteListScreen} options={{ title: 'Notes' }} />
+          <Stack.Screen name="NoteEdit" component={NoteEditScreen} options={{ title: 'Edit Note' }} />
+          <Stack.Screen name="DiffView" component={DiffViewScreen} options={{ title: 'View Diff' }} />
+          <Stack.Screen name="VersionHistory" component={VersionHistoryScreen} options={{ title: 'Version History' }} />
+          <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});
 
 export default RootNavigator;
