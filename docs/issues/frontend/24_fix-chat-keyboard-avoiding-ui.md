@@ -38,23 +38,5 @@ tags: [UI, bug, chat, keyboard]
 ---
 ### 試行 #1
 
-- **試みたこと:**
-    - `ChatInputBar.tsx` から `KeyboardAvoidingView` を削除。
-    - `NoteListScreen.tsx` と `NoteEditScreen.tsx` のルート要素を `KeyboardAvoidingView` でラップし、キーボード制御を各画面に委譲した。
-    - `ChatInputBar.tsx` から `editable` と `disabled` 属性を削除し、UIの一貫性を図った。
-- **結果:** 失敗。
-    - キーボード追従の問題は解決しなかった。チャット入力欄は依然としてキーボードに隠れたままだった。
-    - UIの一貫性も改善されなかった。
-- **メモ:**
-    - `ChatInputBar.tsx` が `position: 'absolute'` で絶対配置されているため、親コンポーネントの `KeyboardAvoidingView` がレイアウト計算の対象として認識できていない可能性が高い。これが失敗の根本原因と考えられる。
-
----
-### 試行 #2
-
-- **計画:**
-    - **根本原因の解消:** `ChatInputBar.tsx` のスタイルから `position: 'absolute'` を削除する。
-    - **レイアウトの再構築:** `NoteListScreen.tsx` と `NoteEditScreen.tsx` のJSX構造を見直す。メインのコンテンツエリア（`FlatList`や`FileEditor`）が利用可能なスペース全体を占めるように(`flex: 1`)し、その**下**に`ChatInputBar`を通常のコンポーネントとして配置する。
-    - これにより、`KeyboardAvoidingView`が画面内のすべての要素を正しく認識し、キーボード表示時に`ChatInputBar`を適切に押し上げることが期待される。
-    - まずは `ChatInputBar.tsx` のスタイル変更から着手する。
 
 ---
