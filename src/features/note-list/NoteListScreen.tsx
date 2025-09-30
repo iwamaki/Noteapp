@@ -18,7 +18,7 @@ import { FabButton } from '../../components/FabButton';
 import { ListItem } from '../../components/ListItem';
 import { useCustomHeader } from '../../components/CustomHeader';
 import { commonStyles, colors, spacing } from '../../utils/commonStyles';
-import { ChatInputBar } from '../chat/components/ChatInputBar';
+import { ChatInputBar } from '../chat/ChatInputBar';
 import { ChatContext } from '../../services/llmService';
 
 // 入力バーの高さ（概算）

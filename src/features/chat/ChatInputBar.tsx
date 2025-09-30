@@ -18,9 +18,9 @@ import {
   Keyboard,
   KeyboardEvent,
 } from 'react-native';
-import { ChatMessage, LLMCommand } from '../../../services/llmService';
-import { useChat } from '../hooks/useChat';
-import { ChatContext } from '../../../services/api';
+import { ChatMessage, LLMCommand } from '../../services/llmService';
+import { useChat } from './hooks/useChat';
+import { ChatContext } from '../../services/api';
 
 interface ChatInputBarProps {
   context?: ChatContext;
@@ -81,6 +81,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
     }
   }, [messages, isExpanded]);
 
+  
   // 展開/折りたたみアニメーション
   useEffect(() => {
     Animated.timing(expandAnimation, {
@@ -88,7 +89,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
       duration: 300,
       useNativeDriver: false,
     }).start();
-  }, [isExpanded]);
+  }, [isExpanded]);  
 
   const handleSendMessage = async () => {
     const trimmedInput = inputText.trim();
@@ -309,7 +310,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     paddingHorizontal: 10,
     paddingVertical: 8,
-    paddingBottom: Platform.OS === 'ios' ? 20 : 8,
+    paddingBottom: Platform.OS === 'ios' ? 20 : 35,
     backgroundColor: '#f8f9fa',
   },
   expandButton: {
