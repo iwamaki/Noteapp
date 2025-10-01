@@ -96,31 +96,31 @@ function SettingsScreen() {
       <View style={styles.content}>
         {/* 1. 表示設定 */}
         {renderSection('表示設定')}
-        {renderPicker('テーマ', settings.theme, [
+        {renderPicker('テーマ (未実装)', settings.theme, [
           { label: 'ライト', value: 'light' },
           { label: 'ダーク', value: 'dark' },
           { label: 'システム', value: 'system' },
         ])}
-        {renderPicker('フォントサイズ', settings.fontSize, [
+        {renderPicker('フォントサイズ (未実装)', settings.fontSize, [
           { label: '小', value: 'small' },
           { label: '中', value: 'medium' },
           { label: '大', value: 'large' },
           { label: '特大', value: 'xlarge' },
         ])}
         {renderOption(
-          '行番号を表示',
+          '行番号を表示 (未実装)',
           settings.showLineNumbers,
           undefined,
           () => updateSettings({ showLineNumbers: !settings.showLineNumbers })
         )}
         {renderOption(
-          'シンタックスハイライト',
+          'シンタックスハイライト (未実装)',
           settings.syntaxHighlight,
           undefined,
           () => updateSettings({ syntaxHighlight: !settings.syntaxHighlight })
         )}
         {renderOption(
-          'マークダウン記号を表示',
+          'マークダウン記号を表示 (未実装)',
           settings.showMarkdownSymbols,
           undefined,
           () => updateSettings({ showMarkdownSymbols: !settings.showMarkdownSymbols })
@@ -128,39 +128,39 @@ function SettingsScreen() {
 
         {/* 2. 動作設定 */}
         {renderSection('動作設定')}
-        {renderPicker('デフォルトエディタモード', settings.defaultEditorMode, [
+        {renderPicker('デフォルトエディタモード (未実装)', settings.defaultEditorMode, [
           { label: '編集', value: 'edit' },
           { label: 'プレビュー', value: 'preview' },
           { label: '分割', value: 'split' },
         ])}
         {renderOption(
-          '自動保存',
+          '自動保存 (未実装)',
           settings.autoSaveEnabled,
           undefined,
           () => updateSettings({ autoSaveEnabled: !settings.autoSaveEnabled })
         )}
         {renderOption(
-          '自動インデント',
+          '自動インデント (未実装)',
           settings.autoIndent,
           undefined,
           () => updateSettings({ autoIndent: !settings.autoIndent })
         )}
         {renderOption(
-          'スペルチェック',
+          'スペルチェック (未実装)',
           settings.spellCheck,
           undefined,
           () => updateSettings({ spellCheck: !settings.spellCheck })
         )}
         {renderOption(
-          '自動補完',
+          '自動補完 (未実装)',
           settings.autoComplete,
           undefined,
           () => updateSettings({ autoComplete: !settings.autoComplete })
         )}
 
         {/* 3. LLM（AI）設定 */}
-        {renderSection('LLM（AI）設定')}
-        {renderPicker('プライバシーモード', settings.privacyMode, [
+        {renderSection('LLM（AI）設定 (未実装)')}
+        {renderPicker('プライバシーモード (未実装)', settings.privacyMode, [
           { label: '通常', value: 'normal' },
           { label: 'プライベート', value: 'private' },
         ])}
@@ -168,25 +168,25 @@ function SettingsScreen() {
         {/* 4. システムと通知 */}
         {renderSection('システムと通知')}
         {renderOption(
-          'バージョン更新通知',
+          'バージョン更新通知 (未実装)',
           settings.updateNotifications,
           undefined,
           () => updateSettings({ updateNotifications: !settings.updateNotifications })
         )}
         {renderOption(
-          'バックアップ完了通知',
+          'バックアップ完了通知 (未実装)',
           settings.backupNotifications,
           undefined,
           () => updateSettings({ backupNotifications: !settings.backupNotifications })
         )}
         {renderOption(
-          'LLM処理完了通知',
+          'LLM処理完了通知 (未実装)',
           settings.llmNotifications,
           undefined,
           () => updateSettings({ llmNotifications: !settings.llmNotifications })
         )}
         {renderOption(
-          '高コントラストモード',
+          '高コントラストモード (未実装)',
           settings.highContrastMode,
           undefined,
           () => updateSettings({ highContrastMode: !settings.highContrastMode })
