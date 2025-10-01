@@ -34,7 +34,6 @@ class LLMCommand(BaseModel):
 
 class ChatResponse(BaseModel):
     message: str
-    response: Optional[str] = None
     commands: Optional[List[LLMCommand]] = None
     provider: Optional[str] = None
     model: Optional[str] = None
