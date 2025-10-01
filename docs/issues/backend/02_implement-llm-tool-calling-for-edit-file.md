@@ -30,10 +30,18 @@ tags: [backend, LLM, langchain, tool-calling]
 ## 関連ファイル (Related Files)
 > このissueに関連すると思われるファイルやディレクトリのリストです。
 > LLMがコード分析を始める際のヒントになります。
->
-> - `server/src/main.py`
-> - `src/services/llmService.ts`
-> - `src/features/note-edit/NoteEditScreen.tsx`
+> 
+> ### バックエンド (Backend)
+> - **`server/src/services.py`**: **[最重要]** LLMとの対話ロジックが記述されており、ここにTool Callingを実装する中心的なファイル。
+> - **`server/src/tools.py`**: **[最重要]** LLMが使用する `edit_file` などのツールを定義するファイル。
+> - `server/src/main.py`: APIエンドポイントが定義されている。`services.py`を呼び出す。
+> - `server/src/models.py`: `ChatResponse` や `LLMCommand` などのデータモデルが定義されている。
+> 
+> ### フロントエンド (Frontend)
+> - `src/features/chat/hooks/useChat.ts`: チャットのUIロジックと状態を管理し、バックエンドからのコマンドを処理する起点。
+> - `src/services/api.ts`: `APIService` としてバックエンドとの通信を抽象化している。
+> - `src/services/llmService.ts`: `LLMCommand` などのフロントエンド側の型定義が含まれる。
+> - `src/features/note-edit/NoteEditScreen.tsx`: 最終的にファイル編集結果が反映される画面。
 
 ## 開発ログ (Development Log)
 
@@ -43,8 +51,14 @@ tags: [backend, LLM, langchain, tool-calling]
 ---
 ### 試行 #1
 
-- **試みたこと:** （実行した計画の要約）
-- **結果:** （成功、失敗、発生したエラーなど）
-- **メモ:** （次のセッションへの申し送り事項、気づきなど）
+- **試みたこと:** issueに記載された関連ファイルの妥当性を確認するため、ソースコード全体を調査した。
+- **結果:** 
+  - issue記載のファイルリストが不十分であることが判明した。
+  - バックエンドの `server/src/services.py` がLLMロジックの中心であり、現状はTool Calling機能が実装されていないことを確認した。
+  - `server/src/tools.py` は存在するが空であり、ここにツール定義が必要であることがわかった。
+  - フロントエンドでは `useChat.ts` がバックエンドからのコマンドを処理する `onCommandReceived` コールバックを持っており、コマンド実行の起点となることを確認した。
+- **メモ:** 
+  - 次のステップとして、`server/src/services.py` にLangChainのTool Calling機能を実装する。
+  - `server/src/tools.py` に `edit_file` ツールを具体的に定義する。
 
 ---
