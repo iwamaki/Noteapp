@@ -10,6 +10,7 @@ import {
 import { useSettingsStore } from '../../store/settingsStore';
 import { colors, spacing, typography } from '../../utils/commonStyles';
 
+// 設定画面コンポーネント
 function SettingsScreen() {
   const { settings, loadSettings, updateSettings, isLoading } = useSettingsStore();
 

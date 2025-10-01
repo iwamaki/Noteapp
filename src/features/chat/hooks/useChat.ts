@@ -3,10 +3,12 @@ import { useState, useCallback, useMemo } from 'react';
 import APIService, { ChatContext } from '../../../services/api';
 import { ChatMessage, LLMCommand } from '../../../services/llmService';
 
+// チャットフック
 export const useChat = (context: ChatContext = {}, onCommandReceived?: (commands: LLMCommand[]) => void) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
+  // メッセージオブジェクトを作成する関数
   const createMessage = useCallback(( 
     role: ChatMessage['role'],
     content: string
@@ -16,10 +18,12 @@ export const useChat = (context: ChatContext = {}, onCommandReceived?: (commands
     timestamp: new Date(),
   }), []);
 
+  // メッセージを追加する関数
   const addMessage = useCallback((message: ChatMessage) => {
     setMessages(prev => [...prev, message]);
   }, []);
 
+  // LLMからのレスポンスを処理する関数
   const handleLLMResponse = useCallback((response: any) => {
     const aiMessage = createMessage('ai', response.message || response.response || '');
     addMessage(aiMessage);
@@ -42,6 +46,7 @@ export const useChat = (context: ChatContext = {}, onCommandReceived?: (commands
     }
   }, [createMessage, addMessage, onCommandReceived]);
 
+  // エラーハンドリング関数
   const handleError = useCallback((error: unknown) => {
     console.error('Chat error:', error);
     
@@ -55,6 +60,7 @@ export const useChat = (context: ChatContext = {}, onCommandReceived?: (commands
     addMessage(errorMessage);
   }, [createMessage, addMessage]);
 
+  // メッセージ送信関数
   const sendMessage = useCallback(async (inputText: string) => {
     const trimmedInput = inputText.trim();
     if (!trimmedInput || isLoading) return;
