@@ -76,6 +76,7 @@ export const FileEditor: React.FC<FileEditorProps> = ({
     return FILE_VIEWERS.default;
   }, [filename]);
 
+  // 差分の生成
   const diff = useMemo(() =>
     originalContent !== currentContent
       ? generateDiff(originalContent, currentContent)
@@ -83,6 +84,7 @@ export const FileEditor: React.FC<FileEditorProps> = ({
     [originalContent, currentContent]
   );
 
+  // 差分管理フックの利用
   const {
     selectedBlocks,
     toggleBlockSelection,
@@ -91,25 +93,21 @@ export const FileEditor: React.FC<FileEditorProps> = ({
     allChangeBlockIds
   } = useDiffManager(diff);
 
+  // 変更があるかどうかの判定
   const isModified = useMemo(() => {
     return currentContent !== originalContent;
   }, [currentContent, originalContent]);
 
-
-
-
-
+  // 差分適用のハンドラ
   const handleApplyDiff = useCallback(() => {
     const selectedContent = generateSelectedContent();
     onModeChange('content');
   }, [generateSelectedContent, onModeChange]);
 
-
-
+  // 全選択・全解除の判定
   const allSelected = allChangeBlockIds.size > 0 && selectedBlocks.size === allChangeBlockIds.size;
 
-
-
+  // コンテンツのレンダリング
   const renderContent = () => {
     switch (mode) {
       case 'content':
@@ -180,6 +178,7 @@ export const FileEditor: React.FC<FileEditorProps> = ({
   );
 };
 
+// スタイル定義
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
   contentContainer: { flex: 1, paddingHorizontal: 16, paddingVertical: 12 },
