@@ -1,11 +1,12 @@
 
-
+// LLMサービス関連の型定義とユーティリティ関数
 export interface ChatMessage {
   role: 'user' | 'ai' | 'system';
   content: string;
   timestamp: Date;
 }
 
+// チャットコンテキスト
 export interface ChatContext {
   currentPath?: string;
   fileList?: Array<{
@@ -36,6 +37,7 @@ export interface ChatContext {
   conversationHistory?: ChatMessage[];
 }
 
+// LLMプロバイダー情報
 export interface LLMProvider {
   name: string;
   defaultModel: string;
@@ -43,6 +45,7 @@ export interface LLMProvider {
   status: 'available' | 'unavailable' | 'error';
 }
 
+// LLMコマンド
 export interface LLMCommand {
   action: string;
   path?: string;
@@ -54,6 +57,7 @@ export interface LLMCommand {
   sources?: string[];
 }
 
+// LLMレスポンス
 export interface LLMResponse {
   message: string;
   response?: string;
@@ -65,11 +69,13 @@ export interface LLMResponse {
   warning?: string;
 }
 
+// LLMヘルスステータス
 export interface LLMHealthStatus {
   status: 'ok' | 'error';
   providers: Record<string, LLMProvider>;
 }
 
+// LLM設定
 export interface LLMConfig {
   maxHistorySize: number;
   apiTimeout: number;

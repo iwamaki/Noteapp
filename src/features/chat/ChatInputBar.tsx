@@ -22,11 +22,13 @@ import { ChatMessage, LLMCommand } from '../../services/llmService';
 import { useChat } from './hooks/useChat';
 import { ChatContext } from '../../services/api';
 
-interface ChatInputBarProps {
+// チャット入力バーコンポーネントのプロパティ   
+interface ChatInputBarProps { 
   context?: ChatContext;
-  onCommandReceived?: (commands: LLMCommand[]) => void;
+  onCommandReceived?: (commands: LLMCommand[]) => void;     
 }
 
+// チャット入力バーコンポーネント
 export const ChatInputBar: React.FC<ChatInputBarProps> = ({
   context,
   onCommandReceived,
@@ -51,6 +53,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
       }).start();
     };
 
+    // キーボードが隠れたときの処理
     const keyboardWillHide = (e: KeyboardEvent) => {
       setKeyboardHeight(0);
       Animated.timing(positionAnimation, {
@@ -91,6 +94,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
     }).start();
   }, [isExpanded]);  
 
+  // メッセージ送信処理
   const handleSendMessage = async () => {
     const trimmedInput = inputText.trim();
     if (trimmedInput.length > 0 && !isLoading) {
@@ -99,13 +103,16 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
     }
   };
 
+  // 送信可能かどうかの判定
   const canSendMessage = inputText.trim().length > 0 && !isLoading;
 
+  // アニメーションで変化するスタイル
   const messageAreaHeight = expandAnimation.interpolate({
     inputRange: [0, 1],
     outputRange: [0, 300],
   });
 
+  // メッセージのレンダリング
   const renderMessage = (message: ChatMessage, index: number) => {
     let containerStyle: any[] = [styles.message];
     let textStyle: any[] = [styles.messageText];

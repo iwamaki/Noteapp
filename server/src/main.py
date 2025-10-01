@@ -167,6 +167,7 @@ async def chat_post(request: ChatRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# テスト用のGETエンドポイント
 @app.get("/api/chat")
 async def chat_get(
     message: str,
@@ -184,6 +185,7 @@ async def chat_get(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# LLMプロバイダーの取得
 @app.get("/api/llm-providers")
 async def get_llm_providers():
     """利用可能なLLMプロバイダーを取得"""
@@ -216,6 +218,7 @@ async def get_llm_providers():
     
     return providers
 
+# ヘルスチェックエンドポイント
 @app.get("/api/health")
 async def health_check():
     """ヘルスチェック"""
@@ -242,6 +245,7 @@ async def health_check():
         "providers": providers_status
     }
 
+# ルートエンドポイント
 @app.get("/")
 async def root():
     """ルートエンドポイント"""
