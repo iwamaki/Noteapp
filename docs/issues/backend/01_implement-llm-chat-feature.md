@@ -40,17 +40,7 @@ tags: [backend, LLM, FastAPI, LangChain, chat]
 
 ## 関連ファイル (Related Files)
 
-- `server/requirements.txt`
 - `server/src/main.py`
-- `server/src/routers/llm.py`
-- `server/src/services/llm_service.py`
-- `server/src/langchain_agent/chat_agent.py` (新規作成)
-- `server/src/tool/web_search_service.py` (新規作成)
-- `server/src/clients/openai_client.py`
-- `server/src/clients/local_llm_client.py`
-- `server/src/core/config.py`
-- `server/Dockerfile`
-- `server/docker-compose.yml`
 - `src/services/llmService.ts` (フロントエンドの参照用)
 - `docs/参考/server_pythonver/main.py` (プロトタイプ参照用)
 
@@ -60,9 +50,7 @@ tags: [backend, LLM, FastAPI, LangChain, chat]
 ### 試行 #1
 
 - **試みたこと:**
-    - `src/services/llmService.ts` を分析し、フロントエンドが期待するバックエンドAPIの仕様を把握した。
     - `server/src/main.py`, `server/src/routers/llm.py`, `server/src/services/llm_service.py`, `server/src/clients/openai_client.py`, `server/src/clients/local_llm_client.py`, `server/requirements.txt` が未実装または空であることを確認した。
-    - `server/src/core/config.py` がLLM関連の設定を扱う準備ができていることを確認した。
     - `docs/参考/server_pythonver/main.py` に存在するプロトタイプを分析し、実装の具体的な指針を得た。
     - 上記分析に基づき、本Issueのドラフトを作成した。
 - **結果:** バックエンドのLLM機能が未実装であることが明確になり、フロントエンドのエラーの原因が特定できた。プロトタイプから具体的な実装方針を確立できた。
