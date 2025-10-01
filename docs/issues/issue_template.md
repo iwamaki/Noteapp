@@ -32,6 +32,15 @@ tags: [] # 例: [UI, navigation, bug]
 > - `src/screens/HomeScreen.tsx`
 > - `src/navigation/RootNavigator.tsx`
 
+## 制約条件 (Constraints)
+
+> このissueを解決する際に守るべき制約やルール、考慮すべき技術的・運用的な条件を記述します。
+> 例: 使用禁止のライブラリ、パフォーマンス要件、UIデザインガイドライン、セキュリティ要件など。
+>
+> - 例: 外部APIは利用しないこと
+> - 例: レスポンスタイムは1秒以内
+> - 例: 既存のUIコンポーネントを再利用すること
+
 ## 開発ログ (Development Log)
 
 > このissueに関する作業の履歴を時系列で記録します。
@@ -46,7 +55,6 @@ tags: [] # 例: [UI, navigation, bug]
 
 ---
 ### 試行 #2
-
-- ...
+...
 
 ---
