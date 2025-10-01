@@ -41,4 +41,4 @@ yarn-error.*
 /android
 
 # docs
-docs/参考/
+docs/参考/server/.env
