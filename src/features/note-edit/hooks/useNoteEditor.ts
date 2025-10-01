@@ -6,8 +6,6 @@
  *　- 保存処理（差分表示画面への遷移）のハンドラを提供
  */
 
-
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -25,7 +23,7 @@ export const useNoteEditor = (noteId: string | undefined) => {
   const [isLoading, setIsLoading] = useState(true);
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
-  // 1. noteIdに基づいてノートを選択し、ローディング状態を管理する
+  // noteIdに基づいてノートを選択し、ローディング状態を管理する
   useEffect(() => {
     setIsLoading(true);
     selectNote(noteId ?? null).finally(() => {
@@ -34,7 +32,7 @@ export const useNoteEditor = (noteId: string | undefined) => {
     });
   }, [noteId, selectNote]);
 
-  // 2. activeNoteが更新されたら、ローカルのstateを更新し、ローディングを解除する
+  // activeNoteが更新されたら、ローカルのstateを更新し、ローディングを解除する
   useEffect(() => {
     if (noteId === undefined || activeNote?.id === noteId) {
       setTitle(activeNote?.title ?? '');
@@ -64,7 +62,7 @@ export const useNoteEditor = (noteId: string | undefined) => {
     }, 500); // 500msのデバウンス
   };
 
-  // 3. 保存処理（差分表示画面への遷移）のハンドラ
+  // 保存処理（差分表示画面への遷移）のハンドラ
   const handleGoToDiff = useCallback(() => {
     // コンテンツが変更されていない場合はアラートを表示して遷移しない
     if (activeNote?.content === content) {

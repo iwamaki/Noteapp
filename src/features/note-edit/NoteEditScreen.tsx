@@ -20,6 +20,7 @@ type NoteEditScreenRouteProp = RouteProp<RootStackParamList, 'NoteEdit'>;
 // 入力バーの高さ（概算）
 const CHAT_INPUT_HEIGHT = Platform.OS === 'ios' ? 78 : 66;
 
+// ノート編集画面コンポーネント
 function NoteEditScreen() {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const route = useRoute<NoteEditScreenRouteProp>();
@@ -38,6 +39,7 @@ function NoteEditScreen() {
 
   const [viewMode, setViewMode] = useState<ViewMode>('edit');
 
+  // ヘッダーの設定
   useLayoutEffect(() => {
     const rightButtons: Array<{ title: string; onPress: () => void; variant?: 'primary' | 'secondary' | 'danger'; }> = [];
 
@@ -53,6 +55,7 @@ function NoteEditScreen() {
       rightButtons.push({ title: '履歴', onPress: () => navigation.navigate('VersionHistory', { noteId: activeNote?.id || '' }), variant: 'secondary' });
     }
 
+    // タイトル入力欄をヘッダーに表示
     navigation.setOptions(
       createHeaderConfig({
         title: (
@@ -71,6 +74,7 @@ function NoteEditScreen() {
     );
   }, [navigation, title, activeNote, handleGoToDiff, createHeaderConfig, viewMode, setViewMode, isLoading]);
 
+  // チャットエリアの作成 
   const chatContext: ChatContext = {
     currentFile: activeNote?.id,
     currentFileContent: {
