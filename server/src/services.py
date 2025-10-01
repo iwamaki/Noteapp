@@ -1,9 +1,10 @@
 """
 ビジネスロジック（サービス層）
 """
-from typing import Optional
+from typing import Optional, List
 import os
-from .models import ChatResponse, ChatContext
+from .models import ChatResponse, ChatContext, LLMCommand
+from .tools import AVAILABLE_TOOLS
 
 
 class SimpleLLMService:
@@ -31,6 +32,9 @@ class SimpleLLMService:
                     temperature=0.7
                 )
 
+                # Tool Callingを有効化
+                llm_with_tools = llm.bind_tools(AVAILABLE_TOOLS)
+
                 messages = [
                     SystemMessage(content="あなたは親切で有能なAIアシスタントです。ユーザーのノート作成と編集をサポートします。"),
                     HumanMessage(content=message)
@@ -41,11 +45,14 @@ class SimpleLLMService:
                     context_msg = f"\n\n現在編集中のファイル: {context.currentFileContent.get('filename')}\n内容:\n{context.currentFileContent.get('content')}"
                     messages.append(HumanMessage(content=context_msg))
 
-                response = llm.invoke(messages)
+                response = llm_with_tools.invoke(messages)
+
+                # ツール呼び出しがあるかチェック
+                commands = self._extract_tool_calls(response)
 
                 return ChatResponse(
-                    message=response.content,
-                    response=response.content,
+                    message=response.content if response.content else "ファイルの編集コマンドを生成しました。",
+                    commands=commands if commands else None,
                     provider=provider,
                     model=model
                 )
@@ -61,6 +68,9 @@ class SimpleLLMService:
                     temperature=0.7
                 )
 
+                # Tool Callingを有効化
+                llm_with_tools = llm.bind_tools(AVAILABLE_TOOLS)
+
                 messages = [
                     SystemMessage(content="あなたは親切で有能なAIアシスタントです。ユーザーのノート作成と編集をサポートします。"),
                     HumanMessage(content=message)
@@ -70,11 +80,14 @@ class SimpleLLMService:
                     context_msg = f"\n\n現在編集中のファイル: {context.currentFileContent.get('filename')}\n内容:\n{context.currentFileContent.get('content')}"
                     messages.append(HumanMessage(content=context_msg))
 
-                response = llm.invoke(messages)
+                response = llm_with_tools.invoke(messages)
+
+                # ツール呼び出しがあるかチェック
+                commands = self._extract_tool_calls(response)
 
                 return ChatResponse(
-                    message=response.content,
-                    response=response.content,
+                    message=response.content if response.content else "ファイルの編集コマンドを生成しました。",
+                    commands=commands if commands else None,
                     provider=provider,
                     model=model
                 )
@@ -83,7 +96,6 @@ class SimpleLLMService:
                 # APIキーが設定されていない場合のフォールバック
                 return ChatResponse(
                     message=f"受信したメッセージ: {message}\n\n申し訳ありません。現在LLMサービスが利用できません。APIキーを設定してください。",
-                    response=f"エコー応答: {message}",
                     provider=provider,
                     model=model
                 )
@@ -92,7 +104,26 @@ class SimpleLLMService:
             print(f"Error in process_chat: {str(e)}")
             return ChatResponse(
                 message=f"エラーが発生しました: {str(e)}",
-                response=f"エラー: {str(e)}",
                 provider=provider,
                 model=model
             )
+
+    def _extract_tool_calls(self, response) -> Optional[List[LLMCommand]]:
+        """
+        LLMのレスポンスからツール呼び出しを抽出し、LLMCommandに変換する
+        """
+        if not hasattr(response, 'tool_calls') or not response.tool_calls:
+            return None
+
+        commands = []
+        for tool_call in response.tool_calls:
+            # edit_fileツールの場合
+            if tool_call.get('name') == 'edit_file':
+                args = tool_call.get('args', {})
+                commands.append(LLMCommand(
+                    action='edit_file',
+                    path=args.get('filename'),
+                    content=args.get('content')
+                ))
+
+        return commands if commands else None

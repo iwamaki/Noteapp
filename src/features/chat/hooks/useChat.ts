@@ -25,7 +25,7 @@ export const useChat = (context: ChatContext = {}, onCommandReceived?: (commands
 
   // LLMからのレスポンスを処理する関数
   const handleLLMResponse = useCallback((response: any) => {
-    const aiMessage = createMessage('ai', response.message || response.response || '');
+    const aiMessage = createMessage('ai', response.message || '');
     addMessage(aiMessage);
 
     if (response.commands && response.commands.length > 0 && onCommandReceived) {

@@ -60,7 +60,6 @@ export interface LLMCommand {
 // LLMレスポンス
 export interface LLMResponse {
   message: string;
-  response?: string;
   commands?: LLMCommand[];
   provider?: string;
   model?: string;
@@ -262,7 +261,7 @@ export class LLMService {
       // 会話履歴に追加
       this.conversationHistory.addExchange(
         message,
-        data.message || data.response || ''
+        data.message
       );
 
       return data;
