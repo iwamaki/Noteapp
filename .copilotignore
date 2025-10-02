@@ -1,0 +1,62 @@
+# GitHub Copilot が読み込まないファイルを指定する ignore ファイル
+# .gitignore と同様の構文を使用可能
+
+# 参考資料ディレクトリ（プロジェクト固有の不要なドキュメント）
+docs/参考/
+
+# ログファイル（実行時生成されるログを無視）
+*.log
+
+# テストファイル（テストコードはCopilotの学習対象外）
+**/__tests__/
+**/*.test.*
+**/*.spec.*
+
+# 一時ファイル（開発中のテンポラリファイル）
+*.tmp
+*.temp
+*.swp
+*.bak
+
+# 環境ファイル（機密情報や環境依存の設定）
+.env*
+!.env.example  # サンプルファイルは除外しない
+
+# 依存関係とビルド成果物（Node.js関連）
+node_modules/
+.expo/
+dist/
+web-build/
+*.tsbuildinfo
+
+# Metro（React Nativeビルダー）のヘルスチェックファイル
+.metro-health-check*
+
+# デバッグファイル（npm/yarn関連）
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# OS生成ファイル（macOS）
+.DS_Store
+
+# 証明書ファイル（セキュリティ関連）
+*.pem
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# ネイティブビルド成果物（iOS/Android）
+ios/
+android/
+*.orig.*
+*.jks
+
+# Python関連（バックエンドのキャッシュ）
+*.pyc
+__pycache__/
+server/src/__pycache__/
+
+# その他の不要なファイル（プロジェクトに応じて追加）
+.vscode/settings.json  # 個人設定
