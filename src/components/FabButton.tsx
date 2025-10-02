@@ -1,3 +1,8 @@
+/**
+ * @file FabButton.tsx
+ * @summary このファイルは、アプリケーションのフローティングアクションボタン（FAB）コンポーネントを定義します。
+ * @responsibility 画面上で主要なアクションをトリガーするための視覚的に目立つボタンを提供し、サイズ、アイコン、色などのカスタマイズを可能にする責任があります。
+ */
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { colors, spacing, shadows, responsive } from '../utils/commonStyles';

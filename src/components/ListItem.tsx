@@ -1,3 +1,8 @@
+/**
+ * @file ListItem.tsx
+ * @summary このファイルは、アプリケーションのリストアイテムコンポーネントを定義します。
+ * @responsibility ノート一覧などのリスト表示において、各アイテムのタイトル、サブタイトル、選択状態、およびアクションを視覚的に表現する責任があります。
+ */
 import React from 'react';
 import { TouchableOpacity, Text, View, StyleSheet } from 'react-native';
 import { colors, spacing, shadows, typography, responsive } from '../utils/commonStyles';

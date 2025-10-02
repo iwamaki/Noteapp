@@ -1,3 +1,8 @@
+/**
+ * @file useLLMCommandHandler.ts
+ * @summary このファイルは、LLM（大規模言語モデル）からのコマンドを処理するカスタムフックを定義します。
+ * @responsibility LLMから受け取ったコマンド（例: ファイル編集）を解釈し、アプリケーションの状態を適切に更新したり、関連する画面遷移をトリガーしたりする責任があります。
+ */
 import { useCallback, useEffect, useRef } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';

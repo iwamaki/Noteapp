@@ -1,3 +1,8 @@
+/**
+ * @file HeaderButton.tsx
+ * @summary このファイルは、アプリケーションのヘッダーで使用されるボタンコンポーネントを定義します。
+ * @responsibility ヘッダー内に配置されるアクションボタンのスタイルと動作を標準化し、視覚的な一貫性と再利用性を提供する責任があります。
+ */
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { colors, spacing, typography, responsive } from '../utils/commonStyles';

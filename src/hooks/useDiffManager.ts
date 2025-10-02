@@ -1,3 +1,8 @@
+/**
+ * @file useDiffManager.ts
+ * @summary このファイルは、差分表示と選択ロジックを管理するカスタムフックを定義します。
+ * @responsibility 差分ブロックの選択状態を管理し、選択されたブロックに基づいて新しいコンテンツを生成する機能を提供する責任があります。
+ */
 import { useState, useMemo, useCallback } from 'react';
 import { DiffLine } from '../services/diffService';
 

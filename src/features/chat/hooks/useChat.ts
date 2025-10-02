@@ -1,9 +1,12 @@
+/**
+ * @file useChat.ts
+ * @summary このファイルは、チャット機能のロジックをカプセル化するカスタムフックを定義します。
+ * @responsibility チャットメッセージの送受信、状態管理（メッセージ履歴、ローディング状態）、およびLLMからの応答処理（コマンドの実行を含む）を担当します。
+ */
 
 import { useState, useCallback, useMemo } from 'react';
 import APIService, { ChatContext } from '../../../services/api';
 import { ChatMessage, LLMCommand } from '../../../services/llmService';
-
-// チャットフック
 export const useChat = (context: ChatContext = {}, onCommandReceived?: (commands: LLMCommand[]) => void) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);

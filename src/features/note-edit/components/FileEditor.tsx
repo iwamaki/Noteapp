@@ -1,6 +1,7 @@
 /**
- * ファイルエディタコンポーネント
- * ユーザーがファイルを編集できるインターフェースを提供します。
+ * @file FileEditor.tsx
+ * @summary このファイルは、アプリケーションのファイルエディタコンポーネントを定義します。
+ * @responsibility ユーザーがファイルのコンテンツを編集、プレビュー、または差分表示できるインターフェースを提供し、異なる表示モード間の切り替えを管理する責任があります。
  */
 
 import React, { useState, useCallback, useMemo, useEffect } from 'react';

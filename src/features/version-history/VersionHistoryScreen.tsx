@@ -1,3 +1,8 @@
+/**
+ * @file VersionHistoryScreen.tsx
+ * @summary このファイルは、アプリケーションのノートのバージョン履歴画面をレンダリングします。
+ * @responsibility 特定のノートの過去のバージョンを一覧表示し、選択したバージョンと現在のノートの差分を表示する機能を提供します。
+ */
 import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';

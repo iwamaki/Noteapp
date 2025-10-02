@@ -1,6 +1,7 @@
 /**
- *  ノート編集画面
- *  ノートの内容を編集する画面です。
+ * @file NoteEditScreen.tsx
+ * @summary このファイルは、アプリケーションのノート編集画面をレンダリングします。
+ * @responsibility ノートのタイトルと内容の編集、プレビュー表示、変更の保存、およびバージョン履歴へのアクセス機能を提供します。
  */
 
 import React, { useLayoutEffect, useState } from 'react';

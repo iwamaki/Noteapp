@@ -1,3 +1,8 @@
+/**
+ * @file SettingsScreen.tsx
+ * @summary このファイルは、アプリケーションの設定画面をレンダリングします。
+ * @responsibility ユーザーがアプリケーションの各種設定（表示、動作、LLM関連など）を閲覧・変更できるUIを提供し、設定の永続化と更新を管理します。
+ */
 import React, { useEffect } from 'react';
 import {
   View,
@@ -9,8 +14,6 @@ import {
 } from 'react-native';
 import { useSettingsStore } from '../../store/settingsStore';
 import { colors, spacing, typography } from '../../utils/commonStyles';
-
-// 設定画面コンポーネント
 function SettingsScreen() {
   const { settings, loadSettings, updateSettings, isLoading } = useSettingsStore();
 

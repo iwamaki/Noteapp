@@ -1,3 +1,8 @@
+/**
+ * @file FileEditor.test.tsx
+ * @summary `FileEditor`コンポーネントの単体テストを定義します。
+ * @responsibility `FileEditor`コンポーネントが、プレビューモード、コンテンツモード、編集モードでそれぞれマークダウンコンテンツ、プレーンテキストコンテンツ、編集可能なテキスト入力を正しくレンダリングするかを検証します。
+ */
 import React from 'react';
 import { render, screen } from '@testing-library/react-native';
 import { FileEditor } from '../FileEditor';

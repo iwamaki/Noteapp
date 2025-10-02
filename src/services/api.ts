@@ -1,6 +1,7 @@
 /**
- * API関連
- * LLM関連のAPI関連
+ * @file api.ts
+ * @summary このファイルは、アプリケーションの主要なAPIサービスを定義します。
+ * @responsibility LLM（大規模言語モデル）との通信を抽象化し、チャットメッセージの送信やLLMプロバイダーの設定などの機能を提供する責任があります。
  */
 
 import { LLMService, ChatContext, LLMResponse } from './llmService';
