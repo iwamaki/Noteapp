@@ -42,7 +42,7 @@ yarn-error.*
 /android
 
 # docs
-docs/参考/server/.env
+docs/参考/
 .env
 
 # Python
