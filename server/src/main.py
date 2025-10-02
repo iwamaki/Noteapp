@@ -1,3 +1,8 @@
+# @file main.py
+# @summary このファイルは、LLM Note AppのバックエンドAPIの主要なエントリポイントを定義します。
+# FastAPIアプリケーションを初期化し、CORS設定、LLMサービスとの連携、および各種APIエンドポイント（チャット、プロバイダー情報、ヘルスチェック）を提供します。
+# @responsibility APIリクエストのルーティング、LLMサービスへの処理の委譲、応答の生成、およびエラーハンドリングを行います。
+# アプリケーションの起動と設定を管理し、フロントエンドとの通信インターフェースを提供します。
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv

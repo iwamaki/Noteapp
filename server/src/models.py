@@ -1,6 +1,8 @@
-"""
-データモデル定義
-"""
+# @file models.py
+# @summary このファイルは、FastAPIアプリケーションで使用されるデータモデル（Pydanticモデル）を定義します。
+# チャットメッセージ、チャットコンテキスト、LLMコマンド、LLMプロバイダー、およびチャット応答の構造を定義します。
+# @responsibility アプリケーション内外でやり取りされるデータの整合性と構造を保証し、
+# APIリクエストとレスポンスのバリデーションおよびシリアライゼーションをPydanticによって自動化します。
 from pydantic import BaseModel
 from typing import Optional, Dict, Any, List
 
