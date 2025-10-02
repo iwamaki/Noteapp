@@ -44,3 +44,13 @@ yarn-error.*
 # docs
 docs/参考/server/.env
 .env
+server/src
+server/.env.example
+server/.env.example
+server/.env.example
+server/src
+server/src
+server/src
+server/src/__pycache__/main.cpython-311.pyc
+server/src/__pycache__/main.cpython-311.pyc
+server/src/__pycache__/main.cpython-311.pyc
