@@ -22,6 +22,7 @@ import { useCustomHeader } from '../../components/CustomHeader';
 import { commonStyles, colors, spacing } from '../../utils/commonStyles';
 import { ChatInputBar } from '../chat/ChatInputBar';
 import { ChatContext } from '../../services/llmService';
+import { logger } from '../../utils/logger'; // loggerをインポート
 
 // 入力バーの高さ（概算）
 const CHAT_INPUT_HEIGHT = Platform.OS === 'ios' ? 78 : 66;
@@ -32,7 +33,7 @@ function NoteListScreen() {
   const { notes, loading, isSelectionMode, selectedNoteIds } = useNoteStoreSelectors();
 
   // デバッグ用ログ
-  console.log('NoteListScreen render:', { isSelectionMode, selectedCount: selectedNoteIds.size });
+  logger.debug('NoteListScreen render:', { isSelectionMode, selectedCount: selectedNoteIds.size });
   const {
     fetchNotes,
     createNote,
@@ -185,7 +186,7 @@ function NoteListScreen() {
       )}
       <ChatInputBar context={chatContext} />
       {(() => {
-        console.log('FAB render check:', { isSelectionMode, shouldShow: !isSelectionMode });
+        logger.debug('FAB render check:', { isSelectionMode, shouldShow: !isSelectionMode });
         return !isSelectionMode ? <FabButton onPress={handleCreateNote} /> : null;
       })()}
     </View>

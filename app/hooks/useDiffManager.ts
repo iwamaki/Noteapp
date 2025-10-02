@@ -5,6 +5,7 @@
  */
 import { useState, useMemo, useCallback } from 'react';
 import { DiffLine } from '../services/diffService';
+import { logger } from '../utils/logger'; // loggerをインポート
 
 export const useDiffManager = (diff: DiffLine[]) => {
   // 差分ブロックの全IDを取得
@@ -51,12 +52,12 @@ export const useDiffManager = (diff: DiffLine[]) => {
   const generateSelectedContent = useCallback(() => {
     const newLines: string[] = [];
 
-    console.log('=== generateSelectedContent デバッグ ===');
-    console.log('diff.length:', diff.length);
-    console.log('selectedBlocks:', Array.from(selectedBlocks));
+    logger.debug('=== generateSelectedContent デバッグ ===');
+    logger.debug('diff.length:', diff.length);
+    logger.debug('selectedBlocks:', Array.from(selectedBlocks));
 
     diff.forEach((line, index) => {
-      console.log(`Line ${index}:`, {
+      logger.debug(`Line ${index}:`, {
         type: line.type,
         content: JSON.stringify(line.content),
         changeBlockId: line.changeBlockId,
@@ -87,12 +88,12 @@ export const useDiffManager = (diff: DiffLine[]) => {
           break;
       }
 
-      console.log(`  → willInclude: ${willInclude}, newLines.length: ${newLines.length}`);
+      logger.debug(`  → willInclude: ${willInclude}, newLines.length: ${newLines.length}`);
     });
 
     const result = newLines.join('\n');
-    console.log('Final newLines:', newLines);
-    console.log('Final result:', JSON.stringify(result));
+    logger.debug('Final newLines:', newLines);
+    logger.debug('Final result:', JSON.stringify(result));
     return result;
   }, [diff, selectedBlocks]);
 

@@ -9,6 +9,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/types';
 import { LLMCommand, LLMResponse } from '../services/llmService';
 import { useNoteStore } from '../store/noteStore';
+import { logger } from '../utils/logger'; // loggerをインポート
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -27,7 +28,7 @@ export const useLLMCommandHandler = (context: CommandHandlerContext) => {
   // activeNoteの内容が変更された場合に編集中のコンテンツを更新
   useEffect(() => {
     if (isWaitingForUpdateRef.current && activeNote && activeNote.content !== previousContentRef.current) {
-      console.log('[LLMCommandHandler] Applying updated content from store');
+      logger.debug('[LLMCommandHandler] Applying updated content from store');
       context.setContent(activeNote.content);
       previousContentRef.current = activeNote.content;
       isWaitingForUpdateRef.current = false;
@@ -38,7 +39,7 @@ export const useLLMCommandHandler = (context: CommandHandlerContext) => {
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       if (activeNote && activeNote.content !== context.currentContent) {
-        console.log('[LLMCommandHandler] Syncing content on screen focus');
+        logger.debug('[LLMCommandHandler] Syncing content on screen focus');
         context.setContent(activeNote.content);
         previousContentRef.current = activeNote.content;
       }
@@ -53,7 +54,7 @@ export const useLLMCommandHandler = (context: CommandHandlerContext) => {
       return;
     }
 
-    console.log('[LLMCommandHandler] Executing edit_file command:', {
+    logger.debug('[LLMCommandHandler] Executing edit_file command:', {
       originalContentLength: context.currentContent.length,
       newContentLength: command.content.length,
       originalPreview: context.currentContent.substring(0, 100),
