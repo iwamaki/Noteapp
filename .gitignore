@@ -48,3 +48,4 @@ docs/参考/server/.env
 # Python
 *.pyc
 __pycache__/
+server/src/__pycache__/
