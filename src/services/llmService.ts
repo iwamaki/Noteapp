@@ -253,11 +253,6 @@ export class LLMService {
 
       const data: LLMResponse = await response.json();
 
-      // コマンドの検証
-      if (data.commands) {
-        data.commands.forEach(CommandValidator.validate);
-      }
-
       // 会話履歴に追加
       this.conversationHistory.addExchange(
         message,

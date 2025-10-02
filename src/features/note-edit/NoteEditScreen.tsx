@@ -13,7 +13,8 @@ import { useNoteEditor } from './hooks/useNoteEditor';
 import { useCustomHeader } from '../../components/CustomHeader';
 import { commonStyles, colors, typography, responsive, spacing } from '../../utils/commonStyles';
 import { ChatInputBar } from '../chat/ChatInputBar';
-import { ChatContext } from '../../services/llmService';
+import { ChatContext, LLMCommand } from '../../services/llmService';
+import { useLLMCommandHandler } from '../../hooks/useLLMCommandHandler';
 
 type NoteEditScreenRouteProp = RouteProp<RootStackParamList, 'NoteEdit'>;
 
@@ -38,6 +39,24 @@ function NoteEditScreen() {
   } = useNoteEditor(noteId);
 
   const [viewMode, setViewMode] = useState<ViewMode>('edit');
+
+  // LLMコマンドハンドラの初期化
+  const { handleLLMResponse } = useLLMCommandHandler({
+    currentContent: content,
+    setContent,
+    title
+  });
+
+  // LLMコマンドを受信した時の処理
+  const handleCommandReceived = (commands: LLMCommand[]) => {
+    if (commands && commands.length > 0) {
+      // コマンドハンドラに委譲
+      handleLLMResponse({
+        message: 'Commands received',
+        commands
+      });
+    }
+  };
 
   // ヘッダーの設定
   useLayoutEffect(() => {
@@ -102,7 +121,10 @@ function NoteEditScreen() {
           />
         )}
       </View>
-      <ChatInputBar context={chatContext} />
+      <ChatInputBar
+        context={chatContext}
+        onCommandReceived={handleCommandReceived}
+      />
     </View>
   );
 }

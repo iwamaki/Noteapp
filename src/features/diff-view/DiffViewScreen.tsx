@@ -26,18 +26,30 @@ function DiffViewScreen() {
   const mode = route.params?.mode ?? 'save';
   
   const originalContent = useMemo(() => {
-    if (mode === 'restore' && route.params?.originalContent) {
+    if (route.params?.originalContent) {
       return route.params.originalContent;
     }
     return activeNote?.content ?? '';
-  }, [mode, route.params, activeNote]);
+  }, [route.params, activeNote]);
 
   const newContent = useMemo(() => {
-    if (mode === 'restore' && route.params?.newContent) {
+    if (route.params?.newContent) {
       return route.params.newContent;
     }
     return draftNote?.content ?? '';
-  }, [mode, route.params, draftNote]);
+  }, [route.params, draftNote]);
+
+  // デバッグ用ログ
+  console.log('[DiffViewScreen] Content analysis:', {
+    mode,
+    hasRouteOriginal: !!route.params?.originalContent,
+    hasRouteNew: !!route.params?.newContent,
+    hasDraftNote: !!draftNote,
+    originalLength: originalContent.length,
+    newLength: newContent.length,
+    originalPreview: originalContent.substring(0, 100),
+    newPreview: newContent.substring(0, 100)
+  });
 
   const filename = draftNote?.title ?? '差分プレビュー';
 
