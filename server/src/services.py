@@ -1,6 +1,8 @@
-"""
-ビジネスロジック（サービス層）
-"""
+# @file services.py
+# @summary このファイルは、LLM（大規模言語モデル）とのインタラクションを管理するビジネスロジック（サービス層）を提供します。
+# OpenAIおよびGoogle GeminiのLLMプロバイダーを統合し、チャットメッセージの処理、ツール呼び出しの実行、およびコンテキストの管理を行います。
+# @responsibility LLMからの応答を生成し、必要に応じてファイル編集などのツール呼び出しコマンドを抽出し、
+# アプリケーションの他の部分に返します。また、APIキーの管理やエラーハンドリングも行います。
 from typing import Optional, List
 import os
 from .models import ChatResponse, ChatContext, LLMCommand

@@ -1,6 +1,8 @@
-"""
-LLMツール定義
-"""
+# @file tools.py
+# @summary このファイルは、LLM（大規模言語モデル）が利用できるツールを定義します。
+# 現在、ファイルの内容を編集するための`edit_file`ツールが含まれています。
+# @responsibility LLMが特定の操作（例: ファイル編集）を実行する際に呼び出すことができる関数を提供し、
+# そのツールの引数と戻り値を定義することで、LLMとシステム間のインタラクションを仲介します。
 from langchain.tools import tool
 from typing import Optional
 
