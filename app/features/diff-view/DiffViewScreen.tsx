@@ -14,6 +14,7 @@ import { NoteStorageService } from '../../services/storageService';
 import { useDiffManager } from '../../hooks/useDiffManager';
 import { DiffViewer } from './components/DiffViewer';
 import { HeaderButton } from '../../components/HeaderButton';
+import { logger } from '../../utils/logger'; // loggerをインポート
 
 type DiffViewScreenNavigationProp = StackNavigationProp<RootStackParamList, 'DiffView'>;
 type DiffViewScreenRouteProp = ReturnType<typeof useRoute<import('@react-navigation/native').RouteProp<RootStackParamList, 'DiffView'>>>;
@@ -40,7 +41,7 @@ function DiffViewScreen() {
   }, [route.params, draftNote]);
 
   // デバッグ用ログ
-  console.log('[DiffViewScreen] Content analysis:', {
+  logger.debug('[DiffViewScreen] Content analysis:', {
     mode,
     hasRouteOriginal: !!route.params?.originalContent,
     hasRouteNew: !!route.params?.newContent,
@@ -91,8 +92,8 @@ function DiffViewScreen() {
         const validation = validateDataConsistency(originalContent, selectedContent, tempDiff);
 
         if (!validation.isValid) {
-          console.log('=== 整合性エラー詳細 ===');
-          console.log('validation.error:', validation.error);
+          logger.debug('=== 整合性エラー詳細 ===');
+          logger.debug('validation.error:', validation.error);
           Alert.alert('データエラー', `保存データの整合性に問題があります: ${validation.error}`);
           return;
         }

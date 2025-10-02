@@ -98,105 +98,13 @@ function SettingsScreen() {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.content}>
-        {/* 1. 表示設定 */}
-        {renderSection('表示設定')}
-        {renderPicker('テーマ (未実装)', settings.theme, [
-          { label: 'ライト', value: 'light' },
-          { label: 'ダーク', value: 'dark' },
-          { label: 'システム', value: 'system' },
-        ])}
-        {renderPicker('フォントサイズ (未実装)', settings.fontSize, [
-          { label: '小', value: 'small' },
-          { label: '中', value: 'medium' },
-          { label: '大', value: 'large' },
-          { label: '特大', value: 'xlarge' },
-        ])}
-        {renderOption(
-          '行番号を表示 (未実装)',
-          settings.showLineNumbers,
-          undefined,
-          () => updateSettings({ showLineNumbers: !settings.showLineNumbers })
-        )}
-        {renderOption(
-          'シンタックスハイライト (未実装)',
-          settings.syntaxHighlight,
-          undefined,
-          () => updateSettings({ syntaxHighlight: !settings.syntaxHighlight })
-        )}
-        {renderOption(
-          'マークダウン記号を表示 (未実装)',
-          settings.showMarkdownSymbols,
-          undefined,
-          () => updateSettings({ showMarkdownSymbols: !settings.showMarkdownSymbols })
-        )}
-
-        {/* 2. 動作設定 */}
-        {renderSection('動作設定')}
-        {renderPicker('デフォルトエディタモード (未実装)', settings.defaultEditorMode, [
-          { label: '編集', value: 'edit' },
-          { label: 'プレビュー', value: 'preview' },
-          { label: '分割', value: 'split' },
-        ])}
-        {renderOption(
-          '自動保存 (未実装)',
-          settings.autoSaveEnabled,
-          undefined,
-          () => updateSettings({ autoSaveEnabled: !settings.autoSaveEnabled })
-        )}
-        {renderOption(
-          '自動インデント (未実装)',
-          settings.autoIndent,
-          undefined,
-          () => updateSettings({ autoIndent: !settings.autoIndent })
-        )}
-        {renderOption(
-          'スペルチェック (未実装)',
-          settings.spellCheck,
-          undefined,
-          () => updateSettings({ spellCheck: !settings.spellCheck })
-        )}
-        {renderOption(
-          '自動補完 (未実装)',
-          settings.autoComplete,
-          undefined,
-          () => updateSettings({ autoComplete: !settings.autoComplete })
-        )}
-
-        {/* 3. LLM（AI）設定 */}
-        {renderSection('LLM（AI）設定 (未実装)')}
-        {renderPicker('プライバシーモード (未実装)', settings.privacyMode, [
-          { label: '通常', value: 'normal' },
-          { label: 'プライベート', value: 'private' },
-        ])}
-
-        {/* 4. システムと通知 */}
-        {renderSection('システムと通知')}
-        {renderOption(
-          'バージョン更新通知 (未実装)',
-          settings.updateNotifications,
-          undefined,
-          () => updateSettings({ updateNotifications: !settings.updateNotifications })
-        )}
-        {renderOption(
-          'バックアップ完了通知 (未実装)',
-          settings.backupNotifications,
-          undefined,
-          () => updateSettings({ backupNotifications: !settings.backupNotifications })
-        )}
-        {renderOption(
-          'LLM処理完了通知 (未実装)',
-          settings.llmNotifications,
-          undefined,
-          () => updateSettings({ llmNotifications: !settings.llmNotifications })
-        )}
-        {renderOption(
-          '高コントラストモード (未実装)',
-          settings.highContrastMode,
-          undefined,
-          () => updateSettings({ highContrastMode: !settings.highContrastMode })
-        )}
-
-        {/* リセットボタン */}
+        <Text style={styles.sectionTitle}>現在設定可能な項目</Text>
+        <Text style={styles.infoText}>
+          その他の設定項目は今後のアップデートで追加予定です。
+        </Text>
+        
+        {/* 実装済みの項目があればここに表示 */}
+        
         <TouchableOpacity
           style={styles.resetButton}
           onPress={async () => {
@@ -224,6 +132,12 @@ const styles = StyleSheet.create({
     marginTop: spacing.xl,
     marginBottom: spacing.md,
     color: colors.primary,
+  },
+  infoText: {
+    ...typography.body,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: spacing.xl,
   },
   optionContainer: {
     flexDirection: 'row',
