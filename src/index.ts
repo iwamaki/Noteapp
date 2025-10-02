@@ -1,3 +1,8 @@
+/**
+ * @file index.ts
+ * @summary このファイルは、Expoアプリケーションのルートコンポーネントを登録し、アプリケーションのエントリポイントとして機能します。
+ * @responsibility `App.tsx`で定義されたメインの`App`コンポーネントを登録し、Expo Goまたはネイティブビルド環境でアプリケーションが適切に初期化されるようにします。
+ */
 import { registerRootComponent } from 'expo';
 
 import App from './App';

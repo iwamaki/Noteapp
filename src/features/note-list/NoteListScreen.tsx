@@ -1,7 +1,7 @@
 /**
- * ノート一覧画面コンポーネント
- * - ノートの一覧表示、選択、新規作成を行う
- * - カスタムヘッダーとフローティングアクションボタンを使用
+ * @file NoteListScreen.tsx
+ * @summary このファイルは、アプリケーションのノート一覧画面をレンダリングします。
+ * @responsibility ノートの表示、選択モードの管理、新規ノートの作成、および選択されたノートの操作（削除、コピー）を担当します。
  */  
 
 import React, { useEffect, useLayoutEffect } from 'react';

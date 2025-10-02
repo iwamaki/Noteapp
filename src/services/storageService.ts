@@ -1,7 +1,10 @@
-/*
-* ストレージサービス
-* ノートの作成、取得、更新、削除、およびバージョン管理を行う
-*/
+/**
+ * @file storageService.ts
+ * @summary このファイルは、アプリケーションの永続的なデータストレージを管理するためのサービスを提供します。
+ * ノートの作成、取得、更新、削除、およびバージョン管理機能を含みます。
+ * @responsibility AsyncStorageを利用してノートデータとノートのバージョン履歴を保存・管理し、データの整合性を保ちながら、
+ * ノートのライフサイクル全体にわたる操作（CRUD、バージョン復元、検索など）を安全かつ効率的に実行します。
+ */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { v4 as uuidv4 } from 'uuid';

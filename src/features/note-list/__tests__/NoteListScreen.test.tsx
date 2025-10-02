@@ -1,3 +1,8 @@
+/**
+ * @file NoteListScreen.test.tsx
+ * @summary `NoteListScreen`コンポーネントの単体テストを定義します。
+ * @responsibility `NoteListScreen`がノートのリスト表示、選択モードの切り替え、ノートの作成、およびFABボタンの表示/非表示ロジックを正しく処理するかを検証します。
+ */
 
 import React from 'react';
 import { render, fireEvent, screen } from '@testing-library/react-native';

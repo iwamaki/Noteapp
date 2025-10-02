@@ -1,3 +1,10 @@
+/**
+ * @file noteStore.ts
+ * @summary このファイルは、Zustandを使用してノートアプリケーションのグローバル状態管理を定義します。
+ * ノートデータ、UIの状態（ローディング、エラー、選択モードなど）、およびそれらを操作するアクションを管理します。
+ * @responsibility ノートのフェッチ、選択、作成、更新、削除、検索、および選択モードに関連する状態とロジックを一元的に管理し、
+ * アプリケーション全体でノートデータの一貫性とアクセス性を提供します。
+ */
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { NoteStorageService, Note, CreateNoteData, UpdateNoteData, StorageError } from '../services/storageService';

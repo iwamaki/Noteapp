@@ -1,3 +1,8 @@
+/**
+ * @file commonStyles.ts
+ * @summary このファイルは、アプリケーション全体で一貫したUIを構築するための共通スタイル、カラーパレット、スペーシング、タイポグラフィ、シャドウ、およびレイアウトユーティリティを定義します。
+ * @responsibility アプリケーションの視覚的な一貫性を保ち、開発者が再利用可能なスタイルプロパティに簡単にアクセスできるようにすることで、UI開発の効率と保守性を向上させます。
+ */
 import { StyleSheet, Dimensions } from 'react-native';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
