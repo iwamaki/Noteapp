@@ -5,8 +5,8 @@ module.exports = {
     "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo/.*|@expo/.*|expo-modules-core/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg|uuid)"
   ],
   testMatch: [
-    "**/src/tests/**/*.test.ts",
-    "**/src/__tests__/**/*.+(ts|tsx|js)?(x)",
-    "**/src/features/**/*.test.tsx"
+    "**/app/tests/**/*.test.ts",
+    "**/app/__tests__/**/*.+(ts|tsx|js)?(x)",
+    "**/app/features/**/*.test.tsx"
   ],
 };

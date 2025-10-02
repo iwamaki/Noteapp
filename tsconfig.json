@@ -19,8 +19,8 @@
     "strict": true
   },
   "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
+    "app/**/*.ts",
+    "app/**/*.tsx",
     "shared/**/*.ts",
     "jest.config.js",
     "jest.setup.js",
