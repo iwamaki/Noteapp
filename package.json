@@ -1,7 +1,7 @@
 {
   "name": "noteapp",
   "version": "1.0.0",
-  "main": "src/index.ts",
+  "main": "app/index.ts",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
