@@ -7,14 +7,18 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { useNoteStore } from '../../../store/noteStore';
+import { useNoteStore, useNoteDraftStore } from '../../../store/note';
 import { Alert } from 'react-native';
 import { RootStackParamList } from '../../../navigation/types';
 
 // カスタムフックの定義
 export const useNoteEditor = (noteId: string | undefined) => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
-  const { activeNote, selectNote, setDraftNote, updateNote } = useNoteStore();
+
+  const activeNote = useNoteStore(state => state.activeNote);
+  const selectNote = useNoteStore(state => state.selectNote);
+  const updateNote = useNoteStore(state => state.updateNote);
+  const setDraftNote = useNoteDraftStore(state => state.setDraftNote);
 
   const [title, setTitle] = useState(activeNote?.title ?? '');
   const [content, setContent] = useState(activeNote?.content ?? '');

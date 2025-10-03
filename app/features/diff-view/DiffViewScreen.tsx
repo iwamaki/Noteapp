@@ -8,7 +8,7 @@ import { View, StyleSheet, Alert } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
-import { useNoteStore } from '../../store/noteStore';
+import { useNoteStore, useNoteDraftStore } from '../../store/note';
 import { generateDiff, validateDataConsistency } from '../../services/diffService';
 import { NoteStorageService } from '../../services/storageService';
 import { useDiffManager } from '../../hooks/useDiffManager';
@@ -22,7 +22,12 @@ type DiffViewScreenRouteProp = ReturnType<typeof useRoute<import('@react-navigat
 function DiffViewScreen() {
   const navigation = useNavigation<DiffViewScreenNavigationProp>();
   const route = useRoute<DiffViewScreenRouteProp>();
-  const { activeNote, draftNote, saveDraftNote, setDraftNote, selectNote } = useNoteStore();
+
+  const activeNote = useNoteStore(state => state.activeNote);
+  const selectNote = useNoteStore(state => state.selectNote);
+  const draftNote = useNoteDraftStore(state => state.draftNote);
+  const saveDraftNote = useNoteDraftStore(state => state.saveDraftNote);
+  const setDraftNote = useNoteDraftStore(state => state.setDraftNote);
 
   const mode = route.params?.mode ?? 'save';
   

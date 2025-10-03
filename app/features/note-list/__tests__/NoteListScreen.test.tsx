@@ -7,13 +7,31 @@
 import React from 'react';
 import { render, fireEvent, screen } from '@testing-library/react-native';
 import NoteListScreen from '../NoteListScreen';
-import { useNoteStoreSelectors, useNoteStoreActions } from '../../../store/noteStore';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 
 // 各種フックのモック
-jest.mock('../../../store/noteStore', () => ({
-  useNoteStoreSelectors: jest.fn(),
-  useNoteStoreActions: jest.fn(),
+jest.mock('../../../store/note', () => ({
+  useNoteStore: jest.fn((selector) => {
+    const mockState = {
+      filteredNotes: (global as any).mockNoteStoreState?.filteredNotes || [],
+      loading: (global as any).mockNoteStoreState?.loading || { isLoading: false },
+      fetchNotes: (global as any).mockNoteStoreActions?.fetchNotes || jest.fn(),
+      createNote: (global as any).mockNoteStoreActions?.createNote || jest.fn(),
+    };
+    return selector(mockState);
+  }),
+  useNoteSelectionStore: jest.fn((selector) => {
+    const mockState = {
+      isSelectionMode: (global as any).mockSelectionStoreState?.isSelectionMode || false,
+      selectedNoteIds: (global as any).mockSelectionStoreState?.selectedNoteIds || new Set(),
+      toggleSelectionMode: (global as any).mockSelectionStoreActions?.toggleSelectionMode || jest.fn(),
+      toggleNoteSelection: (global as any).mockSelectionStoreActions?.toggleNoteSelection || jest.fn(),
+      clearSelectedNotes: (global as any).mockSelectionStoreActions?.clearSelectedNotes || jest.fn(),
+      deleteSelectedNotes: (global as any).mockSelectionStoreActions?.deleteSelectedNotes || jest.fn(),
+      copySelectedNotes: (global as any).mockSelectionStoreActions?.copySelectedNotes || jest.fn(),
+    };
+    return selector(mockState);
+  }),
 }));
 
 jest.mock('@react-navigation/native', () => ({
@@ -29,8 +47,6 @@ jest.mock('../../../components/CustomHeader', () => ({
 }));
 
 // モックの型定義
-const mockedUseNoteStoreSelectors = useNoteStoreSelectors as jest.Mock;
-const mockedUseNoteStoreActions = useNoteStoreActions as jest.Mock;
 const mockedUseNavigation = useNavigation as jest.Mock;
 const mockedUseIsFocused = useIsFocused as jest.Mock;
 
@@ -39,9 +55,11 @@ describe('NoteListScreen', () => {
     navigate: jest.fn(),
     setOptions: jest.fn(),
   };
-  const mockActions = {
+  const mockNoteStoreActions = {
     fetchNotes: jest.fn(),
     createNote: jest.fn(),
+  };
+  const mockSelectionStoreActions = {
     toggleSelectionMode: jest.fn(),
     toggleNoteSelection: jest.fn(),
     clearSelectedNotes: jest.fn(),
@@ -54,18 +72,23 @@ describe('NoteListScreen', () => {
     jest.clearAllMocks();
     mockedUseNavigation.mockReturnValue(mockNavigation);
     mockedUseIsFocused.mockReturnValue(true);
-    mockedUseNoteStoreActions.mockReturnValue(mockActions);
+
+    // グローバルにモック状態を設定
+    (global as any).mockNoteStoreActions = mockNoteStoreActions;
+    (global as any).mockSelectionStoreActions = mockSelectionStoreActions;
   });
 
   const renderScreen = () => render(<NoteListScreen />);
 
   test('通常モードではFABが表示される', () => {
-    mockedUseNoteStoreSelectors.mockReturnValue({
-      notes: [],
+    (global as any).mockNoteStoreState = {
+      filteredNotes: [],
       loading: { isLoading: false },
+    };
+    (global as any).mockSelectionStoreState = {
       isSelectionMode: false,
       selectedNoteIds: new Set(),
-    });
+    };
 
     renderScreen();
 
@@ -75,12 +98,14 @@ describe('NoteListScreen', () => {
   });
 
   test('選択モードではFABが表示されない', () => {
-    mockedUseNoteStoreSelectors.mockReturnValue({
-      notes: [{ id: '1', title: 'Test Note', content: 'Content', created_at: new Date(), updated_at: new Date() }],
+    (global as any).mockNoteStoreState = {
+      filteredNotes: [{ id: '1', title: 'Test Note', content: 'Content', created_at: new Date(), updated_at: new Date() }],
       loading: { isLoading: false },
+    };
+    (global as any).mockSelectionStoreState = {
       isSelectionMode: true,
       selectedNoteIds: new Set(['1']),
-    });
+    };
 
     renderScreen();
 
@@ -90,13 +115,14 @@ describe('NoteListScreen', () => {
 
   test('選択モードを解除するとFABが再表示される', () => {
     // 1. 最初は選択モード
-    const initialStoreState = {
-      notes: [{ id: '1', title: 'Test Note', content: 'Content', created_at: new Date(), updated_at: new Date() }],
+    (global as any).mockNoteStoreState = {
+      filteredNotes: [{ id: '1', title: 'Test Note', content: 'Content', created_at: new Date(), updated_at: new Date() }],
       loading: { isLoading: false },
+    };
+    (global as any).mockSelectionStoreState = {
       isSelectionMode: true,
       selectedNoteIds: new Set(['1']),
     };
-    mockedUseNoteStoreSelectors.mockReturnValue(initialStoreState);
 
     const { rerender } = renderScreen();
 
@@ -104,13 +130,11 @@ describe('NoteListScreen', () => {
     expect(screen.queryByText('+')).toBeNull();
 
     // 2. 選択モードを解除した状態をシミュレート
-    const normalModeState = {
-      ...initialStoreState,
+    (global as any).mockSelectionStoreState = {
       isSelectionMode: false,
       selectedNoteIds: new Set(),
     };
-    mockedUseNoteStoreSelectors.mockReturnValue(normalModeState);
-    
+
     // NoteListScreenを再レンダリング
     rerender(<NoteListScreen />);
 
@@ -120,14 +144,16 @@ describe('NoteListScreen', () => {
   });
 
   test('ノート作成ボタンを押すとcreateNoteとnavigateが呼ばれる', () => {
-    mockedUseNoteStoreSelectors.mockReturnValue({
-      notes: [],
+    (global as any).mockNoteStoreState = {
+      filteredNotes: [],
       loading: { isLoading: false },
+    };
+    (global as any).mockSelectionStoreState = {
       isSelectionMode: false,
       selectedNoteIds: new Set(),
-    });
+    };
     // createNoteが新しいノートを返すように設定
-    mockActions.createNote.mockResolvedValue({ id: 'new-note-id', title: '新しいノート', content: '' });
+    mockNoteStoreActions.createNote.mockResolvedValue({ id: 'new-note-id', title: '新しいノート', content: '' });
 
     renderScreen();
 
@@ -135,6 +161,6 @@ describe('NoteListScreen', () => {
     fireEvent.press(fab);
 
     // createNoteが呼ばれるのを待つ
-    expect(mockActions.createNote).toHaveBeenCalled();
+    expect(mockNoteStoreActions.createNote).toHaveBeenCalled();
   });
 });

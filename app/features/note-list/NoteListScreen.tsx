@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { useNavigation, NavigationProp, useIsFocused } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/types';
-import { useNoteStore, useNoteStoreSelectors, useNoteStoreActions } from '../../store/noteStore';
+import { useNoteStore, useNoteSelectionStore } from '../../store/note';
 import { FabButton } from '../../components/FabButton';
 import { ListItem } from '../../components/ListItem';
 import { useCustomHeader } from '../../components/CustomHeader';
@@ -30,19 +30,23 @@ const CHAT_INPUT_HEIGHT = Platform.OS === 'ios' ? 78 : 66;
 // ノート一覧画面コンポーネント
 function NoteListScreen() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
-  const { notes, loading, isSelectionMode, selectedNoteIds } = useNoteStoreSelectors();
+
+  // 各ストアから必要な状態とアクションを取得
+  const notes = useNoteStore(state => state.filteredNotes);
+  const loading = useNoteStore(state => state.loading);
+  const fetchNotes = useNoteStore(state => state.fetchNotes);
+  const createNote = useNoteStore(state => state.createNote);
+
+  const isSelectionMode = useNoteSelectionStore(state => state.isSelectionMode);
+  const selectedNoteIds = useNoteSelectionStore(state => state.selectedNoteIds);
+  const toggleSelectionMode = useNoteSelectionStore(state => state.toggleSelectionMode);
+  const toggleNoteSelection = useNoteSelectionStore(state => state.toggleNoteSelection);
+  const clearSelectedNotes = useNoteSelectionStore(state => state.clearSelectedNotes);
+  const deleteSelectedNotes = useNoteSelectionStore(state => state.deleteSelectedNotes);
+  const copySelectedNotes = useNoteSelectionStore(state => state.copySelectedNotes);
 
   // デバッグ用ログ
   logger.debug('NoteListScreen render:', { isSelectionMode, selectedCount: selectedNoteIds.size });
-  const {
-    fetchNotes,
-    createNote,
-    toggleSelectionMode,
-    toggleNoteSelection,
-    clearSelectedNotes,
-    deleteSelectedNotes,
-    copySelectedNotes
-  } = useNoteStoreActions();
   const isFocused = useIsFocused();
   const { createHeaderConfig } = useCustomHeader();
 
