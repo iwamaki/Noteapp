@@ -86,51 +86,7 @@ app/
 ### フェーズ2: 構造改善（優先度: 🟡 中）
 **目的**: コードの保守性と拡張性を向上
 
-#### 2.1 noteStoreの分割
-**問題**: 415行、15個のアクションで肥大化
-
-**リファクタリング計画**:
-```typescript
-// 現在の構造
-store/noteStore.ts (415行)
-  - notes, activeNote, draftNote
-  - 15個のアクション
-
-// 改善後の構造
-store/
-├── note/
-│   ├── noteStore.ts (基本CRUD: 150行)
-│   │   - notes, activeNote
-│   │   - fetchNotes, selectNote, createNote, updateNote, deleteNote
-│   │
-│   ├── noteDraftStore.ts (ドラフト管理: 80行)
-│   │   - draftNote
-│   │   - setDraftNote, saveDraftNote, discardDraft, isDraftModified
-│   │
-│   ├── noteSelectionStore.ts (選択モード: 100行)
-│   │   - isSelectionMode, selectedNoteIds
-│   │   - toggleSelectionMode, toggleNoteSelection
-│   │   - deleteSelectedNotes, copySelectedNotes
-│   │
-│   └── index.ts (統合エクスポート)
-│       export * from './noteStore'
-│       export * from './noteDraftStore'
-│       export * from './noteSelectionStore'
-```
-
-**実装手順**:
-1. 新しいストアファイルを作成
-2. 既存のnoteStoreから機能を移動
-3. 各ストア間の依存関係を整理（Zustandのsliceパターン使用）
-4. 既存のコンポーネントから段階的に移行
-5. 旧noteStore.tsを削除
-
-**期待される効果**:
-- 責任の明確化
-- テストの容易性向上
-- 並行開発が可能に
-
-**リスク**: 中（既存コードの大規模変更が必要）
+#### ！完了 2.1 noteStoreの分割 完了！
 
 ---
 
@@ -818,10 +774,10 @@ describe('Diff View Flow', () => {
 - [x] コードレビューと動作確認（1日）
 
 ### Week 3-4: 🟡 フェーズ2 (構造改善 - Part 1)
-- [ ] noteStoreの分割設計（1日）
-- [ ] noteStore分割実装（3日）
-- [ ] 既存コードの移行とテスト（2日）
-- [ ] コードレビューと統合テスト（1日）
+- [x] noteStoreの分割設計（1日）
+- [x] noteStore分割実装（3日）
+- [x] 既存コードの移行とテスト（2日）
+- [x] コードレビューと統合テスト（1日）
 
 ### Week 5-6: 🟡 フェーズ2 (構造改善 - Part 2)
 - [ ] テーマシステムの実装（2日）
