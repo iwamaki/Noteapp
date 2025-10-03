@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { render, fireEvent, screen } from '@testing-library/react-native';
+import { render, fireEvent, screen, act } from '@testing-library/react-native';
 import NoteListScreen from '../NoteListScreen';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 
@@ -34,12 +34,14 @@ jest.mock('../../../store/note', () => ({
   }),
 }));
 
+// ナビゲーションとフォーカスのモック
 jest.mock('@react-navigation/native', () => ({
   ...jest.requireActual('@react-navigation/native'),
   useNavigation: jest.fn(),
   useIsFocused: jest.fn(),
 }));
 
+// カスタムヘッダーのモック
 jest.mock('../../../components/CustomHeader', () => ({
   useCustomHeader: () => ({
     createHeaderConfig: jest.fn(),
@@ -50,6 +52,7 @@ jest.mock('../../../components/CustomHeader', () => ({
 const mockedUseNavigation = useNavigation as jest.Mock;
 const mockedUseIsFocused = useIsFocused as jest.Mock;
 
+// NoteListScreenコンポーネントのテスト
 describe('NoteListScreen', () => {
   const mockNavigation = {
     navigate: jest.fn(),
@@ -70,12 +73,21 @@ describe('NoteListScreen', () => {
   beforeEach(() => {
     // 各テストの前にモックをリセット
     jest.clearAllMocks();
+    jest.useFakeTimers();
     mockedUseNavigation.mockReturnValue(mockNavigation);
     mockedUseIsFocused.mockReturnValue(true);
 
     // グローバルにモック状態を設定
     (global as any).mockNoteStoreActions = mockNoteStoreActions;
     (global as any).mockSelectionStoreActions = mockSelectionStoreActions;
+  });
+
+  // 各テストの後にタイマーをクリアしてエラーを防止
+  afterEach(() => {
+    act(() => {
+      jest.runOnlyPendingTimers();
+    });
+    jest.useRealTimers();
   });
 
   const renderScreen = () => render(<NoteListScreen />);

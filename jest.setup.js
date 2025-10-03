@@ -9,3 +9,9 @@ jest.mock('@react-native-async-storage/async-storage', () =>
 jest.mock('react-native-get-random-values', () => ({
   getRandomValues: jest.fn(),
 }));
+
+// タイマーのクリーンアップ
+afterEach(() => {
+  jest.clearAllTimers();
+  jest.useRealTimers();
+});
