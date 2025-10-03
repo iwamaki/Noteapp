@@ -23,7 +23,7 @@ tags: [backend, refactoring]
 >
 > - [x] `main.py` に定義されているPydanticモデル群が、新しく作成する `server/src/models.py` にすべて移動されている。
 > - [x] `main.py` に定義されているLLM関連のツール（`edit_file`など）が、新しく作成する `server/src/tools.py` に移動されている。
-> - [x] `main.py` に定義されている `SimpleLLMService` クラス（ビジネスロジック）が、新しく作成する `server/src/services.py` に移動されている。
+> - [x] `main.py` に定義されている `LLMService` クラス（ビジネスロジック）が、新しく作成する `server/src/services.py` に移動されている。
 > - [x] `main.py` は、APIエンドポイントの定義に専念する形に修正され、他のファイルから必要なクラスやインスタンスをインポートして使用する構成になっている。
 > - [x] リファクタリング後も、既存のAPIエンドポイント（`/api/chat` など）はリファクタリング前と同様に機能する。
 

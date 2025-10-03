@@ -42,10 +42,14 @@ yarn-error.*
 /android
 
 # docs
-docs/参考/
+docs/reference/
 .env
 
 # Python
 *.pyc
 __pycache__/
 server/src/__pycache__/
+
+# API keys and credentials
+key.json
+*.key

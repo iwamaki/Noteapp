@@ -5,15 +5,52 @@
 # アプリケーションの他の部分に返します。また、APIキーの管理やエラーハンドリングも行います。
 from typing import Optional, List
 import os
+from google.cloud import secretmanager
+from google.api_core import exceptions
 from .models import ChatResponse, ChatContext, LLMCommand
 from .tools import AVAILABLE_TOOLS
 
 
 class SimpleLLMService:
     def __init__(self):
-        self.openai_api_key = os.getenv("OPENAI_API_KEY")
-        self.gemini_api_key = os.getenv("GOOGLE_API_KEY")
+        self.openai_api_key = None
+        self.gemini_api_key = None
 
+        gcp_project_id = os.getenv("GCP_PROJECT_ID")
+        openai_secret_id = os.getenv("OPENAI_API_SECRET_ID", "OPENAI_API_KEY")
+        gemini_secret_id = os.getenv("GEMINI_API_SECRET_ID", "GOOGLE_API_KEY")
+        
+        # GOOGLE_APPLICATION_CREDENTIALS が設定されている場合、Secret Managerを試す
+        if os.getenv("GOOGLE_APPLICATION_CREDENTIALS"):
+            try:
+                client = secretmanager.SecretManagerServiceClient()
+                
+                # OpenAI APIキーの取得
+                if gcp_project_id and openai_secret_id:
+                    secret_name = f"projects/{gcp_project_id}/secrets/{openai_secret_id}/versions/latest"
+                    try:
+                        response = client.access_secret_version(request={"name": secret_name})
+                        self.openai_api_key = response.payload.data.decode("UTF-8").strip()
+                    except exceptions.NotFound:
+                        print(f"Secret {openai_secret_id} not found in project {gcp_project_id}. Falling back to environment variable.")
+                    except Exception as e:
+                        print(f"Error accessing secret {openai_secret_id}: {e}. Falling back to environment variable.")
+
+                # Gemini APIキーの取得
+                if gcp_project_id and gemini_secret_id:
+                    secret_name = f"projects/{gcp_project_id}/secrets/{gemini_secret_id}/versions/latest"
+                    try:
+                        response = client.access_secret_version(request={"name": secret_name})
+                        self.gemini_api_key = response.payload.data.decode("UTF-8").strip()
+                    except exceptions.NotFound:
+                        print(f"Secret {gemini_secret_id} not found in project {gcp_project_id}. Falling back to environment variable.")
+                    except Exception as e:
+                        print(f"Error accessing secret {gemini_secret_id}: {e}. Falling back to environment variable.")
+
+            except Exception as e:
+                print(f"Could not initialize Secret Manager client: {e}. Falling back to environment variables.")
+
+    # チャットメッセージを処理するメインメソッド
     async def process_chat(
         self,
         message: str,
@@ -103,13 +140,16 @@ class SimpleLLMService:
                 )
 
         except Exception as e:
+            import traceback
             print(f"Error in process_chat: {str(e)}")
+            print(traceback.format_exc()) 
             return ChatResponse(
                 message=f"エラーが発生しました: {str(e)}",
                 provider=provider,
                 model=model
             )
 
+    # LLMのレスポンスからツール呼び出しを抽出するヘルパーメソッド
     def _extract_tool_calls(self, response) -> Optional[List[LLMCommand]]:
         """
         LLMのレスポンスからツール呼び出しを抽出し、LLMCommandに変換する

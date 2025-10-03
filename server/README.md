@@ -23,7 +23,7 @@ GOOGLE_API_KEY=your_actual_google_api_key
 プロジェクトルートディレクトリで：
 
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
 ### 3. ローカル環境で直接実行する場合
