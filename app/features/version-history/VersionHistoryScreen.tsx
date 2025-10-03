@@ -10,7 +10,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
 import { NoteStorageService } from '../../services/storageService';
 import { NoteVersion } from '../../../shared/types/note';
-import { useNoteStore } from '../../store/noteStore';
+import { useNoteStore } from '../../store/note';
 import { format } from 'date-fns';
 
 type VersionHistoryScreenNavigationProp = StackNavigationProp<RootStackParamList, 'VersionHistory'>;
@@ -20,7 +20,7 @@ function VersionHistoryScreen() {
   const navigation = useNavigation<VersionHistoryScreenNavigationProp>();
   const route = useRoute<VersionHistoryScreenRouteProp>();
   const { noteId } = route.params;
-  const { activeNote } = useNoteStore();
+  const activeNote = useNoteStore(state => state.activeNote);
 
   const [versions, setVersions] = useState<NoteVersion[]>([]);
   const [loading, setLoading] = useState(true);

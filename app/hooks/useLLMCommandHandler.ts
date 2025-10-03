@@ -8,7 +8,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/types';
 import { LLMCommand, LLMResponse } from '../services/llmService';
-import { useNoteStore } from '../store/noteStore';
+import { useNoteStore } from '../store/note';
 import { logger } from '../utils/logger'; // loggerをインポート
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
@@ -21,7 +21,7 @@ interface CommandHandlerContext {
 
 export const useLLMCommandHandler = (context: CommandHandlerContext) => {
   const navigation = useNavigation<NavigationProp>();
-  const { activeNote } = useNoteStore();
+  const activeNote = useNoteStore(state => state.activeNote);
   const previousContentRef = useRef<string>(context.currentContent);
   const isWaitingForUpdateRef = useRef<boolean>(false);
 
