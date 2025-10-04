@@ -6,7 +6,7 @@
 
 import React from 'react';
 import { render, fireEvent, screen, act } from '@testing-library/react-native';
-import NoteListScreen from '../NoteListScreen';
+import NoteListScreen from '../../features/note-list/NoteListScreen';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 
 // 各種フックのモック
