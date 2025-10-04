@@ -4,14 +4,58 @@
  * @responsibility チャットメッセージの送受信、状態管理（メッセージ履歴、ローディング状態）、およびLLMからの応答処理（コマンドの実行を含む）を担当します。
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { Animated, PanResponder } from 'react-native';
 import APIService, { ChatContext } from '../../../services/api';
 import { ChatMessage, LLMCommand } from '../../../services/llmService';
 import { logger } from '../../../utils/logger';
 
+// チャットエリアの高さの制限値
+const CHAT_AREA_MIN_HEIGHT = 150;       // 最小高さ
+const CHAT_AREA_MAX_HEIGHT = 400;       // 最大高さ
+const CHAT_AREA_INITIAL_HEIGHT = 250;   // 初期高さ
+
+
 export const useChat = (context: ChatContext = {}, onCommandReceived?: (commands: LLMCommand[]) => void) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  const chatAreaHeight = useRef(new Animated.Value(CHAT_AREA_INITIAL_HEIGHT)).current;
+  const heightValue = useRef(CHAT_AREA_INITIAL_HEIGHT);
+
+  useEffect(() => {
+    const listenerId = chatAreaHeight.addListener(({ value }) => {
+      heightValue.current = value;
+    });
+    return () => {
+      chatAreaHeight.removeListener(listenerId);
+    };
+  }, [chatAreaHeight]);
+
+  const gestureStartHeight = useRef(0);
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onPanResponderGrant: () => {
+        gestureStartHeight.current = heightValue.current;
+      },
+      onPanResponderMove: (_, gestureState) => {
+        const newHeight = gestureStartHeight.current - gestureState.dy;
+
+        let clampedHeight = newHeight;
+        if (clampedHeight < CHAT_AREA_MIN_HEIGHT) {
+          clampedHeight = CHAT_AREA_MIN_HEIGHT;
+        } else if (clampedHeight > CHAT_AREA_MAX_HEIGHT) {
+          clampedHeight = CHAT_AREA_MAX_HEIGHT;
+        }
+
+        chatAreaHeight.setValue(clampedHeight);
+      },
+      onPanResponderRelease: () => {
+        // onPanResponderMoveで値がすでに設定されているため、何もしません
+      },
+    })
+  ).current;
 
   const createMessage = useCallback(( 
     role: ChatMessage['role'],
@@ -85,5 +129,7 @@ export const useChat = (context: ChatContext = {}, onCommandReceived?: (commands
     messages,
     isLoading,
     sendMessage,
+    chatAreaHeight,
+    panResponder,
   };
 };

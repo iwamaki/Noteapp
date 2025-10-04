@@ -12,21 +12,20 @@ import {
   StyleSheet,
   Text,
   Platform,
-  ScrollView,
-  ActivityIndicator,
   Animated,
   Keyboard,
   KeyboardEvent,
 } from 'react-native';
-import { ChatMessage, LLMCommand } from '../../services/llmService';
+import { LLMCommand } from '../../services/llmService';
 import { useChat } from './hooks/useChat';
 import { ChatContext } from '../../services/api';
 import { useTheme } from '../../theme/ThemeContext';
+import { ChatHistory } from './components/ChatHistory';
 
-// チャット入力バーコンポーネントのプロパティ   
-interface ChatInputBarProps { 
+// チャット入力バーコンポーネントのプロパティ
+interface ChatInputBarProps {
   context?: ChatContext;
-  onCommandReceived?: (commands: LLMCommand[]) => void;     
+  onCommandReceived?: (commands: LLMCommand[]) => void;
 }
 
 // チャット入力バーコンポーネント
@@ -34,13 +33,17 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
   context,
   onCommandReceived,
 }) => {
-  const { colors, spacing, typography } = useTheme();
-  const { messages, isLoading, sendMessage } = useChat(context, onCommandReceived);
+  const { colors, typography } = useTheme();
+  const {
+    messages,
+    isLoading,
+    sendMessage,
+    chatAreaHeight,
+    panResponder,
+  } = useChat(context, onCommandReceived);
   const [inputText, setInputText] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
-  const scrollViewRef = useRef<ScrollView>(null);
-  const expandAnimation = useRef(new Animated.Value(0)).current;
   const positionAnimation = useRef(new Animated.Value(0)).current;
 
   // キーボードイベントのリスナー
@@ -65,8 +68,10 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
       }).start();
     };
 
-    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const showEvent =
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent =
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
 
     const showSubscription = Keyboard.addListener(showEvent, keyboardWillShow);
     const hideSubscription = Keyboard.addListener(hideEvent, keyboardWillHide);
@@ -76,25 +81,6 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
       hideSubscription.remove();
     };
   }, []);
-
-  // メッセージが追加されたら自動スクロール
-  useEffect(() => {
-    if (isExpanded && messages.length > 0) {
-      setTimeout(() => {
-        scrollViewRef.current?.scrollToEnd({ animated: true });
-      }, 100);
-    }
-  }, [messages, isExpanded]);
-
-  
-  // 展開/折りたたみアニメーション
-  useEffect(() => {
-    Animated.timing(expandAnimation, {
-      toValue: isExpanded ? 1 : 0,
-      duration: 300,
-      useNativeDriver: false,
-    }).start();
-  }, [isExpanded]);  
 
   // メッセージ送信処理
   const handleSendMessage = async () => {
@@ -108,12 +94,6 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
   // 送信可能かどうかの判定
   const canSendMessage = inputText.trim().length > 0 && !isLoading;
 
-  // アニメーションで変化するスタイル
-  const messageAreaHeight = expandAnimation.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, 300],
-  });
-
   const styles = StyleSheet.create({
     container: {
       position: 'absolute',
@@ -123,88 +103,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
       backgroundColor: colors.secondary,
       borderTopWidth: 1,
       borderTopColor: colors.border,
-    },
-    messagesArea: {
-      backgroundColor: colors.background,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-      overflow: 'hidden',
-    },
-    messagesHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingHorizontal: 16,
-      paddingVertical: 8,
-      backgroundColor: colors.secondary,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    messagesHeaderTitle: {
-      fontSize: typography.body.fontSize,
-      fontWeight: '600',
-      color: colors.text,
-    },
-    collapseButton: {
-      padding: 4,
-    },
-    collapseButtonText: {
-      fontSize: typography.subtitle.fontSize,
-      color: colors.textSecondary,
-    },
-    messagesScrollView: {
-      flex: 1,
-    },
-    messagesContent: {
-      paddingHorizontal: 16,
-      paddingVertical: 8,
-    },
-    message: {
-      marginVertical: 4,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      borderRadius: 8,
-      maxWidth: '85%',
-    },
-    userMessage: {
-      backgroundColor: colors.primary,
-      alignSelf: 'flex-end',
-    },
-    aiMessage: {
-      backgroundColor: colors.secondary,
-      alignSelf: 'flex-start',
-      borderWidth: 1,
-      borderColor: colors.border,
-    },
-    systemMessage: {
-      backgroundColor: colors.warning + '30', // warning with opacity
-      alignSelf: 'center',
-      borderWidth: 1,
-      borderColor: colors.warning,
-    },
-    messageText: {
-      fontSize: typography.body.fontSize,
-      lineHeight: typography.body.fontSize * 1.4,
-    },
-    userMessageText: {
-      color: colors.background,
-    },
-    aiMessageText: {
-      color: colors.text,
-    },
-    systemMessageText: {
-      color: colors.text,
-    },
-    loadingContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingVertical: 12,
-    },
-    loadingText: {
-      marginLeft: 8,
-      fontSize: typography.body.fontSize,
-      color: colors.primary,
+      zIndex: 999,
     },
     inputArea: {
       flexDirection: 'row',
@@ -265,62 +164,17 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
     },
   });
 
-  // メッセージのレンダリング
-  const renderMessage = (message: ChatMessage, index: number) => {
-    let containerStyle: any[] = [styles.message];
-    let textStyle: any[] = [styles.messageText];
-
-    switch (message.role) {
-      case 'user':
-        containerStyle.push(styles.userMessage);
-        textStyle.push(styles.userMessageText);
-        break;
-      case 'ai':
-        containerStyle.push(styles.aiMessage);
-        textStyle.push(styles.aiMessageText);
-        break;
-      case 'system':
-        containerStyle.push(styles.systemMessage);
-        textStyle.push(styles.systemMessageText);
-        break;
-    }
-
-    return (
-      <View key={index} style={containerStyle}>
-        <Text style={textStyle}>{message.content}</Text>
-
-      </View>
-    );
-  };
-
   return (
     <Animated.View style={[styles.container, { bottom: positionAnimation }]}>
       {/* メッセージ履歴エリア（展開可能） */}
       {isExpanded && (
-        <Animated.View style={[styles.messagesArea, { height: messageAreaHeight }]}>
-          <View style={styles.messagesHeader}>
-            <Text style={styles.messagesHeaderTitle}>チャット履歴</Text>
-            <TouchableOpacity
-              onPress={() => setIsExpanded(false)}
-              style={styles.collapseButton}
-            >
-              <Text style={styles.collapseButtonText}>▼</Text>
-            </TouchableOpacity>
-          </View>
-          <ScrollView
-            ref={scrollViewRef}
-            style={styles.messagesScrollView}
-            contentContainerStyle={styles.messagesContent}
-          >
-            {messages.map(renderMessage)}
-            {isLoading && (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator size="small" color={colors.primary} />
-                <Text style={styles.loadingText}>AI が処理中です...</Text>
-              </View>
-            )}
-          </ScrollView>
-        </Animated.View>
+        <ChatHistory
+          messages={messages}
+          isLoading={isLoading}
+          onCollapse={() => setIsExpanded(false)}
+          messageAreaHeight={chatAreaHeight}
+          panHandlers={panResponder.panHandlers}
+        />
       )}
 
       {/* 入力エリア（常に表示） */}
