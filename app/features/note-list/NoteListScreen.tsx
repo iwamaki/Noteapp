@@ -129,7 +129,7 @@ function NoteListScreen() {
       const selectedCount = selectedNoteIds.size;
       navigation.setOptions(
         createHeaderConfig({
-          title: <Text>{selectedCount}件選択中</Text>,
+          title: <Text style={{ color: colors.text }}>{selectedCount}件選択中</Text>,
           leftButtons: [
             { title: 'キャンセル', onPress: handleCancelSelection, variant: 'secondary' },
           ],
@@ -156,7 +156,7 @@ function NoteListScreen() {
         })
       );
     }
-  }, [navigation, createHeaderConfig, isSelectionMode, selectedNoteIds.size, handleCancelSelection, handleCopySelected, handleDeleteSelected]);
+  }, [navigation, createHeaderConfig, isSelectionMode, selectedNoteIds.size, handleCancelSelection, handleCopySelected, handleDeleteSelected, colors]);
 
   // ノート作成ハンドラー
   const handleCreateNote = async () => {

@@ -18,6 +18,7 @@ import Markdown from 'react-native-markdown-display';
 import { generateDiff, DiffLine } from '../../../services/diffService';
 import { useDiffManager } from '../../../hooks/useDiffManager';
 import { DiffViewer } from '../../diff-view/components/DiffViewer';
+import { useTheme } from '../../../theme/ThemeContext';
 
 // 表示モードの型定義
 export type ViewMode = 'content' | 'edit' | 'preview' | 'diff';
@@ -55,6 +56,7 @@ export const FileEditor: React.FC<FileEditorProps> = ({
   onModeChange,
   onContentChange,
 }) => {
+  const { colors, typography } = useTheme();
   const [currentContent, setCurrentContent] = useState(initialContent);
   const [originalContent, setOriginalContent] = useState(initialContent);
 
@@ -108,6 +110,22 @@ export const FileEditor: React.FC<FileEditorProps> = ({
   // 全選択・全解除の判定
   const allSelected = allChangeBlockIds.size > 0 && selectedBlocks.size === allChangeBlockIds.size;
 
+  // スタイル定義
+  const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+    contentContainer: { flex: 1, paddingHorizontal: 16, paddingVertical: 12 },
+    previewContainer: { flex: 1, paddingHorizontal: 16, paddingVertical: 12 },
+    previewText: { ...typography.body, color: colors.text, fontFamily: 'monospace' },
+    editContainer: { flex: 1, paddingHorizontal: 16, paddingVertical: 12 },
+    textEditor: { flex: 1, ...typography.body, fontFamily: 'monospace', borderWidth: 1, borderColor: colors.border, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 12, backgroundColor: colors.background, color: colors.text },
+    footer: { flexDirection: 'row', justifyContent: 'space-around', backgroundColor: colors.secondary, paddingVertical: 12, borderTopWidth: 1, borderTopColor: colors.border },
+    controlButton: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 6, borderWidth: 1, borderColor: colors.border },
+    controlButtonText: { ...typography.body, fontWeight: '500', color: colors.text },
+    applyButton: { backgroundColor: colors.success, borderColor: colors.success },
+    applyButtonText: { color: colors.background },
+    cancelButton: { backgroundColor: colors.secondary },
+  });
+
   // コンテンツのレンダリング
   const renderContent = () => {
     switch (mode) {
@@ -132,7 +150,7 @@ export const FileEditor: React.FC<FileEditorProps> = ({
               }}
               multiline
               placeholder="ファイルの内容を編集してください..."
-              placeholderTextColor="#999"
+              placeholderTextColor={colors.textSecondary}
               textAlignVertical="top"
             />
           </View>
@@ -141,7 +159,11 @@ export const FileEditor: React.FC<FileEditorProps> = ({
       case 'preview':
         return (
           <ScrollView style={styles.previewContainer}>
-            <Markdown>{currentContent}</Markdown>
+            <Markdown style={{
+              body: { color: colors.text, ...typography.body },
+              heading1: { color: colors.text, ...typography.title },
+              heading2: { color: colors.text, ...typography.subtitle },
+            }}>{currentContent}</Markdown>
           </ScrollView>
         );
 
@@ -178,19 +200,3 @@ export const FileEditor: React.FC<FileEditorProps> = ({
     </View>
   );
 };
-
-// スタイル定義
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  contentContainer: { flex: 1, paddingHorizontal: 16, paddingVertical: 12 },
-  previewContainer: { flex: 1, paddingHorizontal: 16, paddingVertical: 12 },
-  previewText: { fontSize: 14, lineHeight: 20, color: '#495057', fontFamily: 'monospace' },
-  editContainer: { flex: 1, paddingHorizontal: 16, paddingVertical: 12 },
-  textEditor: { flex: 1, fontSize: 14, lineHeight: 20, fontFamily: 'monospace', borderWidth: 1, borderColor: '#ced4da', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 12, backgroundColor: '#fff' },
-  footer: { flexDirection: 'row', justifyContent: 'space-around', backgroundColor: '#f8f9fa', paddingVertical: 12, borderTopWidth: 1, borderTopColor: '#dee2e6' },
-  controlButton: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 6, borderWidth: 1, borderColor: '#dee2e6' },
-  controlButtonText: { fontSize: 14, fontWeight: '500', color: '#495057' },
-  applyButton: { backgroundColor: '#28a745', borderColor: '#28a745' },
-  applyButtonText: { color: '#fff' },
-  cancelButton: { backgroundColor: '#f8f9fa' },
-});

@@ -3,7 +3,7 @@
  * @summary このファイルは、アプリケーションの設定画面をレンダリングします。
  * @responsibility ユーザーがアプリケーションの各種設定（表示、動作、LLM関連など）を閲覧・変更できるUIを提供し、設定の永続化と更新を管理します。
  */
-import React, { useEffect } from 'react';
+import React, { useEffect, useLayoutEffect } from 'react';
 import {
   View,
   Text,
@@ -12,16 +12,29 @@ import {
   TouchableOpacity,
   Switch,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { useSettingsStore } from '../../store/settingsStore';
 import { useTheme } from '../../theme/ThemeContext';
+import { useCustomHeader } from '../../components/CustomHeader';
 
 function SettingsScreen() {
   const { colors, spacing, typography } = useTheme();
+  const navigation = useNavigation();
+  const { createHeaderConfig } = useCustomHeader();
   const { settings, loadSettings, updateSettings, isLoading } = useSettingsStore();
 
   useEffect(() => {
     loadSettings();
   }, []);
+
+  useLayoutEffect(() => {
+    navigation.setOptions(
+      createHeaderConfig({
+        title: <Text style={{ color: colors.text }}>設定</Text>,
+        leftButtons: [{ title: '\u2190', onPress: () => navigation.goBack() }],
+      })
+    );
+  }, [navigation, colors]);
 
   const renderSection = (title: string) => (
     <Text style={styles.sectionTitle}>{title}</Text>

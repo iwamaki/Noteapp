@@ -21,6 +21,7 @@ import {
 import { ChatMessage, LLMCommand } from '../../services/llmService';
 import { useChat } from './hooks/useChat';
 import { ChatContext } from '../../services/api';
+import { useTheme } from '../../theme/ThemeContext';
 
 // チャット入力バーコンポーネントのプロパティ   
 interface ChatInputBarProps { 
@@ -33,6 +34,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
   context,
   onCommandReceived,
 }) => {
+  const { colors, spacing, typography } = useTheme();
   const { messages, isLoading, sendMessage } = useChat(context, onCommandReceived);
   const [inputText, setInputText] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
@@ -112,6 +114,163 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
     outputRange: [0, 300],
   });
 
+  const styles = StyleSheet.create({
+    container: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: colors.secondary,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+    },
+    messagesArea: {
+      backgroundColor: colors.background,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+      overflow: 'hidden',
+    },
+    messagesHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      backgroundColor: colors.secondary,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    messagesHeaderTitle: {
+      fontSize: typography.body.fontSize,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    collapseButton: {
+      padding: 4,
+    },
+    collapseButtonText: {
+      fontSize: typography.subtitle.fontSize,
+      color: colors.textSecondary,
+    },
+    messagesScrollView: {
+      flex: 1,
+    },
+    messagesContent: {
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+    },
+    message: {
+      marginVertical: 4,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: 8,
+      maxWidth: '85%',
+    },
+    userMessage: {
+      backgroundColor: colors.primary,
+      alignSelf: 'flex-end',
+    },
+    aiMessage: {
+      backgroundColor: colors.secondary,
+      alignSelf: 'flex-start',
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    systemMessage: {
+      backgroundColor: colors.warning + '30', // warning with opacity
+      alignSelf: 'center',
+      borderWidth: 1,
+      borderColor: colors.warning,
+    },
+    messageText: {
+      fontSize: typography.body.fontSize,
+      lineHeight: typography.body.fontSize * 1.4,
+    },
+    userMessageText: {
+      color: colors.background,
+    },
+    aiMessageText: {
+      color: colors.text,
+    },
+    systemMessageText: {
+      color: colors.text,
+    },
+    messageTimestamp: {
+      fontSize: typography.caption.fontSize,
+      color: colors.textSecondary,
+      marginTop: 4,
+      textAlign: 'right',
+    },
+    loadingContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 12,
+    },
+    loadingText: {
+      marginLeft: 8,
+      fontSize: typography.body.fontSize,
+      color: colors.primary,
+    },
+    inputArea: {
+      flexDirection: 'row',
+      alignItems: 'flex-end',
+      paddingHorizontal: 10,
+      paddingVertical: 8,
+      paddingBottom: Platform.OS === 'ios' ? 20 : 35,
+      backgroundColor: colors.secondary,
+    },
+    expandButton: {
+      alignSelf: 'flex-end',
+      marginRight: 8,
+      marginBottom: 8,
+      paddingHorizontal: 8,
+      paddingVertical: 6,
+      backgroundColor: colors.border,
+      borderRadius: 4,
+    },
+    expandButtonText: {
+      fontSize: typography.caption.fontSize,
+      color: colors.text,
+      fontWeight: '600',
+    },
+    textInput: {
+      flex: 1,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 20,
+      paddingHorizontal: 15,
+      paddingVertical: 10,
+      fontSize: typography.subtitle.fontSize,
+      backgroundColor: colors.background,
+      color: colors.text,
+      maxHeight: 100,
+      marginRight: 8,
+      minHeight: 40,
+    },
+    sendButton: {
+      backgroundColor: colors.primary,
+      paddingHorizontal: 20,
+      paddingVertical: 10,
+      borderRadius: 20,
+      justifyContent: 'center',
+      alignItems: 'center',
+      minHeight: 40,
+    },
+    sendButtonText: {
+      color: '#fff',
+      fontSize: typography.subtitle.fontSize,
+      fontWeight: '600',
+    },
+    disabledButton: {
+      backgroundColor: colors.textSecondary,
+      opacity: 0.5,
+    },
+    disabledButtonText: {
+      opacity: 0.7,
+    },
+  });
+
   // メッセージのレンダリング
   const renderMessage = (message: ChatMessage, index: number) => {
     let containerStyle: any[] = [styles.message];
@@ -164,7 +323,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
             {messages.map(renderMessage)}
             {isLoading && (
               <View style={styles.loadingContainer}>
-                <ActivityIndicator size="small" color="#007bff" />
+                <ActivityIndicator size="small" color={colors.primary} />
                 <Text style={styles.loadingText}>AI が処理中です...</Text>
               </View>
             )}
@@ -185,7 +344,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
         <TextInput
           style={styles.textInput}
           placeholder="メッセージを入力..."
-          placeholderTextColor="#999"
+          placeholderTextColor={colors.textSecondary}
           value={inputText}
           onChangeText={setInputText}
           multiline
@@ -213,159 +372,3 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
     </Animated.View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: '#f8f9fa',
-    borderTopWidth: 1,
-    borderTopColor: '#dee2e6',
-  },
-  messagesArea: {
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#dee2e6',
-    overflow: 'hidden',
-  },
-  messagesHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: '#f8f9fa',
-    borderBottomWidth: 1,
-    borderBottomColor: '#dee2e6',
-  },
-  messagesHeaderTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#495057',
-  },
-  collapseButton: {
-    padding: 4,
-  },
-  collapseButtonText: {
-    fontSize: 16,
-    color: '#6c757d',
-  },
-  messagesScrollView: {
-    flex: 1,
-  },
-  messagesContent: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  message: {
-    marginVertical: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    maxWidth: '85%',
-  },
-  userMessage: {
-    backgroundColor: '#007bff',
-    alignSelf: 'flex-end',
-  },
-  aiMessage: {
-    backgroundColor: '#f8f9fa',
-    alignSelf: 'flex-start',
-    borderWidth: 1,
-    borderColor: '#dee2e6',
-  },
-  systemMessage: {
-    backgroundColor: '#fff3cd',
-    alignSelf: 'center',
-    borderWidth: 1,
-    borderColor: '#ffeaa7',
-  },
-  messageText: {
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  userMessageText: {
-    color: '#fff',
-  },
-  aiMessageText: {
-    color: '#495057',
-  },
-  systemMessageText: {
-    color: '#856404',
-  },
-  messageTimestamp: {
-    fontSize: 10,
-    color: '#6c757d',
-    marginTop: 4,
-    textAlign: 'right',
-  },
-  loadingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-  },
-  loadingText: {
-    marginLeft: 8,
-    fontSize: 14,
-    color: '#007bff',
-  },
-  inputArea: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    paddingBottom: Platform.OS === 'ios' ? 20 : 35,
-    backgroundColor: '#f8f9fa',
-  },
-  expandButton: {
-    alignSelf: 'flex-end',
-    marginRight: 8,
-    marginBottom: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    backgroundColor: '#e9ecef',
-    borderRadius: 4,
-  },
-  expandButtonText: {
-    fontSize: 12,
-    color: '#495057',
-    fontWeight: '600',
-  },
-  textInput: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#ced4da',
-    borderRadius: 20,
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    fontSize: 16,
-    backgroundColor: '#fff',
-    maxHeight: 100,
-    marginRight: 8,
-    minHeight: 40,
-  },
-  sendButton: {
-    backgroundColor: '#007bff',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    minHeight: 40,
-  },
-  sendButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  disabledButton: {
-    backgroundColor: '#6c757d',
-    opacity: 0.5,
-  },
-  disabledButtonText: {
-    opacity: 0.7,
-  },
-});

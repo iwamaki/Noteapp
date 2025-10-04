@@ -94,7 +94,7 @@ function NoteEditScreen() {
         rightButtons: rightButtons,
       })
     );
-  }, [navigation, title, activeNote, handleGoToDiff, createHeaderConfig, viewMode, setViewMode, isLoading]);
+  }, [navigation, title, activeNote, handleGoToDiff, createHeaderConfig, viewMode, setViewMode, isLoading, colors]);
 
   // チャットエリアの作成
   const chatContext: ChatContext = {
