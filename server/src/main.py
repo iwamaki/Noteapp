@@ -70,7 +70,7 @@ async def get_llm_providers():
     if llm_service.openai_api_key:
         providers["openai"] = LLMProvider(
             name="OpenAI",
-            defaultModel="gpt-3.5-turbo",
+            defaultModel="gpt-4",
             models=["gpt-3.5-turbo", "gpt-4", "gpt-4-turbo-preview"],
             status="available"
         )
