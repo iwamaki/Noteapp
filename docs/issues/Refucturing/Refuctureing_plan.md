@@ -93,91 +93,7 @@ app/
 #### 2.2 設定とサービスの連携
 **問題**: settingsStoreの設定が実際に適用されていない
 
-**リファクタリング計画**:
 
-##### 2.2.1 テーマシステムの実装
-```typescript
-// app/theme/ThemeContext.tsx
-import React, { createContext, useContext, useEffect } from 'react';
-import { useSettingsStore } from '../store/settingsStore';
-
-type Theme = {
-  colors: typeof lightColors;
-  spacing: typeof spacing;
-  typography: typeof typography;
-};
-
-const ThemeContext = createContext<Theme | null>(null);
-
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const { settings } = useSettingsStore();
-  
-  const theme = useMemo(() => {
-    const colors = settings.theme === 'dark' ? darkColors : lightColors;
-    const typography = getTypographyForSize(settings.fontSize);
-    
-    return { colors, spacing, typography };
-  }, [settings.theme, settings.fontSize]);
-  
-  return (
-    <ThemeContext.Provider value={theme}>
-      {children}
-    </ThemeContext.Provider>
-  );
-}
-
-export function useTheme() {
-  const theme = useContext(ThemeContext);
-  if (!theme) throw new Error('useTheme must be used within ThemeProvider');
-  return theme;
-}
-```
-
-##### 2.2.2 App.tsxの更新
-```typescript
-// app/App.tsx
-import React, { useEffect } from 'react';
-import { ThemeProvider } from './theme/ThemeContext';
-import { useSettingsStore } from './store/settingsStore';
-import RootNavigator from './navigation/RootNavigator';
-
-export default function App() {
-  const { loadSettings } = useSettingsStore();
-  
-  useEffect(() => {
-    loadSettings();
-  }, []);
-  
-  return (
-    <ThemeProvider>
-      <RootNavigator />
-    </ThemeProvider>
-  );
-}
-```
-
-##### 2.2.3 コンポーネントでの使用
-```typescript
-// Before
-import { colors } from '../utils/commonStyles';
-
-// After
-import { useTheme } from '../theme/ThemeContext';
-
-function MyComponent() {
-  const { colors } = useTheme();
-  // ...
-}
-```
-
-**期待される効果**:
-- テーマ切り替えが実際に機能する
-- ダークモード対応
-- ユーザー設定が反映される
-
-**リスク**: 中（全コンポーネントの修正が必要）
-
----
 
 #### 2.3 LLMコマンドの完全実装
 **問題**: `edit_file`コマンドのみ実装、他の9種類が未実装
@@ -192,18 +108,18 @@ const commandHandlers = {
   'create_file': executeCreateFileCommand,       // ❌ 未実装 → ノート作成
   'delete_file': executeDeleteFileCommand,       // ❌ 未実装 → ノート削除
   'copy_file': executeCopyFileCommand,           // ❌ 未実装 → ノート複製
-  'move_file': executeMoveFileCommand,           // ❌ 未実装 → 不要?
+  'move_file': executeMoveFileCommand,           // ❌ 未実装 → 優先度低
   'read_file': executeReadFileCommand,           // ❌ 未実装 → ノート読み込み
   'list_files': executeListFilesCommand,         // ❌ 未実装 → 一覧表示
   'batch_delete': executeBatchDeleteCommand,     // ❌ 未実装 → 複数削除
   'batch_copy': executeBatchCopyCommand,         // ❌ 未実装 → 複数複製
-  'batch_move': executeBatchMoveCommand,         // ❌ 未実装 → 不要?
+  'batch_move': executeBatchMoveCommand,         // ❌ 未実装 → 優先度低
 };
 
 // ノートアプリとしての優先順位:
 // 優先度高: create_file, delete_file, read_file, list_files
 // 優先度中: copy_file, batch_delete, batch_copy
-// 優先度低: move_file, batch_move (ファイルシステムの概念がないため)
+// 優先度低: move_file, batch_move (ファイルシステムの概念がないが、一応))
 ```
 
 **実装手順**:
@@ -780,9 +696,9 @@ describe('Diff View Flow', () => {
 - [x] コードレビューと統合テスト（1日）
 
 ### Week 5-6: 🟡 フェーズ2 (構造改善 - Part 2)
-- [ ] テーマシステムの実装（2日）
-- [ ] 各コンポーネントでuseTheme適用（3日）
-- [ ] ダークモード対応（2日）
+- [x] テーマシステムの実装（2日）
+- [x] 各コンポーネントでuseTheme適用（3日）
+- [x] ダークモード対応（2日）
 
 ### Week 7-8: 🟡 フェーズ2 (構造改善 - Part 3)
 - [ ] LLMコマンド実装（優先度高から）（4日）

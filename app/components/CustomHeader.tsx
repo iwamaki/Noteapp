@@ -19,11 +19,13 @@ export interface HeaderConfig {
     title: string;
     onPress: () => void;
     variant?: 'primary' | 'secondary' | 'danger';
+    disabled?: boolean;
   }>;
   rightButtons?: Array<{
     title: string;
     onPress: () => void;
     variant?: 'primary' | 'secondary' | 'danger';
+    disabled?: boolean;
   }>;
 }
 

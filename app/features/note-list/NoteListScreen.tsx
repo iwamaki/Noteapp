@@ -47,7 +47,7 @@ function NoteListScreen() {
   const copySelectedNotes = useNoteSelectionStore(state => state.copySelectedNotes);
 
   // デバッグ用ログ
-  logger.debug('NoteListScreen render:', { isSelectionMode, selectedCount: selectedNoteIds.size });
+  logger.debug('note', 'NoteListScreen render:', { isSelectionMode, selectedCount: selectedNoteIds.size });
   const isFocused = useIsFocused();
   const { createHeaderConfig } = useCustomHeader();
 
@@ -217,7 +217,7 @@ function NoteListScreen() {
       )}
       <ChatInputBar context={chatContext} />
       {(() => {
-        logger.debug('FAB render check:', { isSelectionMode, shouldShow: !isSelectionMode });
+        logger.debug('note', 'FAB render check:', { isSelectionMode, shouldShow: !isSelectionMode });
         return !isSelectionMode ? <FabButton onPress={handleCreateNote} /> : null;
       })()}
     </View>
