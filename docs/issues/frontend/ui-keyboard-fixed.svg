@@ -1,0 +1,59 @@
+<svg width="300" height="500" xmlns="http://www.w3.org/2000/svg">
+  <!-- 画面の枠 -->
+  <rect x="0" y="0" width="300" height="500" fill="#f5f5f5" stroke="#333" stroke-width="2"/>
+  
+  <!-- ヘッダー部分 -->
+  <rect x="0" y="0" width="300" height="50" fill="#4a90e2" stroke="none"/>
+  <text x="20" y="30" font-size="14" fill="white" font-weight="bold">NoteEditScreen</text>
+  
+  <!-- テキストエディタ領域 (自動調整済み) -->
+  <rect x="5" y="55" width="290" height="175" fill="white" stroke="#ddd" stroke-width="1"/>
+  <text x="15" y="75" font-size="12" fill="#333">テキストエディタ (自動スクロール済み)</text>
+  <line x1="15" y1="85" x2="285" y2="85" stroke="#eee"/>
+  
+  <!-- スクロール後のテキスト表示 - 入力中の行が見える！ -->
+  <text x="15" y="105" font-size="10" fill="#666">15行目: スクロールされて</text>
+  <text x="15" y="125" font-size="10" fill="#666">16行目: 上の方は隠れたが</text>
+  <text x="15" y="145" font-size="10" fill="#666">17行目: 入力中の行は</text>
+  <text x="15" y="165" font-size="10" fill="#666">18行目: ちゃんと見える</text>
+  <text x="15" y="185" font-size="10" fill="#e74c3c" font-weight="bold">19行目: 入力中の行 ▌ ← 見える！</text>
+  <text x="15" y="205" font-size="10" fill="#666">20行目: 続きのテキスト</text>
+  
+  <!-- スクロールインジケーター -->
+  <rect x="285" y="55" width="8" height="175" fill="#f0f0f0"/>
+  <rect x="287" y="120" width="4" height="30" fill="#4a90e2" rx="2"/>
+  
+  <!-- ChatInputBar (キーボード上に移動) -->
+  <rect x="5" y="235" width="290" height="60" fill="#e8f4fd" stroke="#4a90e2" stroke-width="1"/>
+  <text x="15" y="255" font-size="11" fill="#4a90e2">ChatInputBar (自動移動)</text>
+  <rect x="15" y="265" width="270" height="25" fill="white" stroke="#ccc" rx="12"/>
+  <text x="25" y="281" font-size="10" fill="#333">チャット入力中...</text>
+  
+  <!-- ソフトウェアキーボード -->
+  <rect x="0" y="300" width="300" height="200" fill="#2c3e50"/>
+  <text x="20" y="330" font-size="12" fill="white">🎹 ソフトウェアキーボード</text>
+  
+  <!-- キーボードのキー表現 -->
+  <g fill="#34495e" stroke="#555">
+    <rect x="15" y="350" width="25" height="25" rx="3"/>
+    <rect x="45" y="350" width="25" height="25" rx="3"/>
+    <rect x="75" y="350" width="25" height="25" rx="3"/>
+    <rect x="105" y="350" width="25" height="25" rx="3"/>
+    <text x="135" y="368" font-size="8" fill="#bdc3c7">QWERTY...</text>
+  </g>
+  
+  <!-- 解決ポイントを示す矢印と説明 -->
+  <g stroke="#27ae60" stroke-width="2" fill="none">
+    <path d="M 310 185 L 340 185 L 335 180 M 340 185 L 335 190"/>
+    <text x="345" y="190" font-size="9" fill="#27ae60" font-weight="bold">✓ 入力行が見える!</text>
+  </g>
+  
+  <g stroke="#27ae60" stroke-width="2" fill="none">
+    <path d="M 310 265 L 340 265 L 335 260 M 340 265 L 335 270"/>
+    <text x="345" y="270" font-size="9" fill="#27ae60" font-weight="bold">✓ 正しい位置に移動!</text>
+  </g>
+  
+  <!-- 解決状況を示すバッジ -->
+  <rect x="205" y="10" width="80" height="20" fill="#27ae60" rx="10"/>
+  <text x="225" y="23" font-size="10" fill="white" font-weight="bold">✓ 解決済み</text>
+</svg>

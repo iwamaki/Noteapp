@@ -4,8 +4,8 @@
  * @responsibility ノートのタイトルと内容の編集、プレビュー表示、変更の保存、およびバージョン履歴へのアクセス機能を提供します。
  */
 
-import React, { useState } from 'react';
-import { View, StyleSheet, Platform, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, StyleSheet, Platform, ActivityIndicator, Keyboard, KeyboardEvent, Animated } from 'react-native';
 import { useRoute, RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/types';
 import { FileEditor, ViewMode } from './components/FileEditor';
@@ -39,6 +39,41 @@ function NoteEditScreen() {
   } = useNoteEditor(noteId);
 
   const [viewMode, setViewMode] = useState<ViewMode>('edit');
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const paddingBottomAnim = useRef(new Animated.Value(CHAT_INPUT_HEIGHT)).current;
+
+  // キーボードイベントのリスナー
+  useEffect(() => {
+    const keyboardWillShow = (e: KeyboardEvent) => {
+      const height = e.endCoordinates.height;
+      setKeyboardHeight(height);
+      Animated.timing(paddingBottomAnim, {
+        toValue: CHAT_INPUT_HEIGHT + height,
+        duration: e.duration || 250,
+        useNativeDriver: false,
+      }).start();
+    };
+
+    const keyboardWillHide = (e: KeyboardEvent) => {
+      setKeyboardHeight(0);
+      Animated.timing(paddingBottomAnim, {
+        toValue: CHAT_INPUT_HEIGHT,
+        duration: e.duration || 250,
+        useNativeDriver: false,
+      }).start();
+    };
+
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSubscription = Keyboard.addListener(showEvent, keyboardWillShow);
+    const hideSubscription = Keyboard.addListener(hideEvent, keyboardWillHide);
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, [paddingBottomAnim]);
 
   // LLMコマンドハンドラの初期化
   const { handleLLMResponse } = useLLMCommandHandler({
@@ -104,7 +139,7 @@ function NoteEditScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.contentContainer, { paddingBottom: CHAT_INPUT_HEIGHT }]}>
+      <Animated.View style={[styles.contentContainer, { paddingBottom: paddingBottomAnim }]}>
         {isLoading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={colors.primary} />
@@ -118,7 +153,7 @@ function NoteEditScreen() {
             onContentChange={setContent}
           />
         )}
-      </View>
+      </Animated.View>
       <ChatInputBar
         context={chatContext}
         onCommandReceived={handleCommandReceived}
