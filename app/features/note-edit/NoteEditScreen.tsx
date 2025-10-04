@@ -12,7 +12,8 @@ import { RootStackParamList } from '../../navigation/types';
 import { FileEditor, ViewMode } from './components/FileEditor';
 import { useNoteEditor } from './hooks/useNoteEditor';
 import { useCustomHeader } from '../../components/CustomHeader';
-import { commonStyles, colors, typography, responsive, spacing } from '../../utils/commonStyles';
+import { responsive } from '../../utils/commonStyles';
+import { useTheme } from '../../theme/ThemeContext';
 import { ChatInputBar } from '../chat/ChatInputBar';
 import { ChatContext, LLMCommand } from '../../services/llmService';
 import { useLLMCommandHandler } from '../../hooks/useLLMCommandHandler';
@@ -24,6 +25,7 @@ const CHAT_INPUT_HEIGHT = Platform.OS === 'ios' ? 78 : 66;
 
 // ノート編集画面コンポーネント
 function NoteEditScreen() {
+  const { colors, spacing, typography } = useTheme();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const route = useRoute<NoteEditScreenRouteProp>();
   const { noteId } = route.params || {};
@@ -94,7 +96,7 @@ function NoteEditScreen() {
     );
   }, [navigation, title, activeNote, handleGoToDiff, createHeaderConfig, viewMode, setViewMode, isLoading]);
 
-  // チャットエリアの作成 
+  // チャットエリアの作成
   const chatContext: ChatContext = {
     currentFile: activeNote?.id,
     currentFileContent: {
@@ -105,8 +107,30 @@ function NoteEditScreen() {
     },
   };
 
+  // スタイルの定義
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    contentContainer: {
+      flex: 1,
+    },
+    headerTitle: {
+      ...typography.title,
+      color: colors.text,
+      width: responsive.getResponsiveSize(180, 200, 220),
+      textAlign: 'left',
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+  });
+
   return (
-    <View style={commonStyles.container}>
+    <View style={styles.container}>
       <View style={[styles.contentContainer, { paddingBottom: CHAT_INPUT_HEIGHT }]}>
         {isLoading ? (
           <View style={styles.loadingContainer}>
@@ -129,22 +153,5 @@ function NoteEditScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  contentContainer: {
-    flex: 1,
-  },
-  headerTitle: {
-    ...typography.title,
-    color: colors.text,
-    width: responsive.getResponsiveSize(180, 200, 220),
-    textAlign: 'left',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-});
 
 export default NoteEditScreen;

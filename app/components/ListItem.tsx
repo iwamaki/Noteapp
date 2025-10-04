@@ -5,7 +5,8 @@
  */
 import React from 'react';
 import { TouchableOpacity, Text, View, StyleSheet } from 'react-native';
-import { colors, spacing, shadows, typography, responsive } from '../utils/commonStyles';
+import { responsive } from '../utils/commonStyles';
+import { useTheme } from '../theme/ThemeContext';
 
 interface ListItemProps {
   title: string;
@@ -28,6 +29,69 @@ export const ListItem: React.FC<ListItemProps> = ({
   isSelected = false,
   isSelectionMode = false,
 }) => {
+  const { colors, spacing, shadows, typography } = useTheme();
+
+  const styles = StyleSheet.create({
+    container: {
+      backgroundColor: colors.background,
+      borderRadius: 8,
+      marginBottom: spacing.md,
+      padding: responsive.getResponsiveSize(spacing.md, spacing.lg, spacing.xl),
+      ...shadows.small,
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    content: {
+      flex: 1,
+    },
+    title: {
+      ...typography.title,
+      marginBottom: spacing.xs,
+      color: colors.text,
+    },
+    subtitle: {
+      ...typography.body,
+      color: colors.textSecondary,
+    },
+    rightContainer: {
+      marginLeft: spacing.md,
+      justifyContent: 'center',
+    },
+    disabled: {
+      opacity: 0.5,
+    },
+    selected: {
+      backgroundColor: colors.primary + '20',
+      borderWidth: 2,
+      borderColor: colors.primary,
+    },
+    selectionMode: {
+      backgroundColor: colors.background,
+    },
+    checkboxContainer: {
+      marginRight: spacing.md,
+    },
+    checkbox: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      borderWidth: 2,
+      borderColor: colors.textSecondary,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'transparent',
+    },
+    checkboxSelected: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    checkboxText: {
+      color: 'white',
+      fontSize: 16,
+      fontWeight: 'bold',
+    },
+  });
+
   return (
     <TouchableOpacity
       style={[
@@ -65,64 +129,3 @@ export const ListItem: React.FC<ListItemProps> = ({
     </TouchableOpacity>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: colors.background,
-    borderRadius: 8,
-    marginBottom: spacing.md,
-    padding: responsive.getResponsiveSize(spacing.md, spacing.lg, spacing.xl),
-    ...shadows.small,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  content: {
-    flex: 1,
-  },
-  title: {
-    ...typography.title,
-    marginBottom: spacing.xs,
-    color: colors.text,
-  },
-  subtitle: {
-    ...typography.body,
-    color: colors.textSecondary,
-  },
-  rightContainer: {
-    marginLeft: spacing.md,
-    justifyContent: 'center',
-  },
-  disabled: {
-    opacity: 0.5,
-  },
-  selected: {
-    backgroundColor: colors.primary + '20',
-    borderWidth: 2,
-    borderColor: colors.primary,
-  },
-  selectionMode: {
-    backgroundColor: colors.background,
-  },
-  checkboxContainer: {
-    marginRight: spacing.md,
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: colors.textSecondary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'transparent',
-  },
-  checkboxSelected: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  checkboxText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-});

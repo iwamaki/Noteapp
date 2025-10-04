@@ -19,10 +19,10 @@ import { useNoteStore, useNoteSelectionStore } from '../../store/note';
 import { FabButton } from '../../components/FabButton';
 import { ListItem } from '../../components/ListItem';
 import { useCustomHeader } from '../../components/CustomHeader';
-import { commonStyles, colors, spacing } from '../../utils/commonStyles';
 import { ChatInputBar } from '../chat/ChatInputBar';
 import { ChatContext } from '../../services/llmService';
-import { logger } from '../../utils/logger'; // loggerをインポート
+import { logger } from '../../utils/logger';
+import { useTheme } from '../../theme/ThemeContext';
 
 // 入力バーの高さ（概算）
 const CHAT_INPUT_HEIGHT = Platform.OS === 'ios' ? 78 : 66;
@@ -30,6 +30,7 @@ const CHAT_INPUT_HEIGHT = Platform.OS === 'ios' ? 78 : 66;
 // ノート一覧画面コンポーネント
 function NoteListScreen() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const { colors, spacing } = useTheme();
 
   // 各ストアから必要な状態とアクションを取得
   const notes = useNoteStore(state => state.filteredNotes);
@@ -49,6 +50,32 @@ function NoteListScreen() {
   logger.debug('NoteListScreen render:', { isSelectionMode, selectedCount: selectedNoteIds.size });
   const isFocused = useIsFocused();
   const { createHeaderConfig } = useCustomHeader();
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.secondary,
+    },
+    centered: {
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    emptyContainer: {
+      flex: 1,
+    },
+    emptyMessage: {
+      fontSize: 16,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      paddingHorizontal: spacing.xl,
+    },
+    list: {
+      flex: 1,
+    },
+    listContent: {
+      padding: spacing.md,
+    },
+  });
 
   useEffect(() => {
     if (isFocused) {
@@ -144,7 +171,7 @@ function NoteListScreen() {
   // ローディング中の表示
   if (loading.isLoading && notes.length === 0) {
     return (
-      <View style={[commonStyles.container, commonStyles.centered]}>
+      <View style={[styles.container, styles.centered]}>
         <ActivityIndicator size="large" color={colors.primary} />
         <ChatInputBar />
       </View>
@@ -171,9 +198,9 @@ function NoteListScreen() {
 
   // メインの表示
   return (
-    <View style={commonStyles.container}>
+    <View style={styles.container}>
       {notes.length === 0 && !loading.isLoading ? (
-        <View style={[commonStyles.centered, styles.emptyContainer]}>
+        <View style={[styles.centered, styles.emptyContainer]}>
           <Text style={styles.emptyMessage}>ノートがありません。</Text>
           <Text style={styles.emptyMessage}>下の「+」ボタンから新しいノートを作成しましょう。</Text>
         </View>
@@ -196,24 +223,5 @@ function NoteListScreen() {
     </View>
   );
 }
-
-// スタイル定義
-const styles = StyleSheet.create({
-  emptyContainer: {
-    flex: 1,
-  },
-  emptyMessage: {
-    fontSize: 16,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    paddingHorizontal: spacing.xl,
-  },
-  list: {
-    flex: 1,
-  },
-  listContent: {
-    padding: spacing.md,
-  },
-});
 
 export default NoteListScreen;

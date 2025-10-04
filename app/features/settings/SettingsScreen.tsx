@@ -13,8 +13,10 @@ import {
   Switch,
 } from 'react-native';
 import { useSettingsStore } from '../../store/settingsStore';
-import { colors, spacing, typography } from '../../utils/commonStyles';
+import { useTheme } from '../../theme/ThemeContext';
+
 function SettingsScreen() {
+  const { colors, spacing, typography } = useTheme();
   const { settings, loadSettings, updateSettings, isLoading } = useSettingsStore();
 
   useEffect(() => {
@@ -87,6 +89,91 @@ function SettingsScreen() {
     </View>
   );
 
+  // スタイルの定義
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.secondary,
+    },
+    content: {
+      padding: spacing.lg,
+    },
+    sectionTitle: {
+      ...typography.subtitle,
+      marginTop: spacing.xl,
+      marginBottom: spacing.md,
+      color: colors.primary,
+    },
+    infoText: {
+      ...typography.body,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      marginBottom: spacing.xl,
+    },
+    optionContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      backgroundColor: colors.background,
+      padding: spacing.lg,
+      borderRadius: 8,
+      marginBottom: spacing.sm,
+    },
+    optionLabel: {
+      ...typography.body,
+      color: colors.text,
+      flex: 1,
+    },
+    optionValue: {
+      ...typography.body,
+      color: colors.primary,
+    },
+    pickerContainer: {
+      backgroundColor: colors.background,
+      padding: spacing.lg,
+      borderRadius: 8,
+      marginBottom: spacing.sm,
+    },
+    pickerButtons: {
+      flexDirection: 'row',
+      marginTop: spacing.md,
+      gap: spacing.sm,
+      flexWrap: 'wrap',
+    },
+    pickerButton: {
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.lg,
+      borderRadius: 6,
+      backgroundColor: colors.secondary,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    pickerButtonActive: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    pickerButtonText: {
+      ...typography.body,
+      color: colors.text,
+    },
+    pickerButtonTextActive: {
+      color: colors.background,
+      fontWeight: '600',
+    },
+    resetButton: {
+      backgroundColor: colors.danger,
+      padding: spacing.lg,
+      borderRadius: 8,
+      alignItems: 'center',
+      marginTop: spacing.xl,
+      marginBottom: spacing.xxl,
+    },
+    resetButtonText: {
+      ...typography.subtitle,
+      color: colors.background,
+    },
+  });
+
   if (isLoading) {
     return (
       <View style={styles.container}>
@@ -98,13 +185,25 @@ function SettingsScreen() {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.sectionTitle}>現在設定可能な項目</Text>
+        {renderSection('表示設定')}
+
+        {renderPicker('テーマ', settings.theme, [
+          { label: 'ライト', value: 'light' },
+          { label: 'ダーク', value: 'dark' },
+          { label: 'システム', value: 'system' },
+        ])}
+
+        {renderPicker('フォントサイズ', settings.fontSize, [
+          { label: '小', value: 'small' },
+          { label: '中', value: 'medium' },
+          { label: '大', value: 'large' },
+          { label: '特大', value: 'xlarge' },
+        ])}
+
         <Text style={styles.infoText}>
           その他の設定項目は今後のアップデートで追加予定です。
         </Text>
-        
-        {/* 実装済みの項目があればここに表示 */}
-        
+
         <TouchableOpacity
           style={styles.resetButton}
           onPress={async () => {
@@ -118,89 +217,5 @@ function SettingsScreen() {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.secondary,
-  },
-  content: {
-    padding: spacing.lg,
-  },
-  sectionTitle: {
-    ...typography.subtitle,
-    marginTop: spacing.xl,
-    marginBottom: spacing.md,
-    color: colors.primary,
-  },
-  infoText: {
-    ...typography.body,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginBottom: spacing.xl,
-  },
-  optionContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: colors.background,
-    padding: spacing.lg,
-    borderRadius: 8,
-    marginBottom: spacing.sm,
-  },
-  optionLabel: {
-    ...typography.body,
-    color: colors.text,
-    flex: 1,
-  },
-  optionValue: {
-    ...typography.body,
-    color: colors.primary,
-  },
-  pickerContainer: {
-    backgroundColor: colors.background,
-    padding: spacing.lg,
-    borderRadius: 8,
-    marginBottom: spacing.sm,
-  },
-  pickerButtons: {
-    flexDirection: 'row',
-    marginTop: spacing.md,
-    gap: spacing.sm,
-    flexWrap: 'wrap',
-  },
-  pickerButton: {
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    borderRadius: 6,
-    backgroundColor: colors.secondary,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  pickerButtonActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  pickerButtonText: {
-    ...typography.body,
-    color: colors.text,
-  },
-  pickerButtonTextActive: {
-    color: colors.background,
-    fontWeight: '600',
-  },
-  resetButton: {
-    backgroundColor: colors.danger,
-    padding: spacing.lg,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: spacing.xl,
-    marginBottom: spacing.xxl,
-  },
-  resetButtonText: {
-    ...typography.subtitle,
-    color: colors.background,
-  },
-});
 
 export default SettingsScreen;
