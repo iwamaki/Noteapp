@@ -195,12 +195,6 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
     systemMessageText: {
       color: colors.text,
     },
-    messageTimestamp: {
-      fontSize: typography.caption.fontSize,
-      color: colors.textSecondary,
-      marginTop: 4,
-      textAlign: 'right',
-    },
     loadingContainer: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -294,9 +288,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
     return (
       <View key={index} style={containerStyle}>
         <Text style={textStyle}>{message.content}</Text>
-        <Text style={styles.messageTimestamp}>
-          {message.timestamp.toLocaleTimeString()}
-        </Text>
+
       </View>
     );
   };

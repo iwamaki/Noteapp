@@ -50,11 +50,11 @@ export const useLLMCommandHandler = (context: CommandHandlerContext) => {
 
   const executeEditFileCommand = useCallback((command: LLMCommand) => {
     if (!command.content) {
-      console.warn('edit_file command missing content');
+      logger.warn('llm', 'edit_file command missing content');
       return;
     }
 
-    logger.debug('llm', '[LLMCommandHandler] Executing edit_file command:', {
+    logger.debug('llm', '[LLMCommandHandler] Executing edit_file command', {
       originalContentLength: context.currentContent.length,
       newContentLength: command.content.length,
       originalPreview: context.currentContent.substring(0, 100),
@@ -78,7 +78,7 @@ export const useLLMCommandHandler = (context: CommandHandlerContext) => {
         executeEditFileCommand(command);
         break;
       default:
-        console.warn(`Unknown command action: ${command.action}`);
+        logger.warn('llm', 'Unknown command action', { action: command.action });
     }
   }, [executeEditFileCommand]);
 

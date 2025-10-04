@@ -41,14 +41,6 @@ export const useChat = (context: ChatContext = {}, onCommandReceived?: (commands
       const warningMessage = createMessage('system', `⚠️ ${response.warning}`);
       addMessage(warningMessage);
     }
-
-    if (response.provider && response.model) {
-      const debugMessage = createMessage(
-        'system',
-        `🔧 via ${response.provider} (${response.model}) | 履歴: ${response.historyCount || 0}件`
-      );
-      addMessage(debugMessage);
-    }
   }, [createMessage, addMessage, onCommandReceived]);
 
   const handleError = useCallback((error: unknown) => {
@@ -85,7 +77,7 @@ export const useChat = (context: ChatContext = {}, onCommandReceived?: (commands
       handleError(error);
     } finally {
       setIsLoading(false);
-      logger.debug('chat', 'sendMessage finished');
+      logger.debug('chat', '==========sendMessage finished==========');
     }
   }, [isLoading, context, createMessage, addMessage, handleLLMResponse, handleError]);
 
