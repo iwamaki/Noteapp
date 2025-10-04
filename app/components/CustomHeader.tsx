@@ -95,6 +95,8 @@ export const CustomHeader: React.FC<CustomHeaderProps> = ({
 };
 
 export const useCustomHeader = () => {
+  const { colors } = useTheme(); // フックのトップレベルで useTheme を呼び出す
+
   const buttonContainerStyle = {
     flexDirection: 'row' as const,
     marginHorizontal: 10,
@@ -132,6 +134,11 @@ export const useCustomHeader = () => {
         </View>
       );
     },
+    // ヘッダー自体のスタイルもテーマに合わせる
+    headerStyle: {
+      backgroundColor: colors.secondary,
+    },
+    headerTintColor: colors.primary,
   });
 
   return { createHeaderConfig };

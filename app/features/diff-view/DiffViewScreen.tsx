@@ -4,7 +4,7 @@
  * @responsibility ノートの変更履歴やドラフト内容の差分を表示し、選択した変更を適用またはバージョンを復元する機能を提供します。
  */
 import React, { useMemo, useLayoutEffect } from 'react';
-import { View, StyleSheet, Alert } from 'react-native';
+import { View, StyleSheet, Alert, Text } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
@@ -13,7 +13,8 @@ import { generateDiff, validateDataConsistency } from '../../services/diffServic
 import { NoteStorageService } from '../../services/storageService';
 import { useDiffManager } from '../../hooks/useDiffManager';
 import { DiffViewer } from './components/DiffViewer';
-import { HeaderButton } from '../../components/HeaderButton';
+import { useCustomHeader } from '../../components/CustomHeader';
+import { useTheme } from '../../theme/ThemeContext';
 import { logger } from '../../utils/logger'; // loggerをインポート
 
 type DiffViewScreenNavigationProp = StackNavigationProp<RootStackParamList, 'DiffView'>;
@@ -22,6 +23,8 @@ type DiffViewScreenRouteProp = ReturnType<typeof useRoute<import('@react-navigat
 function DiffViewScreen() {
   const navigation = useNavigation<DiffViewScreenNavigationProp>();
   const route = useRoute<DiffViewScreenRouteProp>();
+  const { colors } = useTheme();
+  const { createHeaderConfig } = useCustomHeader();
 
   const activeNote = useNoteStore(state => state.activeNote);
   const selectNote = useNoteStore(state => state.selectNote);
@@ -123,34 +126,37 @@ function DiffViewScreen() {
 
   useLayoutEffect(() => {
     const isRestoreMode = mode === 'restore';
-    navigation.setOptions({
-      headerTitle: isRestoreMode ? 'Restore Version' : 'Apply Changes',
-      headerLeft: () => (
-        <HeaderButton
-          title="←"
-          onPress={handleCancel}
-          variant="secondary"
-        />
-      ),
-      headerRight: () => (
-        <View style={styles.headerRightContainer}>
-          {!isRestoreMode && (
-            <HeaderButton
-              title={allSelected ? '☑ 全選択' : '☐ 全選択'}
-              onPress={toggleAllSelection}
-              variant="secondary"
-            />
-          )}
-          <HeaderButton
-            title={isRestoreMode ? '復元' : `適用 (${selectedBlocks.size})`}
-            onPress={handleApply}
-            disabled={!isRestoreMode && selectedBlocks.size === 0}
-            variant="primary"
-          />
-        </View>
-      ),
-    });
-  }, [navigation, handleApply, handleCancel, toggleAllSelection, allSelected, selectedBlocks.size, mode]);
+    navigation.setOptions(
+      createHeaderConfig({
+        title: <Text style={{ color: colors.text }}>{isRestoreMode ? 'バージョン復元' : '変更の適用'}</Text>,
+        leftButtons: [{ title: '←', onPress: handleCancel, variant: 'secondary' }],
+        rightButtons: [
+          ...(!isRestoreMode
+            ? [
+                {
+                  title: allSelected ? '☑ 全選択' : '☐ 全選択',
+                  onPress: toggleAllSelection,
+                  variant: 'secondary' as const,
+                },
+              ]
+            : []),
+          {
+            title: isRestoreMode ? '復元' : `適用 (${selectedBlocks.size})`,
+            onPress: handleApply,
+            disabled: !isRestoreMode && selectedBlocks.size === 0,
+            variant: 'primary' as const,
+          },
+        ],
+      })
+    );
+  }, [navigation, handleApply, handleCancel, toggleAllSelection, allSelected, selectedBlocks.size, mode, colors]);
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+  });
 
   return (
     <View style={styles.container}>
@@ -163,16 +169,5 @@ function DiffViewScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  headerRightContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-});
 
 export default DiffViewScreen;
