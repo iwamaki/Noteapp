@@ -1,7 +1,7 @@
 ---
 title: "チャット機能におけるLLMへの会話履歴の未連携"
 id: 31
-status: new
+status: done
 priority: high
 attempt_count: 0
 tags: [chat, LLM, backend, conversation-history, bug]
@@ -19,8 +19,8 @@ tags: [chat, LLM, backend, conversation-history, bug]
 
 > このissueが「完了」と見なされるための具体的な条件をチェックリスト形式で記述します。
 >
-> - [ ] LLMが過去の会話履歴に基づいて、より文脈に沿った応答を生成できること。
-> - [ ] OpenAIおよびGoogle Geminiの両方のLLMプロバイダーで、会話履歴が正しく処理されること。
+> - [x] LLMが過去の会話履歴に基づいて、より文脈に沿った応答を生成できること。
+> - [x] OpenAIおよびGoogle Geminiの両方のLLMプロバイダーで、会話履歴が正しく処理されること。
 
 ## 関連ファイル (Related Files)
 

@@ -1,7 +1,7 @@
 ---
 title: "LLM編集結果の差分表示・適用フロー実装"
 id: 18
-status: new
+status: done
 priority: high
 attempt_count: 0
 tags: [LLM, UI, diff, integration]
@@ -17,12 +17,12 @@ LLMがノート内容を編集するコマンドを発行した場合に、そ�
 
 ## 受け入れ条件 (Acceptance Criteria)
 
-- [ ] `ChatPanel`内でLLMがノート内容の編集を提案するコマンド（例: `edit_file`コマンド）を発行した場合、その編集内容が一時的に保持されること。
-- [ ] LLMからの編集コマンド受信後、自動的に`DiffViewScreen`へ遷移し、現在のノート内容とLLMが提案した編集内容との差分が表示されること。
-- [ ] `DiffViewScreen`では、ユーザーがLLMの提案した変更ブロックを選択的に適用できること。
-- [ ] ユーザーが`DiffViewScreen`で「適用」を選択した場合、LLMによる変更がノートに反映され、保存されること。
-- [ ] ユーザーが`DiffViewScreen`で「キャンセル」を選択した場合、LLMによる変更は破棄され、元のノート内容が維持されること。
-- [ ] `ChatPanel`と`NoteEditScreen`、`DiffViewScreen`間のデータ連携がスムーズに行われること。
+- [x] `ChatPanel`内でLLMがノート内容の編集を提案するコマンド（例: `edit_file`コマンド）を発行した場合、その編集内容が一時的に保持されること。
+- [x] LLMからの編集コマンド受信後、自動的に`DiffViewScreen`へ遷移し、現在のノート内容とLLMが提案した編集内容との差分が表示されること。
+- [x] `DiffViewScreen`では、ユーザーがLLMの提案した変更ブロックを選択的に適用できること。
+- [x] ユーザーが`DiffViewScreen`で「適用」を選択した場合、LLMによる変更がノートに反映され、保存されること。
+- [x] ユーザーが`DiffViewScreen`で「キャンセル」を選択した場合、LLMによる変更は破棄され、元のノート内容が維持されること。
+- [x] `ChatPanel`と`NoteEditScreen`、`DiffViewScreen`間のデータ連携がスムーズに行われること。
 
 ## 関連ファイル (Related Files)
 

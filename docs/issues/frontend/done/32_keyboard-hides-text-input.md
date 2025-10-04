@@ -1,7 +1,7 @@
 ---
 title: "NoteEditScreenでキーボードがテキスト入力を隠す問題"
 id: 32
-status: new
+status: done
 priority: high
 attempt_count: 0
 tags: [UI, bug, keyboard]
@@ -23,9 +23,9 @@ tags: [UI, bug, keyboard]
 
 > このissueが「完了」と見なされるための具体的な条件をチェックリスト形式で記述します。
 >
-> - [ ] `NoteEditScreen`でメインのテキストエディタを編集中、キーボードが表示されても入力中の行が隠れない。
-> - [ ] `ChatInputBar`は、キーボードが表示された際に、その直上に正しく配置される。
-> - [ ] 上記2つのコンポーネントのキーボード対応ロジックが互いに干渉しない。
+> - [x] `NoteEditScreen`でメインのテキストエディタを編集中、キーボードが表示されても入力中の行が隠れない。
+> - [x] `ChatInputBar`は、キーボードが表示された際に、その直上に正しく配置される。
+> - [x] 上記2つのコンポーネントのキーボード対応ロジックが互いに干渉しない。
 
 ## 関連ファイル (Related Files)
 

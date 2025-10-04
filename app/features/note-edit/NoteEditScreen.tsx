@@ -20,7 +20,7 @@ import { useLLMCommandHandler } from '../../hooks/useLLMCommandHandler';
 type NoteEditScreenRouteProp = RouteProp<RootStackParamList, 'NoteEdit'>;
 
 // 入力バーの高さ（概算）
-const CHAT_INPUT_HEIGHT = Platform.OS === 'ios' ? 78 : 66;
+const CHAT_INPUT_HEIGHT = Platform.OS === 'ios' ? 90 : 100;
 
 // ノート編集画面コンポーネント
 function NoteEditScreen() {
