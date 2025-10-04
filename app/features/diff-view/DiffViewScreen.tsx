@@ -46,7 +46,7 @@ function DiffViewScreen() {
   }, [route.params, draftNote]);
 
   // デバッグ用ログ
-  logger.debug('[DiffViewScreen] Content analysis:', {
+  logger.debug('diff', '[DiffViewScreen] Content analysis:', {
     mode,
     hasRouteOriginal: !!route.params?.originalContent,
     hasRouteNew: !!route.params?.newContent,
@@ -97,8 +97,8 @@ function DiffViewScreen() {
         const validation = validateDataConsistency(originalContent, selectedContent, tempDiff);
 
         if (!validation.isValid) {
-          logger.debug('=== 整合性エラー詳細 ===');
-          logger.debug('validation.error:', validation.error);
+          logger.debug('diff', '=== 整合性エラー詳細 ===');
+          logger.debug('diff', 'validation.error:', validation.error);
           Alert.alert('データエラー', `保存データの整合性に問題があります: ${validation.error}`);
           return;
         }

@@ -28,7 +28,7 @@ export const useLLMCommandHandler = (context: CommandHandlerContext) => {
   // activeNoteの内容が変更された場合に編集中のコンテンツを更新
   useEffect(() => {
     if (isWaitingForUpdateRef.current && activeNote && activeNote.content !== previousContentRef.current) {
-      logger.debug('[LLMCommandHandler] Applying updated content from store');
+      logger.debug('llm', '[LLMCommandHandler] Applying updated content from store');
       context.setContent(activeNote.content);
       previousContentRef.current = activeNote.content;
       isWaitingForUpdateRef.current = false;
@@ -39,7 +39,7 @@ export const useLLMCommandHandler = (context: CommandHandlerContext) => {
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       if (activeNote && activeNote.content !== context.currentContent) {
-        logger.debug('[LLMCommandHandler] Syncing content on screen focus');
+        logger.debug('llm', '[LLMCommandHandler] Syncing content on screen focus');
         context.setContent(activeNote.content);
         previousContentRef.current = activeNote.content;
       }
@@ -54,7 +54,7 @@ export const useLLMCommandHandler = (context: CommandHandlerContext) => {
       return;
     }
 
-    logger.debug('[LLMCommandHandler] Executing edit_file command:', {
+    logger.debug('llm', '[LLMCommandHandler] Executing edit_file command:', {
       originalContentLength: context.currentContent.length,
       newContentLength: command.content.length,
       originalPreview: context.currentContent.substring(0, 100),

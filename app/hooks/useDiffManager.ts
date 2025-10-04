@@ -52,12 +52,12 @@ export const useDiffManager = (diff: DiffLine[]) => {
   const generateSelectedContent = useCallback(() => {
     const newLines: string[] = [];
 
-    logger.debug('=== generateSelectedContent デバッグ ===');
-    logger.debug('diff.length:', diff.length);
-    logger.debug('selectedBlocks:', Array.from(selectedBlocks));
+    logger.debug('diff', '=== generateSelectedContent デバッグ ===');
+    logger.debug('diff', 'diff.length:', diff.length);
+    logger.debug('diff', 'selectedBlocks:', Array.from(selectedBlocks));
 
     diff.forEach((line, index) => {
-      logger.debug(`Line ${index}:`, {
+      logger.debug('diff', `Line ${index}:`, {
         type: line.type,
         content: JSON.stringify(line.content),
         changeBlockId: line.changeBlockId,
@@ -88,12 +88,12 @@ export const useDiffManager = (diff: DiffLine[]) => {
           break;
       }
 
-      logger.debug(`  → willInclude: ${willInclude}, newLines.length: ${newLines.length}`);
+      logger.debug('diff', `  → willInclude: ${willInclude}, newLines.length: ${newLines.length}`);
     });
 
     const result = newLines.join('\n');
-    logger.debug('Final newLines:', newLines);
-    logger.debug('Final result:', JSON.stringify(result));
+    logger.debug('diff', 'Final newLines:', newLines);
+    logger.debug('diff', 'Final result:', JSON.stringify(result));
     return result;
   }, [diff, selectedBlocks]);
 
