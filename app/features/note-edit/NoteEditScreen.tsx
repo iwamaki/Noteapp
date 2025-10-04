@@ -36,6 +36,8 @@ function NoteEditScreen() {
     setContent,
     isLoading,
     handleGoToDiff,
+    handleCompositionStart,
+    handleCompositionEnd,
   } = useNoteEditor(noteId);
 
   const [viewMode, setViewMode] = useState<ViewMode>('edit');
@@ -104,6 +106,8 @@ function NoteEditScreen() {
         title={title}
         onTitleChange={setTitle}
         editable={viewMode === 'edit' && !isLoading}
+        onCompositionStart={handleCompositionStart}
+        onCompositionEnd={handleCompositionEnd}
       />
     ),
     onViewModeChange: setViewMode,

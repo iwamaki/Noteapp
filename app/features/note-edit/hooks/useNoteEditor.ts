@@ -24,6 +24,8 @@ export const useNoteEditor = (noteId: string | undefined) => {
   const [content, setContent] = useState(activeNote?.content ?? '');
   const [isLoading, setIsLoading] = useState(true);
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+  // IME入力中かどうかを追跡するフラグ
+  const isComposing = useRef(false);
 
   // noteIdに基づいてノートを選択し、ローディング状態を管理する
   useEffect(() => {
@@ -47,6 +49,11 @@ export const useNoteEditor = (noteId: string | undefined) => {
   const handleTitleChange = (newTitle: string) => {
     setTitle(newTitle); // UI即時反映
 
+    // IME入力中は自動保存をスキップ
+    if (isComposing.current) {
+      return;
+    }
+
     if (debounceTimer.current) {
       clearTimeout(debounceTimer.current);
     }
@@ -61,7 +68,34 @@ export const useNoteEditor = (noteId: string | undefined) => {
             setTitle(activeNote.title);
           });
       }
-    }, 500); // 500msのデバウンス
+    }, 1000); // デバウンス時間を1000msに延長してIME入力の余裕を持たせる
+  };
+
+  // IME入力開始時のハンドラ
+  const handleCompositionStart = () => {
+    isComposing.current = true;
+    // デバウンスタイマーをクリアして、IME入力中は保存しない
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+      debounceTimer.current = null;
+    }
+  };
+
+  // IME入力終了時のハンドラ（変換確定時）
+  const handleCompositionEnd = (finalTitle: string) => {
+    isComposing.current = false;
+    // 変換確定後に保存処理を実行
+    if (activeNote && activeNote.title !== finalTitle) {
+      // 少し遅延させて確実に変換が確定した後に保存
+      setTimeout(() => {
+        updateNote({ id: activeNote.id, title: finalTitle })
+          .catch(error => {
+            console.error('Failed to update title:', error);
+            Alert.alert('エラー', 'タイトルの更新に失敗しました。');
+            setTitle(activeNote.title);
+          });
+      }, 100);
+    }
   };
 
   // 保存処理（差分表示画面への遷移）のハンドラ
@@ -82,10 +116,12 @@ export const useNoteEditor = (noteId: string | undefined) => {
   return {
     activeNote,
     title,
-    setTitle: handleTitleChange, // NoteEditScreenに渡す関数を新しいハンドラに
+    setTitle: handleTitleChange,
     content,
     setContent,
     isLoading,
     handleGoToDiff,
+    handleCompositionStart,
+    handleCompositionEnd,
   };
 };

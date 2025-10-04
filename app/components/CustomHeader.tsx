@@ -3,11 +3,6 @@
  * @summary このファイルは、アプリケーションのカスタムヘッダーコンポーネントと、ヘッダー設定を生成するフックを定義します。
  * @responsibility アプリケーション全体で一貫性のあるヘッダーUIを提供し、タイトル、左右のボタンなどの要素を柔軟に設定できるようにする責任があります。
  */
-/**
- * @file CustomHeader.tsx
- * @summary このファイルは、アプリケーションのカスタムヘッダーコンポーネントと、ヘッダー設定を生成するフックを定義します。
- * @responsibility アプリケーション全体で一貫性のあるヘッダーUIを提供し、タイトル、左右のボタンなどの要素を柔軟に設定できるようにする責任があります。
- */
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { HeaderButton } from './HeaderButton';
