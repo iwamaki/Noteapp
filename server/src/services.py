@@ -90,11 +90,17 @@ class SimpleLLMService:
                             from langchain.schema import AIMessage
                             messages.append(AIMessage(content=content))
 
-                messages.append(HumanMessage(content=message))
-
+                # ユーザーのメッセージとファイルコンテキストを結合
+                full_user_message = message
                 if context and context.currentFileContent:
-                    context_msg = f"\n\n現在編集中のファイル: {context.currentFileContent.get('filename')}\n内容:\n{context.currentFileContent.get('content')}"
-                    messages.append(HumanMessage(content=context_msg))
+                    context_msg = f"\n\n[現在のファイル情報]\nファイル名: {context.currentFileContent.get('filename')}\n内容:\n---\n{context.currentFileContent.get('content')}\n---"
+                    full_user_message += context_msg
+                
+                messages.append(HumanMessage(content=full_user_message))
+
+                print("--- OpenAI Request Messages ---")
+                print(messages)
+                print("-----------------------------")
 
                 response = llm_with_tools.invoke(messages)
 
@@ -137,11 +143,17 @@ class SimpleLLMService:
                         elif role == 'ai':
                             messages.append(AIMessage(content=content))
 
-                messages.append(HumanMessage(content=message))
-
+                # ユーザーのメッセージとファイルコンテキストを結合
+                full_user_message = message
                 if context and context.currentFileContent:
-                    context_msg = f"\n\n現在編集中のファイル: {context.currentFileContent.get('filename')}\n内容:\n{context.currentFileContent.get('content')}"
-                    messages.append(HumanMessage(content=context_msg))
+                    context_msg = f"\n\n[現在のファイル情報]\nファイル名: {context.currentFileContent.get('filename')}\n内容:\n---\n{context.currentFileContent.get('content')}\n---"
+                    full_user_message += context_msg
+                
+                messages.append(HumanMessage(content=full_user_message))
+
+                print("--- Gemini Request Messages ---")
+                print(messages)
+                print("-----------------------------")
 
                 response = llm_with_tools.invoke(messages)
 
