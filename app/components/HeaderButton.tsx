@@ -5,7 +5,8 @@
  */
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
-import { colors, spacing, typography, responsive } from '../utils/commonStyles';
+import { responsive } from '../utils/commonStyles';
+import { useTheme } from '../theme/ThemeContext';
 
 interface HeaderButtonProps {
   title: string;
@@ -22,6 +23,8 @@ export const HeaderButton: React.FC<HeaderButtonProps> = ({
   color,
   variant = 'primary',
 }) => {
+  const { colors, spacing, typography } = useTheme();
+
   const getButtonColor = () => {
     if (color) return color;
 
@@ -36,6 +39,23 @@ export const HeaderButton: React.FC<HeaderButtonProps> = ({
         return colors.primary;
     }
   };
+
+  const styles = StyleSheet.create({
+    button: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+      minWidth: 44,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    buttonText: {
+      ...typography.header,
+      textAlign: 'center',
+    },
+    disabled: {
+      opacity: 0.5,
+    },
+  });
 
   return (
     <TouchableOpacity
@@ -60,20 +80,3 @@ export const HeaderButton: React.FC<HeaderButtonProps> = ({
     </TouchableOpacity>
   );
 };
-
-const styles = StyleSheet.create({
-  button: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    minWidth: 44,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  buttonText: {
-    ...typography.header,
-    textAlign: 'center',
-  },
-  disabled: {
-    opacity: 0.5,
-  },
-});

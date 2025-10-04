@@ -1,19 +1,30 @@
 /**
  * @file App.tsx
  * @summary このファイルはNoteappアプリケーションの主要なエントリポイントとして機能します。
- * ルートナビゲーション構造を初期化します。
+ * ルートナビゲーション構造を初期化し、テーマとユーザー設定を読み込みます。
  * @responsibility その主な責任は、トップレベルのアプリケーションレイアウトとナビゲーションフローを設定し、
  * すべてのコア機能にアクセスできるようにすることです。
  */
 import React, { useEffect } from 'react';
 import RootNavigator from './navigation/RootNavigator';
+import { ThemeProvider } from './theme/ThemeContext';
+import { useSettingsStore } from './store/settingsStore';
 import { logger } from './utils/logger';
 
 export default function App() {
+  const { loadSettings } = useSettingsStore();
+
   useEffect(() => {
     // アプリのログカテゴリを'chat'のみに設定
     logger.setCategories(['chat', 'llm']);
+
+    // ユーザー設定を読み込み
+    loadSettings();
   }, []);
 
-  return <RootNavigator />;
+  return (
+    <ThemeProvider>
+      <RootNavigator />
+    </ThemeProvider>
+  );
 }

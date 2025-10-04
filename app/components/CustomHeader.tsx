@@ -11,7 +11,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { HeaderButton } from './HeaderButton';
-import { spacing } from '../utils/commonStyles';
+import { useTheme } from '../theme/ThemeContext';
 
 export interface HeaderConfig {
   title?: React.ReactNode;
@@ -34,6 +34,32 @@ export const CustomHeader: React.FC<CustomHeaderProps> = ({
   leftButtons = [],
   rightButtons = [],
 }) => {
+  const { spacing } = useTheme();
+
+  const styles = StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      height: 44,
+    },
+    leftSection: {
+      flex: 1,
+      alignItems: 'flex-start',
+    },
+    centerSection: {
+      flex: 2,
+      alignItems: 'flex-start',
+    },
+    rightSection: {
+      flex: 1,
+      alignItems: 'flex-end',
+    },
+    buttonContainer: {
+      flexDirection: 'row',
+      marginHorizontal: spacing.md,
+    },
+  });
+
   const renderButtons = (buttons: HeaderConfig['leftButtons']) => {
     if (!buttons || buttons.length === 0) return null;
 
@@ -69,12 +95,17 @@ export const CustomHeader: React.FC<CustomHeaderProps> = ({
 };
 
 export const useCustomHeader = () => {
+  const buttonContainerStyle = {
+    flexDirection: 'row' as const,
+    marginHorizontal: 10,
+  };
+
   const createHeaderConfig = (config: HeaderConfig) => ({
     headerTitle: () => config.title || null,
     headerLeft: () => {
       if (!config.leftButtons?.length) return null;
       return (
-        <View style={styles.buttonContainer}>
+        <View style={buttonContainerStyle}>
           {config.leftButtons.map((button, index) => (
             <HeaderButton
               key={index}
@@ -89,7 +120,7 @@ export const useCustomHeader = () => {
     headerRight: () => {
       if (!config.rightButtons?.length) return null;
       return (
-        <View style={styles.buttonContainer}>
+        <View style={buttonContainerStyle}>
           {config.rightButtons.map((button, index) => (
             <HeaderButton
               key={index}
@@ -105,27 +136,3 @@ export const useCustomHeader = () => {
 
   return { createHeaderConfig };
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    height: 44,
-  },
-  leftSection: {
-    flex: 1,
-    alignItems: 'flex-start',
-  },
-  centerSection: {
-    flex: 2,
-    alignItems: 'flex-start',
-  },
-  rightSection: {
-    flex: 1,
-    alignItems: 'flex-end',
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    marginHorizontal: spacing.md,
-  },
-});
