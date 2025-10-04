@@ -5,7 +5,7 @@
  */
 import React from 'react';
 import { render, screen } from '@testing-library/react-native';
-import { FileEditor } from '../FileEditor';
+import { FileEditor } from '../../features/note-edit/components/FileEditor';
 
 describe('FileEditor', () => {
   it('renders markdown content correctly in preview mode', () => {

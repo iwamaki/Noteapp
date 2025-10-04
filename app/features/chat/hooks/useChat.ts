@@ -4,14 +4,15 @@
  * @responsibility チャットメッセージの送受信、状態管理（メッセージ履歴、ローディング状態）、およびLLMからの応答処理（コマンドの実行を含む）を担当します。
  */
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 import APIService, { ChatContext } from '../../../services/api';
 import { ChatMessage, LLMCommand } from '../../../services/llmService';
+import { logger } from '../../../utils/logger';
+
 export const useChat = (context: ChatContext = {}, onCommandReceived?: (commands: LLMCommand[]) => void) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // メッセージオブジェクトを作成する関数
   const createMessage = useCallback(( 
     role: ChatMessage['role'],
     content: string
@@ -21,17 +22,18 @@ export const useChat = (context: ChatContext = {}, onCommandReceived?: (commands
     timestamp: new Date(),
   }), []);
 
-  // メッセージを追加する関数
   const addMessage = useCallback((message: ChatMessage) => {
+    logger.debug('chat', 'Adding message:', message);
     setMessages(prev => [...prev, message]);
   }, []);
 
-  // LLMからのレスポンスを処理する関数
   const handleLLMResponse = useCallback((response: any) => {
+    logger.debug('llm', 'Handling LLM response:', response);
     const aiMessage = createMessage('ai', response.message || '');
     addMessage(aiMessage);
 
     if (response.commands && response.commands.length > 0 && onCommandReceived) {
+      logger.debug('llm', 'Commands received from LLM:', response.commands);
       onCommandReceived(response.commands);
     }
 
@@ -49,8 +51,8 @@ export const useChat = (context: ChatContext = {}, onCommandReceived?: (commands
     }
   }, [createMessage, addMessage, onCommandReceived]);
 
-  // エラーハンドリング関数
   const handleError = useCallback((error: unknown) => {
+    logger.debug('chat', 'Handling error:', error);
     console.error('Chat error:', error);
     
     let errorMessageContent = '不明なエラーが発生しました。\n\nサーバーが起動していることを確認してください。';
@@ -63,22 +65,27 @@ export const useChat = (context: ChatContext = {}, onCommandReceived?: (commands
     addMessage(errorMessage);
   }, [createMessage, addMessage]);
 
-  // メッセージ送信関数
   const sendMessage = useCallback(async (inputText: string) => {
+    logger.debug('chat', 'sendMessage called with:', inputText);
     const trimmedInput = inputText.trim();
-    if (!trimmedInput || isLoading) return;
+    if (!trimmedInput || isLoading) {
+      logger.debug('chat', 'sendMessage aborted (empty input or loading)');
+      return;
+    }
 
     const userMessage = createMessage('user', trimmedInput);
     addMessage(userMessage);
     setIsLoading(true);
 
     try {
+      logger.debug('llm', 'Sending message to API with context:', context);
       const response = await APIService.sendChatMessage(trimmedInput, context);
       handleLLMResponse(response);
     } catch (error) {
       handleError(error);
     } finally {
       setIsLoading(false);
+      logger.debug('chat', 'sendMessage finished');
     }
   }, [isLoading, context, createMessage, addMessage, handleLLMResponse, handleError]);
 

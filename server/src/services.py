@@ -7,8 +7,8 @@ from typing import Optional, List
 import os
 from google.cloud import secretmanager
 from google.api_core import exceptions
-from .models import ChatResponse, ChatContext, LLMCommand
-from .tools import AVAILABLE_TOOLS
+from src.models import ChatResponse, ChatContext, LLMCommand
+from src.tools import AVAILABLE_TOOLS
 
 
 class SimpleLLMService:
@@ -75,31 +75,43 @@ class SimpleLLMService:
                 llm_with_tools = llm.bind_tools(AVAILABLE_TOOLS)
 
                 messages = [
-                    SystemMessage(content="あなたは親切で有能なAIアシスタントです。ユーザーのノート作成と編集をサポートします。"),
-                    HumanMessage(content=message)
+                    SystemMessage(content="あなたは親切で有能なAIアシスタントです。ユーザーのノート作成と編集をサポートします。")
                 ]
 
-                # コンテキストがある場合は追加情報を含める
+                history_count = 0
+                if context and context.conversationHistory:
+                    history_count = len(context.conversationHistory)
+                    for history_message in context.conversationHistory:
+                        role = history_message.get('role')
+                        content = history_message.get('content', '')
+                        if role == 'user':
+                            messages.append(HumanMessage(content=content))
+                        elif role == 'ai':
+                            from langchain.schema import AIMessage
+                            messages.append(AIMessage(content=content))
+
+                messages.append(HumanMessage(content=message))
+
                 if context and context.currentFileContent:
                     context_msg = f"\n\n現在編集中のファイル: {context.currentFileContent.get('filename')}\n内容:\n{context.currentFileContent.get('content')}"
                     messages.append(HumanMessage(content=context_msg))
 
                 response = llm_with_tools.invoke(messages)
 
-                # ツール呼び出しがあるかチェック
                 commands = self._extract_tool_calls(response)
 
                 return ChatResponse(
                     message=response.content if response.content else "ファイルの編集コマンドを生成しました。",
                     commands=commands if commands else None,
                     provider=provider,
-                    model=model
+                    model=model,
+                    historyCount=history_count
                 )
 
             # Geminiを使用する場合
             elif provider == "gemini" and self.gemini_api_key:
                 from langchain_google_genai import ChatGoogleGenerativeAI
-                from langchain.schema import HumanMessage, SystemMessage
+                from langchain.schema import HumanMessage, SystemMessage, AIMessage
 
                 llm = ChatGoogleGenerativeAI(
                     model=model if model.startswith("gemini") else "gemini-1.5-flash",
@@ -111,9 +123,21 @@ class SimpleLLMService:
                 llm_with_tools = llm.bind_tools(AVAILABLE_TOOLS)
 
                 messages = [
-                    SystemMessage(content="あなたは親切で有能なAIアシスタントです。ユーザーのノート作成と編集をサポートします。"),
-                    HumanMessage(content=message)
+                    SystemMessage(content="あなたは親切で有能なAIアシスタントです。ユーザーのノート作成と編集をサポートします。")
                 ]
+
+                history_count = 0
+                if context and context.conversationHistory:
+                    history_count = len(context.conversationHistory)
+                    for history_message in context.conversationHistory:
+                        role = history_message.get('role')
+                        content = history_message.get('content', '')
+                        if role == 'user':
+                            messages.append(HumanMessage(content=content))
+                        elif role == 'ai':
+                            messages.append(AIMessage(content=content))
+
+                messages.append(HumanMessage(content=message))
 
                 if context and context.currentFileContent:
                     context_msg = f"\n\n現在編集中のファイル: {context.currentFileContent.get('filename')}\n内容:\n{context.currentFileContent.get('content')}"
@@ -128,7 +152,8 @@ class SimpleLLMService:
                     message=response.content if response.content else "ファイルの編集コマンドを生成しました。",
                     commands=commands if commands else None,
                     provider=provider,
-                    model=model
+                    model=model,
+                    historyCount=history_count
                 )
 
             else:
