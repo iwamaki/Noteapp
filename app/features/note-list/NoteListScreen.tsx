@@ -1,55 +1,48 @@
-/**
- * @file NoteListScreen.tsx
- * @summary このファイルは、アプリケーションのノート一覧画面をレンダリングします。
- * @responsibility ノートの表示、選択モードの管理、新規ノートの作成、および選択されたノートの操作（削除、コピー）を担当します。
- */  
-
-import React, { useEffect, useLayoutEffect } from 'react';
+import React from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   FlatList,
   ActivityIndicator,
   Platform,
 } from 'react-native';
-import { useNavigation, NavigationProp, useIsFocused } from '@react-navigation/native';
-import { RootStackParamList } from '../../navigation/types';
-import { useNoteStore, useNoteSelectionStore } from '../../store/note';
-import { FabButton } from '../../components/FabButton';
 import { ListItem } from '../../components/ListItem';
-import { useCustomHeader } from '../../components/CustomHeader';
 import { ChatInputBar } from '../chat/ChatInputBar';
 import { ChatContext } from '../../services/llmService';
-import { logger } from '../../utils/logger';
 import { useTheme } from '../../theme/ThemeContext';
+import { useNoteListLogic } from './hooks/useNoteListLogic';
+import { useNoteListHeader } from './hooks/useNoteListHeader';
+import { NoteListEmptyState } from './components/NoteListEmptyState';
+import { NoteListFabButton } from './components/NoteListFabButton';
 
 // 入力バーの高さ（概算）
 const CHAT_INPUT_HEIGHT = Platform.OS === 'ios' ? 78 : 66;
 
 // ノート一覧画面コンポーネント
 function NoteListScreen() {
-  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const { colors, spacing } = useTheme();
 
-  // 各ストアから必要な状態とアクションを取得
-  const notes = useNoteStore(state => state.filteredNotes);
-  const loading = useNoteStore(state => state.loading);
-  const fetchNotes = useNoteStore(state => state.fetchNotes);
-  const createNote = useNoteStore(state => state.createNote);
+  const {
+    notes,
+    loading,
+    isSelectionMode,
+    selectedNoteIds,
+    handleSelectNote,
+    handleLongPressNote,
+    handleCancelSelection,
+    handleDeleteSelected,
+    handleCopySelected,
+    handleCreateNote,
+    fetchNotes,
+  } = useNoteListLogic();
 
-  const isSelectionMode = useNoteSelectionStore(state => state.isSelectionMode);
-  const selectedNoteIds = useNoteSelectionStore(state => state.selectedNoteIds);
-  const toggleSelectionMode = useNoteSelectionStore(state => state.toggleSelectionMode);
-  const toggleNoteSelection = useNoteSelectionStore(state => state.toggleNoteSelection);
-  const clearSelectedNotes = useNoteSelectionStore(state => state.clearSelectedNotes);
-  const deleteSelectedNotes = useNoteSelectionStore(state => state.deleteSelectedNotes);
-  const copySelectedNotes = useNoteSelectionStore(state => state.copySelectedNotes);
-
-  // デバッグ用ログ
-  logger.debug('note', 'NoteListScreen render:', { isSelectionMode, selectedCount: selectedNoteIds.size });
-  const isFocused = useIsFocused();
-  const { createHeaderConfig } = useCustomHeader();
+  useNoteListHeader({
+    isSelectionMode,
+    selectedNoteIds,
+    handleCancelSelection,
+    handleDeleteSelected,
+    handleCopySelected,
+  });
 
   const styles = StyleSheet.create({
     container: {
@@ -76,97 +69,6 @@ function NoteListScreen() {
       padding: spacing.md,
     },
   });
-
-  useEffect(() => {
-    if (isFocused) {
-      fetchNotes();
-    }
-  }, [isFocused]);
-
-  // ノート選択ハンドラー
-  const handleSelectNote = (noteId: string) => {
-    if (isSelectionMode) {
-      toggleNoteSelection(noteId);
-    } else {
-      navigation.navigate('NoteEdit', { noteId });
-    }
-  };
-
-  // ノート長押しハンドラー
-  const handleLongPressNote = (noteId: string) => {
-    if (!isSelectionMode) {
-      toggleSelectionMode();
-      toggleNoteSelection(noteId);
-    }
-  };
-
-  // 選択キャンセルハンドラー
-  const handleCancelSelection = () => {
-    clearSelectedNotes();
-  };
-
-  // 選択ノート削除ハンドラー
-  const handleDeleteSelected = async () => {
-    try {
-      await deleteSelectedNotes();
-    } catch (error) {
-      console.error("Failed to delete selected notes:", error);
-    }
-  };
-
-  // 選択ノートコピーハンドラー
-  const handleCopySelected = async () => {
-    try {
-      await copySelectedNotes();
-    } catch (error) {
-      console.error("Failed to copy selected notes:", error);
-    }
-  };
-
-  // カスタムヘッダーの設定
-  useLayoutEffect(() => {
-    if (isSelectionMode) {
-      const selectedCount = selectedNoteIds.size;
-      navigation.setOptions(
-        createHeaderConfig({
-          title: <Text style={{ color: colors.text }}>{selectedCount}件選択中</Text>,
-          leftButtons: [
-            { title: 'キャンセル', onPress: handleCancelSelection, variant: 'secondary' },
-          ],
-          rightButtons: [
-            {
-              title: 'コピー',
-              onPress: handleCopySelected,
-              variant: 'primary'
-            },
-            {
-              title: '削除',
-              onPress: handleDeleteSelected,
-              variant: 'danger'
-            },
-          ],
-        })
-      );
-    } else {
-      navigation.setOptions(
-        createHeaderConfig({
-          rightButtons: [
-            { title: '設定', onPress: () => navigation.navigate('Settings'), variant: 'primary' },
-          ],
-        })
-      );
-    }
-  }, [navigation, createHeaderConfig, isSelectionMode, selectedNoteIds.size, handleCancelSelection, handleCopySelected, handleDeleteSelected, colors]);
-
-  // ノート作成ハンドラー
-  const handleCreateNote = async () => {
-    try {
-      const newNote = await createNote({ title: '新しいノート', content: '' });
-      navigation.navigate('NoteEdit', { noteId: newNote.id });
-    } catch (error) {
-      console.error("Failed to create note:", error);
-    }
-  };
 
   // ローディング中の表示
   if (loading.isLoading && notes.length === 0) {
@@ -200,10 +102,10 @@ function NoteListScreen() {
   return (
     <View style={styles.container}>
       {notes.length === 0 && !loading.isLoading ? (
-        <View style={[styles.centered, styles.emptyContainer]}>
-          <Text style={styles.emptyMessage}>ノートがありません。</Text>
-          <Text style={styles.emptyMessage}>下の「+」ボタンから新しいノートを作成しましょう。</Text>
-        </View>
+        <NoteListEmptyState
+          containerStyle={styles.centered}
+          messageStyle={styles.emptyMessage}
+        />
       ) : (
         <FlatList
           data={notes}
@@ -216,10 +118,10 @@ function NoteListScreen() {
         />
       )}
       <ChatInputBar context={chatContext} />
-      {(() => {
-        logger.debug('note', 'FAB render check:', { isSelectionMode, shouldShow: !isSelectionMode });
-        return !isSelectionMode ? <FabButton onPress={handleCreateNote} /> : null;
-      })()}
+      <NoteListFabButton
+        isSelectionMode={isSelectionMode}
+        onPress={handleCreateNote}
+      />
     </View>
   );
 }
