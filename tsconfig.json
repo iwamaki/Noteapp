@@ -26,7 +26,7 @@
     "jest.setup.js",
     "babel.config.js",
     "app.json"
-  ],
+, "app/features/note-list/NoteListScreen.tsxｓｓ", "app/features/note-list/NoteListScreen.backup", "app/features/chat/ChatInputBar.tsx.back"  ],
   "exclude": [
     "node_modules"
   ],
