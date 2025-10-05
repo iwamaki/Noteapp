@@ -23,7 +23,7 @@ export const useNoteEditor = (noteId: string | undefined) => {
   const [title, setTitle] = useState(activeNote?.title ?? '');
   const [content, setContent] = useState(activeNote?.content ?? '');
   const [isLoading, setIsLoading] = useState(true);
-  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+  const debounceTimer = useRef<number | null>(null);
   // IME入力中かどうかを追跡するフラグ
   const isComposing = useRef(false);
 

@@ -25,10 +25,6 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
       fontSize: typography.body.fontSize,
       lineHeight: typography.body.fontSize * 1.4,
     },
-        // Markdown styles
-    markdownContainer: {
-      // Markdownコンポーネントが適用されるViewのスタイル
-    },
     message: {
       borderRadius: 8,
       marginVertical: 4,
@@ -73,10 +69,8 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
       break;
   }
 
-  const markdownStyles = StyleSheet.create({
-    body: {
-      ...StyleSheet.flatten(markdownTextStyle),
-    },
+  const markdownStyles = {
+    body: StyleSheet.flatten(markdownTextStyle),
     // 他のMarkdown要素のスタイルを必要に応じて追加
     // 例: heading1: { color: colors.text, fontSize: typography.h1.fontSize },
     // link: { color: colors.primary },
@@ -97,7 +91,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
     // list_item: {
     //   color: colors.text,
     // },
-  });
+  };
 
   return (
     <View style={containerStyle}>

@@ -10,7 +10,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Switch,
   ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -56,29 +55,6 @@ function SettingsScreen() {
 
   const renderSection = (title: string) => (
     <Text style={styles.sectionTitle}>{title}</Text>
-  );
-
-  const renderOption = (
-    label: string,
-    value: string | boolean | number,
-    options?: { label: string; value: any }[],
-    onPress?: () => void
-  ) => (
-    <View style={styles.optionContainer}>
-      <Text style={styles.optionLabel}>{label}</Text>
-      {typeof value === 'boolean' ? (
-        <Switch
-          value={value}
-          onValueChange={(newValue) => {
-            if (onPress) onPress();
-          }}
-        />
-      ) : (
-        <TouchableOpacity onPress={onPress}>
-          <Text style={styles.optionValue}>{String(value)}</Text>
-        </TouchableOpacity>
-      )}
-    </View>
   );
 
   const renderPicker = (
@@ -148,10 +124,7 @@ function SettingsScreen() {
       textAlign: 'center',
       marginBottom: spacing.xl,
     },
-    optionContainer: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
+    pickerContainer: {
       backgroundColor: colors.background,
       padding: spacing.lg,
       borderRadius: 8,
@@ -161,16 +134,6 @@ function SettingsScreen() {
       ...typography.body,
       color: colors.text,
       flex: 1,
-    },
-    optionValue: {
-      ...typography.body,
-      color: colors.primary,
-    },
-    pickerContainer: {
-      backgroundColor: colors.background,
-      padding: spacing.lg,
-      borderRadius: 8,
-      marginBottom: spacing.sm,
     },
     pickerButtons: {
       flexDirection: 'row',

@@ -1,4 +1,4 @@
-import { useLayoutEffect, useCallback } from 'react';
+import React, { useLayoutEffect, useCallback } from 'react';
 import { Text } from 'react-native';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../../navigation/types';

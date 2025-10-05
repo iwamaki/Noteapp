@@ -24,9 +24,7 @@ export interface HeaderConfig {
   }>;
 }
 
-interface CustomHeaderProps extends HeaderConfig {}
-
-export const CustomHeader: React.FC<CustomHeaderProps> = ({
+export const CustomHeader: React.FC<HeaderConfig> = ({
   title,
   leftButtons = [],
   rightButtons = [],

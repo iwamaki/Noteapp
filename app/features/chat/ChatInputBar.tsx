@@ -14,7 +14,6 @@ import {
   Platform,
   Animated,
   Keyboard,
-  KeyboardEvent,
 } from 'react-native';
 import { LLMCommand } from '../../services/llmService';
 import { useChat } from './hooks/useChat';
@@ -48,14 +47,12 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
   const [inputText, setInputText] = useState('');
   const [isNoteAttached, setIsNoteAttached] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const positionAnimation = useRef(new Animated.Value(0)).current;
 
   // キーボードイベントのリスナー
   useEffect(() => {
-    const keyboardWillShow = (e: KeyboardEvent) => {
+    const keyboardWillShow = (e: any) => {
       const height = e.endCoordinates.height;
-      setKeyboardHeight(height);
       Animated.timing(positionAnimation, {
         toValue: height,
         duration: e.duration || 250,
@@ -64,8 +61,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
     };
 
     // キーボードが隠れたときの処理
-    const keyboardWillHide = (e: KeyboardEvent) => {
-      setKeyboardHeight(0);
+    const keyboardWillHide = (e: any) => {
       Animated.timing(positionAnimation, {
         toValue: 0,
         duration: e.duration || 250,
@@ -153,7 +149,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
       borderColor: colors.primary,
     },
     attachButtonTextActive: {
-      color: '#fff',
+      color: colors.white,
     },
     textInput: {
       flex: 1,
@@ -179,7 +175,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
       minHeight: 40,
     },
     sendButtonText: {
-      color: '#fff',
+      color: colors.white,
       fontSize: typography.subtitle.fontSize,
       fontWeight: '600',
     },

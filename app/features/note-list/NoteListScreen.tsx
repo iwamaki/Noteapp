@@ -53,9 +53,6 @@ function NoteListScreen() {
       justifyContent: 'center',
       alignItems: 'center',
     },
-    emptyContainer: {
-      flex: 1,
-    },
     emptyMessage: {
       fontSize: 16,
       color: colors.textSecondary,

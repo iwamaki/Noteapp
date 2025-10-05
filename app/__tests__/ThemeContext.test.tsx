@@ -31,6 +31,8 @@ describe('ThemeContext', () => {
         autoComplete: true,
         privacyMode: 'normal',
         llmService: 'openai',
+        llmProvider: 'openai',
+        llmModel: 'gpt-4',
         llmApiKey: '',
         localLlmUrl: 'http://localhost',
         localLlmPort: '8080',
@@ -164,7 +166,7 @@ describe('ThemeContext', () => {
   });
 
   describe('System Theme', () => {
-    it('should follow system color scheme when theme is "system"', () => {
+    it('should follow system color scheme when theme is "system" - dark', () => {
       const { useColorScheme } = require('react-native');
       useColorScheme.mockReturnValue('dark');
 
@@ -188,6 +190,32 @@ describe('ThemeContext', () => {
 
       // システムがダークなのでダークテーマの背景色になるべき
       expect(getByTestId('background').props.children).toBe('#000');
+    });
+
+    it('should follow system color scheme when theme is "system" - light', () => {
+      const { useColorScheme } = require('react-native');
+      useColorScheme.mockReturnValue('light');
+
+      useSettingsStore.setState({
+        settings: {
+          ...useSettingsStore.getState().settings,
+          theme: 'system',
+        },
+      });
+
+      const TestComponent = () => {
+        const { colors } = useTheme();
+        return <Text testID="background">{colors.background}</Text>;
+      };
+
+      const { getByTestId } = render(
+        <ThemeProvider>
+          <TestComponent />
+        </ThemeProvider>
+      );
+
+      // システムがライトなのでライトテーマの背景色になるべき
+      expect(getByTestId('background').props.children).toBe('#fff');
     });
   });
 
@@ -307,6 +335,37 @@ describe('ThemeContext', () => {
       expect(getByTestId('title').props.children).toBe(Math.round(18 * 1.25)); // 23
       expect(getByTestId('body').props.children).toBe(Math.round(14 * 1.25)); // 18
     });
+
+    it('should adjust all typography properties based on fontSize setting', () => {
+      useSettingsStore.setState({
+        settings: {
+          ...useSettingsStore.getState().settings,
+          fontSize: 'large',
+        },
+      });
+
+      const TestComponent = () => {
+        const { typography } = useTheme();
+        return (
+          <View>
+            <Text testID="subtitle">{typography.subtitle.fontSize}</Text>
+            <Text testID="caption">{typography.caption.fontSize}</Text>
+            <Text testID="header">{typography.header.fontSize}</Text>
+          </View>
+        );
+      };
+
+      const { getByTestId } = render(
+        <ThemeProvider>
+          <TestComponent />
+        </ThemeProvider>
+      );
+
+      // large: 1.125倍
+      expect(getByTestId('subtitle').props.children).toBe(Math.round(16 * 1.125)); // 18
+      expect(getByTestId('caption').props.children).toBe(Math.round(12 * 1.125)); // 14
+      expect(getByTestId('header').props.children).toBe(Math.round(16 * 1.125)); // 18
+    });
   });
 
   describe('Spacing', () => {
@@ -384,6 +443,28 @@ describe('ThemeContext', () => {
       expect(getByTestId('medium').props.children).toBe(5);
       expect(getByTestId('large').props.children).toBe(8);
     });
+
+    it('should use theme shadow color in dark theme', () => {
+      useSettingsStore.setState({
+        settings: {
+          ...useSettingsStore.getState().settings,
+          theme: 'dark',
+        },
+      });
+
+      const TestComponent = () => {
+        const { shadows } = useTheme();
+        return <Text testID="shadowColor">{shadows.medium.shadowColor}</Text>;
+      };
+
+      const { getByTestId } = render(
+        <ThemeProvider>
+          <TestComponent />
+        </ThemeProvider>
+      );
+
+      expect(getByTestId('shadowColor').props.children).toBe('#000');
+    });
   });
 
   describe('Theme Reactivity', () => {
@@ -422,6 +503,44 @@ describe('ThemeContext', () => {
       // ダークテーマの背景色に変更されているべき
       await waitFor(() => {
         expect(getByTestId('background').props.children).toBe('#000');
+      });
+    });
+
+    it('should update typography when fontSize changes', async () => {
+      const TestComponent = () => {
+        const { typography } = useTheme();
+        return <Text testID="title">{typography.title.fontSize}</Text>;
+      };
+
+      const { getByTestId, rerender } = render(
+        <ThemeProvider>
+          <TestComponent />
+        </ThemeProvider>
+      );
+
+      // 初期状態: medium
+      expect(getByTestId('title').props.children).toBe(18);
+
+      // largeに変更
+      act(() => {
+        useSettingsStore.setState({
+          settings: {
+            ...useSettingsStore.getState().settings,
+            fontSize: 'large',
+          },
+        });
+      });
+
+      // 再レンダリング
+      rerender(
+        <ThemeProvider>
+          <TestComponent />
+        </ThemeProvider>
+      );
+
+      // largeのタイポグラフィに変更されているべき
+      await waitFor(() => {
+        expect(getByTestId('title').props.children).toBe(Math.round(18 * 1.125)); // 20
       });
     });
   });

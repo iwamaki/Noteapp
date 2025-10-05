@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, Platform, ActivityIndicator, Keyboard, KeyboardEvent, Animated } from 'react-native';
+import { View, StyleSheet, Platform, ActivityIndicator, Keyboard, Animated } from 'react-native';
 import { useRoute, RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/types';
 import { FileEditor, ViewMode } from './components/FileEditor';
@@ -41,14 +41,12 @@ function NoteEditScreen() {
   } = useNoteEditor(noteId);
 
   const [viewMode, setViewMode] = useState<ViewMode>('edit');
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const paddingBottomAnim = useRef(new Animated.Value(CHAT_INPUT_HEIGHT)).current;
 
   // キーボードイベントのリスナー
   useEffect(() => {
-    const keyboardWillShow = (e: KeyboardEvent) => {
+    const keyboardWillShow = (e: any) => {
       const height = e.endCoordinates.height;
-      setKeyboardHeight(height);
       Animated.timing(paddingBottomAnim, {
         toValue: CHAT_INPUT_HEIGHT + height,
         duration: e.duration || 250,
@@ -56,8 +54,7 @@ function NoteEditScreen() {
       }).start();
     };
 
-    const keyboardWillHide = (e: KeyboardEvent) => {
-      setKeyboardHeight(0);
+    const keyboardWillHide = (e: any) => {
       Animated.timing(paddingBottomAnim, {
         toValue: CHAT_INPUT_HEIGHT,
         duration: e.duration || 250,
