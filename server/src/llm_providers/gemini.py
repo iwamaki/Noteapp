@@ -12,9 +12,9 @@ from src.logger import logger, log_llm_raw
 class GeminiProvider(BaseLLMProvider):
     """Google GeminiのLLMプロバイダー"""
 
-    def __init__(self, api_key: str, model: str = "gemini-1.5-flash"):
+    def __init__(self, api_key: str, model: str = "gemini-2.5-flash"):
         self.llm = ChatGoogleGenerativeAI(
-            model=model if model.startswith("gemini") else "gemini-1.5-flash",
+            model=model if model.startswith("gemini") else "gemini-2.5-flash",
             google_api_key=api_key,
             temperature=0.7
         )
@@ -40,8 +40,8 @@ class GeminiProvider(BaseLLMProvider):
                     messages.append(AIMessage(content=content))
 
         full_user_message = message
-        if context and context.currentFileContent:
-            context_msg = f"\n\n[現在のファイル情報]\nファイル名: {context.currentFileContent.get('filename')}\n内容:\n---\n{context.currentFileContent.get('content')}\n---"
+        if context and context.attachedFileContent:
+            context_msg = f"\n\n[添付ファイル情報]\nファイル名: {context.attachedFileContent.get('filename')}\n内容:\n---\n{context.attachedFileContent.get('content')}\n---"
             full_user_message += context_msg
         
         messages.append(HumanMessage(content=full_user_message))
@@ -82,8 +82,11 @@ class GeminiProvider(BaseLLMProvider):
                 ]
             })
         
+        content = response.content
+        message = "".join(content) if isinstance(content, list) else content
+        
         return ChatResponse(
-            message=response.content if response.content else "ファイルの編集コマンドを生成しました。",
+            message=message if message else "ファイルの編集コマンドを生成しました。",
             commands=commands if commands else None,
             provider="gemini",
             model=self.model,

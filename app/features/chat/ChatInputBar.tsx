@@ -26,12 +26,16 @@ import { ChatHistory } from './components/ChatHistory';
 interface ChatInputBarProps {
   context?: ChatContext;
   onCommandReceived?: (commands: LLMCommand[]) => void;
+  currentNoteTitle?: string;
+  currentNoteContent?: string;
 }
 
 // チャット入力バーコンポーネント
 export const ChatInputBar: React.FC<ChatInputBarProps> = ({
   context,
   onCommandReceived,
+  currentNoteTitle,
+  currentNoteContent,
 }) => {
   const { colors, typography } = useTheme();
   const {
@@ -40,8 +44,9 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
     sendMessage,
     chatAreaHeight,
     panResponder,
-  } = useChat(context, onCommandReceived);
+  } = useChat(context, onCommandReceived, currentNoteTitle, currentNoteContent);
   const [inputText, setInputText] = useState('');
+  const [isNoteAttached, setIsNoteAttached] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const positionAnimation = useRef(new Animated.Value(0)).current;
@@ -86,8 +91,10 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
   const handleSendMessage = async () => {
     const trimmedInput = inputText.trim();
     if (trimmedInput.length > 0 && !isLoading) {
-      await sendMessage(trimmedInput);
+      console.log('[ChatInputBar] Sending message with isNoteAttached:', isNoteAttached);
+      await sendMessage(trimmedInput, { isNoteAttached });
       setInputText('');
+      setIsNoteAttached(false); // 送信後にリセット
     }
   };
 
@@ -126,6 +133,27 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
       fontSize: typography.caption.fontSize,
       color: colors.text,
       fontWeight: '600',
+    },
+    attachButton: {
+      alignSelf: 'flex-end',
+      marginRight: 8,
+      marginBottom: 8,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 20,
+    },
+    attachButtonText: {
+      fontSize: typography.caption.fontSize,
+      color: colors.text,
+    },
+    attachButtonActive: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    attachButtonTextActive: {
+      color: '#fff',
     },
     textInput: {
       flex: 1,
@@ -187,6 +215,22 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
             <Text style={styles.expandButtonText}>▲ {messages.length}</Text>
           </TouchableOpacity>
         )}
+        <TouchableOpacity
+          onPress={() => setIsNoteAttached(prev => !prev)}
+          style={[
+            styles.attachButton,
+            isNoteAttached && styles.attachButtonActive,
+          ]}
+        >
+          <Text
+            style={[
+              styles.attachButtonText,
+              isNoteAttached && styles.attachButtonTextActive,
+            ]}
+          >
+            + Note
+          </Text>
+        </TouchableOpacity>
         <TextInput
           style={styles.textInput}
           placeholder="メッセージを入力..."

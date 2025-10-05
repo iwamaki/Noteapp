@@ -3,7 +3,7 @@
  * @summary このファイルは、アプリケーションの設定画面をレンダリングします。
  * @responsibility ユーザーがアプリケーションの各種設定（表示、動作、LLM関連など）を閲覧・変更できるUIを提供し、設定の永続化と更新を管理します。
  */
-import React, { useEffect, useLayoutEffect } from 'react';
+import React, { useEffect, useLayoutEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -11,21 +11,39 @@ import {
   ScrollView,
   TouchableOpacity,
   Switch,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSettingsStore } from '../../store/settingsStore';
 import { useTheme } from '../../theme/ThemeContext';
 import { useCustomHeader } from '../../components/CustomHeader';
+import APIService from '../../services/api';
+import { LLMProvider } from '../../services/llmService';
 
 function SettingsScreen() {
   const { colors, spacing, typography } = useTheme();
   const navigation = useNavigation();
   const { createHeaderConfig } = useCustomHeader();
   const { settings, loadSettings, updateSettings, isLoading } = useSettingsStore();
+  const [llmProviders, setLlmProviders] = useState<Record<string, LLMProvider>>({});
+  const [isLoadingProviders, setIsLoadingProviders] = useState(true);
 
   useEffect(() => {
     loadSettings();
+    loadLLMProviders();
   }, []);
+
+  const loadLLMProviders = async () => {
+    try {
+      setIsLoadingProviders(true);
+      const providers = await APIService.loadLLMProviders();
+      setLlmProviders(providers);
+    } catch (error) {
+      console.error('Failed to load LLM providers:', error);
+    } finally {
+      setIsLoadingProviders(false);
+    }
+  };
 
   useLayoutEffect(() => {
     navigation.setOptions(
@@ -82,9 +100,16 @@ function SettingsScreen() {
               const updateKey = label === 'テーマ' ? 'theme' :
                               label === 'フォントサイズ' ? 'fontSize' :
                               label === 'デフォルトエディタモード' ? 'defaultEditorMode' :
-                              label === 'プライバシーモード' ? 'privacyMode' : '';
+                              label === 'プライバシーモード' ? 'privacyMode' :
+                              label === 'LLMプロバイダー' ? 'llmProvider' :
+                              label === 'モデル' ? 'llmModel' : '';
               if (updateKey) {
-                updateSettings({ [updateKey]: option.value });
+                const updates: any = { [updateKey]: option.value };
+                // プロバイダー変更時はデフォルトモデルも設定
+                if (updateKey === 'llmProvider' && llmProviders[option.value]) {
+                  updates.llmModel = llmProviders[option.value].defaultModel;
+                }
+                updateSettings(updates);
               }
             }}
           >
@@ -185,6 +210,19 @@ function SettingsScreen() {
       ...typography.subtitle,
       color: colors.background,
     },
+    loadingContainer: {
+      backgroundColor: colors.background,
+      padding: spacing.lg,
+      borderRadius: 8,
+      marginBottom: spacing.sm,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.md,
+    },
+    loadingText: {
+      ...typography.body,
+      color: colors.textSecondary,
+    },
   });
 
   if (isLoading) {
@@ -212,6 +250,37 @@ function SettingsScreen() {
           { label: '大', value: 'large' },
           { label: '特大', value: 'xlarge' },
         ])}
+
+        {renderSection('LLM設定')}
+
+        {isLoadingProviders ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="small" color={colors.primary} />
+            <Text style={styles.loadingText}>LLMプロバイダーを読み込み中...</Text>
+          </View>
+        ) : (
+          <>
+            {renderPicker(
+              'LLMプロバイダー',
+              settings.llmProvider,
+              Object.entries(llmProviders).map(([key, provider]) => ({
+                label: `${provider.name}${provider.status === 'unavailable' ? ' (利用不可)' : ''}`,
+                value: key,
+              }))
+            )}
+
+            {settings.llmProvider && llmProviders[settings.llmProvider] && (
+              renderPicker(
+                'モデル',
+                settings.llmModel,
+                llmProviders[settings.llmProvider].models.map(model => ({
+                  label: model,
+                  value: model,
+                }))
+              )
+            )}
+          </>
+        )}
 
         <Text style={styles.infoText}>
           その他の設定項目は今後のアップデートで追加予定です。

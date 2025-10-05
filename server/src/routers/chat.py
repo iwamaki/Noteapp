@@ -4,6 +4,7 @@
 from fastapi import APIRouter, HTTPException
 from src.models import ChatRequest
 from src.services.chat_service import ChatService
+from src.logger import logger
 
 router = APIRouter()
 chat_service = ChatService()
@@ -11,6 +12,7 @@ chat_service = ChatService()
 @router.post("/api/chat")
 async def chat_post(request: ChatRequest):
     """チャットメッセージを処理（POST）"""
+    logger.info(f"Received chat request context: {request.context.model_dump_json(indent=2) if request.context else 'None'}")
     try:
         response = await chat_service.process_chat(
             message=request.message,

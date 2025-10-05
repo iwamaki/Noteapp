@@ -28,6 +28,10 @@ export interface ChatContext {
     size: string;
     type: string;
   };
+  attachedFileContent?: {
+    filename: string;
+    content: string;
+  };
   isEditMode?: boolean;
   selectedFiles?: string[];
   timestamp?: string;
