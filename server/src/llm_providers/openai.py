@@ -25,7 +25,7 @@ class OpenAIProvider(BaseLLMProvider):
         llm_with_tools = self.llm.bind_tools(AVAILABLE_TOOLS)
 
         messages = [
-            SystemMessage(content="あなたは親切で有能なAIアシスタントです。ユーザーのノート作成と編集をサポートします。")
+            SystemMessage(content="あなたは親切で有能なAIアシスタントです。")
         ]
 
         history_count = 0
@@ -40,8 +40,8 @@ class OpenAIProvider(BaseLLMProvider):
                     messages.append(AIMessage(content=content))
 
         full_user_message = message
-        if context and context.currentFileContent:
-            context_msg = f"\n\n[現在のファイル情報]\nファイル名: {context.currentFileContent.get('filename')}\n内容:\n---\n{context.currentFileContent.get('content')}\n---"
+        if context and context.attachedFileContent:
+            context_msg = f"\n\n[添付ファイル情報]\nファイル名: {context.attachedFileContent.get('filename')}\n内容:\n---\n{context.attachedFileContent.get('content')}\n---"
             full_user_message += context_msg
         
         messages.append(HumanMessage(content=full_user_message))

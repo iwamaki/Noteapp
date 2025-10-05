@@ -23,8 +23,8 @@ async def get_llm_providers():
     if settings.gemini_api_key:
         providers["gemini"] = LLMProvider(
             name="Google Gemini",
-            defaultModel="gemini-1.5-flash",
-            models=["gemini-1.5-flash", "gemini-1.5-pro"],
+            defaultModel="gemini-2.5-flash",
+            models=["gemini-2.5-flash", "gemini-2.5-pro"],
             status="available"
         )
     
@@ -55,8 +55,8 @@ async def health_check():
         providers_status["gemini"] = {
             "name": "Google Gemini",
             "status": "available",
-            "defaultModel": "gemini-1.5-flash",
-            "models": ["gemini-1.5-flash", "gemini-1.5-pro"]
+            "defaultModel": "gemini-2.5-flash",
+            "models": ["gemini-2.5-flash"]
         }
     
     return {

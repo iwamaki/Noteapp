@@ -9,6 +9,9 @@ import { Animated, PanResponder } from 'react-native';
 import APIService, { ChatContext } from '../../../services/api';
 import { ChatMessage, LLMCommand } from '../../../services/llmService';
 import { logger } from '../../../utils/logger';
+import { useNoteDraftStore } from '../../../store/note/noteDraftStore';
+import { useSettingsStore } from '../../../store/settingsStore';
+
 
 // チャットエリアの高さの制限値
 const CHAT_AREA_MIN_HEIGHT = 150;       // 最小高さ
@@ -16,9 +19,15 @@ const CHAT_AREA_MAX_HEIGHT = 400;       // 最大高さ
 const CHAT_AREA_INITIAL_HEIGHT = 250;   // 初期高さ
 
 
-export const useChat = (context: ChatContext = {}, onCommandReceived?: (commands: LLMCommand[]) => void) => {
+export const useChat = (
+  context: ChatContext = {},
+  onCommandReceived?: (commands: LLMCommand[]) => void,
+  currentNoteTitle?: string,
+  currentNoteContent?: string
+) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const { settings } = useSettingsStore();
 
   const chatAreaHeight = useRef(new Animated.Value(CHAT_AREA_INITIAL_HEIGHT)).current;
   const heightValue = useRef(CHAT_AREA_INITIAL_HEIGHT);
@@ -101,8 +110,9 @@ export const useChat = (context: ChatContext = {}, onCommandReceived?: (commands
     addMessage(errorMessage);
   }, [createMessage, addMessage]);
 
-  const sendMessage = useCallback(async (inputText: string) => {
-    logger.debug('chat', 'sendMessage called with:', inputText);
+  const sendMessage = useCallback(async (inputText: string, options?: { isNoteAttached?: boolean }) => {
+    logger.debug('chat', 'sendMessage called with:', { inputText, options });
+    logger.debug('chat', 'Current note state:', { currentNoteTitle, currentNoteContent });
     const trimmedInput = inputText.trim();
     if (!trimmedInput || isLoading) {
       logger.debug('chat', 'sendMessage aborted (empty input or loading)');
@@ -114,8 +124,25 @@ export const useChat = (context: ChatContext = {}, onCommandReceived?: (commands
     setIsLoading(true);
 
     try {
-      logger.debug('llm', 'Sending message to API with context:', context);
-      const response = await APIService.sendChatMessage(trimmedInput, context);
+      // 設定からLLMプロバイダーとモデルを適用
+      APIService.setLLMProvider(settings.llmProvider);
+      APIService.setLLMModel(settings.llmModel);
+
+      // コンテキストを動的に構築
+      const dynamicContext = { ...context };
+      if (options?.isNoteAttached && currentNoteTitle && currentNoteContent) {
+        dynamicContext.attachedFileContent = {
+          filename: currentNoteTitle,
+          content: currentNoteContent,
+        };
+        logger.debug('chat', 'Attaching note content to context:', dynamicContext.attachedFileContent);
+      } else if (options?.isNoteAttached) {
+        logger.debug('chat', 'isNoteAttached is true but note data is missing:', { currentNoteTitle, currentNoteContent });
+      }
+
+      logger.debug('llm', 'Sending message to API with context:', dynamicContext);
+      logger.debug('llm', 'Using provider:', settings.llmProvider, 'model:', settings.llmModel);
+      const response = await APIService.sendChatMessage(trimmedInput, dynamicContext);
       handleLLMResponse(response);
     } catch (error) {
       handleError(error);
@@ -123,7 +150,7 @@ export const useChat = (context: ChatContext = {}, onCommandReceived?: (commands
       setIsLoading(false);
       logger.debug('chat', '==========sendMessage finished==========');
     }
-  }, [isLoading, context, createMessage, addMessage, handleLLMResponse, handleError]);
+  }, [isLoading, context, currentNoteTitle, currentNoteContent, createMessage, addMessage, handleLLMResponse, handleError]);
 
   return {
     messages,

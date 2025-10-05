@@ -1,7 +1,6 @@
 {
   "name": "noteapp",
   "version": "1.0.0",
-  "type": "module",
   "main": "app/index.ts",
   "scripts": {
     "start": "expo start",
@@ -51,5 +50,7 @@
     "ts-jest": "29.1.2",
     "typescript": "~5.9.2"
   },
+
   "private": true
+
 }

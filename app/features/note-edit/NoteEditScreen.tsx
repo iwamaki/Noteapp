@@ -117,12 +117,6 @@ function NoteEditScreen() {
   // チャットエリアの作成
   const chatContext: ChatContext = {
     currentFile: activeNote?.id,
-    currentFileContent: {
-      filename: title,
-      content: content,
-      size: content.length.toString(),
-      type: 'text',
-    },
   };
 
   // スタイルの定義
@@ -161,6 +155,8 @@ function NoteEditScreen() {
       <ChatInputBar
         context={chatContext}
         onCommandReceived={handleCommandReceived}
+        currentNoteTitle={title}
+        currentNoteContent={content}
       />
     </View>
   );

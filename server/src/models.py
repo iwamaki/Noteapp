@@ -18,6 +18,7 @@ class ChatContext(BaseModel):
     fileList: Optional[List[Dict[str, Any]]] = None
     currentFile: Optional[str] = None
     currentFileContent: Optional[Dict[str, str]] = None
+    attachedFileContent: Optional[Dict[str, str]] = None
     conversationHistory: Optional[List[Dict[str, Any]]] = None
 
 

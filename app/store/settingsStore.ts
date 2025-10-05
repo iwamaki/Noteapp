@@ -34,6 +34,8 @@ export interface AppSettings {
   // 3. LLM/AI設定
   privacyMode: 'normal' | 'private';
   llmService: string;
+  llmProvider: string; // 現在選択中のLLMプロバイダー (openai, gemini, etc.)
+  llmModel: string; // 現在選択中のLLMモデル (gpt-4, gemini-1.5-pro, etc.)
   llmApiKey: string;
   localLlmUrl: string;
   localLlmPort: string;
@@ -96,6 +98,8 @@ const defaultSettings: AppSettings = {
   // LLM/AI設定
   privacyMode: 'normal',
   llmService: 'openai',
+  llmProvider: 'openai',
+  llmModel: 'gpt-4',
   llmApiKey: '',
   localLlmUrl: 'http://localhost',
   localLlmPort: '8080',
