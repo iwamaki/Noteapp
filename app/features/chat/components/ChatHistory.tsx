@@ -40,51 +40,54 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
   }, [messages]);
 
   const styles = StyleSheet.create({
-    messagesArea: {
-      backgroundColor: colors.background,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-      overflow: 'hidden',
-    },
-    messagesHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingHorizontal: 16,
-      paddingVertical: 8,
-      backgroundColor: colors.secondary,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    messagesHeaderTitle: {
-      fontSize: typography.body.fontSize,
-      fontWeight: '600',
-      color: colors.text,
-    },
     collapseButton: {
       padding: 4,
-    },
+    },    
     collapseButtonText: {
+      color: colors.textSecondary,      
       fontSize: typography.subtitle.fontSize,
-      color: colors.textSecondary,
     },
-    messagesScrollView: {
-      flex: 1,
+
+    loadingContainer: {
+      alignItems: 'center',
+      flexDirection: 'row',
+      justifyContent: 'center',
+      paddingVertical: 12,
+    },
+    loadingText: {
+      color: colors.primary,
+      fontSize: typography.body.fontSize,
+      marginLeft: 8,
+    },
+
+    messagesArea: {
+      backgroundColor: colors.background,
+      borderBottomColor: colors.border,
+      borderBottomWidth: 1,
+      overflow: 'hidden',
     },
     messagesContent: {
       paddingHorizontal: 16,
       paddingVertical: 8,
     },
-    loadingContainer: {
-      flexDirection: 'row',
+    messagesHeader: {
       alignItems: 'center',
-      justifyContent: 'center',
-      paddingVertical: 12,
+      backgroundColor: colors.secondary,
+      borderBottomColor: colors.border,
+      borderBottomWidth: 1,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      paddingHorizontal: 16,
+      paddingVertical: 8,
     },
-    loadingText: {
-      marginLeft: 8,
+    messagesHeaderTitle: {
+      color: colors.text,
       fontSize: typography.body.fontSize,
-      color: colors.primary,
+      fontWeight: '600',
+    },
+
+    messagesScrollView: {
+      flex: 1,
     },
   });
 

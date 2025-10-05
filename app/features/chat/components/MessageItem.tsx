@@ -12,46 +12,47 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
   const { colors, typography } = useTheme();
 
   const styles = StyleSheet.create({
-    message: {
-      marginVertical: 4,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      borderRadius: 8,
-      maxWidth: '85%',
-    },
-    userMessage: {
-      backgroundColor: colors.primary,
-      alignSelf: 'flex-end',
+    aiMarkdownText: {
+      color: colors.text,
     },
     aiMessage: {
-      backgroundColor: colors.secondary,
       alignSelf: 'flex-start',
-      borderWidth: 1,
+      backgroundColor: colors.secondary,
       borderColor: colors.border,
-    },
-    systemMessage: {
-      backgroundColor: colors.warning + '30', // warning with opacity
-      alignSelf: 'center',
       borderWidth: 1,
-      borderColor: colors.warning,
-    },
-    // Markdown styles
-    markdownContainer: {
-      // Markdownコンポーネントが適用されるViewのスタイル
     },
     baseText: {
       fontSize: typography.body.fontSize,
       lineHeight: typography.body.fontSize * 1.4,
     },
-    userMarkdownText: {
-      color: colors.background,
+        // Markdown styles
+    markdownContainer: {
+      // Markdownコンポーネントが適用されるViewのスタイル
     },
-    aiMarkdownText: {
-      color: colors.text,
+    message: {
+      borderRadius: 8,
+      marginVertical: 4,
+      maxWidth: '85%',
+      paddingHorizontal: 12,
+      paddingVertical: 8,
     },
     systemMarkdownText: {
       color: colors.text,
     },
+    systemMessage: {
+      alignSelf: 'center',
+      backgroundColor: colors.warning + '30', // warning with opacity
+      borderColor: colors.warning,
+      borderWidth: 1,
+    },    
+    userMarkdownText: {
+      color: colors.background,
+    },
+    userMessage: {
+      alignSelf: 'flex-end',
+      backgroundColor: colors.primary,
+    },
+
   });
 
   let containerStyle: any[] = [styles.message];

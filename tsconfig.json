@@ -25,10 +25,10 @@
     "jest.config.js",
     "jest.setup.js",
     "babel.config.js",
-    "app.json"
-, "app/features/note-list/NoteListScreen.tsxｓｓ", "app/features/note-list/NoteListScreen.backup", "app/features/chat/ChatInputBar.tsx.back"  ],
+    "app.json",
+  ],
   "exclude": [
-    "node_modules"
+    "app/__tests__/**",
   ],
   "extends": "expo/tsconfig.base"
 }

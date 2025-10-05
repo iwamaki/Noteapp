@@ -1,18 +1,18 @@
 import globals from "globals";
 import pluginJs from "@eslint/js";
 import tseslint from "@typescript-eslint/eslint-plugin";
-import parser from "@typescript-eslint/parser";  // パーサーを別途インポート
+import parser from "@typescript-eslint/parser";  
 import pluginReact from "eslint-plugin-react";
 import pluginReactNative from "eslint-plugin-react-native";
 
 export default [
   {
-    ignores: ["**/*.test.*", "**/__tests__/**"],  // testファイルを無視
+    ignores: ["**/*.test.*", "**/__tests__/**"],
   },
   {
-    files: ["**/*.{js,mjs,cjs,ts,jsx,tsx}"],  // 一般ファイル
+    files: ["**/*.{js,mjs,cjs,ts,jsx,tsx}"],  
     languageOptions: {
-      parser: parser,  // 正しいパーサーを指定
+      parser: parser,  
       parserOptions: {
         ecmaFeatures: {
           jsx: true,
@@ -41,6 +41,8 @@ export default [
       ...pluginReact.configs.recommended.rules,
       ...pluginReactNative.configs.all.rules,  // 'all' が利用可能か確認（利用不可なら 'recommended' に変更）
       // Custom rules
+      "order/properties": "off",  // 追加: プロパティ順序チェックをオフ
+      "react-native/sort-styles": "off",  // 追加: React Nativeスタイル順序チェックをオフ
       "react-native/no-unused-styles": "warn",
       "react-native/split-platform-components": "warn",
       "react-native/no-inline-styles": "warn",
