@@ -18,6 +18,7 @@ import { useTheme } from '../../theme/ThemeContext';
 import { useCustomHeader } from '../../components/CustomHeader';
 import APIService from '../../services/api';
 import { LLMProvider } from '../../services/llmService';
+import { Ionicons } from '@expo/vector-icons';
 
 function SettingsScreen() {
   const { colors, spacing, typography } = useTheme();
@@ -47,11 +48,17 @@ function SettingsScreen() {
   useLayoutEffect(() => {
     navigation.setOptions(
       createHeaderConfig({
-        title: <Text style={{ color: colors.text }}>設定</Text>,
-        leftButtons: [{ title: '\u2190', onPress: () => navigation.goBack() }],
+        title: <Text style={{ color: colors.text, fontSize: typography.header.fontSize }}>設定</Text>,
+        leftButtons: [
+          {
+            icon: <Ionicons name="arrow-back-outline" size={24} color={colors.textSecondary} />,
+            onPress: () => navigation.goBack(),
+            variant: 'secondary',
+          },
+        ],
       })
     );
-  }, [navigation, colors]);
+  }, [navigation, colors, typography]);
 
   const renderSection = (title: string) => (
     <Text style={styles.sectionTitle}>{title}</Text>
@@ -194,7 +201,7 @@ function SettingsScreen() {
         <Text>読み込み中...</Text>
       </View>
     );
-  }
+  };
 
   return (
     <ScrollView style={styles.container}>
