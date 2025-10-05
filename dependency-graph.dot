@@ -20,11 +20,6 @@ strict digraph "dependency-cruiser output"{
     subgraph "cluster_app" {label="app" subgraph "cluster_app/components" {label="components" "app/components/ListItem.tsx" [label=<ListItem.tsx> tooltip="ListItem.tsx" URL="app/components/ListItem.tsx" fillcolor="#bbfeff"] } }
     "app/components/ListItem.tsx" -> "app/theme/ThemeContext.tsx"
     "app/components/ListItem.tsx" -> "app/utils/commonStyles.ts"
-    subgraph "cluster_app" {label="app" subgraph "cluster_app/components" {label="components" "app/components/index.ts" [label=<index.ts> tooltip="index.ts" URL="app/components/index.ts" fillcolor="#ddfeff"] } }
-    "app/components/index.ts" -> "app/components/CustomHeader.tsx" [arrowhead="inv"]
-    "app/components/index.ts" -> "app/components/FabButton.tsx" [arrowhead="inv"]
-    "app/components/index.ts" -> "app/components/HeaderButton.tsx" [arrowhead="inv"]
-    "app/components/index.ts" -> "app/components/ListItem.tsx" [arrowhead="inv"]
     subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" "app/features/chat/ChatInputBar.tsx" [label=<ChatInputBar.tsx> tooltip="ChatInputBar.tsx" URL="app/features/chat/ChatInputBar.tsx" fillcolor="#bbfeff"] } } }
     "app/features/chat/ChatInputBar.tsx" -> "app/services/api.ts"
     "app/features/chat/ChatInputBar.tsx" -> "app/services/llmService.ts"
@@ -41,6 +36,7 @@ strict digraph "dependency-cruiser output"{
     subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/hooks" {label="hooks" "app/features/chat/hooks/useChat.ts" [label=<useChat.ts> tooltip="useChat.ts" URL="app/features/chat/hooks/useChat.ts" fillcolor="#ddfeff"] } } } }
     "app/features/chat/hooks/useChat.ts" -> "app/services/api.ts"
     "app/features/chat/hooks/useChat.ts" -> "app/services/llmService.ts"
+    "app/features/chat/hooks/useChat.ts" -> "app/store/settingsStore.ts"
     "app/features/chat/hooks/useChat.ts" -> "app/utils/logger.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/diff-view" {label="diff-view" "app/features/diff-view/DiffViewScreen.tsx" [label=<DiffViewScreen.tsx> tooltip="DiffViewScreen.tsx" URL="app/features/diff-view/DiffViewScreen.tsx" fillcolor="#bbfeff"] } } }
     "app/features/diff-view/DiffViewScreen.tsx" -> "app/components/CustomHeader.tsx"
@@ -63,13 +59,12 @@ strict digraph "dependency-cruiser output"{
     "app/features/note-edit/NoteEditScreen.tsx" -> "app/features/chat/ChatInputBar.tsx"
     "app/features/note-edit/NoteEditScreen.tsx" -> "app/features/note-edit/components/FileEditor.tsx"
     "app/features/note-edit/NoteEditScreen.tsx" -> "app/features/note-edit/components/NoteEditHeader.tsx"
-    "app/features/note-edit/NoteEditScreen.tsx" -> "app/features/note-edit/hooks/useNoteEditHeader.ts"
-    "app/features/note-edit/NoteEditScreen.tsx" -> "app/features/note-edit/hooks/useNoteEditor.ts"
+    "app/features/note-edit/NoteEditScreen.tsx" -> "app/features/note-edit/hooks/useNoteEditHeader.tsx"
+    "app/features/note-edit/NoteEditScreen.tsx" -> "app/features/note-edit/hooks/useNoteEditor.tsx"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/note-edit" {label="note-edit" subgraph "cluster_app/features/note-edit/components" {label="components" "app/features/note-edit/components/FileEditor.tsx" [label=<FileEditor.tsx> tooltip="FileEditor.tsx" URL="app/features/note-edit/components/FileEditor.tsx" fillcolor="#bbfeff"] } } } }
     "app/features/note-edit/components/FileEditor.tsx" -> "app/hooks/useDiffManager.ts"
     "app/features/note-edit/components/FileEditor.tsx" -> "app/services/diffService.ts"
     "app/features/note-edit/components/FileEditor.tsx" -> "app/theme/ThemeContext.tsx"
-    "app/features/note-edit/components/FileEditor.tsx" -> "app/features/note-edit/utils/fileViewerConfig.ts"
     "app/features/note-edit/components/FileEditor.tsx" -> "app/features/note-edit/components/editors/DiffPreview.tsx"
     "app/features/note-edit/components/FileEditor.tsx" -> "app/features/note-edit/components/editors/MarkdownPreview.tsx"
     "app/features/note-edit/components/FileEditor.tsx" -> "app/features/note-edit/components/editors/TextEditor.tsx"
@@ -84,14 +79,15 @@ strict digraph "dependency-cruiser output"{
     "app/features/note-edit/components/editors/MarkdownPreview.tsx" -> "app/theme/ThemeContext.tsx"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/note-edit" {label="note-edit" subgraph "cluster_app/features/note-edit/components" {label="components" subgraph "cluster_app/features/note-edit/components/editors" {label="editors" "app/features/note-edit/components/editors/TextEditor.tsx" [label=<TextEditor.tsx> tooltip="TextEditor.tsx" URL="app/features/note-edit/components/editors/TextEditor.tsx" fillcolor="#bbfeff"] } } } } }
     "app/features/note-edit/components/editors/TextEditor.tsx" -> "app/theme/ThemeContext.tsx"
-    subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/note-edit" {label="note-edit" subgraph "cluster_app/features/note-edit/hooks" {label="hooks" "app/features/note-edit/hooks/useNoteEditHeader.ts" [label=<useNoteEditHeader.ts> tooltip="useNoteEditHeader.ts" URL="app/features/note-edit/hooks/useNoteEditHeader.ts" fillcolor="#ddfeff"] } } } }
-    "app/features/note-edit/hooks/useNoteEditHeader.ts" -> "app/components/CustomHeader.tsx"
-    "app/features/note-edit/hooks/useNoteEditHeader.ts" -> "app/navigation/types.ts"
-    "app/features/note-edit/hooks/useNoteEditHeader.ts" -> "app/features/note-edit/components/FileEditor.tsx"
-    subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/note-edit" {label="note-edit" subgraph "cluster_app/features/note-edit/hooks" {label="hooks" "app/features/note-edit/hooks/useNoteEditor.ts" [label=<useNoteEditor.ts> tooltip="useNoteEditor.ts" URL="app/features/note-edit/hooks/useNoteEditor.ts" fillcolor="#ddfeff"] } } } }
-    "app/features/note-edit/hooks/useNoteEditor.ts" -> "app/navigation/types.ts"
-    "app/features/note-edit/hooks/useNoteEditor.ts" -> "app/store/note/index.ts"
-    subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/note-edit" {label="note-edit" subgraph "cluster_app/features/note-edit/utils" {label="utils" "app/features/note-edit/utils/fileViewerConfig.ts" [label=<fileViewerConfig.ts> tooltip="fileViewerConfig.ts" URL="app/features/note-edit/utils/fileViewerConfig.ts" fillcolor="#ddfeff"] } } } }
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/note-edit" {label="note-edit" subgraph "cluster_app/features/note-edit/hooks" {label="hooks" "app/features/note-edit/hooks/useNoteEditHeader.tsx" [label=<useNoteEditHeader.tsx> tooltip="useNoteEditHeader.tsx" URL="app/features/note-edit/hooks/useNoteEditHeader.tsx" fillcolor="#bbfeff"] } } } }
+    "app/features/note-edit/hooks/useNoteEditHeader.tsx" -> "app/components/CustomHeader.tsx"
+    "app/features/note-edit/hooks/useNoteEditHeader.tsx" -> "app/navigation/types.ts"
+    "app/features/note-edit/hooks/useNoteEditHeader.tsx" -> "app/theme/ThemeContext.tsx"
+    "app/features/note-edit/hooks/useNoteEditHeader.tsx" -> "app/features/note-edit/components/FileEditor.tsx"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/note-edit" {label="note-edit" subgraph "cluster_app/features/note-edit/hooks" {label="hooks" "app/features/note-edit/hooks/useNoteEditor.tsx" [label=<useNoteEditor.tsx> tooltip="useNoteEditor.tsx" URL="app/features/note-edit/hooks/useNoteEditor.tsx" fillcolor="#bbfeff"] } } } }
+    "app/features/note-edit/hooks/useNoteEditor.tsx" -> "app/navigation/types.ts"
+    "app/features/note-edit/hooks/useNoteEditor.tsx" -> "app/store/note/index.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/note-edit" {label="note-edit" subgraph "cluster_app/features/note-edit/utils" {label="utils" "app/features/note-edit/utils/fileViewerConfig.ts" [label=<fileViewerConfig.ts> tooltip="no-orphans" URL="app/features/note-edit/utils/fileViewerConfig.ts" fillcolor="#ccffcc" fontcolor="orange" color="orange"] } } } }
     subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/note-list" {label="note-list" "app/features/note-list/NoteListScreen.tsx" [label=<NoteListScreen.tsx> tooltip="NoteListScreen.tsx" URL="app/features/note-list/NoteListScreen.tsx" fillcolor="#bbfeff"] } } }
     "app/features/note-list/NoteListScreen.tsx" -> "app/components/ListItem.tsx"
     "app/features/note-list/NoteListScreen.tsx" -> "app/services/llmService.ts"
@@ -116,6 +112,8 @@ strict digraph "dependency-cruiser output"{
     "app/features/note-list/hooks/useNoteListLogic.ts" -> "app/utils/logger.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/settings" {label="settings" "app/features/settings/SettingsScreen.tsx" [label=<SettingsScreen.tsx> tooltip="SettingsScreen.tsx" URL="app/features/settings/SettingsScreen.tsx" fillcolor="#bbfeff"] } } }
     "app/features/settings/SettingsScreen.tsx" -> "app/components/CustomHeader.tsx"
+    "app/features/settings/SettingsScreen.tsx" -> "app/services/api.ts"
+    "app/features/settings/SettingsScreen.tsx" -> "app/services/llmService.ts"
     "app/features/settings/SettingsScreen.tsx" -> "app/store/settingsStore.ts"
     "app/features/settings/SettingsScreen.tsx" -> "app/theme/ThemeContext.tsx"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/version-history" {label="version-history" "app/features/version-history/VersionHistoryScreen.tsx" [label=<VersionHistoryScreen.tsx> tooltip="VersionHistoryScreen.tsx" URL="app/features/version-history/VersionHistoryScreen.tsx" fillcolor="#bbfeff"] } } }
