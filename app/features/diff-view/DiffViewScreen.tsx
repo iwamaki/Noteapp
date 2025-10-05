@@ -16,6 +16,7 @@ import { DiffViewer } from './components/DiffViewer';
 import { useCustomHeader } from '../../components/CustomHeader';
 import { useTheme } from '../../theme/ThemeContext';
 import { logger } from '../../utils/logger'; // loggerをインポート
+import { Ionicons } from '@expo/vector-icons';
 
 type DiffViewScreenNavigationProp = StackNavigationProp<RootStackParamList, 'DiffView'>;
 type DiffViewScreenRouteProp = ReturnType<typeof useRoute<import('@react-navigation/native').RouteProp<RootStackParamList, 'DiffView'>>>;
@@ -23,7 +24,7 @@ type DiffViewScreenRouteProp = ReturnType<typeof useRoute<import('@react-navigat
 function DiffViewScreen() {
   const navigation = useNavigation<DiffViewScreenNavigationProp>();
   const route = useRoute<DiffViewScreenRouteProp>();
-  const { colors } = useTheme();
+  const { colors, typography } = useTheme();
   const { createHeaderConfig } = useCustomHeader();
 
   const activeNote = useNoteStore(state => state.activeNote);
@@ -128,8 +129,14 @@ function DiffViewScreen() {
     const isRestoreMode = mode === 'restore';
     navigation.setOptions(
       createHeaderConfig({
-        title: <Text style={{ color: colors.text }}>{isRestoreMode ? 'バージョン復元' : '変更の適用'}</Text>,
-        leftButtons: [{ title: '←', onPress: handleCancel, variant: 'secondary' }],
+        title: <Text style={{ color: colors.text, fontSize: typography.header.fontSize }}>{isRestoreMode ? '復元' : '変更の適用'}</Text>,
+        leftButtons: [
+          {
+            icon: <Ionicons name="arrow-back-outline" size={24} color={colors.textSecondary} />,
+            onPress: handleCancel,
+            variant: 'secondary',
+          },
+        ],
         rightButtons: [
           ...(!isRestoreMode
             ? [

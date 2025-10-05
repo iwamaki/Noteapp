@@ -3,6 +3,7 @@
  * @summary このファイルは、アプリケーションのノートのバージョン履歴画面をレンダリングします。
  * @responsibility 特定のノートの過去のバージョンを一覧表示し、選択したバージョンと現在のノートの差分を表示する機能を提供します。
  */
+
 import React, { useState, useCallback, useLayoutEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -14,6 +15,7 @@ import { useNoteStore } from '../../store/note';
 import { format } from 'date-fns';
 import { useTheme } from '../../theme/ThemeContext';
 import { useCustomHeader } from '../../components/CustomHeader';
+import { Ionicons } from '@expo/vector-icons';
 
 type VersionHistoryScreenNavigationProp = StackNavigationProp<RootStackParamList, 'VersionHistory'>;
 type VersionHistoryScreenRouteProp = ReturnType<typeof useRoute<import('@react-navigation/native').RouteProp<RootStackParamList, 'VersionHistory'>>>;
@@ -33,11 +35,17 @@ function VersionHistoryScreen() {
   useLayoutEffect(() => {
     navigation.setOptions(
       createHeaderConfig({
-        title: <Text style={{ color: colors.text }}>バージョン履歴</Text>,
-        leftButtons: [{ title: '←', onPress: () => navigation.goBack() }],
+        title: <Text style={{ color: colors.text, fontSize: typography.header.fontSize }}>バージョン履歴</Text>,
+        leftButtons: [
+          {
+            icon: <Ionicons name="arrow-back-outline" size={24} color={colors.textSecondary} />,
+            onPress: () => navigation.goBack(),
+            variant: 'secondary',
+          },
+        ],
       })
     );
-  }, [navigation, colors]);
+  }, [navigation, colors, typography]);
 
   const fetchVersions = useCallback(async () => {
     try {
