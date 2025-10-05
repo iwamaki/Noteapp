@@ -36,14 +36,20 @@ export const useNoteEditor = (noteId: string | undefined) => {
     });
   }, [noteId, selectNote]);
 
-  // activeNoteが更新されたら、ローカルのstateを更新し、ローディングを解除する
+  // activeNoteが更新されたら、タイトルを更新し、ローディングを解除する
   useEffect(() => {
     if (noteId === undefined || activeNote?.id === noteId) {
       setTitle(activeNote?.title ?? '');
-      setContent(activeNote?.content ?? '');
       setIsLoading(false);
     }
   }, [activeNote, noteId]);
+
+  // noteIdが変更されたら、コンテントを更新する
+  useEffect(() => {
+    if (noteId === undefined || activeNote?.id === noteId) {
+      setContent(activeNote?.content ?? '');
+    }
+  }, [noteId]);
 
   // タイトル変更ハンドラ（デバウンス付き自動保存）
   const handleTitleChange = (newTitle: string) => {

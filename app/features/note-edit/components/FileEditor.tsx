@@ -38,12 +38,6 @@ export const FileEditor: React.FC<FileEditorProps> = ({
   const [currentContent, setCurrentContent] = useState(initialContent);
   const [originalContent, setOriginalContent] = useState(initialContent);
 
-  // initialContentプロパティの変更を監視し、内部状態を更新する
-  useEffect(() => {
-    setCurrentContent(initialContent);
-    setOriginalContent(initialContent);
-  }, [initialContent]);
-
   // ファイル形式の判定
   const viewerConfig = useMemo(() => getViewerConfig(filename), [filename]);
 
