@@ -4,6 +4,7 @@ import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../../navigation/types';
 import { useCustomHeader } from '../../../components/CustomHeader';
 import { useTheme } from '../../../theme/ThemeContext';
+import { Ionicons } from '@expo/vector-icons';
 
 
 interface UseNoteListHeaderProps {
@@ -58,7 +59,7 @@ export const useNoteListHeader = ({
       navigation.setOptions(
         createHeaderConfig({
           rightButtons: [
-            { title: '設定', onPress: () => navigation.navigate('Settings'), variant: 'primary' },
+            { icon: <Ionicons name="settings-outline" size={24} color={colors.primary} />, onPress: () => navigation.navigate('Settings'), variant: 'primary' },
           ],
         })
       );

@@ -9,6 +9,8 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../../navigation/types';
 import { useCustomHeader } from '../../../components/CustomHeader';
 import { ViewMode } from '../components/FileEditor';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../../theme/ThemeContext';
 
 interface UseNoteEditHeaderProps {
   title: string;
@@ -31,10 +33,12 @@ export const useNoteEditHeader = ({
 }: UseNoteEditHeaderProps) => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { createHeaderConfig } = useCustomHeader();
+  const { colors } = useTheme();
 
   useLayoutEffect(() => {
     const rightButtons: Array<{
-      title: string;
+      title?: string;
+      icon?: React.ReactNode;
       onPress: () => void;
       variant?: 'primary' | 'secondary' | 'danger';
     }> = [];
@@ -43,32 +47,34 @@ export const useNoteEditHeader = ({
       // ビューモードに応じたボタン
       if (viewMode === 'content') {
         rightButtons.push({
-          title: '編集',
+          icon: <Ionicons name="pencil-outline" size={24} color={colors.primary} />,
           onPress: () => onViewModeChange('edit'),
           variant: 'primary',
         });
       } else if (viewMode === 'edit') {
         rightButtons.push({
-          title: 'プレビュー',
+          icon: <Ionicons name="eye-outline" size={24} color={colors.textSecondary} />,
           onPress: () => onViewModeChange('preview'),
           variant: 'secondary',
         });
-        rightButtons.push({
-          title: '保存',
-          onPress: onSave,
-          variant: 'primary',
-        });
       } else if (viewMode === 'preview') {
         rightButtons.push({
-          title: '編集に戻る',
+          icon: <Ionicons name="eye-off-outline" size={24} color={colors.primary} />,
           onPress: () => onViewModeChange('edit'),
-          variant: 'secondary',
+          variant: 'primary', // プレビュー中はprimaryにして目立たせる
         });
       }
 
+      // 保存ボタン (常に表示)
+      rightButtons.push({
+        icon: <Ionicons name="save-outline" size={24} color={colors.primary} />,
+        onPress: onSave,
+        variant: viewMode === 'preview' ? 'secondary' : 'primary',  // プレビュー中はsecondaryに変更
+      });
+
       // 履歴ボタン
       rightButtons.push({
-        title: '履歴',
+        icon: <Ionicons name="time-outline" size={24} color={colors.textSecondary} />,
         onPress: () =>
           navigation.navigate('VersionHistory', { noteId: activeNoteId || '' }),
         variant: 'secondary',
@@ -80,7 +86,7 @@ export const useNoteEditHeader = ({
         title: headerTitle,
         leftButtons: [
           {
-            title: '\u2190',
+            icon: <Ionicons name="arrow-back-outline" size={24} color={colors.textSecondary} />,
             onPress: () => navigation.goBack(),
             variant: 'secondary',
           },
@@ -98,5 +104,6 @@ export const useNoteEditHeader = ({
     onViewModeChange,
     onSave,
     createHeaderConfig,
+    colors,
   ]);
 };

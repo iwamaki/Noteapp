@@ -11,13 +11,15 @@ import { useTheme } from '../theme/ThemeContext';
 export interface HeaderConfig {
   title?: React.ReactNode;
   leftButtons?: Array<{
-    title: string;
+    title?: string;
+    icon?: React.ReactNode; // Add icon property
     onPress: () => void;
     variant?: 'primary' | 'secondary' | 'danger';
     disabled?: boolean;
   }>;
   rightButtons?: Array<{
-    title: string;
+    title?: string;
+    icon?: React.ReactNode; // Add icon property
     onPress: () => void;
     variant?: 'primary' | 'secondary' | 'danger';
     disabled?: boolean;
@@ -107,6 +109,7 @@ export const useCustomHeader = () => {
             <HeaderButton
               key={index}
               title={button.title}
+              icon={button.icon}
               onPress={button.onPress}
               variant={button.variant}
             />
@@ -122,6 +125,7 @@ export const useCustomHeader = () => {
             <HeaderButton
               key={index}
               title={button.title}
+              icon={button.icon}
               onPress={button.onPress}
               variant={button.variant}
             />

@@ -7,9 +7,12 @@ import React from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { responsive } from '../utils/commonStyles';
 import { useTheme } from '../theme/ThemeContext';
+import { Ionicons } from '@expo/vector-icons'; // Import Ionicons
 
 interface HeaderButtonProps {
-  title: string;
+  title?: string;
+  icon?: React.ReactNode;
+  iconName?: React.ComponentProps<typeof Ionicons>['name'];
   onPress: () => void;
   disabled?: boolean;
   color?: string;
@@ -18,6 +21,8 @@ interface HeaderButtonProps {
 
 export const HeaderButton: React.FC<HeaderButtonProps> = ({
   title,
+  icon,
+  iconName,
   onPress,
   disabled = false,
   color,
@@ -57,6 +62,8 @@ export const HeaderButton: React.FC<HeaderButtonProps> = ({
     },
   });
 
+  const buttonColor = disabled ? colors.textSecondary : getButtonColor();
+
   return (
     <TouchableOpacity
       style={[
@@ -66,17 +73,27 @@ export const HeaderButton: React.FC<HeaderButtonProps> = ({
       onPress={onPress}
       disabled={disabled}
     >
-      <Text
-        style={[
-          styles.buttonText,
-          {
-            color: disabled ? colors.textSecondary : getButtonColor(),
-            fontSize: responsive.getResponsiveSize(14, 16, 18),
-          },
-        ]}
-      >
-        {title}
-      </Text>
+      {icon ? (
+        icon
+      ) : iconName ? (
+        <Ionicons
+          name={iconName}
+          size={responsive.getResponsiveSize(20, 22, 24)}
+          color={buttonColor}
+        />
+      ) : (
+        <Text
+          style={[
+            styles.buttonText,
+            {
+              color: buttonColor,
+              fontSize: responsive.getResponsiveSize(14, 16, 18),
+            },
+          ]}
+        >
+          {title}
+        </Text>
+      )}
     </TouchableOpacity>
   );
 };
