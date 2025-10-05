@@ -5,7 +5,6 @@
  * @responsibility テキストの差分計算（LCSアルゴリズムに基づく）、差分行の型定義、および生成された差分データの整合性検証を行います。
  * これにより、変更履歴の表示や適用などの機能で利用される差分情報の正確性と信頼性を保証します。
  */
-import { diff_match_patch, DIFF_DELETE, DIFF_INSERT, DIFF_EQUAL } from 'diff-match-patch';
 
 export interface DiffLine {
   type: 'common' | 'added' | 'deleted' | 'hunk-header';
@@ -64,7 +63,6 @@ export const validateDataConsistency = (originalText: string, newText: string, d
  * 行ベースでの差分を計算し、文字レベルの分割問題を回避
  * @param originalText 元のテキスト
  * @param newText 新しいテキスト
- * @param contextLines コンテキスト行数（デフォルト: 3）
  * @returns 差分行の配列
  */
 /**
@@ -108,7 +106,7 @@ const calculateLineDiff = (originalLines: string[], newLines: string[]): { type:
   return changes;
 };
 
-export const generateDiff = (originalText: string, newText: string, contextLines: number = 3): DiffLine[] => {
+export const generateDiff = (originalText: string, newText: string): DiffLine[] => {
   // 入力テキストの正規化
   const normalizedOriginal = (originalText || '').replace(/\r\n/g, '\n');
   const normalizedNew = (newText || '').replace(/\r\n/g, '\n');

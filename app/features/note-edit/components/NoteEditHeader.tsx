@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useRef } from 'react';
-import { TextInput, StyleSheet, Platform, NativeSyntheticEvent, TextInputKeyPressEventData } from 'react-native';
+import { TextInput, StyleSheet, NativeSyntheticEvent, TextInputKeyPressEventData } from 'react-native';
 import { useTheme } from '../../../theme/ThemeContext';
 import { responsive } from '../../../utils/commonStyles';
 

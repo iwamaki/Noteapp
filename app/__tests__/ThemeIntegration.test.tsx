@@ -31,6 +31,8 @@ describe('Theme Integration Tests', () => {
     autoComplete: true,
     privacyMode: 'normal' as const,
     llmService: 'openai',
+    llmProvider: 'openai',
+    llmModel: 'gpt-3.5-turbo',
     llmApiKey: '',
     localLlmUrl: 'http://localhost',
     localLlmPort: '8080',
@@ -155,6 +157,52 @@ describe('Theme Integration Tests', () => {
       expect(titleElement).toBeTruthy();
       // フォントサイズの変更でもレンダリングできることを確認
     });
+
+    it('should render with high contrast mode', () => {
+      act(() => {
+        useSettingsStore.setState({
+          settings: {
+            ...defaultSettings,
+            highContrastMode: true,
+          },
+        });
+      });
+
+      const { getByText } = render(
+        <ThemeProvider>
+          <ListItem
+            title="Test Note"
+            subtitle="Test content"
+            onPress={jest.fn()}
+          />
+        </ThemeProvider>
+      );
+
+      expect(getByText('Test Note')).toBeTruthy();
+    });
+
+    it('should handle screen reader optimization', () => {
+      act(() => {
+        useSettingsStore.setState({
+          settings: {
+            ...defaultSettings,
+            screenReaderOptimization: true,
+          },
+        });
+      });
+
+      const { getByText } = render(
+        <ThemeProvider>
+          <ListItem
+            title="Test Note"
+            subtitle="Test content"
+            onPress={jest.fn()}
+          />
+        </ThemeProvider>
+      );
+
+      expect(getByText('Test Note')).toBeTruthy();
+    });
   });
 
   describe('FabButton Component', () => {
@@ -207,6 +255,25 @@ describe('Theme Integration Tests', () => {
       const { getByText } = render(
         <ThemeProvider>
           <FabButton onPress={jest.fn()} icon="+" disabled={true} />
+        </ThemeProvider>
+      );
+
+      expect(getByText('+')).toBeTruthy();
+    });
+
+    it('should handle high contrast mode', () => {
+      act(() => {
+        useSettingsStore.setState({
+          settings: {
+            ...defaultSettings,
+            highContrastMode: true,
+          },
+        });
+      });
+
+      const { getByText } = render(
+        <ThemeProvider>
+          <FabButton onPress={jest.fn()} icon="+" />
         </ThemeProvider>
       );
 
@@ -283,6 +350,25 @@ describe('Theme Integration Tests', () => {
           settings: {
             ...defaultSettings,
             fontSize: 'xlarge',
+          },
+        });
+      });
+
+      const { getByText } = render(
+        <ThemeProvider>
+          <HeaderButton title="保存" onPress={jest.fn()} />
+        </ThemeProvider>
+      );
+
+      expect(getByText('保存')).toBeTruthy();
+    });
+
+    it('should handle high contrast mode', () => {
+      act(() => {
+        useSettingsStore.setState({
+          settings: {
+            ...defaultSettings,
+            highContrastMode: true,
           },
         });
       });
@@ -375,6 +461,33 @@ describe('Theme Integration Tests', () => {
 
       expect(getByText('Test')).toBeTruthy();
     });
+
+    it('should switch to high contrast mode', () => {
+      const { rerender, getByText } = render(
+        <ThemeProvider>
+          <FabButton onPress={jest.fn()} icon="+" />
+        </ThemeProvider>
+      );
+
+      expect(getByText('+')).toBeTruthy();
+
+      act(() => {
+        useSettingsStore.setState({
+          settings: {
+            ...defaultSettings,
+            highContrastMode: true,
+          },
+        });
+      });
+
+      rerender(
+        <ThemeProvider>
+          <FabButton onPress={jest.fn()} icon="+" />
+        </ThemeProvider>
+      );
+
+      expect(getByText('+')).toBeTruthy();
+    });
   });
 
   describe('Multiple Components', () => {
@@ -392,6 +505,56 @@ describe('Theme Integration Tests', () => {
 
       expect(getByText('Note 1')).toBeTruthy();
       expect(getByText('Note 2')).toBeTruthy();
+      expect(getByText('+')).toBeTruthy();
+      expect(getByText('設定')).toBeTruthy();
+    });
+
+    it('should render multiple components with dark theme', () => {
+      act(() => {
+        useSettingsStore.setState({
+          settings: {
+            ...defaultSettings,
+            theme: 'dark',
+          },
+        });
+      });
+
+      const { getByText } = render(
+        <ThemeProvider>
+          <>
+            <ListItem title="Note 1" subtitle="Content 1" onPress={jest.fn()} />
+            <FabButton onPress={jest.fn()} icon="+" />
+            <HeaderButton title="設定" onPress={jest.fn()} />
+          </>
+        </ThemeProvider>
+      );
+
+      expect(getByText('Note 1')).toBeTruthy();
+      expect(getByText('+')).toBeTruthy();
+      expect(getByText('設定')).toBeTruthy();
+    });
+
+    it('should render multiple components with high contrast mode', () => {
+      act(() => {
+        useSettingsStore.setState({
+          settings: {
+            ...defaultSettings,
+            highContrastMode: true,
+          },
+        });
+      });
+
+      const { getByText } = render(
+        <ThemeProvider>
+          <>
+            <ListItem title="Note 1" subtitle="Content 1" onPress={jest.fn()} />
+            <FabButton onPress={jest.fn()} icon="+" />
+            <HeaderButton title="設定" onPress={jest.fn()} />
+          </>
+        </ThemeProvider>
+      );
+
+      expect(getByText('Note 1')).toBeTruthy();
       expect(getByText('+')).toBeTruthy();
       expect(getByText('設定')).toBeTruthy();
     });

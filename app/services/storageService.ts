@@ -77,7 +77,7 @@ export class NoteStorageService {
       const notes = await StorageUtils.safeJsonParse<any[]>(jsonValue);
       if (!notes) return [];
       return notes.map(note => StorageUtils.convertDates(note) as Note);
-    } catch (error) {
+    } catch {
       throw new StorageError('Failed to retrieve notes', 'FETCH_ERROR');
     }
   }
@@ -85,7 +85,7 @@ export class NoteStorageService {
   private static async saveAllNotes(notes: Note[]): Promise<void> {
     try {
       await AsyncStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(notes));
-    } catch (error) {
+    } catch {
       throw new StorageError('Failed to save notes', 'SAVE_ERROR');
     }
   }
@@ -97,7 +97,7 @@ export class NoteStorageService {
       const versions = await StorageUtils.safeJsonParse<any[]>(jsonValue);
       if (!versions) return [];
       return versions.map(version => StorageUtils.convertDates(version) as NoteVersion);
-    } catch (error) {
+    } catch {
       throw new StorageError('Failed to retrieve note versions', 'FETCH_VERSIONS_ERROR');
     }
   }
@@ -105,7 +105,7 @@ export class NoteStorageService {
   private static async saveAllVersions(versions: NoteVersion[]): Promise<void> {
     try {
       await AsyncStorage.setItem(NOTE_VERSIONS_STORAGE_KEY, JSON.stringify(versions));
-    } catch (error) {
+    } catch {
       throw new StorageError('Failed to save note versions', 'SAVE_VERSIONS_ERROR');
     }
   }

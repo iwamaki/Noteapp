@@ -3,7 +3,7 @@
  * @summary ノート編集画面のヘッダー設定ロジックを管理するフック
  */
 
-import { useLayoutEffect } from 'react';
+import React, { useLayoutEffect } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../../navigation/types';

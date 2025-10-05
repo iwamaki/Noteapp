@@ -79,14 +79,14 @@ export const ListItem: React.FC<ListItemProps> = ({
       borderColor: colors.textSecondary,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: 'transparent',
+      backgroundColor: colors.transparent,
     },
     checkboxSelected: {
       backgroundColor: colors.primary,
       borderColor: colors.primary,
     },
     checkboxText: {
-      color: 'white',
+      color: colors.white,
       fontSize: 16,
       fontWeight: 'bold',
     },

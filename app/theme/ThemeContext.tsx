@@ -20,6 +20,9 @@ const lightColors = {
   success: '#28a745',
   warning: '#ffc107',
   danger: '#dc3545',
+  white: '#fff',
+  black: '#000',
+  transparent: 'transparent',
 };
 
 // ダークテーマのカラーパレット
@@ -34,6 +37,9 @@ const darkColors = {
   success: '#32D74B',
   warning: '#FFD60A',
   danger: '#FF453A',
+  white: '#fff',
+  black: '#000',
+  transparent: 'transparent',
 };
 
 // スペーシング（テーマに依存しない）

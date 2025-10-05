@@ -37,7 +37,7 @@ export const FabButton: React.FC<FabButtonProps> = ({
       ...shadows.large,
     },
     fabText: {
-      color: 'white',
+      color: colors.white,
       fontWeight: 'bold',
     },
     disabled: {

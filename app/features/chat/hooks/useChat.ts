@@ -9,7 +9,6 @@ import { Animated, PanResponder } from 'react-native';
 import APIService, { ChatContext } from '../../../services/api';
 import { ChatMessage, LLMCommand } from '../../../services/llmService';
 import { logger } from '../../../utils/logger';
-import { useNoteDraftStore } from '../../../store/note/noteDraftStore';
 import { useSettingsStore } from '../../../store/settingsStore';
 
 

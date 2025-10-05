@@ -19,10 +19,12 @@ export default [
         },
         ecmaVersion: 2020,
         sourceType: "module",
+        project: "./tsconfig.json",
       },
       globals: {
         ...globals.browser,
         ...globals.node,
+        "__DEV__": "readonly",
       },
     },
     plugins: {

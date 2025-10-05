@@ -4,12 +4,12 @@
  * @responsibility ユーザーがファイルのコンテンツを編集、プレビュー、または差分表示できるインターフェースを提供し、異なる表示モード間の切り替えを管理する責任があります。
  */
 
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { generateDiff } from '../../../services/diffService';
 import { useDiffManager } from '../../../hooks/useDiffManager';
 import { useTheme } from '../../../theme/ThemeContext';
-import { getViewerConfig } from '../utils/fileViewerConfig';
+
 import { MarkdownPreview } from './editors/MarkdownPreview';
 import { TextEditor } from './editors/TextEditor';
 import { DiffPreview } from './editors/DiffPreview';
@@ -28,7 +28,7 @@ interface FileEditorProps {
 
 // ファイルエディタコンポーネント
 export const FileEditor: React.FC<FileEditorProps> = ({
-  filename,
+
   initialContent,
   mode,
   onModeChange,
@@ -36,10 +36,7 @@ export const FileEditor: React.FC<FileEditorProps> = ({
 }) => {
   const { colors, typography } = useTheme();
   const [currentContent, setCurrentContent] = useState(initialContent);
-  const [originalContent, setOriginalContent] = useState(initialContent);
-
-  // ファイル形式の判定
-  const viewerConfig = useMemo(() => getViewerConfig(filename), [filename]);
+  const [originalContent] = useState(initialContent);
 
   // 差分の生成
   const diff = useMemo(() =>
@@ -58,14 +55,9 @@ export const FileEditor: React.FC<FileEditorProps> = ({
     allChangeBlockIds
   } = useDiffManager(diff);
 
-  // 変更があるかどうかの判定
-  const isModified = useMemo(() => {
-    return currentContent !== originalContent;
-  }, [currentContent, originalContent]);
-
   // 差分適用のハンドラ
   const handleApplyDiff = useCallback(() => {
-    const selectedContent = generateSelectedContent();
+    generateSelectedContent();
     onModeChange('content');
   }, [generateSelectedContent, onModeChange]);
 
