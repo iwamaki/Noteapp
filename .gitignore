@@ -53,3 +53,6 @@ server/src/__pycache__/
 # API keys and credentials
 key.json
 *.key
+
+# build
+build/
