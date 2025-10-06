@@ -67,8 +67,83 @@ const filterNotes = (notes: Note[], query: string): Note[] => {
   );
 };
 
+import { eventBus } from '../../services/eventBus'; // Add this import
+
 export const useNoteStore = create<NoteStoreState>()(
-  subscribeWithSelector((set, get) => ({
+  subscribeWithSelector((set, get) => {
+    // EventBusリスナーの登録
+    eventBus.on('note:created', ({ note }) => {
+      const { notes, searchQuery } = get();
+      const updatedNotes = [...notes, note].sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+      set({
+        notes: updatedNotes,
+        filteredNotes: filterNotes(updatedNotes, searchQuery),
+        activeNote: note,
+        lastUpdated: new Date(),
+      });
+    });
+
+    eventBus.on('note:updated', ({ note }) => {
+      const { notes, activeNote, searchQuery } = get();
+      const updatedNotes = notes.map(n => n.id === note.id ? note : n);
+      set({
+        notes: updatedNotes,
+        filteredNotes: filterNotes(updatedNotes, searchQuery),
+        activeNote: activeNote?.id === note.id ? note : activeNote,
+        lastUpdated: new Date(),
+      });
+    });
+
+    eventBus.on('note:deleted', ({ noteId }) => {
+      const { notes, activeNote, searchQuery } = get();
+      const updatedNotes = notes.filter(n => n.id !== noteId);
+      set({
+        notes: updatedNotes,
+        filteredNotes: filterNotes(updatedNotes, searchQuery),
+        activeNote: activeNote?.id === noteId ? null : activeNote,
+        lastUpdated: new Date(),
+      });
+    });
+
+    eventBus.on('notes:bulk-deleted', ({ noteIds }) => {
+      const { notes, activeNote, searchQuery } = get();
+      const updatedNotes = notes.filter(n => !noteIds.includes(n.id));
+      set({
+        notes: updatedNotes,
+        filteredNotes: filterNotes(updatedNotes, searchQuery),
+        activeNote: activeNote && noteIds.includes(activeNote.id) ? null : activeNote,
+        lastUpdated: new Date(),
+      });
+    });
+
+    eventBus.on('notes:bulk-copied', ({ newNotes }) => {
+      const { notes, searchQuery } = get();
+      const updatedNotes = [...notes, ...newNotes].sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+      set({
+        notes: updatedNotes,
+        filteredNotes: filterNotes(updatedNotes, searchQuery),
+        lastUpdated: new Date(),
+      });
+    });
+
+    eventBus.on('draft:saved', ({ note }) => {
+      const { notes, activeNote, searchQuery } = get();
+      const existingNoteIndex = notes.findIndex(n => n.id === note.id);
+      let updatedNotes;
+      if (existingNoteIndex > -1) {
+        updatedNotes = notes.map(n => n.id === note.id ? note : n);
+      } else {
+        updatedNotes = [...notes, note].sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+      }
+      set({
+        notes: updatedNotes,
+        filteredNotes: filterNotes(updatedNotes, searchQuery),
+        activeNote: activeNote?.id === note.id ? note : activeNote,
+        lastUpdated: new Date(),
+      });
+    });
+
+    return {
     // 初期状態
     notes: [],
     activeNote: null,
@@ -128,9 +203,7 @@ export const useNoteStore = create<NoteStoreState>()(
         }
 
         set({ activeNote: note });
-
-        // 他のストアにも通知: noteDraftStoreのdraftNoteをセット
-        // (これは各コンポーネント側で明示的に行うべきなので、ここでは行わない)
+        await eventBus.emit('note:selected', { noteId }); // Emit event
       } catch (error) {
         console.error(`Failed to select note with id: ${noteId}`, error);
         set({
@@ -152,9 +225,7 @@ export const useNoteStore = create<NoteStoreState>()(
 
       try {
         const newNote = await NoteStorageService.createNote(data);
-        await get().fetchNotes();
-
-        set({ activeNote: newNote });
+        await eventBus.emit('note:created', { note: newNote }); // Emit event
 
         return newNote;
       } catch (error) {
@@ -177,12 +248,7 @@ export const useNoteStore = create<NoteStoreState>()(
 
       try {
         const updatedNote = await NoteStorageService.updateNote(data);
-        await get().fetchNotes();
-
-        const { activeNote } = get();
-        if (activeNote?.id === updatedNote.id) {
-          set({ activeNote: updatedNote });
-        }
+        await eventBus.emit('note:updated', { note: updatedNote }); // Emit event
 
         return updatedNote;
       } catch (error) {
@@ -205,13 +271,7 @@ export const useNoteStore = create<NoteStoreState>()(
 
       try {
         await NoteStorageService.deleteNote(noteId);
-        await get().fetchNotes();
-
-        // 削除されたノートがアクティブだった場合はクリア
-        const { activeNote } = get();
-        if (activeNote?.id === noteId) {
-          set({ activeNote: null });
-        }
+        await eventBus.emit('note:deleted', { noteId }); // Emit event
       } catch (error) {
         console.error(`Failed to delete note with id: ${noteId}`, error);
         const noteError = createNoteError(error, 'DELETE_ERROR');
@@ -235,5 +295,6 @@ export const useNoteStore = create<NoteStoreState>()(
     clearError: () => {
       set({ error: null });
     },
-  }))
+  };
+  })
 );
