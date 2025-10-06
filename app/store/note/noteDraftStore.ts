@@ -7,6 +7,7 @@ import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { Note } from '../../../shared/types/note';
 import { eventBus } from '../../services/eventBus';
+import { NoteActionService } from '../../services/NoteActionService';
 import { NoteStorageService } from '../../services/storageService';
 
 // 型定義
@@ -99,10 +100,12 @@ export const useNoteDraftStore = create<NoteDraftStoreState>()(
       }
 
       try {
-        await eventBus.emit('draft:save-requested', { draftNote, activeNoteId });
+        const savedNote = await NoteActionService.saveDraftNote(draftNote, activeNoteId);
+        // NoteActionService will emit 'note:created' or 'note:updated' and 'draft:saved'
         set({ draftNote: null, activeNoteId: null, originalDraftContent: null });
       } catch (error) {
         console.error('Failed to save draft note:', error);
+        // Error event is emitted by NoteActionService
         throw error;
       }
     },
