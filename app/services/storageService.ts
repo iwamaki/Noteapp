@@ -8,33 +8,11 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { v4 as uuidv4 } from 'uuid';
-import { NoteVersion } from '../../shared/types/note';
+import { Note, NoteVersion, CreateNoteData, UpdateNoteData } from '../../shared/types/note';
 
-// 型定義を明確に
-export interface Note {
-  id: string;
-  title: string;
-  content: string;
-  createdAt: Date;
-  updatedAt: Date;
-  version: number;
-  tags?: string[];
-}
 
-// ノート作成・更新用の型
-export interface CreateNoteData {
-  title: string;
-  content: string;
-  tags?: string[];
-}
 
-// 更新時はIDが必須、他は任意
-export interface UpdateNoteData {
-  id: string;
-  title?: string;
-  content?: string;
-  tags?: string[];
-}
+
 
 const NOTES_STORAGE_KEY = '@notes';
 const NOTE_VERSIONS_STORAGE_KEY = '@note_versions';

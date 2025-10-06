@@ -5,7 +5,8 @@
  */
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
-import { NoteStorageService, Note, CreateNoteData, UpdateNoteData, StorageError } from '../../services/storageService';
+import { NoteStorageService, StorageError } from '../../services/storageService';
+import { Note, CreateNoteData, UpdateNoteData } from '../../../shared/types/note';
 import 'react-native-get-random-values';
 
 // 型定義

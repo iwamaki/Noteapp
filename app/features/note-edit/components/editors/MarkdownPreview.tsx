@@ -23,6 +23,15 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content }) => 
     },
   });
 
+  const markdownRules = {
+    image: (node: any, children: React.ReactNode[], parent: any, styles: any) => {
+      // 画像表示機能が未実装のため、ここでは何もレンダリングしない
+      // 必要に応じて、ここにプレースホルダーや代替テキストを表示するロジックを追加
+      console.warn('Image rendering is not implemented yet. Image source:', node.attributes.src);
+      return null;
+    },
+  };
+
   return (
     <ScrollView style={styles.container}>
       <Markdown
@@ -31,6 +40,7 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content }) => 
           heading1: { color: colors.text, ...typography.title },
           heading2: { color: colors.text, ...typography.subtitle },
         }}
+        rules={markdownRules}
       >
         {content}
       </Markdown>

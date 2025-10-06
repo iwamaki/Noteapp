@@ -3,6 +3,7 @@
  * @summary ノート選択モードと複数選択操作を管理するストア
  * @responsibility 選択モードの状態、選択されたノートのID管理、一括削除・一括複製などの操作を管理
  */
+import { Note } from '../../../shared/types/note';
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { NoteStorageService } from '../../services/storageService';
