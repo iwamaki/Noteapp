@@ -5,6 +5,7 @@ export interface Note {
   createdAt: Date;
   updatedAt: Date;
   version: number;
+  tags?: string[];
 }
 
 export interface NoteVersion {
