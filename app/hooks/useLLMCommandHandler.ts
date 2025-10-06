@@ -46,7 +46,7 @@ export const useLLMCommandHandler = (context: CommandHandlerContext) => {
     navigation.navigate('DiffView', {
       originalContent: context.currentContent,
       newContent: command.content,
-      mode: 'save',
+      mode: 'apply',
       onApply: async (approvedContent: string) => {
         if (activeNote?.id) {
           await updateNote(activeNote.id, { content: approvedContent });
