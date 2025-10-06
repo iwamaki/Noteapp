@@ -2,6 +2,7 @@ import { useEffect, useCallback } from 'react';
 import { useNavigation, NavigationProp, useIsFocused } from '@react-navigation/native';
 import { RootStackParamList } from '../../../navigation/types';
 import { useNoteStore, useNoteSelectionStore } from '../../../store/note';
+import { useNoteOperations } from '../../../hooks/useNoteOperations';
 import { logger } from '../../../utils/logger';
 
 export const useNoteListLogic = () => {
@@ -11,16 +12,13 @@ export const useNoteListLogic = () => {
   // 各ストアから必要な状態とアクションを取得
   const notes = useNoteStore(state => state.filteredNotes);
   const loading = useNoteStore(state => state.loading);
-  const fetchNotes = useNoteStore(state => state.fetchNotes);
-  const createNote = useNoteStore(state => state.createNote);
+  const { createNote, bulkDeleteNotes, bulkCopyNotes, fetchNotes } = useNoteOperations();
 
   const isSelectionMode = useNoteSelectionStore(state => state.isSelectionMode);
   const selectedNoteIds = useNoteSelectionStore(state => state.selectedNoteIds);
   const toggleSelectionMode = useNoteSelectionStore(state => state.toggleSelectionMode);
   const toggleNoteSelection = useNoteSelectionStore(state => state.toggleNoteSelection);
   const clearSelectedNotes = useNoteSelectionStore(state => state.clearSelectedNotes);
-  const deleteSelectedNotes = useNoteSelectionStore(state => state.deleteSelectedNotes);
-  const copySelectedNotes = useNoteSelectionStore(state => state.copySelectedNotes);
 
   // デバッグ用ログ
   logger.debug('note', 'useNoteListLogic render:', { isSelectionMode, selectedCount: selectedNoteIds.size });
@@ -56,20 +54,20 @@ export const useNoteListLogic = () => {
   // 選択ノート削除ハンドラー
   const handleDeleteSelected = useCallback(async () => {
     try {
-      await deleteSelectedNotes();
+      await bulkDeleteNotes(Array.from(selectedNoteIds));
     } catch (error) {
       console.error("Failed to delete selected notes:", error);
     }
-  }, [deleteSelectedNotes]);
+  }, [bulkDeleteNotes, selectedNoteIds]);
 
   // 選択ノートコピーハンドラー
   const handleCopySelected = useCallback(async () => {
     try {
-      await copySelectedNotes();
+      await bulkCopyNotes(Array.from(selectedNoteIds));
     } catch (error) {
       console.error("Failed to copy selected notes:", error);
     }
-  }, [copySelectedNotes]);
+  }, [bulkCopyNotes, selectedNoteIds]);
 
   // ノート作成ハンドラー
   const handleCreateNote = useCallback(async () => {

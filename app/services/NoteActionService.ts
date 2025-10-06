@@ -9,7 +9,7 @@ import { Note, CreateNoteData } from '../../shared/types/note';
 import { NoteStorageService, StorageError } from './storageService';
 import { eventBus } from './eventBus';
 import { DraftNote } from '../store/note/noteDraftStore';
-import { v4 as uuidv4 } from 'uuid';
+
 
 export class NoteActionService {
   /**
@@ -71,6 +71,35 @@ export class NoteActionService {
    * @param activeNoteId ドラフトが関連付けられている既存のノートのID (新規の場合はnull)
    * @returns 保存または更新されたノート
    */
+  static async createNote(data: CreateNoteData): Promise<Note> {
+    try {
+      const newNote = await NoteStorageService.createNote(data);
+      await eventBus.emit('note:created', { note: newNote });
+      return newNote;
+    } catch (error: any) {
+      console.error('Failed to create note:', error);
+      await eventBus.emit('error:occurred', {
+        error: error instanceof StorageError ? error : new Error(error.message),
+        context: 'create-note',
+      });
+      throw error;
+    }
+  }
+
+  static async deleteNote(noteId: string): Promise<void> {
+    try {
+      await NoteStorageService.deleteNote(noteId);
+      await eventBus.emit('note:deleted', { noteId });
+    } catch (error: any) {
+      console.error('Failed to delete note:', error);
+      await eventBus.emit('error:occurred', {
+        error: error instanceof StorageError ? error : new Error(error.message),
+        context: 'delete-note',
+      });
+      throw error;
+    }
+  }
+
   static async saveDraftNote(draftNote: DraftNote, activeNoteId: string | null): Promise<Note> {
     try {
       let savedNote: Note;

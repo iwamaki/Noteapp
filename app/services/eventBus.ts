@@ -6,6 +6,7 @@ type EventMap = {
   'note:created': { note: Note };
   'note:updated': { note: Note; previousState?: Note };
   'note:deleted': { noteId: string };
+  'note:loaded': { notes: Note[] };
   'note:selected': { noteId: string | null };
   'notes:bulk-deleted': { noteIds: string[] };
   'notes:bulk-copied': { sourceIds: string[]; newNotes: Note[] };
@@ -17,8 +18,10 @@ type EventMap = {
   'error:occurred': { error: Error; context: string };
 };
 
+type AnyFunction = (payload: any) => void | Promise<void>; 
+
 class EventBus {
-  private listeners = new Map<keyof EventMap, Set<Function>>();
+  private listeners = new Map<keyof EventMap, Set<AnyFunction>>();
   private eventQueue: Array<{ type: keyof EventMap; payload: any }> = [];
   private isProcessing = false;
 

@@ -3,13 +3,14 @@
  * @summary このファイルは、LLM（大規模言語モデル）からのコマンドを処理するカスタムフックを定義します。
  * @responsibility LLMから受け取ったコマンド（例: ファイル編集）を解釈し、アプリケーションの状態を適切に更新したり、関連する画面遷移をトリガーしたりする責任があります。
  */
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/types';
 import { LLMCommand, LLMResponse } from '../services/llmService';
 import { useNoteStore } from '../store/note';
 import { logger } from '../utils/logger'; // loggerをインポート
+import { useNoteOperations } from '../hooks/useNoteOperations';
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -22,35 +23,16 @@ interface CommandHandlerContext {
 export const useLLMCommandHandler = (context: CommandHandlerContext) => {
   const navigation = useNavigation<NavigationProp>();
   const activeNote = useNoteStore(state => state.activeNote);
-  const previousContentRef = useRef<string>(context.currentContent);
-  const isWaitingForUpdateRef = useRef<boolean>(false);
-
-  // activeNoteの内容が変更された場合に編集中のコンテンツを更新
-  useEffect(() => {
-    if (isWaitingForUpdateRef.current && activeNote && activeNote.content !== previousContentRef.current) {
-      logger.debug('llm', '[LLMCommandHandler] Applying updated content from store');
-      context.setContent(activeNote.content);
-      previousContentRef.current = activeNote.content;
-      isWaitingForUpdateRef.current = false;
-    }
-  }, [activeNote, context]);
-
-  // 画面のフォーカス時にコンテンツの同期をチェック
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', () => {
-      if (activeNote && activeNote.content !== context.currentContent) {
-        logger.debug('llm', '[LLMCommandHandler] Syncing content on screen focus');
-        context.setContent(activeNote.content);
-        previousContentRef.current = activeNote.content;
-      }
-    });
-
-    return unsubscribe;
-  }, [navigation, activeNote, context]);
+  const { updateNote } = useNoteOperations();
 
   const executeEditFileCommand = useCallback((command: LLMCommand) => {
     if (!command.content) {
       logger.warn('llm', 'edit_file command missing content');
+      return;
+    }
+
+    if (!activeNote?.id) {
+      logger.warn('llm', 'No active note to apply LLM edit to.');
       return;
     }
 
@@ -61,16 +43,19 @@ export const useLLMCommandHandler = (context: CommandHandlerContext) => {
       newPreview: command.content.substring(0, 100)
     });
 
-    // DiffViewから戻ってきた際の更新を待機状態にする
-    isWaitingForUpdateRef.current = true;
-    previousContentRef.current = context.currentContent;
-
     navigation.navigate('DiffView', {
       originalContent: context.currentContent,
       newContent: command.content,
-      mode: 'save'
+      mode: 'save',
+      onApply: async (approvedContent: string) => {
+        if (activeNote?.id) {
+          await updateNote(activeNote.id, { content: approvedContent });
+          context.setContent(approvedContent); // Update local editor state
+          logger.debug('llm', '[LLMCommandHandler] LLM edit applied and note updated.');
+        }
+      },
     });
-  }, [navigation, context]);
+  }, [navigation, context, activeNote, updateNote]);
 
   const executeCommand = useCallback((command: LLMCommand) => {
     switch (command.action) {
