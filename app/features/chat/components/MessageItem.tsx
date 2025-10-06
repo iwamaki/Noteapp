@@ -93,9 +93,18 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
     // },
   };
 
+  const markdownRules = {
+    image: (node: any, children: React.ReactNode[], parent: any, styles: any) => {
+      // 画像表示機能が未実装のため、ここでは何もレンダリングしない
+      // 必要に応じて、ここにプレースホルダーや代替テキストを表示するロジックを追加
+      console.warn('Image rendering is not implemented yet. Image source:', node.attributes.src);
+      return null;
+    },
+  };
+
   return (
     <View style={containerStyle}>
-      <Markdown style={markdownStyles}>{message.content}</Markdown>
+      <Markdown style={markdownStyles} rules={markdownRules}>{message.content}</Markdown>
     </View>
   );
 };

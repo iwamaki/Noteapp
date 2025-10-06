@@ -5,7 +5,7 @@
  */
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
-import { Note } from '../../services/storageService';
+import { Note } from '../../../shared/types/note';
 import { useNoteStore } from './noteStore';
 
 // 型定義

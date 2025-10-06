@@ -74,7 +74,7 @@ export const useNoteEditor = (noteId: string | undefined) => {
             setTitle(activeNote.title);
           });
       }
-    }, 1000); // デバウンス時間を1000msに延長してIME入力の余裕を持たせる
+    }, 1000) as unknown as number; // デバウンス時間を1000msに延長してIME入力の余裕を持たせる
   };
 
   // IME入力開始時のハンドラ
