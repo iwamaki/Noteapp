@@ -8,6 +8,7 @@ module.exports = {
     "**/app/tests/**/*.test.ts",
     "**/app/__tests__/**/*.+(ts|tsx|js)?(x)",
     "**/app/features/**/*.test.tsx",
-    "**/app/theme/**/*.test.tsx" // 追加: テーマ関連のテストを明示的に含める
+    "**/app/theme/**/*.test.tsx", // 追加: テーマ関連のテストを明示的に含める
+    "**/app/services/**/*.test.ts"
   ],
 };
