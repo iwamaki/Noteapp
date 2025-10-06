@@ -131,6 +131,7 @@ export class NoteStorageService {
   }
 
   static async updateNote(data: UpdateNoteData): Promise<Note> {
+    console.log('--- updateNote called with: ---', JSON.stringify(data, null, 2));
     const notes = await this.getAllNotesRaw();
     const index = notes.findIndex(note => note.id === data.id);
     

@@ -87,7 +87,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
   const handleSendMessage = async () => {
     const trimmedInput = inputText.trim();
     if (trimmedInput.length > 0 && !isLoading) {
-      console.log('[ChatInputBar] Sending message with isNoteAttached:', isNoteAttached);
+  
       await sendMessage(trimmedInput, { isNoteAttached });
       setInputText('');
       setIsNoteAttached(false); // 送信後にリセット

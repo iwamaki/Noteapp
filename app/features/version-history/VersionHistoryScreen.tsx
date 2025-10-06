@@ -10,7 +10,7 @@ import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/nativ
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
 import { NoteStorageService } from '../../services/storageService';
-import { Note, NoteVersion } from '../../../shared/types/note';
+import { NoteVersion } from '../../../shared/types/note';
 import { useNoteStore } from '../../store/note';
 import { format } from 'date-fns';
 import { useTheme } from '../../theme/ThemeContext';

@@ -24,7 +24,7 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content }) => 
   });
 
   const markdownRules = {
-    image: (node: any, children: React.ReactNode[], parent: any, styles: any) => {
+    image: (node: any, _children: React.ReactNode[], _parent: any, _styles: any) => {
       // 画像表示機能が未実装のため、ここでは何もレンダリングしない
       // 必要に応じて、ここにプレースホルダーや代替テキストを表示するロジックを追加
       console.warn('Image rendering is not implemented yet. Image source:', node.attributes.src);

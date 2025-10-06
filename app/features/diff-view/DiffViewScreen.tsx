@@ -8,7 +8,7 @@ import { View, StyleSheet, Alert, Text } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
-import { Note } from '../../../shared/types/note';
+
 import { useNoteStore, useNoteDraftStore } from '../../store/note';
 import { generateDiff, validateDataConsistency } from '../../services/diffService';
 import { NoteStorageService } from '../../services/storageService';
@@ -108,10 +108,17 @@ function DiffViewScreen() {
           return;
         }
 
-        setDraftNote({ title: filename, content: selectedContent });
-        await saveDraftNote();
-        Alert.alert('保存完了', 'ノートが保存されました。');
-        navigation.goBack();
+        if (route.params?.onApply) {
+          route.params.onApply(selectedContent);
+          Alert.alert('適用完了', '変更が適用されました。');
+          navigation.goBack();
+        } else {
+          // Fallback to old behavior if no onApply callback is provided (e.g., for direct draft saving)
+          setDraftNote({ title: filename, content: selectedContent });
+          await saveDraftNote();
+          Alert.alert('保存完了', 'ノートが保存されました。');
+          navigation.goBack();
+        }
       } catch (error) {
         console.error('保存エラー:', error);
         Alert.alert('エラー', 'ノートの保存に失敗しました。');

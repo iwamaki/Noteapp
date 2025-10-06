@@ -65,7 +65,7 @@ export const useNoteSelectionStore = create<NoteSelectionStoreState>()(
 
       // 選択解除
       clearSelectedNotes: () => {
-        console.log('clearSelectedNotes called');
+    
         set({
           selectedNoteIds: new Set<string>(),
           isSelectionMode: false

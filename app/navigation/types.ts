@@ -13,6 +13,7 @@ export type RootStackParamList = {
     originalContent?: string;
     newContent?: string;
     mode?: 'restore' | 'save';
+    onApply?: (content: string) => void; // Callback to return approved content
   } | undefined;
   VersionHistory: { noteId: string };
   Settings: undefined;

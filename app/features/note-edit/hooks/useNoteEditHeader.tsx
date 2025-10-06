@@ -20,6 +20,7 @@ interface UseNoteEditHeaderProps {
   headerTitle: React.ReactNode;
   onViewModeChange: (mode: ViewMode) => void;
   onSave: () => void;
+  onDiff: () => void; // 差分表示用の新しいprop
 }
 
 export const useNoteEditHeader = ({
@@ -30,6 +31,7 @@ export const useNoteEditHeader = ({
   headerTitle,
   onViewModeChange,
   onSave,
+  onDiff, // 新しいpropを受け取る
 }: UseNoteEditHeaderProps) => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { createHeaderConfig } = useCustomHeader();
@@ -61,15 +63,22 @@ export const useNoteEditHeader = ({
         rightButtons.push({
           icon: <Ionicons name="eye-off-outline" size={24} color={colors.primary} />,
           onPress: () => onViewModeChange('edit'),
-          variant: 'primary', // プレビュー中はprimaryにして目立たせる
+          variant: 'primary',
         });
       }
+
+      // 新しい差分表示ボタン
+      rightButtons.push({
+        icon: <Ionicons name="git-network-outline" size={24} color={colors.textSecondary} />,
+        onPress: onDiff,
+        variant: 'secondary',
+      });
 
       // 保存ボタン (常に表示)
       rightButtons.push({
         icon: <Ionicons name="save-outline" size={24} color={colors.primary} />,
         onPress: onSave,
-        variant: viewMode === 'preview' ? 'secondary' : 'primary',  // プレビュー中はsecondaryに変更
+        variant: 'primary',
       });
 
       // 履歴ボタン
@@ -103,6 +112,7 @@ export const useNoteEditHeader = ({
     headerTitle,
     onViewModeChange,
     onSave,
+    onDiff, // 依存配列に追加
     createHeaderConfig,
     colors,
   ]);

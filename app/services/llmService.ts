@@ -313,7 +313,7 @@ export class LLMService {
     try {
       const response = await fetch(`${this.config.baseUrl}/api/health`);
       return await response.json();
-    } catch (error) {
+    } catch (_error) {
       return { status: 'error', providers: {} };
     }
   }
