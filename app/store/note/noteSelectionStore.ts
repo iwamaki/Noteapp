@@ -7,7 +7,7 @@ import { Note } from '../../../shared/types/note';
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { eventBus } from '../../services/eventBus';
-import { NoteStorageService } from '../../services/storageService';
+import { NoteActionService } from '../../services/NoteActionService';
 
 
 interface NoteSelectionStoreState {
@@ -79,13 +79,12 @@ export const useNoteSelectionStore = create<NoteSelectionStoreState>()(
         if (selectedNoteIds.size === 0) return;
 
         try {
-          await eventBus.emit('notes:bulk-deleted', { noteIds: Array.from(selectedNoteIds) });
-          set({
-            selectedNoteIds: new Set<string>(),
-            isSelectionMode: false
-          });
+          await NoteActionService.bulkDeleteNotes(Array.from(selectedNoteIds));
+          // NoteActionService will emit 'notes:bulk-deleted', which this store listens to
+          // to clear selected notes. So no need to clear here directly.
         } catch (error) {
           console.error('Failed to delete selected notes:', error);
+          // Error event is emitted by NoteActionService
           throw error;
         }
       },
@@ -93,39 +92,16 @@ export const useNoteSelectionStore = create<NoteSelectionStoreState>()(
       // 選択されたノートの複製
       copySelectedNotes: async () => {
         const { selectedNoteIds } = get();
-        const notes: Note[] = []; // Temporary placeholder, will be populated via event or other mechanism
 
         if (selectedNoteIds.size === 0) return;
 
         try {
-          const newNotes: Note[] = [];
-          for (const noteId of selectedNoteIds) {
-            const originalNote = notes.find(note => note.id === noteId);
-            if (originalNote) {
-              // In a truly event-driven system, this store would emit an event
-              // like 'selection:copy-requested' with selectedNoteIds.
-              // Another store (e.g., noteStore) would listen, perform the copy,
-              // and then emit 'notes:bulk-copied' with the actual new notes.
-              // For now, we'll simulate the creation and emit the bulk-copied event.
-              const newNote: Note = {
-                ...originalNote,
-                id: `temp-id-${Date.now()}-${Math.random()}`,
-                title: `${originalNote.title} (コピー)`,
-                createdAt: new Date(),
-                updatedAt: new Date(),
-                version: 1,
-              };
-              newNotes.push(newNote);
-            }
-          }
-
-          await eventBus.emit('notes:bulk-copied', { sourceIds: Array.from(selectedNoteIds), newNotes });
-          set({
-            selectedNoteIds: new Set<string>(),
-            isSelectionMode: false
-          });
+          await NoteActionService.bulkCopyNotes(Array.from(selectedNoteIds));
+          // NoteActionService will emit 'notes:bulk-copied', which this store listens to
+          // to clear selected notes. So no need to clear here directly.
         } catch (error) {
           console.error('Failed to copy selected notes:', error);
+          // Error event is emitted by NoteActionService
           throw error;
         }
       },
