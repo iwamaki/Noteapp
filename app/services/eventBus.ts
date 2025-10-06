@@ -1,5 +1,6 @@
 import { Note } from '@shared/types/note';
 import { LLMCommand, LLMResponse } from './llmService';
+import { DraftNote } from '../store/note/noteDraftStore'; // Import DraftNote
 
 type EventMap = {
   'note:created': { note: Note };
@@ -9,6 +10,7 @@ type EventMap = {
   'notes:bulk-deleted': { noteIds: string[] };
   'notes:bulk-copied': { sourceIds: string[]; newNotes: Note[] };
   'draft:saved': { note: Note };
+  'draft:save-requested': { draftNote: DraftNote; activeNoteId: string | null }; // New event
   'llm:command-received': { commands: LLMCommand[] };
   'llm:response-processed': { response: LLMResponse };
   'sync:requested': { source: string };
