@@ -27,42 +27,20 @@ function DiffViewScreen() {
   const route = useRoute<DiffViewScreenRouteProp>();
   const { colors, typography } = useTheme();
   const { createHeaderConfig } = useCustomHeader();
+  const { activeNote, selectNote } = useNoteStore();
 
-  const activeNote = useNoteStore(state => state.activeNote);
-  const selectNote = useNoteStore(state => state.selectNote);
-  const draftNote = useNoteDraftStore(state => state.draftNote);
-  const saveDraftNote = useNoteDraftStore(state => state.saveDraftNote);
-  const setDraftNote = useNoteDraftStore(state => state.setDraftNote);
-
-  const mode = route.params?.mode ?? 'save';
-  
-  const originalContent = useMemo(() => {
-    if (route.params?.originalContent) {
-      return route.params.originalContent;
-    }
-    return activeNote?.content ?? '';
-  }, [route.params, activeNote]);
-
-  const newContent = useMemo(() => {
-    if (route.params?.newContent) {
-      return route.params.newContent;
-    }
-    return draftNote?.content ?? '';
-  }, [route.params, draftNote]);
+  const { mode, originalContent, newContent } = route.params;
 
   // デバッグ用ログ
   logger.debug('diff', '[DiffViewScreen] Content analysis:', {
     mode,
-    hasRouteOriginal: !!route.params?.originalContent,
-    hasRouteNew: !!route.params?.newContent,
-    hasDraftNote: !!draftNote,
     originalLength: originalContent.length,
     newLength: newContent.length,
     originalPreview: originalContent.substring(0, 100),
     newPreview: newContent.substring(0, 100)
   });
 
-  const filename = draftNote?.title ?? '差分プレビュー';
+  const filename = activeNote?.title ?? '差分プレビュー';
 
   const diff = useMemo(() => generateDiff(originalContent, newContent), [
     originalContent,
@@ -80,64 +58,69 @@ function DiffViewScreen() {
   const allSelected = selectedBlocks.size === allChangeBlockIds.size && allChangeBlockIds.size > 0;
 
   const handleApply = async () => {
-    if (mode === 'restore') {
-      const { noteId, versionId } = route.params ?? {};
-      if (!noteId || !versionId) {
-        Alert.alert('エラー', '復元に必要な情報が不足しています。');
-        return;
-      }
+    // モードに応じて処理を分岐
+    if (route.params.mode === 'restore') {
+      const { noteId, versionId } = route.params;
       try {
         const restoredNote = await NoteStorageService.restoreNoteVersion(noteId, versionId);
-        await selectNote(restoredNote.id); // Update the store with the restored note
+        await selectNote(restoredNote.id);
         Alert.alert('復元完了', 'ノートが指定されたバージョンに復元されました。');
         navigation.navigate('NoteEdit', { noteId: restoredNote.id, saved: true });
       } catch (error) {
         console.error('復元エラー:', error);
         Alert.alert('エラー', 'ノートの復元に失敗しました。');
       }
-    } else { // 'save' mode
-      try {
-        const selectedContent = generateSelectedContent();
-        const tempDiff = generateDiff(originalContent, selectedContent);
-        const validation = validateDataConsistency(originalContent, selectedContent, tempDiff);
-
-        if (!validation.isValid) {
-          logger.debug('diff', '=== 整合性エラー詳細 ===');
-          logger.debug('diff', 'validation.error:', validation.error);
-          Alert.alert('データエラー', `保存データの整合性に問題があります: ${validation.error}`);
-          return;
-        }
-
-        if (route.params?.onApply) {
-          route.params.onApply(selectedContent);
-          Alert.alert('適用完了', '変更が適用されました。');
-          navigation.goBack();
-        } else {
-          // Fallback to old behavior if no onApply callback is provided (e.g., for direct draft saving)
-          setDraftNote({ title: filename, content: selectedContent });
-          await saveDraftNote();
-          Alert.alert('保存完了', 'ノートが保存されました。');
-          navigation.goBack();
-        }
-      } catch (error) {
-        console.error('保存エラー:', error);
-        Alert.alert('エラー', 'ノートの保存に失敗しました。');
-      }
+    } else if (route.params.mode === 'apply') {
+      // 'apply' モードの場合、選択されたコンテンツをコールバックで返し、画面を閉じる
+      const selectedContent = generateSelectedContent();
+      route.params.onApply(selectedContent);
+      navigation.goBack();
     }
+    // 'readonly' モードでは適用ボタンは表示されないため、ここのロジックは不要
   };
 
   const handleCancel = () => {
-    if (mode === 'save') {
-      setDraftNote(null);
-    }
+    // ドラフトをクリアするロジックは不要になったため削除
     navigation.goBack();
   };
 
   useLayoutEffect(() => {
-    const isRestoreMode = mode === 'restore';
+    const { mode } = route.params;
+    let titleText = '';
+    let rightButtons: any[] = [];
+
+    if (mode === 'restore') {
+      titleText = '復元';
+      rightButtons = [
+        {
+          title: '復元',
+          onPress: handleApply,
+          variant: 'primary' as const,
+        },
+      ];
+    } else if (mode === 'apply') {
+      titleText = '変更の選択';
+      rightButtons = [
+        {
+          title: allSelected ? '☑ 全選択解除' : '☐ 全選択',
+          onPress: toggleAllSelection,
+          variant: 'secondary' as const,
+        },
+        {
+          title: `適用 (${selectedBlocks.size})`,
+          onPress: handleApply,
+          disabled: selectedBlocks.size === 0,
+          variant: 'primary' as const,
+        },
+      ];
+    } else if (mode === 'readonly') {
+      titleText = '差分表示';
+      // 読み取り専用モードでは右側のボタンはなし
+    }
+
     navigation.setOptions(
       createHeaderConfig({
-        title: <Text style={{ color: colors.text, fontSize: typography.header.fontSize }}>{isRestoreMode ? '復元' : '変更の適用'}</Text>,
+        title: <Text style={{ color: colors.text, fontSize: typography.header.fontSize }}>{titleText}</Text>,
         leftButtons: [
           {
             icon: <Ionicons name="arrow-back-outline" size={24} color={colors.textSecondary} />,
@@ -145,26 +128,10 @@ function DiffViewScreen() {
             variant: 'secondary',
           },
         ],
-        rightButtons: [
-          ...(!isRestoreMode
-            ? [
-                {
-                  title: allSelected ? '☑ 全選択' : '☐ 全選択',
-                  onPress: toggleAllSelection,
-                  variant: 'secondary' as const,
-                },
-              ]
-            : []),
-          {
-            title: isRestoreMode ? '復元' : `適用 (${selectedBlocks.size})`,
-            onPress: handleApply,
-            disabled: !isRestoreMode && selectedBlocks.size === 0,
-            variant: 'primary' as const,
-          },
-        ],
+        rightButtons,
       })
     );
-  }, [navigation, handleApply, handleCancel, toggleAllSelection, allSelected, selectedBlocks.size, mode, colors]);
+  }, [navigation, route.params, handleApply, handleCancel, toggleAllSelection, allSelected, selectedBlocks.size, colors]);
 
   const styles = StyleSheet.create({
     container: {

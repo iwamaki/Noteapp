@@ -7,14 +7,25 @@
 export type RootStackParamList = {
   NoteList: undefined;
   NoteEdit: { noteId?: string; filename?: string; content?: string; saved?: boolean };
-  DiffView: {
-    noteId?: string;
-    versionId?: string;
-    originalContent?: string;
-    newContent?: string;
-    mode?: 'restore' | 'save';
-    onApply?: (content: string) => void; // Callback to return approved content
-  } | undefined;
   VersionHistory: { noteId: string };
+  DiffView: 
+    | { 
+        mode: 'restore';
+        noteId: string;
+        versionId: string;
+        originalContent: string;
+        newContent: string;
+      }
+    | {
+        mode: 'apply';
+        originalContent: string;
+        newContent: string;
+        onApply: (newContent: string) => void;
+      }
+    | {
+        mode: 'readonly';
+        originalContent: string;
+        newContent: string;
+      };
   Settings: undefined;
 };

@@ -53,11 +53,14 @@ export const useNoteEditor = (noteId: string | undefined) => {
   // 差分表示画面への遷移ハンドラ
   const handleGoToDiff = useCallback(() => {
     navigation.navigate('DiffView', {
-      mode: 'readonly', // 読み取り専用モード
+      mode: 'apply',
       originalContent: activeNote?.content ?? '',
       newContent: content,
+      onApply: (newContent: string) => {
+        setContent(newContent);
+      },
     });
-  }, [content, activeNote, navigation]);
+  }, [content, activeNote, navigation, setContent]);
 
   // 保存処理のハンドラ
   const handleSave = useCallback(() => {
