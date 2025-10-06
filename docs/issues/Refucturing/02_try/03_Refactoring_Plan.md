@@ -1,5 +1,3 @@
---- Content from referenced files ---
-Content from @/home/iwash/02_Repository/Noteapp/docs/issues/Refucturing/02_try/03_Refactoring_Plan.md:
 **イベント駆動アーキテクチャ導入によるストア間依存解消計画**
 
 **目的:**
@@ -7,42 +5,59 @@ Content from @/home/iwash/02_Repository/Noteapp/docs/issues/Refucturing/02_try/0
 
 **主要な変更点:**
 
-*   **イベントバスシステムの導入:** アプリケーション全体でイベントの発行と購読を管理する中央ハブを設けます。これにより、各ストアは直接通信するのではなく、イベントを介して間接的に連携するようになります。
-*   **コマンド実行管理システムの導入:** ユーザー操作やシステムイベントによってトリガーされるアクションを「コマンド」として抽象化し、その実行と管理を一元化するシステムを導入します。これにより、Undo/Redoのような機能の実装も容易になります。
-*   **既存ストアのリファクタリング:** ノート関連の既存ストア（`noteStore`や`noteSelectionStore`など）を、イベントバスと連携するように変更します。ストア間の直接的な参照を排除し、イベントの発行と購読を通じて状態を同期させます。
-*   **ノート操作フックの導入:** ノートの作成、更新、削除といった主要な操作を抽象化し、コンポーネントから簡単に利用できる新しいカスタムフックを導入します。
+*   **イベントバスシステムの導入:** アプリケーション全体でイベントの発行と受付を管理する中央ハブを設けます。
+*   **コマンド実行管理システムの導入:** ユーザー操作を「コマンド」として抽象化し、実行とUndo/Redoを管理します。
+*   **既存ストアのリファクタリング:** ストア間の直接参照を排除し、イベントを介して連携するように変更します。
+*   **ノート操作フックの導入:** 主要な操作を抽象化し、コンポーネントから利用できるカスタムフックを導入します。
 
 **参照ファイル:**
 
-*   `docs/issues/Refucturing/02_try/02_Refactoring.md` (提案書)
-*   `app/store/note/noteStore.ts` (既存のノートストア)
-*   `app/store/note/noteSelectionStore.ts` (既存のノート選択ストア)
-*   `app/store/note/noteDraftStore.ts` (既存のドラフトノートストア)
-*   `app/store/settingsStore.ts` (既存の設定ストア)
-*   `app/services/storageService.ts` (ノートの永続化サービス)
-*   `app/services/llmService.ts` (LLMサービス)
-*   `shared/types/note.ts` (共有ノート型定義)
-*   `app/features/note-edit/NoteEditScreen.tsx` (ノート編集画面)
-*   `app/features/note-list/NoteListScreen.tsx` (ノートリスト画面)
-*   `app/navigation/RootNavigator.tsx` (ルートナビゲーター)
-*   `app/features/note-edit/hooks/useNoteEditor.ts` (ノートエディターフック)
-*   `app/features/note-list/hooks/useNoteListLogic.ts` (ノートリストロジックフック)
+*   `docs/issues/Refucturing/02_try/02_Refactoring.md` (技術的な提案書)
 
-**フェーズ概要:**
+---
 
-*   **フェーズ0: 型定義の修正**
-    *   **概要**: `shared/types/note.ts`の`Note`インターフェースに`tags?: string[];`を追加し、`app/services/storageService.ts`の`Note`インターフェースとの整合性を確保しました。詳細については、`docs/issues/Refucturing/02_try/04_Phase0_Type_Correction.md`を参照してください。
-*   **フェーズ1: 共通基盤の構築 (EventBus, CommandExecutor)**
-    *   **概要**: イベント駆動アーキテクチャの核となる`EventBus`と、Undo/Redo機能の基盤となる`CommandExecutor`を実装します。詳細については、`docs/issues/Refucturing/02_try/03_Refactoring_Plan_Phase1_Details.md`を参照してください。
-*   **フェーズ2: ストアのリファクタリング**
-    *   **概要**: `noteStore`、`noteSelectionStore`、`noteDraftStore`、`settingsStore`をイベント駆動型アーキテクチャに移行し、`EventBus`と連携するようにリファクタリングします。これにより、ストア間の直接的な依存関係を解消し、疎結合な状態管理を実現します。詳細については、`docs/issues/Refucturing/02_try/03_Refactoring_Plan_Phase2_Details.md`を参照してください。
-*   **フェーズ3: フックの導入と更新**
-    *   **概要**: `useNoteOperations`フックを新規作成し、`useNoteEditor.tsx`と`useNoteListLogic.ts`をリファクタリングして、EventBusとCommandExecutorを利用するように変更し、ストアへの直接的な依存関係を解消します。
-    *   **重要事項**: `app/services/eventBus.ts`および`app/services/commandExecutor.ts`ファイルがコードベースに存在しないことが確認されました。フェーズ3の実施前にこれらのファイルが実装される必要があります。
-    *   **詳細**: `docs/issues/Refucturing/02_try/03_Refactoring_Plan_Phase3_Details.md`を参照してください。
-*   **フェーズ4: 既存コードの調整とクリーンアップ**
-    *   **概要**: `app/services/storageService.ts`からローカルの`Note`インターフェース定義を削除し、`../../shared/types/note`からインポートするように調整します。また、`app/services/llmService.ts`の`LLMError`クラスが`AppError`と統合されていないことを確認し、既存のテストを実行してリファクタリングによる影響がないことを検証します。
-    *   **詳細**: `docs/issues/Refucturing/02_try/03_Refactoring_Plan_Phase4_Details.md`を参照してください。
+## リファクタリング計画と受け入れ条件
+
+各フェーズの完了は、以下に定義される「受け入れ条件」をすべて満たしているかで判断します。
+
+### フェーズ0: 型定義の統一
+
+#### 受け入れ条件
+- [ ] `Note` 型の定義が `shared/types/note.ts` に集約されている。
+- [ ] アプリケーション内の他ファイル（例: `app/services/storageService.ts`）は、ローカルで `Note` 型を定義せず、`shared/types/note.ts` からインポートして使用している。
+
+### フェーズ1: 共通基盤の構築
+
+#### 受け入れ条件
+- [ ] `app/services/eventBus.ts` が実装されており、イベントの受付・発行・キューイング機能が提供されている。
+- [ ] `app/services/commandExecutor.ts` が実装されており、コマンドの実行、Undo/Redoの履歴管理機能が提供されている。
+- [ ] コマンド（例: `UpdateNoteCommand`）の `undo` 機能は、コマンドが**実行される直前**の状態を復元できることが保証されている。
+- [ ] `EventBus` は、イベントハンドラ内で発生したエラーを捕捉し、`error:occurred` イベントを発行する仕組みを持つ。
+
+### フェーズ2: ストアのリファクタリング
+
+#### 受け入れ条件
+- [ ] 各ストア（`noteStore`, `noteSelectionStore`, `noteDraftStore`）は、他のストアへの直接的なインポートや参照（`useOtherStore.getState()`など）を持たない。
+- [ ] `noteStore` は `note:created`, `note:updated`, `note:deleted` イベントを受け取り、自身の `notes` 配列を正しく更新できる。
+- [ ] `noteStore` は `note:selected` イベントを受け取り、自身の `activeNote` 状態を正しく更新できる。
+- [ ] `noteDraftStore` は `note:selected` イベントを受け取り、`draftNote` 状態を `activeNote` の内容で初期化できる。
+- [ ] `noteSelectionStore` は、一括削除や一括コピーの完了時に `notes:bulk-deleted` や `notes:bulk-copied` イベントを発行する。
+
+### フェーズ3: フック（UIロジック）のリファクタリング
+
+#### 受け入れ条件
+- [ ] `useNoteListLogic` や `useNoteEditor` などのUIロジックフックは、ストアのアクションを直接呼び出さない。
+- [ ] ノートの作成・更新・削除といった操作は、`useNoteOperations` フックや `commandExecutor` を介して実行され、その結果が `EventBus` を通じて各ストアに伝達される。
+- [ ] UIコンポーネントは、リファクタリングされたストアの状態を監視し、イベントを通じて状態が変更された際に正しく再描画される。
+
+### フェーズ4: テストとクリーンアップ
+
+#### 受け入れ条件
+- [ ] 既存のユニットテストおよびE2Eテストが、新しいアーキテクチャの下で全てパスする（必要に応じてテスト自体も修正される）。
+- [ ] イベント駆動のロジック（例: 特定のイベント発行後にストアの状態が期待通りに変わるか）を検証する新しいテストが追加されている。
+- [ ] リファクタリングによって不要になったコード（古いアクション、ヘルパー関数など）が削除されている。
+
+---
 
 **期待される効果:**
 
@@ -50,4 +65,3 @@ Content from @/home/iwash/02_Repository/Noteapp/docs/issues/Refucturing/02_try/0
 *   **予測可能性の向上:** イベントの流れを追うことで、アプリケーションの状態変化をより明確に理解できるようになります。
 *   **テスト容易性の向上:** 各コンポーネントやストアを独立してテストしやすくなります。
 *   **拡張性の確保:** 新しい機能やストアを追加する際に、既存のコードベースへの影響を最小限に抑え、柔軟な拡張が可能になります。
-
