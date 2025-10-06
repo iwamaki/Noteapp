@@ -6,7 +6,8 @@
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { Note } from '../../../shared/types/note';
-import { useNoteStore } from './noteStore';
+import { eventBus } from '../../services/eventBus';
+import { NoteStorageService } from '../../services/storageService';
 
 // 型定義
 export interface DraftNote {
@@ -17,19 +18,72 @@ export interface DraftNote {
 
 interface NoteDraftStoreState {
   // データ
+  activeNoteId: string | null; // To track which note the draft belongs to
   draftNote: DraftNote | null;
+  originalDraftContent: DraftNote | null; // To compare for modifications
 
   // アクション
   setDraftNote: (draft: DraftNote | null) => void;
-  saveDraftNote: () => Promise<Note>;
+  saveDraftNote: () => Promise<void>; // Will emit an event, not return a Note directly
   discardDraft: () => void;
   isDraftModified: () => boolean;
 }
 
 export const useNoteDraftStore = create<NoteDraftStoreState>()(
-  subscribeWithSelector((set, get) => ({
-    // 初期状態
-    draftNote: null,
+  subscribeWithSelector((set, get) => {
+    // EventBus Listeners
+    eventBus.on('note:selected', async ({ noteId }) => {
+      if (noteId) {
+        const note = await NoteStorageService.getNoteById(noteId);
+        if (note) {
+          set({
+            activeNoteId: note.id,
+            draftNote: {
+              title: note.title,
+              content: note.content,
+              tags: note.tags,
+            },
+            originalDraftContent: {
+              title: note.title,
+              content: note.content,
+              tags: note.tags,
+            },
+          });
+        }
+      } else {
+        get().discardDraft();
+      }
+    });
+
+    eventBus.on('note:created', ({ note }) => {
+      const { draftNote, discardDraft } = get();
+      if (draftNote && note.id && draftNote.title === note.title && draftNote.content === note.content) {
+        // If the created note matches the current draft, clear the draft
+        discardDraft();
+      }
+    });
+
+    eventBus.on('note:updated', ({ note }) => {
+      const { draftNote, discardDraft } = get();
+      if (draftNote && note.id && draftNote.title === note.title && draftNote.content === note.content) {
+        // If the updated note matches the current draft, clear the draft
+        discardDraft();
+      }
+    });
+
+    eventBus.on('note:deleted', ({ noteId }) => {
+      const { draftNote, discardDraft } = get();
+      // Assuming draftNote might have an ID if it's an existing note's draft
+      if (draftNote && noteId && (draftNote as Note).id === noteId) {
+        discardDraft();
+      }
+    });
+
+    return {
+      // 初期状態
+      draftNote: null,
+      activeNoteId: null,
+      originalDraftContent: null,
 
     // ドラフト設定
     setDraftNote: (draft) => {
@@ -38,37 +92,15 @@ export const useNoteDraftStore = create<NoteDraftStoreState>()(
 
     // ドラフト保存
     saveDraftNote: async () => {
-      const { draftNote } = get();
-      const activeNote = useNoteStore.getState().activeNote;
+      const { draftNote, activeNoteId } = get();
 
       if (!draftNote) {
         throw new Error('Draft note is not set. Cannot save.');
       }
 
       try {
-        let savedNote: Note;
-
-        if (activeNote) {
-          // 既存ノート更新
-          savedNote = await useNoteStore.getState().updateNote({
-            id: activeNote.id,
-            ...draftNote
-          });
-        } else {
-          // 新規ノート作成
-          savedNote = await useNoteStore.getState().createNote(draftNote);
-        }
-
-        // ドラフトを保存後の状態に同期
-        set({
-          draftNote: {
-            title: savedNote.title,
-            content: savedNote.content,
-            tags: savedNote.tags
-          }
-        });
-
-        return savedNote;
+        await eventBus.emit('draft:save-requested', { draftNote, activeNoteId });
+        set({ draftNote: null, activeNoteId: null, originalDraftContent: null });
       } catch (error) {
         console.error('Failed to save draft note:', error);
         throw error;
@@ -77,34 +109,36 @@ export const useNoteDraftStore = create<NoteDraftStoreState>()(
 
     // ドラフト変更状態チェック
     isDraftModified: () => {
-      const { draftNote } = get();
-      const activeNote = useNoteStore.getState().activeNote;
+      const { draftNote, originalDraftContent } = get();
 
       if (!draftNote) return false;
-      if (!activeNote) return Boolean(draftNote.title || draftNote.content);
+      if (!originalDraftContent) return Boolean(draftNote.title || draftNote.content); // 新規ドラフトの場合
 
       return (
-        activeNote.title !== draftNote.title ||
-        activeNote.content !== draftNote.content ||
-        JSON.stringify(activeNote.tags || []) !== JSON.stringify(draftNote.tags || [])
+        draftNote.title !== originalDraftContent.title ||
+        draftNote.content !== originalDraftContent.content ||
+        JSON.stringify(draftNote.tags || []) !== JSON.stringify(originalDraftContent.tags || [])
       );
     },
 
     // ドラフト破棄
     discardDraft: () => {
-      const activeNote = useNoteStore.getState().activeNote;
+      const { originalDraftContent } = get();
 
-      if (activeNote) {
+      if (originalDraftContent) {
         set({
           draftNote: {
-            title: activeNote.title,
-            content: activeNote.content,
-            tags: activeNote.tags
-          }
+            title: originalDraftContent.title,
+            content: originalDraftContent.content,
+            tags: originalDraftContent.tags
+          },
+          activeNoteId: get().activeNoteId, // activeNoteId は維持
+          originalDraftContent: originalDraftContent // originalDraftContent も維持
         });
       } else {
-        set({ draftNote: null });
+        set({ draftNote: null, activeNoteId: null, originalDraftContent: null });
       }
     },
-  }))
+  };
+  })
 );
