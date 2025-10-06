@@ -137,12 +137,12 @@ await eventBus.emit('notes:bulk-deleted', { noteIds });
 ### 受け入れ条件
 
 - [x] `noteStore.ts`に他ストアのimport文が存在しない
-- [ ] `noteSelectionStore.ts`に他ストアのimport文が存在しない
+- [x] `noteSelectionStore.ts`に他ストアのimport文が存在しない
 - [ ] `noteDraftStore.ts`に他ストアのimport文が存在しない
-- [x] 各ストアがEventBusのリスナーを初期化時に登録している (noteStore.ts 完了)
+- [x] 各ストアがEventBusのリスナーを初期化時に登録している (noteStore.ts, noteSelectionStore.ts 完了)
 - [x] ノート作成時：`note:created`イベントで全ストアが正しく更新される (noteStore.ts 完了)
 - [x] ノート削除時：`note:deleted`イベントで全ストアが正しく更新される (noteStore.ts 完了)
-- [ ] 一括操作時：該当イベントで選択状態がクリアされる
+- [x] 一括操作時：該当イベントで選択状態がクリアされる
 
 ### 検証方法
 ```bash
