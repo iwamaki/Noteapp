@@ -264,3 +264,34 @@ npx depcheck
 4. **ドキュメント更新**: 実装と同時にREADMEやコメントを更新する
 
 この計画書に従って実装を進めることで、安全かつ確実にアーキテクチャの改善を達成できます。
+
+---
+
+## 引き継ぎ (Handover) - 前セッションAIからの申し送り
+
+### 現在の状況
+
+`app/store/note/noteDraftStore.ts` のイベント駆動型リファクタリング (Phase 2) を進行中。
+
+*   `noteStore.ts` および `noteSelectionStore.ts` のリファクタリングは完了し、関連する受け入れ条件は `03_Refactoring_Plan.md` に反映済み。
+*   すべての変更は `feature/phase-2-event-driven-stores` ブランチにコミット・プッシュ済み。
+
+### 発生した問題とメタ的な視点
+
+`noteDraftStore.ts` のリファクタリング中に、以下の問題が発生し、AIの内部状態と実際のファイル内容との間に不一致が生じました。
+
+1.  **ファイル内容の不一致**: `read_file` コマンドの出力と、AIが想定しているファイル内容（特に `import { useNoteStore } from './noteStore';` の有無や `subscribeWithSelector` ブロックの閉じ方）との間に、度々食い違いが発生しました。これにより、AIが意図した `replace` 操作が失敗したり、誤った修正を試みたりするループに陥りました。
+2.  **構文エラーの修正ループ**: `TS1005: ';' expected.` などの構文エラーが繰り返し発生し、AIがその修正に過度に集中してしまい、本来の論理的なリファクタリングステップから逸脱する原因となりました。ユーザーからの「型エラーは一時的に無視して良い」という指示により、このループは中断されました。
+
+これらの問題は、AIがコードベースの現在の状態を正確に把握し続けることの難しさを示しています。特に、複数の `replace` 操作や外部からの修正が介在する場合に顕著です。
+
+### 次のAIへの指示
+
+1.  **`app/store/note/noteDraftStore.ts` の最新内容を必ず `read_file` で取得し、現在の状態を正確に把握してください。** これが最も重要です。
+2.  **以下のリファクタリング計画の残りのステップに集中してください。** 型エラーは一時的に無視し、論理的な変更を優先してください。
+    *   **`NoteDraftStoreState` インターフェースの修正**: `activeNoteId: string | null` と `originalDraftContent: DraftNote | null` を追加し、`saveDraftNote` の戻り値の型を `Promise<void>` に変更します。
+    *   **`saveDraftNote` アクションのリファクタリング**: `useNoteStore.getState()` への直接呼び出しを、`draft:save-requested` イベントの発行に置き換えます。イベント発行後にドラフトをクリアします。
+    *   **`note:selected` イベントリスナーの更新**: ノートが選択されたとき、`activeNoteId` と `originalDraftContent` をストアの状態に設定します。
+    *   **`isDraftModified` および `discardDraft` アクションのリファクタリング**: `activeNoteId` と `originalDraftContent` を使用するように変更します。
+3.  各論理ステップの完了後、`npm run type-check` を実行して型安全性を確認してください。ただし、エラーが発生しても、それが論理的なリファクタリングの副作用である場合は、次のステップに進んでください。
+4.  変更をコミットし、`feature/phase-2-event-driven-stores` ブランチにプッシュすることを忘れないでください。
