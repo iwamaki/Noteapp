@@ -54,6 +54,16 @@ class NoteService {
     }
   }
 
+  async selectNote(noteId: string | null): Promise<void> {
+    try {
+      await eventBus.emit('note:selected', { noteId });
+    } catch (error) {
+      console.error('Failed to select note:', error);
+      await eventBus.emit('error:occurred', { error: error as Error, context: 'select-note' });
+      throw error;
+    }
+  }
+
   // 今後、ノート関連のビジネスロジックをここに追加
 }
 

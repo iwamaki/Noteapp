@@ -70,13 +70,7 @@ export const useNoteOperations = () => {
   }, []);
 
   const selectNote = useCallback(async (noteId: string | null): Promise<void> => {
-    try {
-      await eventBus.emit('note:selected', { noteId });
-    } catch (error) {
-      console.error('Failed to select note:', error);
-      await eventBus.emit('error:occurred', { error: error as Error, context: 'select-note' });
-      throw error;
-    }
+    await noteService.selectNote(noteId);
   }, []);
 
   return {
