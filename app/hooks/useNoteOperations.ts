@@ -9,41 +9,15 @@ import { noteService } from '../services/NoteService';
 
 export const useNoteOperations = () => {
   const createNote = useCallback(async (data: CreateNoteData): Promise<Note> => {
-    try {
-      const command = new CreateNoteCommand(data);
-      await commandExecutor.execute(command);
-      const createdNote = command.getCreatedNote();
-      if (!createdNote) {
-        throw new Error('Created note not found after command execution.');
-      }
-      return createdNote;
-    } catch (error) {
-      console.error('Failed to create note:', error);
-      await eventBus.emit('error:occurred', { error: error as Error, context: 'create-note' });
-      throw error;
-    }
+    return await noteService.createNote(data);
   }, []);
 
   const updateNote = useCallback(async (noteId: string, updates: Partial<UpdateNoteData>, previousState?: Note): Promise<void> => {
-    try {
-      const command = new UpdateNoteCommand(noteId, updates, previousState);
-      await commandExecutor.execute(command);
-    } catch (error) {
-      console.error('Failed to update note:', error);
-      await eventBus.emit('error:occurred', { error: error as Error, context: 'update-note' });
-      throw error;
-    }
+    await noteService.updateNote(noteId, updates, previousState);
   }, []);
 
   const deleteNote = useCallback(async (noteId: string): Promise<void> => {
-    try {
-      const command = new DeleteNoteCommand(noteId);
-      await commandExecutor.execute(command);
-    } catch (error) {
-      console.error('Failed to delete note:', error);
-      await eventBus.emit('error:occurred', { error: error as Error, context: 'delete-note' });
-      throw error;
-    }
+    await noteService.deleteNote(noteId);
   }, []);
 
   const bulkDeleteNotes = useCallback(async (noteIds: string[]): Promise<void> => {

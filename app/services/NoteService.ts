@@ -1,8 +1,9 @@
-import { Note } from '../../shared/types/note';
+import { Note, CreateNoteData, UpdateNoteData } from '../../shared/types/note';
 import { NoteActionService } from './NoteActionService';
 import { eventBus } from './eventBus';
 import { DraftNote } from '../store/note/noteDraftStore';
 import { NoteStorageService } from './storageService';
+import { commandExecutor, CreateNoteCommand, UpdateNoteCommand, DeleteNoteCommand } from './commandExecutor';
 
 // app/services/NoteService.ts
 class NoteService {
@@ -60,6 +61,44 @@ class NoteService {
     } catch (error) {
       console.error('Failed to select note:', error);
       await eventBus.emit('error:occurred', { error: error as Error, context: 'select-note' });
+      throw error;
+    }
+  }
+
+  async createNote(data: CreateNoteData): Promise<Note> {
+    try {
+      const command = new CreateNoteCommand(data);
+      await commandExecutor.execute(command);
+      const createdNote = command.getCreatedNote();
+      if (!createdNote) {
+        throw new Error('Created note not found after command execution.');
+      }
+      return createdNote;
+    } catch (error) {
+      console.error('Failed to create note:', error);
+      await eventBus.emit('error:occurred', { error: error as Error, context: 'create-note' });
+      throw error;
+    }
+  }
+
+  async updateNote(noteId: string, updates: Partial<UpdateNoteData>, previousState?: Note): Promise<void> {
+    try {
+      const command = new UpdateNoteCommand(noteId, updates, previousState);
+      await commandExecutor.execute(command);
+    } catch (error) {
+      console.error('Failed to update note:', error);
+      await eventBus.emit('error:occurred', { error: error as Error, context: 'update-note' });
+      throw error;
+    }
+  }
+
+  async deleteNote(noteId: string): Promise<void> {
+    try {
+      const command = new DeleteNoteCommand(noteId);
+      await commandExecutor.execute(command);
+    } catch (error) {
+      console.error('Failed to delete note:', error);
+      await eventBus.emit('error:occurred', { error: error as Error, context: 'delete-note' });
       throw error;
     }
   }
