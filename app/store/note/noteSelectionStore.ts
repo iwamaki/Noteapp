@@ -7,7 +7,7 @@ import { Note } from '../../../shared/types/note';
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { eventBus } from '../../services/eventBus';
-import { NoteActionService } from '../../services/NoteActionService';
+import { noteService } from '../../services/NoteService';
 
 
 interface NoteSelectionStoreState {
@@ -79,7 +79,7 @@ export const useNoteSelectionStore = create<NoteSelectionStoreState>()(
         if (selectedNoteIds.size === 0) return;
 
         try {
-          await NoteActionService.bulkDeleteNotes(Array.from(selectedNoteIds));
+          await noteService.bulkDeleteNotes(Array.from(selectedNoteIds));
           // NoteActionService will emit 'notes:bulk-deleted', which this store listens to
           // to clear selected notes. So no need to clear here directly.
         } catch (error) {
@@ -96,7 +96,7 @@ export const useNoteSelectionStore = create<NoteSelectionStoreState>()(
         if (selectedNoteIds.size === 0) return;
 
         try {
-          await NoteActionService.bulkCopyNotes(Array.from(selectedNoteIds));
+          await noteService.bulkCopyNotes(Array.from(selectedNoteIds));
           // NoteActionService will emit 'notes:bulk-copied', which this store listens to
           // to clear selected notes. So no need to clear here directly.
         } catch (error) {

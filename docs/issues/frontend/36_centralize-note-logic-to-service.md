@@ -23,12 +23,12 @@ tags: [architecture, refactoring, service-layer]
 
 > このissueが「完了」と見なされるための具体的な条件をチェックリスト形式で記述します。
 >
-> - [ ] `app/services/NoteService.ts`が作成されている
-> - [ ] `useNoteOperations.ts`, `commandExecutor.ts`, `NoteActionService.ts`に分散していたノート関連のビジネスロジックが、すべて`NoteService.ts`に移行されている
-> - [ ] `NoteService`が、内部でストレージ操作、状態更新、アンドゥ・リドゥのコマンド履歴管理の責務を担っている
-> - [ ] `useNoteListLogic`や`useNoteEditor`といった画面固有のフックが、`NoteService`をシンプルに呼び出す形にリファクタリングされている
-> - [ ] 不要になった`commandExecutor.ts`と`NoteActionService.ts`がプロジェクトから削除されている
-> - [ ] ノートのCRUD操作やアンドゥ・リドゥを含む既存の全機能が、リファクタリング後も問題なく動作する
+> - [x] 1. `app/services/NoteService.ts`が作成されている
+> - [ ] 2. `useNoteOperations.ts`, `commandExecutor.ts`, `NoteActionService.ts`に分散していたノート関連のビジネスロジックが、すべて`NoteService.ts`に移行されている
+> - [ ] 3. `NoteService`が、内部でストレージ操作、状態更新、アンドゥ・リドゥのコマンド履歴管理の責務を担っている
+> - [ ] 4. `useNoteListLogic`や`useNoteEditor`といった画面固有のフックが、`NoteService`をシンプルに呼び出す形にリファクタリングされている
+> - [ ] 5. 不要になった`commandExecutor.ts`と`NoteActionService.ts`がプロジェクトから削除されている
+> - [ ] 6. ノートのCRUD操作やアンドゥ・リドゥを含む既存の全機能が、リファクタリング後も問題なく動作する
 
 ## 関連ファイル (Related Files)
 

@@ -7,8 +7,8 @@ import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { Note } from '../../../shared/types/note';
 import { eventBus } from '../../services/eventBus';
-import { NoteActionService } from '../../services/NoteActionService';
 import { NoteStorageService } from '../../services/storageService';
+import { noteService } from '../../services/NoteService';
 
 // 型定義
 export interface DraftNote {
@@ -100,7 +100,7 @@ export const useNoteDraftStore = create<NoteDraftStoreState>()(
       }
 
       try {
-        const savedNote = await NoteActionService.saveDraftNote(draftNote, activeNoteId);
+        const savedNote = await noteService.saveDraftNote(draftNote, activeNoteId);
         // NoteActionService will emit 'note:created' or 'note:updated' and 'draft:saved'
         set({ draftNote: null, activeNoteId: null, originalDraftContent: null });
       } catch (error) {
