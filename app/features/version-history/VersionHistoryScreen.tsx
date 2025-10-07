@@ -9,9 +9,8 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, 
 import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
-import { NoteStorageService } from '../../services/storageService';
-import { NoteVersion } from '../../../shared/types/note';
-import { useNoteStore } from '../../store/note';
+import { NoteEditStorage } from '../note-edit/noteStorage';
+import { NoteVersion, Note } from '../../../shared/types/note';
 import { format } from 'date-fns';
 import { useTheme } from '../../theme/ThemeContext';
 import { useCustomHeader } from '../../components/CustomHeader';
@@ -24,13 +23,13 @@ function VersionHistoryScreen() {
   const navigation = useNavigation<VersionHistoryScreenNavigationProp>();
   const route = useRoute<VersionHistoryScreenRouteProp>();
   const { noteId } = route.params;
-  const activeNote = useNoteStore(state => state.activeNote);
   const { colors, typography, spacing } = useTheme();
   const { createHeaderConfig } = useCustomHeader();
 
   const [versions, setVersions] = useState<NoteVersion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentNote, setCurrentNote] = useState<Note | null>(null);
 
   useLayoutEffect(() => {
     navigation.setOptions(
@@ -52,15 +51,18 @@ function VersionHistoryScreen() {
       setLoading(true);
       setError(null);
       if (noteId) {
-        const fetchedVersions = await NoteStorageService.getNoteVersions(noteId);
+        const fetchedVersions = await NoteEditStorage.getNoteVersions(noteId);
+        const fetchedCurrentNote = await NoteEditStorage.getNoteById(noteId);
+        setCurrentNote(fetchedCurrentNote);
+
         // Also add the current version to the list for context, but designate it
-        if (activeNote) {
+        if (fetchedCurrentNote) {
           const currentVersion = {
             id: 'current',
-            noteId: activeNote.id,
-            content: activeNote.content,
-            version: activeNote.version,
-            createdAt: activeNote.updatedAt,
+            noteId: fetchedCurrentNote.id,
+            content: fetchedCurrentNote.content,
+            version: fetchedCurrentNote.version,
+            createdAt: fetchedCurrentNote.updatedAt,
           };
           setVersions([currentVersion, ...fetchedVersions]);
         } else {
@@ -74,7 +76,7 @@ function VersionHistoryScreen() {
     } finally {
       setLoading(false);
     }
-  }, [noteId, activeNote]);
+  }, [noteId]);
 
   useFocusEffect(
     useCallback(() => {
@@ -83,16 +85,16 @@ function VersionHistoryScreen() {
   );
 
   const handleSelectVersion = (selectedVersion: NoteVersion) => {
-    if (!activeNote || selectedVersion.id === 'current') {
+    if (!currentNote || selectedVersion.id === 'current') {
       // Cannot compare the current version with itself
       return;
     }
     
     navigation.navigate('DiffView', {
-      noteId: activeNote.id,
+      noteId: currentNote.id,
       versionId: selectedVersion.id,
       originalContent: selectedVersion.content,
-      newContent: activeNote.content,
+      newContent: currentNote.content,
       mode: 'restore'
     });
   };
