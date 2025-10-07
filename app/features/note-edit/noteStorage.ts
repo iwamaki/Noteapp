@@ -5,26 +5,7 @@ import { Note, NoteVersion, CreateNoteData, UpdateNoteData } from '../../../shar
 const NOTES_STORAGE_KEY = '@notes';
 const NOTE_VERSIONS_STORAGE_KEY = '@note_versions';
 
-// パフォーマンス向上のためのユーティリティ
-class StorageUtils {
-  static async safeJsonParse<T>(jsonString: string | null): Promise<T | null> {
-    if (!jsonString) return null;
-    try {
-      return JSON.parse(jsonString);
-    } catch (error) {
-      console.error('JSON parse error:', error);
-      return null;
-    }
-  }
-
-  static convertDates(item: any): any {
-    return {
-      ...item,
-      createdAt: new Date(item.createdAt),
-      ...(item.updatedAt && { updatedAt: new Date(item.updatedAt) }),
-    };
-  }
-}
+import StorageUtils from '../../shared/storage/asyncStorageUtils';
 
 // エラークラス
 export class StorageError extends Error {
