@@ -1,20 +1,22 @@
 // useDiffView.ts
 
+import React from 'react';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { useTheme } from '@react-navigation/native';
 import { useLayoutEffect, useMemo, useCallback } from 'react';
-import { Alert } from 'react-native';
+import { Alert, Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { NoteEditStorage, StorageError } from '../../note-edit/noteStorage';
 import { RootStackParamList } from '../../../navigation/types';
 import { useCustomHeader, HeaderConfig } from '../../../components/CustomHeader';
 import { generateDiff } from '../../../services/diffService';
+import { useTheme } from '../../../theme/ThemeContext';
 
 type DiffViewScreenRouteProp = RouteProp<RootStackParamList, 'DiffView'>;
 
 export const useDiffView = () => {
   const navigation = useNavigation();
   const route = useRoute<DiffViewScreenRouteProp>();
-  const theme = useTheme();
+  const { colors, typography } = useTheme();
   const { createHeaderConfig } = useCustomHeader();
 
   // Destructure params based on mode
@@ -80,16 +82,19 @@ export const useDiffView = () => {
 
     navigation.setOptions(
       createHeaderConfig({
-        title: titleText,
-        leftButtons: [{ icon: 'chevron-back', onPress: handleBack, variant: 'secondary' }],
+        title: <Text style={{ color: colors.text, fontSize: typography.header.fontSize }}>{titleText}</Text>,
+        leftButtons: [{
+          icon: <Ionicons name="arrow-back-outline" size={24} color={colors.textSecondary} />,
+          onPress: handleBack,
+          variant: 'secondary'
+        }],
         rightButtons: rightButtons,
       })
     );
-  }, [navigation, createHeaderConfig, handleBack, handleRestore, mode]);
+  }, [navigation, createHeaderConfig, handleBack, handleRestore, mode, colors, typography]);
 
   return {
     diff,
-    theme,
     handleBack,
     handleRestore,
   };
