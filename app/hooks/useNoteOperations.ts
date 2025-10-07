@@ -1,7 +1,6 @@
 import { useCallback } from 'react';
 import { Note, CreateNoteData, UpdateNoteData } from '../../shared/types/note';
-import { NoteActionService } from '../services/NoteActionService';
-import { commandExecutor, UpdateNoteCommand, CreateNoteCommand, DeleteNoteCommand } from '../services/commandExecutor';
+
 import { eventBus } from '../services/eventBus';
 import { NoteStorageService } from '../services/storageService';
 import { DraftNote } from '../store/note/noteDraftStore';
@@ -29,14 +28,7 @@ export const useNoteOperations = () => {
   }, []);
 
   const saveDraftNote = useCallback(async (draftNote: DraftNote, activeNoteId: string | null): Promise<Note> => {
-    try {
-      const savedNote = await NoteActionService.saveDraftNote(draftNote, activeNoteId);
-      return savedNote;
-    } catch (error) {
-      console.error('Failed to save draft note:', error);
-      await eventBus.emit('error:occurred', { error: error as Error, context: 'save-draft-note' });
-      throw error;
-    }
+    return await noteService.saveDraftNote(draftNote, activeNoteId);
   }, []);
 
   const fetchNotes = useCallback(async (): Promise<Note[]> => {
