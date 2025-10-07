@@ -1,6 +1,8 @@
 import { Note } from '../../shared/types/note';
 import { NoteActionService } from './NoteActionService';
 import { eventBus } from './eventBus';
+import { DraftNote } from '../store/note/noteDraftStore';
+import { NoteStorageService } from './storageService';
 
 // app/services/NoteService.ts
 class NoteService {
@@ -25,6 +27,29 @@ class NoteService {
     } catch (error) {
       console.error('Failed to bulk copy notes:', error);
       await eventBus.emit('error:occurred', { error: error as Error, context: 'bulk-copy-notes' });
+      throw error;
+    }
+  }
+
+  async saveDraftNote(draftNote: DraftNote, activeNoteId: string | null): Promise<Note> {
+    try {
+      const savedNote = await NoteActionService.saveDraftNote(draftNote, activeNoteId);
+      return savedNote;
+    } catch (error) {
+      console.error('Failed to save draft note:', error);
+      await eventBus.emit('error:occurred', { error: error as Error, context: 'save-draft-note' });
+      throw error;
+    }
+  }
+
+  async fetchNotes(): Promise<Note[]> {
+    try {
+      const notes = await NoteStorageService.getAllNotes();
+      await eventBus.emit('note:loaded', { notes });
+      return notes;
+    } catch (error) {
+      console.error('Failed to fetch notes:', error);
+      await eventBus.emit('error:occurred', { error: error as Error, context: 'fetch-notes' });
       throw error;
     }
   }
