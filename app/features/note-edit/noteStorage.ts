@@ -153,6 +153,11 @@ export class NoteEditStorage {
   }
 
   // --- Public Version Methods for note-edit ---
+  static async getNoteVersions(noteId: string): Promise<NoteVersion[]> {
+    const allVersions = await this.getAllVersionsRaw();
+    return allVersions.filter(version => version.noteId === noteId);
+  }
+
   static async getNoteVersion(versionId: string): Promise<NoteVersion | null> {
     const allVersions = await this.getAllVersionsRaw();
     return allVersions.find(version => version.id === versionId) || null;
