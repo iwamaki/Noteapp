@@ -34,3 +34,9 @@ export interface DiffLine {
   content: string;
   lineNumber?: number;
 }
+
+export interface DraftNote {
+  title: string;
+  content: string;
+  tags?: string[];
+}

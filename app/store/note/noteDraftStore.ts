@@ -5,17 +5,10 @@
  */
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
-import { Note } from '../../../shared/types/note';
+import { Note, DraftNote } from '../../../shared/types/note';
 import { eventBus } from '../../services/eventBus';
 import { NoteStorageService } from '../../services/storageService';
 import { noteService } from '../../services/NoteService';
-
-// 型定義
-export interface DraftNote {
-  title: string;
-  content: string;
-  tags?: string[];
-}
 
 interface NoteDraftStoreState {
   // データ
@@ -100,7 +93,7 @@ export const useNoteDraftStore = create<NoteDraftStoreState>()(
       }
 
       try {
-        const savedNote = await noteService.saveDraftNote(draftNote, activeNoteId);
+        await noteService.saveDraftNote(draftNote, activeNoteId);
         // NoteActionService will emit 'note:created' or 'note:updated' and 'draft:saved'
         set({ draftNote: null, activeNoteId: null, originalDraftContent: null });
       } catch (error) {

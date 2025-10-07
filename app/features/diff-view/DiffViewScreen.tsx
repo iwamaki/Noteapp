@@ -9,8 +9,8 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
 
-import { useNoteStore, useNoteDraftStore } from '../../store/note';
-import { generateDiff, validateDataConsistency } from '../../services/diffService';
+import { useNoteStore } from '../../store/note';
+import { generateDiff } from '../../services/diffService';
 import { NoteStorageService } from '../../services/storageService';
 import { useDiffManager } from '../../hooks/useDiffManager';
 import { DiffViewer } from './components/DiffViewer';
@@ -27,7 +27,7 @@ function DiffViewScreen() {
   const route = useRoute<DiffViewScreenRouteProp>();
   const { colors, typography } = useTheme();
   const { createHeaderConfig } = useCustomHeader();
-  const { activeNote, selectNote } = useNoteStore();
+  const { selectNote } = useNoteStore();
 
   const { mode, originalContent, newContent } = route.params;
 
@@ -39,8 +39,6 @@ function DiffViewScreen() {
     originalPreview: originalContent.substring(0, 100),
     newPreview: newContent.substring(0, 100)
   });
-
-  const filename = activeNote?.title ?? '差分プレビュー';
 
   const diff = useMemo(() => generateDiff(originalContent, newContent), [
     originalContent,

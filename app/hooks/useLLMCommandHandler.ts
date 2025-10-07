@@ -10,7 +10,7 @@ import { RootStackParamList } from '../navigation/types';
 import { LLMCommand, LLMResponse } from '../services/llmService';
 import { useNoteStore } from '../store/note';
 import { logger } from '../utils/logger'; // loggerをインポート
-import { useNoteOperations } from '../hooks/useNoteOperations';
+import { noteService } from '../services/NoteService'; // noteServiceをインポート
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -23,7 +23,6 @@ interface CommandHandlerContext {
 export const useLLMCommandHandler = (context: CommandHandlerContext) => {
   const navigation = useNavigation<NavigationProp>();
   const activeNote = useNoteStore(state => state.activeNote);
-  const { updateNote } = useNoteOperations();
 
   const executeEditFileCommand = useCallback((command: LLMCommand) => {
     if (!command.content) {
@@ -49,13 +48,13 @@ export const useLLMCommandHandler = (context: CommandHandlerContext) => {
       mode: 'apply',
       onApply: async (approvedContent: string) => {
         if (activeNote?.id) {
-          await updateNote(activeNote.id, { content: approvedContent });
+          await noteService.updateNote(activeNote.id, { content: approvedContent });
           context.setContent(approvedContent); // Update local editor state
           logger.debug('llm', '[LLMCommandHandler] LLM edit applied and note updated.');
         }
       },
     });
-  }, [navigation, context, activeNote, updateNote]);
+  }, [navigation, context, activeNote]);
 
   const executeCommand = useCallback((command: LLMCommand) => {
     switch (command.action) {

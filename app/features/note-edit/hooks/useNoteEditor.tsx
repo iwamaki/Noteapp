@@ -4,11 +4,11 @@
  * @responsibility ノートの読み込み、タイトルとコンテンツの管理、変更の自動保存（デバウンス付き）、および差分表示画面への遷移ロジックを提供する責任があります。
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useNoteStore } from '../../../store/note';
-import { useNoteOperations } from '../../../hooks/useNoteOperations';
+import { noteService } from '../../../services/NoteService'; // noteServiceをインポート
 import { Alert } from 'react-native';
 import { RootStackParamList } from '../../../navigation/types';
 
@@ -17,7 +17,6 @@ export const useNoteEditor = (noteId: string | undefined) => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
   const activeNote = useNoteStore(state => state.activeNote);
-  const { selectNote, saveDraftNote } = useNoteOperations();
 
   const [title, setTitle] = useState(activeNote?.title ?? '');
   const [content, setContent] = useState(activeNote?.content ?? '');
@@ -27,11 +26,11 @@ export const useNoteEditor = (noteId: string | undefined) => {
   // noteIdに基づいてノートを選択し、ローディング状態を管理する
   useEffect(() => {
     setIsLoading(true);
-    selectNote(noteId ?? null).finally(() => {
+    noteService.selectNote(noteId ?? null).finally(() => {
       // selectNoteが完了しても、activeNoteの更新は非同期なので、
       // ここではすぐにローディングを解除しない
     });
-  }, [noteId, selectNote]);
+  }, [noteId]);
 
   // activeNoteが更新されたら、タイトルを更新し、ローディングを解除する
   useEffect(() => {
@@ -72,14 +71,14 @@ export const useNoteEditor = (noteId: string | undefined) => {
       );
       return;
     }
-    saveDraftNote({ title, content }, activeNote?.id ?? null)
+    noteService.saveDraftNote({ title, content }, activeNote?.id ?? null)
       .then(() => {
         Alert.alert('保存完了', 'ノートが保存されました。');
       })
       .catch(() => {
         Alert.alert('エラー', 'ノートの保存に失敗しました。');
       });
-  }, [title, content, activeNote, saveDraftNote]);
+  }, [title, content, activeNote]);
 
   return {
     activeNote,
