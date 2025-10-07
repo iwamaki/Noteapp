@@ -28,7 +28,7 @@ function NoteEditScreen() {
   const { noteId } = route.params || {};
 
   const {
-    activeNote,
+    note,
     title,
     setTitle,
     content,
@@ -75,7 +75,7 @@ function NoteEditScreen() {
   // ヘッダーの設定
   useNoteEditHeader({
     title,
-    activeNoteId: activeNote?.id,
+    activeNoteId: note?.id,
     viewMode,
     isLoading,
     headerTitle: (
@@ -91,7 +91,7 @@ function NoteEditScreen() {
 
   // チャットエリアの作成
   const chatContext: ChatContext = {
-    currentFile: activeNote?.id,
+    currentFile: note?.id,
   };
 
   // スタイルの定義
