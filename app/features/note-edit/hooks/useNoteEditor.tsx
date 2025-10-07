@@ -7,58 +7,59 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { useNoteStore } from '../../../store/note';
-import { noteService } from '../../../services/NoteService'; // noteServiceをインポート
+
 import { Alert } from 'react-native';
 import { RootStackParamList } from '../../../navigation/types';
+import { NoteEditStorage } from '../noteStorage';
+import { Note } from '@shared/types/note';
 
 // カスタムフックの定義
 export const useNoteEditor = (noteId: string | undefined) => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
-  const activeNote = useNoteStore(state => state.activeNote);
-
-  const [title, setTitle] = useState(activeNote?.title ?? '');
-  const [content, setContent] = useState(activeNote?.content ?? '');
+  const [note, setNote] = useState<Note | null>(null);
+  const [title, setTitle] = useState(note?.title ?? '');
+  const [content, setContent] = useState(note?.content ?? '');
   const [isLoading, setIsLoading] = useState(true);
 
-
-  // noteIdに基づいてノートを選択し、ローディング状態を管理する
   useEffect(() => {
-    setIsLoading(true);
-    noteService.selectNote(noteId ?? null).finally(() => {
-      // selectNoteが完了しても、activeNoteの更新は非同期なので、
-      // ここではすぐにローディングを解除しない
-    });
+    const fetchNote = async () => {
+      setIsLoading(true);
+      if (noteId) {
+        try {
+          const fetchedNote = await NoteEditStorage.getNoteById(noteId);
+          setNote(fetchedNote);
+          setTitle(fetchedNote?.title ?? '');
+          setContent(fetchedNote?.content ?? '');
+        } catch (error) {
+          console.error('Failed to fetch note:', error);
+          Alert.alert('エラー', 'ノートの読み込みに失敗しました。');
+          setNote(null);
+          setTitle('');
+          setContent('');
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
+        // 新規ノート作成の場合
+        setNote(null);
+        setTitle('');
+        setContent('');
+        setIsLoading(false);
+      }
+    };
+    fetchNote();
   }, [noteId]);
 
-  // activeNoteが更新されたら、タイトルとコンテンツを更新し、ローディングを解除する
   useEffect(() => {
-    console.log('[DEBUG] useNoteEditor activeNote effect. noteId:', noteId, 'activeNote:', activeNote?.id);
-    if (noteId === undefined) {
-      // 新規ノート作成の場合
-      console.log('[DEBUG] useNoteEditor: New note case');
-      setTitle(activeNote?.title ?? '');
-      setContent(activeNote?.content ?? '');
-      setIsLoading(false);
-    } else if (activeNote?.id === noteId) {
-      // 既存ノートが正しく読み込まれた場合
-      console.log('[DEBUG] useNoteEditor: Existing note loaded');
-      setTitle(activeNote.title);
-      setContent(activeNote.content);
-      setIsLoading(false);
-    } else {
-      console.log('[DEBUG] useNoteEditor: Loading continues');
+    if (note) {
+      setTitle(note.title);
+      setContent(note.content);
     }
-    // activeNoteがnullまたは異なるIDの場合は何もしない（ローディング継続）
-  }, [activeNote, noteId]);
+  }, [note]);
 
-
-
-
-  // 保存処理のハンドラ
-  const handleSave = useCallback(() => {
-    if (activeNote?.content === content) {
+  const handleSave = useCallback(async () => {
+    if (note?.content === content && note?.title === title) {
       Alert.alert(
         '変更がありません',
         'ノートの内容に変更がありません。保存は必要ありません。',
@@ -66,17 +67,37 @@ export const useNoteEditor = (noteId: string | undefined) => {
       );
       return;
     }
-    noteService.saveDraftNote({ title, content, tags: activeNote?.tags ?? [] }, activeNote?.id ?? null)
-      .then(() => {
-        Alert.alert('保存完了', 'ノートが保存されました。');
-      })
-      .catch(() => {
-        Alert.alert('エラー', 'ノートの保存に失敗しました。');
-      });
-  }, [title, content, activeNote]);
+
+    try {
+      let savedNote: Note;
+      if (note) {
+        // 既存ノートの更新
+        savedNote = await NoteEditStorage.updateNote({
+          id: note.id,
+          title,
+          content,
+          tags: note.tags,
+        });
+      } else {
+        // 新規ノートの作成
+        savedNote = await NoteEditStorage.createNote({
+          title,
+          content,
+          tags: [],
+        });
+        // 新規作成後、URLを新しいnoteIdで置き換える
+        navigation.replace('NoteEdit', { noteId: savedNote.id });
+      }
+      setNote(savedNote); // 保存されたノートで状態を更新
+      Alert.alert('保存完了', 'ノートが保存されました。');
+    } catch (error) {
+      console.error('Failed to save note:', error);
+      Alert.alert('エラー', 'ノートの保存に失敗しました。');
+    }
+  }, [note, title, content, navigation]);
 
   return {
-    activeNote,
+    note,
     title,
     setTitle,
     content,
