@@ -1,6 +1,5 @@
-import { Note } from '@shared/types/note';
+import { Note, DraftNote } from '@shared/types/note';
 import { LLMCommand, LLMResponse } from './llmService';
-import { DraftNote } from '../store/note/noteDraftStore'; // Import DraftNote
 
 type EventMap = {
   'note:created': { note: Note };

@@ -1,6 +1,5 @@
-import { Note, CreateNoteData, UpdateNoteData } from '../../shared/types/note';
+import { Note, CreateNoteData, UpdateNoteData, DraftNote } from '../../shared/types/note';
 import { eventBus } from './eventBus';
-import { DraftNote } from '../store/note/noteDraftStore';
 import { NoteStorageService, StorageError } from './storageService';
 
 interface Command {
@@ -17,21 +16,23 @@ class UpdateNoteCommand implements Command {
   ) {}
 
   async execute(): Promise<void> {
-    const { id: _id, ...restUpdates } = this.updates; // Destructure to omit 'id'
+    const { id, ...restUpdates } = this.updates; // Destructure to omit 'id'
     const note = await NoteStorageService.updateNote({
       id: this.noteId,
       ...restUpdates // Spread the rest of the updates
     });
+    void id; // Explicitly mark as intentionally unused
     await eventBus.emit('note:updated', { note });
   }
 
   async undo(): Promise<void> {
     if (this.previousState) {
-      const { id: _id, ...restPreviousState } = this.previousState; // Destructure to omit 'id'
+      const { id, ...restPreviousState } = this.previousState; // Destructure to omit 'id'
       const note = await NoteStorageService.updateNote({
         id: this.noteId,
         ...restPreviousState // Spread the rest of the previous state
       });
+      void id; // Explicitly mark as intentionally unused
       await eventBus.emit('note:updated', { note });
     }
   }

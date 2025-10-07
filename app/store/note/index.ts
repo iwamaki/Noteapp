@@ -13,9 +13,11 @@ export {
 
 // ドラフト管理
 export {
-  useNoteDraftStore,
-  type DraftNote
+  useNoteDraftStore
 } from './noteDraftStore';
+
+// DraftNote型は共通型ファイルから再エクスポート
+export type { DraftNote } from '../../../shared/types/note';
 
 // 選択モード
 export {

@@ -2,7 +2,7 @@ import { useEffect, useCallback } from 'react';
 import { useNavigation, NavigationProp, useIsFocused } from '@react-navigation/native';
 import { RootStackParamList } from '../../../navigation/types';
 import { useNoteStore, useNoteSelectionStore } from '../../../store/note';
-import { useNoteOperations } from '../../../hooks/useNoteOperations';
+import { noteService } from '../../../services/NoteService'; // noteServiceをインポート
 import { logger } from '../../../utils/logger';
 
 export const useNoteListLogic = () => {
@@ -12,7 +12,6 @@ export const useNoteListLogic = () => {
   // 各ストアから必要な状態とアクションを取得
   const notes = useNoteStore(state => state.filteredNotes);
   const loading = useNoteStore(state => state.loading);
-  const { createNote, bulkDeleteNotes, bulkCopyNotes, fetchNotes } = useNoteOperations();
 
   const isSelectionMode = useNoteSelectionStore(state => state.isSelectionMode);
   const selectedNoteIds = useNoteSelectionStore(state => state.selectedNoteIds);
@@ -25,9 +24,9 @@ export const useNoteListLogic = () => {
 
   useEffect(() => {
     if (isFocused) {
-      fetchNotes();
+      noteService.fetchNotes();
     }
-  }, [isFocused, fetchNotes]);
+  }, [isFocused]);
 
   // ノート選択ハンドラー
   const handleSelectNote = useCallback((noteId: string) => {
@@ -54,30 +53,30 @@ export const useNoteListLogic = () => {
   // 選択ノート削除ハンドラー
   const handleDeleteSelected = useCallback(async () => {
     try {
-      await bulkDeleteNotes(Array.from(selectedNoteIds));
+      await noteService.bulkDeleteNotes(Array.from(selectedNoteIds));
     } catch (error) {
       console.error("Failed to delete selected notes:", error);
     }
-  }, [bulkDeleteNotes, selectedNoteIds]);
+  }, [selectedNoteIds]);
 
   // 選択ノートコピーハンドラー
   const handleCopySelected = useCallback(async () => {
     try {
-      await bulkCopyNotes(Array.from(selectedNoteIds));
+      await noteService.bulkCopyNotes(Array.from(selectedNoteIds));
     } catch (error) {
       console.error("Failed to copy selected notes:", error);
     }
-  }, [bulkCopyNotes, selectedNoteIds]);
+  }, [selectedNoteIds]);
 
   // ノート作成ハンドラー
   const handleCreateNote = useCallback(async () => {
     try {
-      const newNote = await createNote({ title: '新しいノート', content: '' });
+      const newNote = await noteService.createNote({ title: '新しいノート', content: '' });
       navigation.navigate('NoteEdit', { noteId: newNote.id });
     } catch (error) {
       console.error("Failed to create note:", error);
     }
-  }, [createNote, navigation]);
+  }, [navigation]);
 
   return {
     notes,
@@ -90,6 +89,6 @@ export const useNoteListLogic = () => {
     handleDeleteSelected,
     handleCopySelected,
     handleCreateNote,
-    fetchNotes,
+    fetchNotes: () => noteService.fetchNotes(), // Export fetchNotes for refreshing from NoteListScreen
   };
 };
