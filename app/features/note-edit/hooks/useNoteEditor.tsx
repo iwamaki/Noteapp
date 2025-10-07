@@ -58,6 +58,10 @@ export const useNoteEditor = (noteId: string | undefined) => {
       onApply: (newContent: string) => {
         setContent(newContent);
       },
+      onCancel: () => {
+        // キャンセル時は編集前の状態に戻す
+        setContent(activeNote?.content ?? '');
+      },
     });
   }, [content, activeNote, navigation, setContent]);
 
@@ -71,7 +75,7 @@ export const useNoteEditor = (noteId: string | undefined) => {
       );
       return;
     }
-    noteService.saveDraftNote({ title, content }, activeNote?.id ?? null)
+    noteService.saveDraftNote({ title, content, tags: activeNote?.tags ?? [] }, activeNote?.id ?? null)
       .then(() => {
         Alert.alert('保存完了', 'ノートが保存されました。');
       })
