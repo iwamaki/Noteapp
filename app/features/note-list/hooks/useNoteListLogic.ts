@@ -1,86 +1,110 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { useNavigation, NavigationProp, useIsFocused } from '@react-navigation/native';
 import { RootStackParamList } from '../../../navigation/types';
-import { useNoteStore, useNoteSelectionStore } from '../../../store/note';
-import { noteService } from '../../../services/NoteService'; // noteServiceをインポート
+import { Note } from '@shared/types/note';
+import { NoteListStorage } from '../noteStorage'; // Import the new NoteListStorage
 import { logger } from '../../../utils/logger';
 
 export const useNoteListLogic = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const isFocused = useIsFocused();
 
-  // 各ストアから必要な状態とアクションを取得
-  const notes = useNoteStore(state => state.filteredNotes);
-  const loading = useNoteStore(state => state.loading);
+  // State management using useState
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedNoteIds, setSelectedNoteIds] = useState<Set<string>>(new Set());
 
-  const isSelectionMode = useNoteSelectionStore(state => state.isSelectionMode);
-  const selectedNoteIds = useNoteSelectionStore(state => state.selectedNoteIds);
-  const toggleSelectionMode = useNoteSelectionStore(state => state.toggleSelectionMode);
-  const toggleNoteSelection = useNoteSelectionStore(state => state.toggleNoteSelection);
-  const clearSelectedNotes = useNoteSelectionStore(state => state.clearSelectedNotes);
+  // Function to fetch notes
+  const fetchNotes = useCallback(async () => {
+    setLoading(true);
+    try {
+      const fetchedNotes = await NoteListStorage.getAllNotes();
+      setNotes(fetchedNotes);
+    } catch (error) {
+      console.error("Failed to fetch notes:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  // デバッグ用ログ
-  logger.debug('note', 'useNoteListLogic render:', { isSelectionMode, selectedCount: selectedNoteIds.size });
-
+  // Fetch notes on screen focus
   useEffect(() => {
     if (isFocused) {
-      noteService.fetchNotes();
+      fetchNotes();
     }
-  }, [isFocused]);
+  }, [isFocused, fetchNotes]);
 
-  // ノート選択ハンドラー
+  // Debug log
+  logger.debug('note', 'useNoteListLogic render:', { isSelectionMode, selectedCount: selectedNoteIds.size });
+
+  // Note selection handler
   const handleSelectNote = useCallback((noteId: string) => {
     if (isSelectionMode) {
-      toggleNoteSelection(noteId);
+      setSelectedNoteIds(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(noteId)) {
+          newSet.delete(noteId);
+        } else {
+          newSet.add(noteId);
+        }
+        return newSet;
+      });
     } else {
       navigation.navigate('NoteEdit', { noteId });
     }
-  }, [isSelectionMode, toggleNoteSelection, navigation]);
+  }, [isSelectionMode, navigation]);
 
-  // ノート長押しハンドラー
+  // Note long press handler
   const handleLongPressNote = useCallback((noteId: string) => {
     if (!isSelectionMode) {
-      toggleSelectionMode();
-      toggleNoteSelection(noteId);
+      setIsSelectionMode(true);
+      setSelectedNoteIds(new Set([noteId]));
     }
-  }, [isSelectionMode, toggleSelectionMode, toggleNoteSelection]);
+  }, [isSelectionMode]);
 
-  // 選択キャンセルハンドラー
+  // Cancel selection handler
   const handleCancelSelection = useCallback(() => {
-    clearSelectedNotes();
-  }, [clearSelectedNotes]);
+    setIsSelectionMode(false);
+    setSelectedNoteIds(new Set());
+  }, []);
 
-  // 選択ノート削除ハンドラー
+  // Delete selected notes handler
   const handleDeleteSelected = useCallback(async () => {
     try {
-      await noteService.bulkDeleteNotes(Array.from(selectedNoteIds));
+      await NoteListStorage.deleteNotes(Array.from(selectedNoteIds));
+      await fetchNotes(); // Refresh list after deletion
+      handleCancelSelection(); // Exit selection mode
     } catch (error) {
       console.error("Failed to delete selected notes:", error);
     }
-  }, [selectedNoteIds]);
+  }, [selectedNoteIds, fetchNotes, handleCancelSelection]);
 
-  // 選択ノートコピーハンドラー
+  // Copy selected notes handler
   const handleCopySelected = useCallback(async () => {
     try {
-      await noteService.bulkCopyNotes(Array.from(selectedNoteIds));
+      await NoteListStorage.copyNotes(Array.from(selectedNoteIds));
+      await fetchNotes(); // Refresh list after copy
+      handleCancelSelection(); // Exit selection mode
     } catch (error) {
       console.error("Failed to copy selected notes:", error);
     }
-  }, [selectedNoteIds]);
+  }, [selectedNoteIds, fetchNotes, handleCancelSelection]);
 
-  // ノート作成ハンドラー
+  // Create note handler
   const handleCreateNote = useCallback(async () => {
     try {
-      const newNote = await noteService.createNote({ title: '新しいノート', content: '' });
+      const newNote = await NoteListStorage.createNote({ title: '新しいノート', content: '' });
+      await fetchNotes(); // Refresh list after creation
       navigation.navigate('NoteEdit', { noteId: newNote.id });
     } catch (error) {
       console.error("Failed to create note:", error);
     }
-  }, [navigation]);
+  }, [navigation, fetchNotes]);
 
   return {
     notes,
-    loading,
+    loading: { isLoading: loading }, // Adapt to the structure expected by NoteListScreen
     isSelectionMode,
     selectedNoteIds,
     handleSelectNote,
@@ -89,6 +113,6 @@ export const useNoteListLogic = () => {
     handleDeleteSelected,
     handleCopySelected,
     handleCreateNote,
-    fetchNotes: () => noteService.fetchNotes(), // Export fetchNotes for refreshing from NoteListScreen
+    fetchNotes,
   };
 };
