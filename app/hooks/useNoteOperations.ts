@@ -51,14 +51,7 @@ export const useNoteOperations = () => {
   }, []);
 
   const bulkCopyNotes = useCallback(async (sourceIds: string[]): Promise<Note[]> => {
-    try {
-      const newNotes = await NoteActionService.bulkCopyNotes(sourceIds);
-      return newNotes;
-    } catch (error) {
-      console.error('Failed to bulk copy notes:', error);
-      await eventBus.emit('error:occurred', { error: error as Error, context: 'bulk-copy-notes' });
-      throw error;
-    }
+    return await noteService.bulkCopyNotes(sourceIds);
   }, []);
 
   const saveDraftNote = useCallback(async (draftNote: DraftNote, activeNoteId: string | null): Promise<Note> => {

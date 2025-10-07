@@ -1,3 +1,4 @@
+import { Note } from '../../shared/types/note';
 import { NoteActionService } from './NoteActionService';
 import { eventBus } from './eventBus';
 
@@ -13,6 +14,17 @@ class NoteService {
     } catch (error) {
       console.error('Failed to bulk delete notes:', error);
       await eventBus.emit('error:occurred', { error: error as Error, context: 'bulk-delete-notes' });
+      throw error;
+    }
+  }
+
+  async bulkCopyNotes(sourceIds: string[]): Promise<Note[]> {
+    try {
+      const newNotes = await NoteActionService.bulkCopyNotes(sourceIds);
+      return newNotes;
+    } catch (error) {
+      console.error('Failed to bulk copy notes:', error);
+      await eventBus.emit('error:occurred', { error: error as Error, context: 'bulk-copy-notes' });
       throw error;
     }
   }
