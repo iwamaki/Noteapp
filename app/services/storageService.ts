@@ -51,19 +51,26 @@ export class NoteStorageService {
   // --- Private Raw Note Methods ---
   private static async getAllNotesRaw(): Promise<Note[]> {
     try {
+      console.log('[DEBUG] Getting all notes from AsyncStorage');
       const jsonValue = await AsyncStorage.getItem(NOTES_STORAGE_KEY);
+      console.log('[DEBUG] AsyncStorage returned:', jsonValue ? `${jsonValue.length} chars` : 'null');
       const notes = await StorageUtils.safeJsonParse<any[]>(jsonValue);
       if (!notes) return [];
+      console.log('[DEBUG] Parsed notes count:', notes.length);
       return notes.map(note => StorageUtils.convertDates(note) as Note);
-    } catch {
+    } catch (error) {
+      console.error('[DEBUG] Failed to get notes from AsyncStorage:', error);
       throw new StorageError('Failed to retrieve notes', 'FETCH_ERROR');
     }
   }
 
   private static async saveAllNotes(notes: Note[]): Promise<void> {
     try {
+      console.log('[DEBUG] Saving notes to AsyncStorage:', notes.length, 'notes');
       await AsyncStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(notes));
-    } catch {
+      console.log('[DEBUG] Successfully saved notes to AsyncStorage');
+    } catch (error) {
+      console.error('[DEBUG] Failed to save notes to AsyncStorage:', error);
       throw new StorageError('Failed to save notes', 'SAVE_ERROR');
     }
   }
@@ -100,6 +107,7 @@ export class NoteStorageService {
   }
 
   static async createNote(data: CreateNoteData): Promise<Note> {
+    console.log('[DEBUG] createNote called with data:', data);
     const now = new Date();
     const newNote: Note = {
       id: uuidv4(),
@@ -112,8 +120,10 @@ export class NoteStorageService {
     };
 
     const notes = await this.getAllNotesRaw();
+    console.log('[DEBUG] Current notes before create:', notes.length);
     notes.push(newNote);
     await this.saveAllNotes(notes);
+    console.log('[DEBUG] Note created successfully:', newNote.id);
 
     // Create initial version
     const initialVersion: NoteVersion = {
@@ -126,19 +136,21 @@ export class NoteStorageService {
     const versions = await this.getAllVersionsRaw();
     versions.push(initialVersion);
     await this.saveAllVersions(versions);
-    
+
     return newNote;
   }
 
   static async updateNote(data: UpdateNoteData): Promise<Note> {
+    console.log('[DEBUG] updateNote called with data:', data);
     const notes = await this.getAllNotesRaw();
     const index = notes.findIndex(note => note.id === data.id);
-    
+
     if (index === -1) {
       throw new StorageError(`Note with id ${data.id} not found`, 'NOT_FOUND');
     }
 
     const existingNote = notes[index];
+    console.log('[DEBUG] Updating existing note:', existingNote.id);
 
     // Save current state as a new version before updating
     const newVersionForOldState: NoteVersion = {
@@ -161,7 +173,8 @@ export class NoteStorageService {
 
     notes[index] = updatedNote;
     await this.saveAllNotes(notes);
-    
+    console.log('[DEBUG] Note updated successfully:', updatedNote.id);
+
     return updatedNote;
   }
 

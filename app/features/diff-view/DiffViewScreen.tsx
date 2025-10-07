@@ -12,7 +12,6 @@ import { RootStackParamList } from '../../navigation/types';
 import { useNoteStore } from '../../store/note';
 import { generateDiff } from '../../services/diffService';
 import { NoteStorageService } from '../../services/storageService';
-import { useDiffManager } from '../../hooks/useDiffManager';
 import { DiffViewer } from './components/DiffViewer';
 import { useCustomHeader } from '../../components/CustomHeader';
 import { useTheme } from '../../theme/ThemeContext';
@@ -45,43 +44,22 @@ function DiffViewScreen() {
     newContent,
   ]);
 
-  const {
-    selectedBlocks,
-    toggleBlockSelection,
-    toggleAllSelection,
-    generateSelectedContent,
-    allChangeBlockIds,
-  } = useDiffManager(diff);
+  const handleRestore = async () => {
+    if (route.params.mode !== 'restore') return;
 
-  const allSelected = selectedBlocks.size === allChangeBlockIds.size && allChangeBlockIds.size > 0;
-
-  const handleApply = async () => {
-    // モードに応じて処理を分岐
-    if (route.params.mode === 'restore') {
-      const { noteId, versionId } = route.params;
-      try {
-        const restoredNote = await NoteStorageService.restoreNoteVersion(noteId, versionId);
-        await selectNote(restoredNote.id);
-        Alert.alert('復元完了', 'ノートが指定されたバージョンに復元されました。');
-        navigation.navigate('NoteEdit', { noteId: restoredNote.id, saved: true });
-      } catch (error) {
-        console.error('復元エラー:', error);
-        Alert.alert('エラー', 'ノートの復元に失敗しました。');
-      }
-    } else if (route.params.mode === 'apply') {
-      // 'apply' モードの場合、選択されたコンテンツをコールバックで返し、画面を閉じる
-      const selectedContent = generateSelectedContent();
-      route.params.onApply(selectedContent);
-      navigation.goBack();
+    const { noteId, versionId } = route.params;
+    try {
+      const restoredNote = await NoteStorageService.restoreNoteVersion(noteId, versionId);
+      await selectNote(restoredNote.id);
+      Alert.alert('復元完了', 'ノートが指定されたバージョンに復元されました。');
+      navigation.navigate('NoteEdit', { noteId: restoredNote.id, saved: true });
+    } catch (error) {
+      console.error('復元エラー:', error);
+      Alert.alert('エラー', 'ノートの復元に失敗しました。');
     }
-    // 'readonly' モードでは適用ボタンは表示されないため、ここのロジックは不要
   };
 
-  const handleCancel = () => {
-    // キャンセル時にコールバックを呼び出す
-    if (route.params.mode === 'apply' && route.params.onCancel) {
-      route.params.onCancel();
-    }
+  const handleBack = () => {
     navigation.goBack();
   };
 
@@ -95,22 +73,7 @@ function DiffViewScreen() {
       rightButtons = [
         {
           title: '復元',
-          onPress: handleApply,
-          variant: 'primary' as const,
-        },
-      ];
-    } else if (mode === 'apply') {
-      titleText = '変更の選択';
-      rightButtons = [
-        {
-          title: allSelected ? '☑ 全選択解除' : '☐ 全選択',
-          onPress: toggleAllSelection,
-          variant: 'secondary' as const,
-        },
-        {
-          title: `適用 (${selectedBlocks.size})`,
-          onPress: handleApply,
-          disabled: selectedBlocks.size === 0,
+          onPress: handleRestore,
           variant: 'primary' as const,
         },
       ];
@@ -125,14 +88,14 @@ function DiffViewScreen() {
         leftButtons: [
           {
             icon: <Ionicons name="arrow-back-outline" size={24} color={colors.textSecondary} />,
-            onPress: handleCancel,
+            onPress: handleBack,
             variant: 'secondary',
           },
         ],
         rightButtons,
       })
     );
-  }, [navigation, route.params, handleApply, handleCancel, toggleAllSelection, allSelected, selectedBlocks.size, colors]);
+  }, [navigation, route.params, handleRestore, handleBack, colors]);
 
   const styles = StyleSheet.create({
     container: {
@@ -145,9 +108,9 @@ function DiffViewScreen() {
     <View style={styles.container}>
       <DiffViewer
         diff={diff}
-        selectedBlocks={selectedBlocks}
-        onBlockToggle={toggleBlockSelection}
-        isReadOnly={mode === 'restore'} // In restore mode, diff is for viewing only
+        selectedBlocks={new Set()}
+        onBlockToggle={() => {}}
+        isReadOnly={true}
       />
     </View>
   );

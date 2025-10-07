@@ -143,6 +143,34 @@ export const useNoteStore = create<NoteStoreState>()(
       });
     });
 
+    eventBus.on('note:loaded', ({ notes }) => {
+      const { searchQuery } = get();
+      set({
+        notes,
+        filteredNotes: filterNotes(notes, searchQuery),
+        lastUpdated: new Date(),
+      });
+    });
+
+    eventBus.on('note:selected', async ({ noteId }) => {
+      console.log('[DEBUG] noteStore received note:selected event with noteId:', noteId);
+      if (!noteId) {
+        set({ activeNote: null });
+        return;
+      }
+
+      try {
+        const note = await NoteStorageService.getNoteById(noteId);
+        console.log('[DEBUG] noteStore loaded note from storage:', note ? note.id : 'null');
+        if (note) {
+          set({ activeNote: note });
+        }
+      } catch (error) {
+        console.error('[DEBUG] noteStore failed to load note:', error);
+        set({ activeNote: null });
+      }
+    });
+
     return {
     // 初期状態
     notes: [],
@@ -184,6 +212,7 @@ export const useNoteStore = create<NoteStoreState>()(
 
     // ノート選択
     selectNote: async (noteId) => {
+      console.log('[DEBUG] noteStore.selectNote called with noteId:', noteId);
       if (!noteId) {
         set({ activeNote: null });
         // noteDraftStoreのdraftNoteもクリア (必要に応じて)
@@ -197,12 +226,15 @@ export const useNoteStore = create<NoteStoreState>()(
       set({ error: null });
 
       try {
+        console.log('[DEBUG] noteStore fetching note from storage');
         const note = await NoteStorageService.getNoteById(noteId);
+        console.log('[DEBUG] noteStore got note:', note ? note.id : 'null');
         if (!note) {
           throw new StorageError(`Note with id ${noteId} not found`, 'NOT_FOUND');
         }
 
         set({ activeNote: note });
+        console.log('[DEBUG] noteStore set activeNote');
         await eventBus.emit('note:selected', { noteId }); // Emit event
       } catch (error) {
         console.error(`Failed to select note with id: ${noteId}`, error);

@@ -14,8 +14,7 @@ import { useNoteEditHeader } from './hooks/useNoteEditHeader';
 import { NoteEditHeader } from './components/NoteEditHeader';
 import { useTheme } from '../../theme/ThemeContext';
 import { ChatInputBar } from '../chat/ChatInputBar';
-import { ChatContext, LLMCommand } from '../../services/llmService';
-import { useLLMCommandHandler } from '../../hooks/useLLMCommandHandler';
+import { ChatContext } from '../../services/llmService';
 
 type NoteEditScreenRouteProp = RouteProp<RootStackParamList, 'NoteEdit'>;
 
@@ -35,7 +34,6 @@ function NoteEditScreen() {
     content,
     setContent,
     isLoading,
-    handleGoToDiff,
     handleSave,
   } = useNoteEditor(noteId);
 
@@ -73,23 +71,6 @@ function NoteEditScreen() {
     };
   }, [paddingBottomAnim]);
 
-  // LLMコマンドハンドラの初期化
-  const { handleLLMResponse } = useLLMCommandHandler({
-    currentContent: content,
-    setContent,
-    title
-  });
-
-  // LLMコマンドを受信した時の処理
-  const handleCommandReceived = (commands: LLMCommand[]) => {
-    if (commands && commands.length > 0) {
-      // コマンドハンドラに委譲
-      handleLLMResponse({
-        message: 'Commands received',
-        commands
-      });
-    }
-  };
 
   // ヘッダーの設定
   useNoteEditHeader({
@@ -106,7 +87,6 @@ function NoteEditScreen() {
     ),
     onViewModeChange: setViewMode,
     onSave: handleSave,
-    onDiff: handleGoToDiff,
   });
 
   // チャットエリアの作成
@@ -149,7 +129,7 @@ function NoteEditScreen() {
       </Animated.View>
       <ChatInputBar
         context={chatContext}
-        onCommandReceived={handleCommandReceived}
+        onCommandReceived={() => {}}
         currentNoteTitle={title}
         currentNoteContent={content}
       />

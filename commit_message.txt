@@ -1,12 +1,4 @@
-feat(refactor): フェーズ2完了 - 永続化レイヤーを持つイベント駆動型コアストア
+chore(frontend): Prepare for issue 37 - Save current state
 
-このコミットは、イベント駆動アーキテクチャのリファクタリングのフェーズ2を完了します。
-
-主な変更点：
-- 永続化関連の操作（一括削除、一括コピー、ドラフト保存）を一元化するために `NoteActionService` を導入しました。このサービスは `NoteStorageService` と連携し、`eventBus` を介して関連イベントを発行します。
-- `noteSelectionStore.ts` をリファクタリングし、一括削除と一括コピー操作を `NoteActionService` に委譲しました。
-- `noteDraftStore.ts` をリファクタリングし、ドラフト保存を `NoteActionService` に委譲しました。
-- `noteDraftStore.ts` で読み取り専用の `getNoteById` 操作のために `NoteStorageService` のインポートを再導入し、型チェックエラーを解決し、書き込みアクションのデカップリングを維持しました。
-- `docs/issues/Refucturing/02_try/03_Refactoring_Plan.md` を更新し、フェーズ2のすべての受け入れ条件を完了としてマークしました。
-
-これらの変更により、ストアが直接的な永続化ロジックからさらに分離され、保守性とイベント駆動アーキテクチャへの準拠が向上します。
+Saving the current state of the frontend before starting significant changes for issue 37.
+- Minor adjustments in DiffViewScreen.tsx, useNoteEditor.tsx, and types.ts.

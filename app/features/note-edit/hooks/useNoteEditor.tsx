@@ -32,38 +32,29 @@ export const useNoteEditor = (noteId: string | undefined) => {
     });
   }, [noteId]);
 
-  // activeNoteが更新されたら、タイトルを更新し、ローディングを解除する
+  // activeNoteが更新されたら、タイトルとコンテンツを更新し、ローディングを解除する
   useEffect(() => {
-    if (noteId === undefined || activeNote?.id === noteId) {
+    console.log('[DEBUG] useNoteEditor activeNote effect. noteId:', noteId, 'activeNote:', activeNote?.id);
+    if (noteId === undefined) {
+      // 新規ノート作成の場合
+      console.log('[DEBUG] useNoteEditor: New note case');
       setTitle(activeNote?.title ?? '');
+      setContent(activeNote?.content ?? '');
       setIsLoading(false);
+    } else if (activeNote?.id === noteId) {
+      // 既存ノートが正しく読み込まれた場合
+      console.log('[DEBUG] useNoteEditor: Existing note loaded');
+      setTitle(activeNote.title);
+      setContent(activeNote.content);
+      setIsLoading(false);
+    } else {
+      console.log('[DEBUG] useNoteEditor: Loading continues');
     }
+    // activeNoteがnullまたは異なるIDの場合は何もしない（ローディング継続）
   }, [activeNote, noteId]);
 
-  // noteIdが変更されたら、コンテントを更新する
-  useEffect(() => {
-    if (noteId === undefined || activeNote?.id === noteId) {
-      setContent(activeNote?.content ?? '');
-    }
-  }, [noteId]);
 
 
-
-  // 差分表示画面への遷移ハンドラ
-  const handleGoToDiff = useCallback(() => {
-    navigation.navigate('DiffView', {
-      mode: 'apply',
-      originalContent: activeNote?.content ?? '',
-      newContent: content,
-      onApply: (newContent: string) => {
-        setContent(newContent);
-      },
-      onCancel: () => {
-        // キャンセル時は編集前の状態に戻す
-        setContent(activeNote?.content ?? '');
-      },
-    });
-  }, [content, activeNote, navigation, setContent]);
 
   // 保存処理のハンドラ
   const handleSave = useCallback(() => {
@@ -91,7 +82,6 @@ export const useNoteEditor = (noteId: string | undefined) => {
     content,
     setContent,
     isLoading,
-    handleGoToDiff,
     handleSave,
   };
 };
