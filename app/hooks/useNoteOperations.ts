@@ -5,6 +5,7 @@ import { commandExecutor, UpdateNoteCommand, CreateNoteCommand, DeleteNoteComman
 import { eventBus } from '../services/eventBus';
 import { NoteStorageService } from '../services/storageService';
 import { DraftNote } from '../store/note/noteDraftStore';
+import { noteService } from '../services/NoteService';
 
 export const useNoteOperations = () => {
   const createNote = useCallback(async (data: CreateNoteData): Promise<Note> => {
@@ -46,13 +47,7 @@ export const useNoteOperations = () => {
   }, []);
 
   const bulkDeleteNotes = useCallback(async (noteIds: string[]): Promise<void> => {
-    try {
-      await NoteActionService.bulkDeleteNotes(noteIds);
-    } catch (error) {
-      console.error('Failed to bulk delete notes:', error);
-      await eventBus.emit('error:occurred', { error: error as Error, context: 'bulk-delete-notes' });
-      throw error;
-    }
+    await noteService.bulkDeleteNotes(noteIds);
   }, []);
 
   const bulkCopyNotes = useCallback(async (sourceIds: string[]): Promise<Note[]> => {
