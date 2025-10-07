@@ -66,15 +66,7 @@ export const useNoteOperations = () => {
   }, []);
 
   const fetchNotes = useCallback(async (): Promise<Note[]> => {
-    try {
-      const notes = await NoteStorageService.getAllNotes();
-      await eventBus.emit('note:loaded', { notes });
-      return notes;
-    } catch (error) {
-      console.error('Failed to fetch notes:', error);
-      await eventBus.emit('error:occurred', { error: error as Error, context: 'fetch-notes' });
-      throw error;
-    }
+    return await noteService.fetchNotes();
   }, []);
 
   const selectNote = useCallback(async (noteId: string | null): Promise<void> => {
