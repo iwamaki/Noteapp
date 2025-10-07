@@ -8,20 +8,13 @@ export type RootStackParamList = {
   NoteList: undefined;
   NoteEdit: { noteId?: string; filename?: string; content?: string; saved?: boolean };
   VersionHistory: { noteId: string };
-  DiffView: 
-    | { 
+  DiffView:
+    | {
         mode: 'restore';
         noteId: string;
         versionId: string;
         originalContent: string;
         newContent: string;
-      }
-    | {
-        mode: 'apply';
-        originalContent: string;
-        newContent: string;
-        onApply: (newContent: string) => void;
-        onCancel?: () => void;
       }
     | {
         mode: 'readonly';

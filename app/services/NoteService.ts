@@ -203,7 +203,23 @@ class NoteService {
 
   async selectNote(noteId: string | null): Promise<void> {
     try {
+      console.log('[DEBUG] NoteService.selectNote called with noteId:', noteId);
+
+      if (!noteId) {
+        // activeNoteをクリア
+        await eventBus.emit('note:selected', { noteId: null });
+        return;
+      }
+
+      // ストレージからノートを取得
+      const note = await NoteStorageService.getNoteById(noteId);
+      if (!note) {
+        throw new StorageError(`Note with id ${noteId} not found`, 'NOT_FOUND');
+      }
+
+      // activeNoteを更新するイベントを発火
       await eventBus.emit('note:selected', { noteId });
+      console.log('[DEBUG] NoteService.selectNote emitted event');
     } catch (error) {
       console.error('Failed to select note:', error);
       await eventBus.emit('error:occurred', { error: error as Error, context: 'select-note' });
