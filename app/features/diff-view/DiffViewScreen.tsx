@@ -78,7 +78,10 @@ function DiffViewScreen() {
   };
 
   const handleCancel = () => {
-    // ドラフトをクリアするロジックは不要になったため削除
+    // キャンセル時にコールバックを呼び出す
+    if (route.params.mode === 'apply' && route.params.onCancel) {
+      route.params.onCancel();
+    }
     navigation.goBack();
   };
 

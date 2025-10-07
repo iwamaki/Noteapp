@@ -21,6 +21,7 @@ export type RootStackParamList = {
         originalContent: string;
         newContent: string;
         onApply: (newContent: string) => void;
+        onCancel?: () => void;
       }
     | {
         mode: 'readonly';
