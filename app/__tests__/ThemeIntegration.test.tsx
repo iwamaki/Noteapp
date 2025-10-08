@@ -6,7 +6,7 @@
 import React from 'react';
 import { render, act } from '@testing-library/react-native';
 import { ThemeProvider } from '../theme/ThemeContext';
-import { useSettingsStore } from '../store/settingsStore';
+import { useSettingsStore } from '../settings/settingsStore';
 import { ListItem } from '../components/ListItem';
 import { FabButton } from '../components/FabButton';
 import { HeaderButton } from '../components/HeaderButton';

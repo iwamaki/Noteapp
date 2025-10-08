@@ -8,7 +8,7 @@
 import React, { useEffect } from 'react';
 import RootNavigator from './navigation/RootNavigator';
 import { ThemeProvider } from './theme/ThemeContext';
-import { useSettingsStore } from './store/settingsStore';
+import { useSettingsStore } from './settings/settingsStore';
 import { logger } from './utils/logger';
 
 export default function App() {
