@@ -1,6 +1,6 @@
 title: "設定画面へのLLMプロバイダー・モデル切り替え機能の実装"
 id: 35
-status: new
+status: done
 priority: high
 attempt_count: 0
 tags: [LLM, settings, UI, feature]

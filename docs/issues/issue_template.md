@@ -1,8 +1,8 @@
 ---
-title: "（ここにissueのタイトルを記述）"
+title: "[priority]_[id]_[issueのタイトル]"
 id: 0 # issueのユニークID
-status: new # new | in-progress | blocked | pending-review | completed
-priority: medium # high | medium | low
+status: new # new | in-progress | blocked | pending-review | done
+priority: medium # A:high | B:medium | C:low
 attempt_count: 0 # このissueへの挑戦回数。失敗のたびにインクリメントする
 tags: [] # 例: [UI, navigation, bug]
 ---

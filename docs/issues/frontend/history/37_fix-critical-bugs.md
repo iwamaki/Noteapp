@@ -1,7 +1,7 @@
 ---
 title: "重大なバグの修正：データ永続化と差分画面の不整合"
 id: 37
-status: new
+status: done
 priority: critical
 tags: [bug, critical, persistence, state-management]
 ---

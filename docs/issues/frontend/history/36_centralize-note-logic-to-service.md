@@ -1,7 +1,7 @@
 ---
 title: "アーキテクチャ改善：ノート管理ロジックをNoteServiceに集約"
 id: 36 # 仮のID
-status: new
+status: destruction
 priority: high
 attempt_count: 0
 tags: [architecture, refactoring, service-layer]

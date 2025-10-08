@@ -33,5 +33,5 @@ tags: [ui, ux, feature, header, undo-redo]
 
 - `app/features/note-edit/components/NoteEditHeader.tsx` (修正対象のヘッダーコンポーネント)
 - `app/features/note-edit/hooks/useNoteEditHeader.tsx` (ヘッダーのロジックを管理するフック)
-- `app/services/NoteService.ts` (アンドゥ・リドゥのロジックと状態を持つサービス)
+- `app/features/note-edit/noteStorage.ts` (アンドゥ・リドゥロジック)
 - `app/navigation/RootNavigator.tsx` (ヘッダー設定の変更が必要な場合がある)
