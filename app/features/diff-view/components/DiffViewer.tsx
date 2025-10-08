@@ -11,7 +11,7 @@ import {
   ScrollView,
   StyleSheet,
 } from 'react-native';
-import { DiffLine } from '../../../services/diffService';
+import { DiffLine } from '../services/diffService';
 import { useTheme } from '../../../theme/ThemeContext';
 
 interface DiffViewerProps {
