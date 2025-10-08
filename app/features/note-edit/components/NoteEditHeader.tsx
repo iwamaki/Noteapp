@@ -4,9 +4,17 @@
  */
 
 import React, { useState, useRef } from 'react';
-import { TextInput, StyleSheet, NativeSyntheticEvent, TextInputKeyPressEventData } from 'react-native';
+import {
+  TextInput,
+  StyleSheet,
+  NativeSyntheticEvent,
+  TextInputKeyPressEventData,
+  View,
+  TouchableOpacity,
+} from 'react-native';
 import { useTheme } from '../../../theme/ThemeContext';
 import { responsive } from '../../../utils/commonStyles';
+import { Ionicons } from '@expo/vector-icons';
 
 interface NoteEditHeaderProps {
   title: string;
@@ -14,6 +22,10 @@ interface NoteEditHeaderProps {
   editable: boolean;
   onCompositionStart?: () => void;
   onCompositionEnd?: (title: string) => void;
+  onUndo: () => void;
+  onRedo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
 }
 
 export const NoteEditHeader: React.FC<NoteEditHeaderProps> = ({
@@ -22,32 +34,45 @@ export const NoteEditHeader: React.FC<NoteEditHeaderProps> = ({
   editable,
   onCompositionStart,
   onCompositionEnd,
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo,
 }) => {
-  const { colors, typography } = useTheme();
+  const { colors, typography, spacing } = useTheme();
   const [localTitle, setLocalTitle] = useState(title);
   const isComposingRef = useRef(false);
 
   const styles = StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      width: responsive.getResponsiveSize(220, 260, 300),
+    },
     headerTitle: {
       ...typography.title,
       color: colors.text,
-      width: responsive.getResponsiveSize(180, 200, 220),
+      flex: 1,
       textAlign: 'left',
+    },
+    buttonContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    button: {
+      paddingHorizontal: spacing.sm,
     },
   });
 
   const handleChangeText = (text: string) => {
     setLocalTitle(text);
-    // IME入力中でなければ即座に親に通知
     if (!isComposingRef.current) {
       onTitleChange(text);
     }
   };
 
-
-  // Android/iOSでのIME入力検知
   const handleKeyPress = (e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
-    // IME入力の開始を検知（完全ではないが補助的に使用）
     if (e.nativeEvent.key === 'Unidentified' || e.nativeEvent.key === 'Process') {
       if (!isComposingRef.current) {
         isComposingRef.current = true;
@@ -56,7 +81,6 @@ export const NoteEditHeader: React.FC<NoteEditHeaderProps> = ({
     }
   };
 
-  // フォーカス喪失時にIME入力終了とみなす
   const handleBlur = () => {
     if (isComposingRef.current) {
       isComposingRef.current = false;
@@ -64,7 +88,6 @@ export const NoteEditHeader: React.FC<NoteEditHeaderProps> = ({
     }
   };
 
-  // 確定キー（Enterなど）押下時
   const handleSubmitEditing = () => {
     if (isComposingRef.current) {
       isComposingRef.current = false;
@@ -72,9 +95,7 @@ export const NoteEditHeader: React.FC<NoteEditHeaderProps> = ({
     }
   };
 
-  // セレクション変更時（カーソル移動時）にもIME終了判定
   const handleSelectionChange = () => {
-    // 一定時間後にIME状態をチェック（IME確定後のカーソル移動）
     setTimeout(() => {
       if (isComposingRef.current) {
         isComposingRef.current = false;
@@ -84,20 +105,37 @@ export const NoteEditHeader: React.FC<NoteEditHeaderProps> = ({
   };
 
   return (
-    <TextInput
-      value={localTitle}
-      onChangeText={handleChangeText}
-      style={styles.headerTitle}
-      placeholder="ノートのタイトル"
-      placeholderTextColor={colors.textSecondary}
-      editable={editable}
-      onKeyPress={handleKeyPress}
-      onBlur={handleBlur}
-      onSubmitEditing={handleSubmitEditing}
-      onSelectionChange={handleSelectionChange}
-      // IME入力を有効にする
-      autoCorrect={false}
-      autoCapitalize="none"
-    />
+    <View style={styles.container}>
+      <TextInput
+        value={localTitle}
+        onChangeText={handleChangeText}
+        style={styles.headerTitle}
+        placeholder="ノートのタイトル"
+        placeholderTextColor={colors.textSecondary}
+        editable={editable}
+        onKeyPress={handleKeyPress}
+        onBlur={handleBlur}
+        onSubmitEditing={handleSubmitEditing}
+        onSelectionChange={handleSelectionChange}
+        autoCorrect={false}
+        autoCapitalize="none"
+      />
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity onPress={onUndo} disabled={!canUndo} style={styles.button}>
+          <Ionicons
+            name="arrow-undo-outline"
+            size={24}
+            color={canUndo ? colors.primary : colors.textSecondary}
+          />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={onRedo} disabled={!canRedo} style={styles.button}>
+          <Ionicons
+            name="arrow-redo-outline"
+            size={24}
+            color={canRedo ? colors.primary : colors.textSecondary}
+          />
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 };

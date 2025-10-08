@@ -4,7 +4,7 @@
  * @responsibility ノートの読み込み、タイトルとコンテンツの管理、変更の自動保存（デバウンス付き）、および差分表示画面への遷移ロジックを提供する責任があります。
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 
@@ -12,15 +12,22 @@ import { Alert } from 'react-native';
 import { RootStackParamList } from '../../../navigation/types';
 import { NoteEditStorage } from '../noteStorage';
 import { Note } from '@shared/types/note';
+import { useContentHistory } from './useContentHistory';
 
 // カスタムフックの定義
 export const useNoteEditor = (noteId: string | undefined) => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const contentHistory = useContentHistory();
 
   const [note, setNote] = useState<Note | null>(null);
   const [title, setTitle] = useState(note?.title ?? '');
   const [content, setContent] = useState(note?.content ?? '');
   const [isLoading, setIsLoading] = useState(true);
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
+
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isUndoRedoing = useRef<boolean>(false);
 
   useEffect(() => {
     const fetchNote = async () => {
@@ -55,8 +62,60 @@ export const useNoteEditor = (noteId: string | undefined) => {
     if (note) {
       setTitle(note.title);
       setContent(note.content);
+      // ノートを読み込んだときに履歴をリセット
+      contentHistory.reset(note.content);
+      setCanUndo(false);
+      setCanRedo(false);
     }
-  }, [note]);
+  }, [note, contentHistory]);
+
+  // contentの変更を検知して履歴に追加（debounce付き）
+  useEffect(() => {
+    // Undo/Redo操作中は履歴を追加しない
+    if (isUndoRedoing.current) {
+      isUndoRedoing.current = false;
+      return;
+    }
+
+    // デバウンス処理
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+
+    debounceTimer.current = setTimeout(() => {
+      contentHistory.pushHistory(content);
+      setCanUndo(contentHistory.canUndo());
+      setCanRedo(contentHistory.canRedo());
+    }, 300);
+
+    return () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+    };
+  }, [content, contentHistory]);
+
+  // Undo関数
+  const undo = useCallback(() => {
+    const prevContent = contentHistory.undo();
+    if (prevContent !== null) {
+      isUndoRedoing.current = true;
+      setContent(prevContent);
+      setCanUndo(contentHistory.canUndo());
+      setCanRedo(contentHistory.canRedo());
+    }
+  }, [contentHistory]);
+
+  // Redo関数
+  const redo = useCallback(() => {
+    const nextContent = contentHistory.redo();
+    if (nextContent !== null) {
+      isUndoRedoing.current = true;
+      setContent(nextContent);
+      setCanUndo(contentHistory.canUndo());
+      setCanRedo(contentHistory.canRedo());
+    }
+  }, [contentHistory]);
 
   const handleSave = useCallback(async () => {
     if (note?.content === content && note?.title === title) {
@@ -96,13 +155,21 @@ export const useNoteEditor = (noteId: string | undefined) => {
     }
   }, [note, title, content, navigation]);
 
+  const handleTitleChange = useCallback((newTitle: string) => {
+    setTitle(newTitle);
+  }, []);
+
   return {
     note,
     title,
-    setTitle,
+    handleTitleChange,
     content,
     setContent,
     isLoading,
     handleSave,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
   };
 };
