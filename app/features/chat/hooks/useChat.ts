@@ -9,7 +9,7 @@ import { Animated, PanResponder } from 'react-native';
 import APIService, { ChatContext } from '../../../services/api';
 import { ChatMessage, LLMCommand } from '../../../services/llmService';
 import { logger } from '../../../utils/logger';
-import { useSettingsStore } from '../../../store/settingsStore';
+import { useSettingsStore } from '../../../settings/settingsStore';
 
 
 // チャットエリアの高さの制限値

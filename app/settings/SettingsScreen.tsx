@@ -13,7 +13,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useSettingsStore } from '../store/settingsStore';
+import { useSettingsStore } from './settingsStore';
 import { useTheme } from '../theme/ThemeContext';
 import { useCustomHeader } from '../components/CustomHeader';
 import APIService from '../services/api';
