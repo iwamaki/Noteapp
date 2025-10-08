@@ -4,7 +4,7 @@
  * @responsibility ユーザーがファイルのコンテンツを編集、プレビュー、または差分表示できるインターフェースを提供し、異なる表示モード間の切り替えを管理する責任があります。
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useTheme } from '../../../theme/ThemeContext';
 
@@ -30,11 +30,9 @@ export const FileEditor: React.FC<FileEditorProps> = ({
   onContentChange,
 }) => {
   const { colors, typography } = useTheme();
-  const [currentContent, setCurrentContent] = useState(initialContent);
 
   // コンテンツ変更のハンドラ
   const handleContentChange = useCallback((text: string) => {
-    setCurrentContent(text);
     if (onContentChange) {
       onContentChange(text);
     }
@@ -53,20 +51,20 @@ export const FileEditor: React.FC<FileEditorProps> = ({
       case 'content':
         return (
           <View style={styles.contentContainer}>
-            <Text style={styles.previewText}>{currentContent}</Text>
+            <Text style={styles.previewText}>{initialContent}</Text>
           </View>
         );
 
       case 'edit':
         return (
           <TextEditor
-            content={currentContent}
+            content={initialContent}
             onContentChange={handleContentChange}
           />
         );
 
       case 'preview':
-        return <MarkdownPreview content={currentContent} />;
+        return <MarkdownPreview content={initialContent} />;
 
       default:
         return null;

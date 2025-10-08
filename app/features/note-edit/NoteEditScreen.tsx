@@ -11,7 +11,6 @@ import { RootStackParamList } from '../../navigation/types';
 import { FileEditor, ViewMode } from './components/FileEditor';
 import { useNoteEditor } from './hooks/useNoteEditor';
 import { useNoteEditHeader } from './hooks/useNoteEditHeader';
-import { NoteEditHeader } from './components/NoteEditHeader';
 import { useTheme } from '../../theme/ThemeContext';
 import { ChatInputBar } from '../chat/ChatInputBar';
 import { ChatContext } from '../../services/llmService';
@@ -30,11 +29,15 @@ function NoteEditScreen() {
   const {
     note,
     title,
-    setTitle,
     content,
     setContent,
     isLoading,
     handleSave,
+    handleTitleChange,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
   } = useNoteEditor(noteId);
 
   const [viewMode, setViewMode] = useState<ViewMode>('edit');
@@ -78,15 +81,14 @@ function NoteEditScreen() {
     activeNoteId: note?.id,
     viewMode,
     isLoading,
-    headerTitle: (
-      <NoteEditHeader
-        title={title}
-        onTitleChange={setTitle}
-        editable={viewMode === 'edit' && !isLoading}
-      />
-    ),
+    isEditable: viewMode === 'edit' && !isLoading,
+    onTitleChange: handleTitleChange,
     onViewModeChange: setViewMode,
     onSave: handleSave,
+    onUndo: undo,
+    onRedo: redo,
+    canUndo,
+    canRedo,
   });
 
   // チャットエリアの作成

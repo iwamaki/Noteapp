@@ -112,6 +112,7 @@ export const useCustomHeader = () => {
               icon={button.icon}
               onPress={button.onPress}
               variant={button.variant}
+              disabled={button.disabled}
             />
           ))}
         </View>
@@ -128,6 +129,7 @@ export const useCustomHeader = () => {
               icon={button.icon}
               onPress={button.onPress}
               variant={button.variant}
+              disabled={button.disabled}
             />
           ))}
         </View>
