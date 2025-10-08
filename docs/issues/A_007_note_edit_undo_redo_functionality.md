@@ -1,7 +1,7 @@
 ---
 title: "A_007_ノート編集画面のUndo/Redo機能の正常化"
 id: 7
-status: new
+status: done
 priority: A:high
 attempt_count: 1
 tags: [note-edit, undo-redo, state-management, UI, critical-bug]
