@@ -67,7 +67,7 @@ export const useNoteEditor = (noteId: string | undefined) => {
       setCanUndo(false);
       setCanRedo(false);
     }
-  }, [note, contentHistory]);
+  }, [note]);
 
   // contentの変更を検知して履歴に追加（debounce付き）
   useEffect(() => {
@@ -93,7 +93,7 @@ export const useNoteEditor = (noteId: string | undefined) => {
         clearTimeout(debounceTimer.current);
       }
     };
-  }, [content, contentHistory]);
+  }, [content]);
 
   // Undo関数
   const undo = useCallback(() => {
