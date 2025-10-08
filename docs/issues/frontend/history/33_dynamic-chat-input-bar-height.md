@@ -1,7 +1,7 @@
 ---
 title: "チャット入力バーの高さの動的計算とレイアウト干渉の根本解決"
 id: 0 # issueのユニークID
-status: new # new | in-progress | blocked | pending-review | completed
+status: done # new | in-progress | blocked | pending-review | completed
 priority: medium # high | medium | low
 attempt_count: 0 # このissueへの挑戦回数。失敗のたびにインクリメントする
 tags: [UI, layout, bug, refactoring]

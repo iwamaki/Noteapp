@@ -1,7 +1,7 @@
 ---
 title: "アーキテクチャの簡素化：Feature-First設計への移行"
 id: 39
-status: new
+status: done
 priority: high
 attempt_count: 0
 tags: [refactoring, architecture, maintainability, simplification]
