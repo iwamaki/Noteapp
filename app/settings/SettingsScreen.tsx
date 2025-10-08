@@ -13,11 +13,11 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useSettingsStore } from '../../store/settingsStore';
-import { useTheme } from '../../theme/ThemeContext';
-import { useCustomHeader } from '../../components/CustomHeader';
-import APIService from '../../services/api';
-import { LLMProvider } from '../../services/llmService';
+import { useSettingsStore } from '../store/settingsStore';
+import { useTheme } from '../theme/ThemeContext';
+import { useCustomHeader } from '../components/CustomHeader';
+import APIService from '../services/api';
+import { LLMProvider } from '../services/llmService';
 import { Ionicons } from '@expo/vector-icons';
 
 function SettingsScreen() {

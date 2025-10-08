@@ -17,7 +17,7 @@ import NoteListScreen from '../features/note-list/NoteListScreen';
 import NoteEditScreen from '../features/note-edit/NoteEditScreen';
 import DiffViewScreen from '../features/diff-view/DiffViewScreen';
 import VersionHistoryScreen from '../features/version-history/VersionHistoryScreen';
-import SettingsScreen from '../features/settings/SettingsScreen';
+import SettingsScreen from '../settings/SettingsScreen';
 
 // スタックナビゲーターの作成
 const Stack = createStackNavigator<RootStackParamList>();
