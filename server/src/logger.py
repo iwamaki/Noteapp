@@ -6,6 +6,7 @@ import os
 import sys
 import json
 from datetime import datetime
+from typing import Union, Dict, Any, Optional
 
 class JsonFormatter(logging.Formatter):
     """JSONフォーマットでログを出力するフォーマッタ"""
@@ -64,7 +65,7 @@ logger = setup_logger()
 # 構造化ログ用のヘルパー関数
 
 
-def log_llm_raw(provider: str, direction: str, content: str, metadata: dict = None):
+def log_llm_raw(provider: str, direction: str, content: Union[str, Dict[str, Any]], metadata: Optional[Dict[str, Any]] = None):
     """LLMとの生のやり取りを詳細にログ記録"""
     log_data = {
         "provider": provider,

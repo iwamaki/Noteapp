@@ -18,8 +18,8 @@ export interface ChatContext {
   currentFileContent?: {
     filename: string;
     content: string;
-    size: string;
-    type: string;
+    size?: string;
+    type?: string;
   };
   attachedFileContent?: {
     filename: string;

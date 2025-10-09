@@ -1,11 +1,13 @@
 # @file gemini.py
 # @summary Google GeminiのLLMプロバイダーを実装します。
 # @responsibility BaseLLMProviderを継承し、GeminiのAPIと通信してチャット応答を生成します。
-from typing import Optional, List
+from typing import Optional, List, Any, Dict
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.schema import HumanMessage, SystemMessage, AIMessage
+from langchain.schema import HumanMessage, SystemMessage, AIMessage, BaseMessage
+from langchain.agents import AgentExecutor, create_tool_calling_agent
+from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from src.models import ChatResponse, ChatContext, LLMCommand
-from src.tools.file_tools import AVAILABLE_TOOLS
+from src.tools.file_tools import AVAILABLE_TOOLS, set_file_context
 from .base import BaseLLMProvider
 from src.logger import logger, log_llm_raw
 
@@ -20,14 +22,40 @@ class GeminiProvider(BaseLLMProvider):
         )
         self.model = model
 
+        # Agentのプロンプトテンプレートを作成
+        self.prompt = ChatPromptTemplate.from_messages([
+            ("system", "あなたは親切で有能なAIアシスタントです。ユーザーのノート作成と編集をサポートします。\n"
+                      "利用可能なツールを使って、ユーザーの要求に応えてください。"),
+            MessagesPlaceholder(variable_name="chat_history", optional=True),
+            ("human", "{input}"),
+            MessagesPlaceholder(variable_name="agent_scratchpad"),
+        ])
+
+        # Agentを作成
+        self.agent = create_tool_calling_agent(self.llm, AVAILABLE_TOOLS, self.prompt)
+        self.agent_executor = AgentExecutor(
+            agent=self.agent,
+            tools=AVAILABLE_TOOLS,
+            verbose=True,  # デバッグ用
+            max_iterations=5,  # 最大5回までツールを呼び出せる
+            handle_parsing_errors=True
+        )
+
     async def chat(self, message: str, context: Optional[ChatContext] = None) -> ChatResponse:
-        """チャットメッセージを処理し、応答を返す"""
-        llm_with_tools = self.llm.bind_tools(AVAILABLE_TOOLS)
+        """チャットメッセージを処理し、応答を返す（Agent Executor使用）"""
 
-        messages = [
-            SystemMessage(content="あなたは親切で有能なAIアシスタントです。ユーザーのノート作成と編集をサポートします。")
-        ]
+        # ファイルコンテキストを設定
+        if context and context.currentFileContent:
+            set_file_context(context.currentFileContent)
+            logger.info(f"File context set: {context.currentFileContent.get('filename')}")
+        elif context and context.attachedFileContent:
+            set_file_context(context.attachedFileContent)
+            logger.info(f"File context set from attached: {context.attachedFileContent.get('filename')}")
+        else:
+            set_file_context(None)
 
+        # 会話履歴を構築
+        chat_history: List[BaseMessage] = []
         history_count = 0
         if context and context.conversationHistory:
             history_count = len(context.conversationHistory)
@@ -35,85 +63,82 @@ class GeminiProvider(BaseLLMProvider):
                 role = history_message.get('role')
                 content = history_message.get('content', '')
                 if role == 'user':
-                    messages.append(HumanMessage(content=content))
+                    chat_history.append(HumanMessage(content=content))
                 elif role == 'ai':
-                    messages.append(AIMessage(content=content))
+                    chat_history.append(AIMessage(content=content))
 
+        # ユーザーメッセージを構築
         full_user_message = message
         if context and context.attachedFileContent:
             context_msg = f"\n\n[添付ファイル情報]\nファイル名: {context.attachedFileContent.get('filename')}\n内容:\n---\n{context.attachedFileContent.get('content')}\n---"
             full_user_message += context_msg
-        
-        messages.append(HumanMessage(content=full_user_message))
 
-        # 生のメッセージ内容をログに記録
-        log_llm_raw("gemini", "request", full_user_message, {
+        # ログ記録
+        log_llm_raw("gemini", "agent_request", {
+            "message": full_user_message,
             "model": self.model,
             "history_count": history_count,
-            "total_messages": len(messages)
-        })
+            "has_file_context": bool(context and (context.currentFileContent or context.attachedFileContent))
+        }, {})
 
-        response = llm_with_tools.invoke(messages)
-        
-        # 生のレスポンス全体をログに記録
-        log_llm_raw("gemini", "response", {
-            "content": response.content if response.content else "",
-            "has_tool_calls": hasattr(response, 'tool_calls') and bool(response.tool_calls),
-            "tool_calls_raw": response.tool_calls if hasattr(response, 'tool_calls') and response.tool_calls else [],
-            "response_metadata": getattr(response, 'response_metadata', {}),
-            "full_response": str(response)
-        }, {
-            "model": self.model
-        })
-
-        commands = self._extract_tool_calls(response)
-        
-        # コマンドの詳細をログに記録
-        if commands:
-            log_llm_raw("gemini", "commands", {
-                "count": len(commands),
-                "actions": [f"{cmd.action}:{cmd.path}" for cmd in commands],
-                "detailed_commands": [
-                    {
-                        "action": cmd.action,
-                        "path": cmd.path,
-                        "content": cmd.content[:500] + "..." if cmd.content and len(cmd.content) > 500 else cmd.content
-                    } for cmd in commands
-                ]
+        # AgentExecutorを実行
+        try:
+            result = await self.agent_executor.ainvoke({
+                "input": full_user_message,
+                "chat_history": chat_history
             })
-        
-        content = response.content
-        message = "".join(content) if isinstance(content, list) else content
-        
-        return ChatResponse(
-            message=message if message else "ファイルの編集コマンドを生成しました。",
-            commands=commands if commands else None,
-            provider="gemini",
-            model=self.model,
-            historyCount=history_count
-        )
 
-    def _extract_tool_calls(self, response) -> Optional[List[LLMCommand]]:
-        """
-        LLMのレスポンスからツール呼び出しを抽出し、LLMCommandに変換する
-        """
-        if not hasattr(response, 'tool_calls') or not response.tool_calls:
-            return None
+            agent_output = result.get("output", "")
 
+            # ログ記録
+            log_llm_raw("gemini", "agent_response", {
+                "output": agent_output,
+                "intermediate_steps": len(result.get("intermediate_steps", [])),
+                "model": self.model
+            }, {})
+
+            # edit_fileツールが呼ばれたかチェック（最終的なツール呼び出しを検出）
+            commands = self._extract_commands_from_agent_result(result)
+
+            if commands:
+                log_llm_raw("gemini", "agent_commands", {
+                    "count": len(commands),
+                    "actions": [f"{cmd.action}:{cmd.path}" for cmd in commands]
+                }, {})
+
+            return ChatResponse(
+                message=agent_output,
+                commands=commands if commands else None,
+                provider="gemini",
+                model=self.model,
+                historyCount=history_count
+            )
+
+        except Exception as e:
+            logger.error(f"Agent execution error: {e}")
+            return ChatResponse(
+                message=f"エラーが発生しました: {str(e)}",
+                provider="gemini",
+                model=self.model,
+                historyCount=history_count
+            )
+
+    def _extract_commands_from_agent_result(self, result: dict) -> Optional[List[LLMCommand]]:
+        """
+        AgentExecutorの実行結果から、フロントエンドで実行すべきコマンドを抽出する
+        （edit_fileのみ - read_fileはAgent内で処理済み）
+        """
         commands = []
-        for tool_call in response.tool_calls:
-            if tool_call.get('name') == 'edit_file':
-                args = tool_call.get('args', {})
+        intermediate_steps = result.get("intermediate_steps", [])
+
+        for action, observation in intermediate_steps:
+            # edit_fileツールが呼ばれた場合のみコマンドとして抽出
+            if hasattr(action, 'tool') and action.tool == 'edit_file':
+                tool_input = action.tool_input
                 commands.append(LLMCommand(
                     action='edit_file',
-                    path=args.get('filename'),
-                    content=args.get('content')
-                ))
-            elif tool_call.get('name') == 'read_file':
-                args = tool_call.get('args', {})
-                commands.append(LLMCommand(
-                    action='read_file',
-                    path=args.get('filename')
+                    path=tool_input.get('filename'),
+                    content=tool_input.get('content')
                 ))
 
         return commands if commands else None
