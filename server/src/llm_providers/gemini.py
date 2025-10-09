@@ -38,7 +38,8 @@ class GeminiProvider(BaseLLMProvider):
             tools=AVAILABLE_TOOLS,
             verbose=True,  # デバッグ用
             max_iterations=5,  # 最大5回までツールを呼び出せる
-            handle_parsing_errors=True
+            handle_parsing_errors=True,
+            return_intermediate_steps=True  # ★ これを追加！
         )
 
     async def chat(self, message: str, context: Optional[ChatContext] = None) -> ChatResponse:
@@ -99,6 +100,13 @@ class GeminiProvider(BaseLLMProvider):
 
             # edit_fileツールが呼ばれたかチェック（最終的なツール呼び出しを検出）
             commands = self._extract_commands_from_agent_result(result)
+
+            # デバッグ: intermediate_steps の内容を詳細にログ出力
+            logger.debug({
+                "intermediate_steps_count": len(result.get("intermediate_steps", [])),
+                "intermediate_steps_raw": result.get("intermediate_steps", []),
+                "extracted_commands": commands
+            })
 
             if commands:
                 log_llm_raw("gemini", "agent_commands", {
