@@ -4,7 +4,7 @@ import { Note, CreateNoteData } from '../../../shared/types/note';
 
 const NOTES_STORAGE_KEY = '@notes';
 
-import StorageUtils from '../../shared/storage/asyncStorageUtils';
+import StorageUtils from '@data/asyncStorageUtils';
 
 // エラークラス
 export class StorageError extends Error {
