@@ -96,11 +96,43 @@ function NoteEditScreen() {
     currentFile: note?.id,
   };
 
+  // コマンドハンドラーの定義（拡張性を考慮したマップパターン）
+  const handleEditFile = (command: LLMCommand) => {
+    if (typeof command.content === 'string') {
+      const newContent = command.content.replace(/^---\s*/, '').replace(/\s*---$/, '');
+      setContent(newContent);
+    }
+  };
+
+  const handleReadFile = (command: LLMCommand) => {
+    // read_fileコマンドの処理
+    // 現在のノート内容は既にLLMに送信されているため、
+    // ここでは追加の処理が必要な場合にのみ実装する
+    console.log(`[read_file] ファイル読み込み要求: ${command.path}`);
+    console.log(`[read_file] 現在のノート内容: ${content.substring(0, 100)}...`);
+
+    // 将来的な拡張例:
+    // - 他のファイルを読み込んでLLMに返す
+    // - ファイル内容をUIに表示する
+    // - ファイルメタデータを取得する
+  };
+
+  // コマンドハンドラーマップ（新しいツールの追加が容易）
+  const commandHandlers: Record<string, (command: LLMCommand) => void> = {
+    'edit_file': handleEditFile,
+    'read_file': handleReadFile,
+    // 将来的に他のツールを追加する場合は、ここに追加するだけ
+    // 例: 'create_file': handleCreateFile,
+    //     'delete_file': handleDeleteFile,
+  };
+
   const handleCommandReceived = (commands: LLMCommand[]) => {
     for (const command of commands) {
-      if (command.action === 'edit_file' && typeof command.content === 'string') {
-        const newContent = command.content.replace(/^---\s*/, '').replace(/\s*---$/, '');
-        setContent(newContent);
+      const handler = commandHandlers[command.action];
+      if (handler) {
+        handler(command);
+      } else {
+        console.warn(`[NoteEditScreen] 未知のコマンド: ${command.action}`);
       }
     }
   };
