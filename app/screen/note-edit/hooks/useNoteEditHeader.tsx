@@ -11,7 +11,7 @@ import { RootStackParamList } from '../../../navigation/types';
 import { useCustomHeader } from '../../../components/CustomHeader';
 import { ViewMode } from '../components/FileEditor';
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '../../../theme/ThemeContext';
+import { useTheme } from '../../../design/theme/ThemeContext';
 import { NoteEditHeader } from '../components/NoteEditHeader';
 
 interface UseNoteEditHeaderProps {

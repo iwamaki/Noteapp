@@ -6,7 +6,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { HeaderButton } from './HeaderButton';
-import { useTheme } from '../theme/ThemeContext';
+import { useTheme } from '../design/theme/ThemeContext';
 
 export interface HeaderConfig {
   title?: React.ReactNode;

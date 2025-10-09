@@ -6,7 +6,7 @@
  */
 import React, { createContext, useContext, useMemo } from 'react';
 import { useColorScheme } from 'react-native';
-import { useSettingsStore } from '../settings/settingsStore';
+import { useSettingsStore } from '../../settings/settingsStore';
 
 // ライトテーマのカラーパレット
 const lightColors = {

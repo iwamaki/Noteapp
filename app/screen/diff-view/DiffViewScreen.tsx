@@ -7,7 +7,7 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { DiffViewer } from './components/DiffViewer';
 import { useDiffView } from './hooks/useDiffView';
-import { useTheme } from '../../theme/ThemeContext';
+import { useTheme } from '../../design/theme/ThemeContext';
 
 function DiffViewScreen() {
   const { diff } = useDiffView();

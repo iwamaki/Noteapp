@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { View, TextInput, StyleSheet } from 'react-native';
-import { useTheme } from '../../../../theme/ThemeContext';
+import { useTheme } from '../../../../design/theme/ThemeContext';
 
 interface TextEditorProps {
   content: string;

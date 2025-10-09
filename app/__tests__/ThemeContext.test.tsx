@@ -5,7 +5,7 @@
 import React from 'react';
 import { render, waitFor, act } from '@testing-library/react-native';
 import { Text, View } from 'react-native';
-import { ThemeProvider, useTheme } from '../theme/ThemeContext';
+import { ThemeProvider, useTheme } from '../design/theme/ThemeContext';
 import { useSettingsStore } from '../settings/settingsStore';
 
 

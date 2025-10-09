@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSettingsStore } from './settingsStore';
-import { useTheme } from '../theme/ThemeContext';
+import { useTheme } from '../design/theme/ThemeContext';
 import { useCustomHeader } from '../components/CustomHeader';
 import APIService from '../services/api';
 import { LLMProvider } from '../services/llmService';

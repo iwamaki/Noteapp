@@ -6,7 +6,7 @@
 
 import React, { useCallback } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { useTheme } from '../../../theme/ThemeContext';
+import { useTheme } from '../../../design/theme/ThemeContext';
 
 import { MarkdownPreview } from './editors/MarkdownPreview';
 import { TextEditor } from './editors/TextEditor';

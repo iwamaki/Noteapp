@@ -5,8 +5,8 @@
  */
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
-import { responsive } from '../styles/commonStyles';
-import { useTheme } from '../theme/ThemeContext';
+import { responsive } from '../design/styles/commonStyles';
+import { useTheme } from '../design/theme/ThemeContext';
 
 interface FabButtonProps {
   onPress: () => void;

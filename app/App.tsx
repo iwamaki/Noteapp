@@ -7,7 +7,7 @@
  */
 import React, { useEffect } from 'react';
 import RootNavigator from './navigation/RootNavigator';
-import { ThemeProvider } from './theme/ThemeContext';
+import { ThemeProvider } from './design/theme/ThemeContext';
 import { useSettingsStore } from './settings/settingsStore';
 import { logger } from './utils/logger';
 

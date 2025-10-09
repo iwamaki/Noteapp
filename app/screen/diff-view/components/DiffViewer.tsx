@@ -12,7 +12,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { DiffLine } from '../services/diffService';
-import { useTheme } from '../../../theme/ThemeContext';
+import { useTheme } from '../../../design/theme/ThemeContext';
 
 interface DiffViewerProps {
   diff: DiffLine[];

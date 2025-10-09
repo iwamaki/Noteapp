@@ -10,7 +10,7 @@ import {
   PanResponderInstance,
 } from 'react-native';
 import { ChatMessage } from '../../../services/llmService';
-import { useTheme } from '../../../theme/ThemeContext';
+import { useTheme } from '../../../design/theme/ThemeContext';
 import { MessageItem } from './MessageItem';
 
 interface ChatHistoryProps {

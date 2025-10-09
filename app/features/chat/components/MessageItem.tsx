@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import Markdown from 'react-native-markdown-display';
 import { ChatMessage } from '../../../services/llmService';
-import { useTheme } from '../../../theme/ThemeContext';
+import { useTheme } from '../../../design/theme/ThemeContext';
 
 interface MessageItemProps {
   message: ChatMessage;
