@@ -15,9 +15,8 @@ import {
   Animated,
   Keyboard,
 } from 'react-native';
-import { LLMCommand } from '../../services/llmService';
 import { useChat } from './hooks/useChat';
-import { ChatContext } from '../../services/api';
+import { ChatContext, LLMCommand } from '../../services/llmService/types';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { ChatHistory } from './components/ChatHistory';
 

@@ -17,7 +17,7 @@ import { useSettingsStore } from './settingsStore';
 import { useTheme } from '../design/theme/ThemeContext';
 import { useCustomHeader } from '../components/CustomHeader';
 import APIService from '../services/api';
-import { LLMProvider } from '../services/llmService';
+import { LLMProvider } from '../services/llmService/types';
 import { Ionicons } from '@expo/vector-icons';
 
 function SettingsScreen() {

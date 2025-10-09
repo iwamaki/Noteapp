@@ -13,7 +13,7 @@ import { useNoteEditor } from './hooks/useNoteEditor';
 import { useNoteEditHeader } from './hooks/useNoteEditHeader';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { ChatInputBar } from '../../features/chat/ChatInputBar';
-import { ChatContext } from '../../services/llmService';
+import { ChatContext } from '../../services/llmService/types';
 
 type NoteEditScreenRouteProp = RouteProp<RootStackParamList, 'NoteEdit'>;
 
