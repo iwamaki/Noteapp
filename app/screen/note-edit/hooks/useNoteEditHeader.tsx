@@ -20,6 +20,7 @@ interface UseNoteEditHeaderProps {
   viewMode: ViewMode;
   isLoading: boolean;
   isEditable: boolean;
+  isDirty: boolean;
   onTitleChange: (title: string) => void;
   onViewModeChange: (mode: ViewMode) => void;
   onSave: () => void;
@@ -35,6 +36,7 @@ export const useNoteEditHeader = ({
   viewMode,
   isLoading,
   isEditable,
+  isDirty,
   onTitleChange,
   onViewModeChange,
   onSave,
@@ -83,9 +85,10 @@ export const useNoteEditHeader = ({
 
     if (!isLoading) {
       rightButtons.push({
-        icon: <Ionicons name="save-outline" size={24} color={colors.primary} />,
+        icon: <Ionicons name="save-outline" size={24} color={isDirty ? colors.primary : colors.textDisabled} />,
         onPress: onSave,
         variant: 'primary',
+        disabled: !isDirty,
       });
 
       rightButtons.push({
@@ -125,6 +128,7 @@ export const useNoteEditHeader = ({
     viewMode,
     isLoading,
     isEditable,
+    isDirty,
     onTitleChange,
     onViewModeChange,
     onSave,

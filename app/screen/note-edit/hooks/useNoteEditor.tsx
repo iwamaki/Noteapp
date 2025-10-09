@@ -25,6 +25,7 @@ export const useNoteEditor = (noteId: string | undefined) => {
   const [isLoading, setIsLoading] = useState(true);
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
 
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isUndoRedoing = useRef<boolean>(false);
@@ -159,6 +160,21 @@ export const useNoteEditor = (noteId: string | undefined) => {
     setTitle(newTitle);
   }, []);
 
+  useEffect(() => {
+    if (isLoading) {
+      // ロード中はダーティ状態にしない
+      setIsDirty(false);
+      return;
+    }
+
+    // 新規ノートの場合、noteはnull。初期値は空文字。
+    const originalContent = note?.content ?? '';
+    const originalTitle = note?.title ?? '';
+
+    const hasChanges = title !== originalTitle || content !== originalContent;
+    setIsDirty(hasChanges);
+  }, [title, content, note, isLoading]);
+
   return {
     note,
     title,
@@ -171,5 +187,6 @@ export const useNoteEditor = (noteId: string | undefined) => {
     redo,
     canUndo,
     canRedo,
+    isDirty,
   };
 };

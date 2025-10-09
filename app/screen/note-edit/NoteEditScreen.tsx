@@ -1,12 +1,6 @@
-/**
- * @file NoteEditScreen.tsx
- * @summary このファイルは、アプリケーションのノート編集画面をレンダリングします。
- * @responsibility ノートのタイトルと内容の編集、プレビュー表示、変更の保存、およびバージョン履歴へのアクセス機能を提供します。
- */
-
 import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, Platform, ActivityIndicator, Keyboard, Animated } from 'react-native';
-import { useRoute, RouteProp } from '@react-navigation/native';
+import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/types';
 import { FileEditor, ViewMode } from './components/FileEditor';
 import { useNoteEditor } from './hooks/useNoteEditor';
@@ -14,6 +8,8 @@ import { useNoteEditHeader } from './hooks/useNoteEditHeader';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { ChatInputBar } from '../../features/chat/ChatInputBar';
 import { ChatContext, LLMCommand, } from '../../services/llmService/types/types';
+import { CustomModal } from '../../components/CustomModal';
+import { StackNavigationProp } from '@react-navigation/stack';
 
 type NoteEditScreenRouteProp = RouteProp<RootStackParamList, 'NoteEdit'>;
 
@@ -24,6 +20,7 @@ const CHAT_INPUT_HEIGHT = Platform.OS === 'ios' ? 90 : 100;
 function NoteEditScreen() {
   const { colors } = useTheme();
   const route = useRoute<NoteEditScreenRouteProp>();
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { noteId } = route.params || {};
 
   const {
@@ -38,10 +35,31 @@ function NoteEditScreen() {
     redo,
     canUndo,
     canRedo,
+    isDirty,
   } = useNoteEditor(noteId);
 
   const [viewMode, setViewMode] = useState<ViewMode>('edit');
+  const [isConfirmModalVisible, setConfirmModalVisible] = useState(false);
+  const [nextAction, setNextAction] = useState<any>(null); 
   const paddingBottomAnim = useRef(new Animated.Value(CHAT_INPUT_HEIGHT)).current;
+
+  useEffect(() => {
+    const beforeRemoveListener = (e: any) => {
+      if (!isDirty || isLoading) {
+        return;
+      }
+      e.preventDefault();
+      setNextAction(e.data.action);
+      setConfirmModalVisible(true);
+    };
+
+    navigation.addListener('beforeRemove', beforeRemoveListener);
+
+    return () => {
+      navigation.removeListener('beforeRemove', beforeRemoveListener);
+    };
+  }, [navigation, isDirty, isLoading]);
+
 
   // キーボードイベントのリスナー
   useEffect(() => {
@@ -82,6 +100,7 @@ function NoteEditScreen() {
     viewMode,
     isLoading,
     isEditable: viewMode === 'edit' && !isLoading,
+    isDirty,
     onTitleChange: handleTitleChange,
     onViewModeChange: setViewMode,
     onSave: handleSave,
@@ -176,6 +195,32 @@ function NoteEditScreen() {
         onCommandReceived={handleCommandReceived}
         currentNoteTitle={title}
         currentNoteContent={content}
+      />
+      <CustomModal
+        isVisible={isConfirmModalVisible}
+        title="変更を破棄しますか？"
+        message="保存されていない変更があります。本当に破棄してよろしいですか？"
+        buttons={[
+          {
+            text: 'キャンセル',
+            style: 'cancel',
+            onPress: () => setConfirmModalVisible(false),
+          },
+          {
+            text: '破棄',
+            style: 'destructive',
+            onPress: () => {
+              setConfirmModalVisible(false);
+              if (nextAction) {
+                navigation.dispatch(nextAction);
+              }
+            },
+          },
+        ]}
+        onClose={() => {
+          setConfirmModalVisible(false);
+          setNextAction(null); // アクションをクリア
+        }}
       />
     </View>
   );
