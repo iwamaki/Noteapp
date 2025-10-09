@@ -6,8 +6,8 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Animated, PanResponder } from 'react-native';
-import APIService, { ChatContext } from '../../../services/api';
-import { ChatMessage, LLMCommand } from '../../../services/llmService';
+import APIService, { ChatContext } from '../../../services/llmService/api';
+import { ChatMessage, LLMCommand } from '../../../services/llmService/index';
 import { logger } from '../../../utils/logger';
 import { useSettingsStore } from '../../../settings/settingsStore';
 

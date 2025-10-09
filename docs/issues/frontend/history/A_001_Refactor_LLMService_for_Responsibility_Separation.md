@@ -1,7 +1,7 @@
 ---
 title: "A_001_Refactor_LLMService_for_Responsibility_Separation"
 id: 001
-status: new
+status: done
 priority: high
 attempt_count: 0
 tags: [refactoring, llmService, architecture]

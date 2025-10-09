@@ -16,7 +16,7 @@ import {
   Keyboard,
 } from 'react-native';
 import { useChat } from './hooks/useChat';
-import { ChatContext, LLMCommand } from '../../services/llmService/types';
+import { ChatContext, LLMCommand } from '../../services/llmService/types/types';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { ChatHistory } from './components/ChatHistory';
 
