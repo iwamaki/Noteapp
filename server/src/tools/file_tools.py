@@ -24,5 +24,21 @@ def edit_file(filename: str, content: str) -> str:
     return f"ファイル '{filename}' の編集コマンドを生成しました。"
 
 
+@tool
+def read_file(filename: str) -> str:
+    """
+    ファイルの内容を読み取ります。
+
+    Args:
+        filename: 読み取るファイルのパス（例: "note.txt"）
+
+    Returns:
+        読み取りが必要であることを示すメッセージ
+    """
+    # 実際のファイル読み込みは行わず、フロントエンドに読み込みコマンドを返すためのツール
+    # このツールが呼ばれたこと自体が、LLMがファイル読み込みを意図したことを示す
+    return f"ファイル '{filename}' の読み取りコマンドを生成しました。"
+
+
 # 利用可能なツールのリスト
-AVAILABLE_TOOLS = [edit_file]
+AVAILABLE_TOOLS = [edit_file, read_file]

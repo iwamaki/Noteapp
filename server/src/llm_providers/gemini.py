@@ -109,5 +109,11 @@ class GeminiProvider(BaseLLMProvider):
                     path=args.get('filename'),
                     content=args.get('content')
                 ))
+            elif tool_call.get('name') == 'read_file':
+                args = tool_call.get('args', {})
+                commands.append(LLMCommand(
+                    action='read_file',
+                    path=args.get('filename')
+                ))
 
         return commands if commands else None
