@@ -18,7 +18,7 @@ import {
 import { LLMCommand } from '../../services/llmService';
 import { useChat } from './hooks/useChat';
 import { ChatContext } from '../../services/api';
-import { useTheme } from '../../theme/ThemeContext';
+import { useTheme } from '../../design/theme/ThemeContext';
 import { ChatHistory } from './components/ChatHistory';
 
 // チャット入力バーコンポーネントのプロパティ

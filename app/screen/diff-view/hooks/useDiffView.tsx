@@ -9,7 +9,7 @@ import { NoteEditStorage, StorageError } from '../../note-edit/noteStorage';
 import { RootStackParamList } from '../../../navigation/types';
 import { useCustomHeader, HeaderConfig } from '../../../components/CustomHeader';
 import { generateDiff } from '../services/diffService';
-import { useTheme } from '../../../theme/ThemeContext';
+import { useTheme } from '../../../design/theme/ThemeContext';
 
 type DiffViewScreenRouteProp = RouteProp<RootStackParamList, 'DiffView'>;
 

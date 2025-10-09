@@ -12,7 +12,7 @@ import { RootStackParamList } from '../../navigation/types';
 import { NoteEditStorage } from '../note-edit/noteStorage';
 import { NoteVersion, Note } from '../../../shared/types/note';
 import { format } from 'date-fns';
-import { useTheme } from '../../theme/ThemeContext';
+import { useTheme } from '../../design/theme/ThemeContext';
 import { useCustomHeader } from '../../components/CustomHeader';
 import { Ionicons } from '@expo/vector-icons';
 

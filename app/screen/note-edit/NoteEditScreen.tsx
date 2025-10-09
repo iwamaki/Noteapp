@@ -11,7 +11,7 @@ import { RootStackParamList } from '../../navigation/types';
 import { FileEditor, ViewMode } from './components/FileEditor';
 import { useNoteEditor } from './hooks/useNoteEditor';
 import { useNoteEditHeader } from './hooks/useNoteEditHeader';
-import { useTheme } from '../../theme/ThemeContext';
+import { useTheme } from '../../design/theme/ThemeContext';
 import { ChatInputBar } from '../../features/chat/ChatInputBar';
 import { ChatContext } from '../../services/llmService';
 

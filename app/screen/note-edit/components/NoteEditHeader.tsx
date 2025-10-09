@@ -12,8 +12,8 @@ import {
   View,
   TouchableOpacity,
 } from 'react-native';
-import { useTheme } from '../../../theme/ThemeContext';
-import { responsive } from '../../../styles/commonStyles';
+import { useTheme } from '../../../design/theme/ThemeContext';
+import { responsive } from '../../../design/styles/commonStyles';
 import { Ionicons } from '@expo/vector-icons';
 
 interface NoteEditHeaderProps {
