@@ -5,7 +5,7 @@ import { Note, NoteVersion, CreateNoteData, UpdateNoteData } from '../../../shar
 const NOTES_STORAGE_KEY = '@notes';
 const NOTE_VERSIONS_STORAGE_KEY = '@note_versions';
 
-import StorageUtils from '../../shared/storage/asyncStorageUtils';
+import StorageUtils from '@data/asyncStorageUtils';
 
 // エラークラス
 export class StorageError extends Error {

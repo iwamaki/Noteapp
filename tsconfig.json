@@ -19,7 +19,8 @@
     "strict": true,
     "baseUrl": ".",
     "paths": {
-      "@shared/*": ["./shared/*"]
+      "@shared/*": ["./shared/*"],
+      "@data/*": ["./app/data/*"]
     }
   },
   "include": [
@@ -30,6 +31,7 @@
     "jest.setup.js",
     "babel.config.js",
     "app.json",
+    "app/data/**/*.ts"
   ],
   "exclude": [
     "app/__tests__/**",
