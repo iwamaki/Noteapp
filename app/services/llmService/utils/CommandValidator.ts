@@ -1,5 +1,5 @@
-import { LLMCommand } from './types';
-import { LLMError } from './LLMError';
+import { LLMCommand } from '../types/types';
+import { LLMError } from '../types/LLMError';
 
 /**
  * コマンド検証ユーティリティ

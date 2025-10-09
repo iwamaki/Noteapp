@@ -4,7 +4,7 @@
  * @responsibility リクエストのライフサイクル管理、レート制限、リクエストトラッキング
  */
 
-import { loggerConfig } from '../../utils/loggerConfig';
+import { loggerConfig } from '../../../utils/loggerConfig';
 
 export interface RequestManagerConfig {
   minRequestInterval?: number; // ミリ秒

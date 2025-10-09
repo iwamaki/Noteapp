@@ -9,7 +9,7 @@ import {
   Animated,
   PanResponderInstance,
 } from 'react-native';
-import { ChatMessage } from '../../../services/llmService';
+import { ChatMessage } from '../../../services/llmService/index';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { MessageItem } from './MessageItem';
 

@@ -4,10 +4,7 @@
  * @responsibility LLM（大規模言語モデル）との通信を抽象化し、チャットメッセージの送信やLLMプロバイダーの設定などの機能を提供する責任があります。
  */
 
-import { LLMService } from './llmService';
-import { ChatContext, LLMResponse } from './llmService/types';
-
-
+import { ChatContext, LLMResponse, LLMService } from './index';
 
 export interface CreateNoteRequest {
   title: string;
@@ -72,6 +69,6 @@ export class APIService {
 
 }
 
-export { LLMService } from './llmService';
-export { ChatContext, LLMResponse } from './llmService/types';
+export { LLMService } from './index';
+export { ChatContext, LLMResponse } from './types/types';
 export default APIService;

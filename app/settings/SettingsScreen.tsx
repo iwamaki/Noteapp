@@ -16,8 +16,8 @@ import { useNavigation } from '@react-navigation/native';
 import { useSettingsStore } from './settingsStore';
 import { useTheme } from '../design/theme/ThemeContext';
 import { useCustomHeader } from '../components/CustomHeader';
-import APIService from '../services/api';
-import { LLMProvider } from '../services/llmService/types';
+import APIService from '../services/llmService/api';
+import { LLMProvider } from '../services/llmService/types/types';
 import { Ionicons } from '@expo/vector-icons';
 
 function SettingsScreen() {
@@ -243,7 +243,7 @@ function SettingsScreen() {
               renderPicker(
                 'モデル',
                 settings.llmModel,
-                llmProviders[settings.llmProvider].models.map(model => ({
+                llmProviders[settings.llmProvider].models.map((model: string) => ({
                   label: model,
                   value: model,
                 }))

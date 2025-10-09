@@ -11,18 +11,18 @@ import type {
   LLMResponse,
   LLMHealthStatus,
   LLMConfig,
-} from './types';
-import { LLMError } from './LLMError';
-import { ConversationHistory } from './ConversationHistory';
-import { HttpClient } from './HttpClient';
-import { RequestManager } from './RequestManager';
-import { ErrorHandler } from './ErrorHandler';
-import { ProviderManager } from './ProviderManager';
+} from './types/types';
+import { LLMError } from './types/LLMError';
+import { ConversationHistory } from './core/ConversationHistory';
+import { HttpClient } from './utils/HttpClient';
+import { RequestManager } from './core/RequestManager';
+import { ErrorHandler } from './utils/ErrorHandler';
+import { ProviderManager } from './core/ProviderManager';
 
 // Re-export types
-export type { ChatMessage, ChatContext, LLMProvider, LLMResponse, LLMHealthStatus, LLMConfig, LLMCommand } from './types';
-export { LLMError } from './LLMError';
-export { ConversationHistory } from './ConversationHistory';
+export type { ChatMessage, ChatContext, LLMProvider, LLMResponse, LLMHealthStatus, LLMConfig, LLMCommand } from './types/types';
+export { LLMError } from './types/LLMError';
+export { ConversationHistory } from './core/ConversationHistory';
 
 /**
  * LLMサービスメインクラス

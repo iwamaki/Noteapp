@@ -5,8 +5,8 @@
  */
 
 import axios from 'axios';
-import { LLMError } from './LLMError';
-import { loggerConfig } from '../../utils/loggerConfig';
+import { LLMError } from '../types/LLMError';
+import { loggerConfig } from '../../../utils/loggerConfig';
 
 /**
  * エラーハンドリングクラス

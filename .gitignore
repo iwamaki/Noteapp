@@ -55,5 +55,6 @@ key.json
 *.key
 
 # build
-build/\n# Backup files\n*.bak
-\n# Build directory\nbuild/
+build/
+.bak
+
