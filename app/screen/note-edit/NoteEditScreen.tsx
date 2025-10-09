@@ -13,7 +13,7 @@ import { useNoteEditor } from './hooks/useNoteEditor';
 import { useNoteEditHeader } from './hooks/useNoteEditHeader';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { ChatInputBar } from '../../features/chat/ChatInputBar';
-import { ChatContext } from '../../services/llmService/types';
+import { ChatContext, LLMCommand } from '../../services/llmService/types';
 
 type NoteEditScreenRouteProp = RouteProp<RootStackParamList, 'NoteEdit'>;
 
@@ -96,6 +96,15 @@ function NoteEditScreen() {
     currentFile: note?.id,
   };
 
+  const handleCommandReceived = (commands: LLMCommand[]) => {
+    for (const command of commands) {
+      if (command.action === 'edit_file' && typeof command.content === 'string') {
+        const newContent = command.content.replace(/^---\s*/, '').replace(/\s*---$/, '');
+        setContent(newContent);
+      }
+    }
+  };
+
   // スタイルの定義
   const styles = StyleSheet.create({
     container: {
@@ -131,7 +140,7 @@ function NoteEditScreen() {
       </Animated.View>
       <ChatInputBar
         context={chatContext}
-        onCommandReceived={() => {}}
+        onCommandReceived={handleCommandReceived}
         currentNoteTitle={title}
         currentNoteContent={content}
       />
