@@ -80,21 +80,6 @@ export const useChat = (
     setMessages(prev => [...prev, message]);
   }, []);
 
-  const handleLLMResponse = useCallback((response: any) => {
-    logger.debug('llm', 'Handling LLM response:', response);
-    const aiMessage = createMessage('ai', response.message || '');
-    addMessage(aiMessage);
-
-    if (response.commands && response.commands.length > 0 && onCommandReceived) {
-      logger.debug('llm', 'Commands received from LLM:', response.commands);
-      onCommandReceived(response.commands);
-    }
-
-    if (response.warning) {
-      const warningMessage = createMessage('system', `⚠️ ${response.warning}`);
-      addMessage(warningMessage);
-    }
-  }, [createMessage, addMessage, onCommandReceived]);
 
   const handleError = useCallback((error: unknown) => {
     logger.debug('chat', 'Handling error:', error);
@@ -144,7 +129,21 @@ export const useChat = (
       logger.debug('llm', 'Sending message to API with context:', dynamicContext);
       logger.debug('llm', 'Using provider:', settings.llmProvider, 'model:', settings.llmModel);
       const response = await APIService.sendChatMessage(trimmedInput, dynamicContext);
-      handleLLMResponse(response);
+
+      // レスポンスを処理
+      logger.debug('llm', 'Handling LLM response:', response);
+      const aiMessage = createMessage('ai', response.message || '');
+      addMessage(aiMessage);
+
+      if (response.commands && response.commands.length > 0 && onCommandReceived) {
+        logger.debug('llm', 'Commands received from LLM:', response.commands);
+        onCommandReceived(response.commands);
+      }
+
+      if (response.warning) {
+        const warningMessage = createMessage('system', `⚠️ ${response.warning}`);
+        addMessage(warningMessage);
+      }
     } catch (error) {
       handleError(error);
     } finally {
@@ -152,7 +151,7 @@ export const useChat = (
       setIsLoading(false);
       logger.debug('chat', '==========sendMessage finished==========');
     }
-  }, [context, currentNoteTitle, currentNoteContent, createMessage, addMessage, handleLLMResponse, handleError, settings.llmProvider, settings.llmModel]);
+  }, [context, currentNoteTitle, currentNoteContent, createMessage, addMessage, handleError, onCommandReceived, settings.llmProvider, settings.llmModel]);
 
   return {
     messages,

@@ -17,7 +17,7 @@ class ChatContext(BaseModel):
     currentPath: Optional[str] = None
     fileList: Optional[List[Dict[str, Any]]] = None
     currentFile: Optional[str] = None
-    currentFileContent: Optional[Dict[str, str]] = None
+    currentFileContent: Optional[Dict[str, str]] = None  # 現在開いているファイルの内容 {"filename": "...", "content": "..."}
     attachedFileContent: Optional[Dict[str, str]] = None
     conversationHistory: Optional[List[Dict[str, Any]]] = None
 

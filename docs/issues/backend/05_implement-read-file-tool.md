@@ -3,8 +3,8 @@ title: "B_005_implement-read-file-tool"
 id: 005
 status: completed
 priority: medium
-attempt_count: 1
-tags: [backend, tool, LLM]
+attempt_count: 2
+tags: [backend, tool, LLM, frontend]
 ---
 
 ## 概要 (Overview)
@@ -221,6 +221,44 @@ const handleCommandReceived = (commands: LLMCommand[]) => {
   2. アプリでノート編集画面を開く
   3. チャットで「このファイルの内容を読み取って」と依頼
   4. LLMが`read_file`ツールを呼び出し、フロントエンドでログが出力されることを確認
+
+---
+### 試行 #2
+
+- **試みたこと:**
+  - **重大な問題を発見**: 試行#1の実装では、LLMが`read_file`を呼び出してもファイル内容が返されず、LLMは何度も`read_file`を呼び続ける無限ループに陥っていた
+  - **根本原因の分析**: `edit_file`は一方向のコマンド（LLM → フロント）だが、`read_file`は双方向のやり取り（LLM → フロント → **LLM**）が必要
+  - **解決策の実装**: フロントエンドで`read_file`コマンドを受け取ったら、ファイル内容を自動的にLLMに送り返すメカニズムを実装
+
+- **結果:**
+  - ✅ `ChatInputBar`に`onSendMessageRef`プロパティを追加し、`sendMessage`関数を親コンポーネントに公開
+  - ✅ `NoteEditScreen`で`sendMessageFnRef`を使って`sendMessage`関数への参照を保持
+  - ✅ `handleReadFile`を非同期関数に変更し、ファイル内容を読み込んだら自動的に`sendMessage`を呼び出してLLMに送信
+  - ✅ `handleCommandReceived`を非同期対応に変更し、`read_file`の自動応答を待つ
+  - ✅ ファイル内容は`[ファイル「{filename}」の内容]\n---\n{content}\n---`という形式でLLMに送信される
+
+- **メモ:**
+  - **重要**: `read_file`は`edit_file`と異なり、「ツール応答」が必要なツール
+  - LLMがツールを呼び出したら、フロントエンドはツールの実行結果を自動的にLLMに返す必要がある
+  - 今回の実装で、LLMは以下の流れでファイル内容を取得できるようになった：
+    1. ユーザー: 「このファイルの内容を読み取って」
+    2. LLM: `read_file`ツールを呼び出し
+    3. フロント: ファイル内容を読み込み、自動的にLLMに送信
+    4. LLM: ファイル内容を受け取り、ユーザーの質問に回答
+  - 将来的には、バックエンド側で「ツール応答を待つ」メカニズムを実装することも検討すべき（LangChainのAgentExecutorパターン）
+
+- **実装されたファイル:**
+  1. `app/features/chat/ChatInputBar.tsx` - `onSendMessageRef`プロパティ追加、`sendMessage`関数の公開（L29, L38, L54-58）
+  2. `app/screen/note-edit/NoteEditScreen.tsx` - `sendMessageFnRef`の追加、`handleReadFile`の非同期化とファイル内容の自動送信、`handleCommandReceived`の非同期対応（L45, L108-129, L140-149, L189）
+
+- **テスト手順:**
+  1. バックエンドサーバーを起動
+  2. アプリでノート編集画面を開き、ノートに内容を入力（例: "1+1は？"）
+  3. チャットで「このファイルの内容を読み取って」と依頼
+  4. LLMが`read_file`ツールを呼び出す
+  5. フロントエンドが自動的にファイル内容をLLMに送信する（ログに表示）
+  6. LLMがファイル内容を受け取り、内容を教えてくれることを確認
+  7. 「答えを教えてください」など追加質問すると、LLMがファイル内容を理解した上で回答できることを確認
 
 ---
 

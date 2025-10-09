@@ -94,6 +94,10 @@ function NoteEditScreen() {
   // チャットエリアの作成
   const chatContext: ChatContext = {
     currentFile: note?.id,
+    currentFileContent: {
+      filename: title,
+      content: content,
+    },
   };
 
   // コマンドハンドラーの定義（拡張性を考慮したマップパターン）
@@ -106,19 +110,16 @@ function NoteEditScreen() {
 
   const handleReadFile = (command: LLMCommand) => {
     // read_fileコマンドの処理
-    // 現在のノート内容は既にLLMに送信されているため、
-    // ここでは追加の処理が必要な場合にのみ実装する
-    console.log(`[read_file] ファイル読み込み要求: ${command.path}`);
-    console.log(`[read_file] 現在のノート内容: ${content.substring(0, 100)}...`);
+    // Agent実装により、read_fileはバックエンドで自動的に処理されるため、
+    // フロントエンドでは特に何もする必要がありません
+    console.log(`[read_file] ファイル読み込みコマンドを受信: ${command.path}`);
+    console.log(`[read_file] このコマンドはバックエンドのAgentで既に処理済みです`);
 
-    // 将来的な拡張例:
-    // - 他のファイルを読み込んでLLMに返す
-    // - ファイル内容をUIに表示する
-    // - ファイルメタデータを取得する
+    // 将来的な拡張: 読み込んだファイルをUIに表示する、など
   };
 
   // コマンドハンドラーマップ（新しいツールの追加が容易）
-  const commandHandlers: Record<string, (command: LLMCommand) => void> = {
+  const commandHandlers: Record<string, (command: LLMCommand) => void | Promise<void>> = {
     'edit_file': handleEditFile,
     'read_file': handleReadFile,
     // 将来的に他のツールを追加する場合は、ここに追加するだけ

@@ -26,6 +26,7 @@ interface ChatInputBarProps {
   onCommandReceived?: (commands: LLMCommand[]) => void;
   currentNoteTitle?: string;
   currentNoteContent?: string;
+  onSendMessageRef?: (sendMessageFn: (message: string, options?: { isNoteAttached?: boolean }) => Promise<void>) => void;
 }
 
 // チャット入力バーコンポーネント
@@ -34,6 +35,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
   onCommandReceived,
   currentNoteTitle,
   currentNoteContent,
+  onSendMessageRef,
 }) => {
   const { colors, typography } = useTheme();
   const {
@@ -47,6 +49,13 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
   const [isNoteAttached, setIsNoteAttached] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const positionAnimation = useRef(new Animated.Value(0)).current;
+
+  // sendMessage関数を親コンポーネントに公開
+  useEffect(() => {
+    if (onSendMessageRef) {
+      onSendMessageRef(sendMessage);
+    }
+  }, [sendMessage, onSendMessageRef]);
 
   // キーボードイベントのリスナー
   useEffect(() => {
