@@ -13,7 +13,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useTheme } from '../../../theme/ThemeContext';
-import { responsive } from '../../../utils/commonStyles';
+import { responsive } from '../../../styles/commonStyles';
 import { Ionicons } from '@expo/vector-icons';
 
 interface NoteEditHeaderProps {
