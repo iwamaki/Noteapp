@@ -85,7 +85,7 @@ export const useNoteEditHeader = ({
 
     if (!isLoading) {
       rightButtons.push({
-        icon: <Ionicons name="save-outline" size={24} color={isDirty ? colors.primary : colors.textDisabled} />,
+        icon: <Ionicons name="save-outline" size={24} color={isDirty ? colors.primary : colors.textSecondary} />,
         onPress: onSave,
         variant: 'primary',
         disabled: !isDirty,

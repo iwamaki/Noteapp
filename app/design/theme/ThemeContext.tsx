@@ -23,6 +23,7 @@ const lightColors = {
   white: '#fff',
   black: '#000',
   transparent: 'transparent',
+  overlay: 'rgba(0, 0, 0, 0.5)',
 };
 
 // ダークテーマのカラーパレット
@@ -40,6 +41,7 @@ const darkColors = {
   white: '#fff',
   black: '#000',
   transparent: 'transparent',
+  overlay: 'rgba(0, 0, 0, 0.5)',
 };
 
 // スペーシング（テーマに依存しない）

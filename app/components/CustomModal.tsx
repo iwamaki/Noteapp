@@ -31,7 +31,7 @@ export const CustomModal: React.FC<CustomModalProps> = ({
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent overlay
+      backgroundColor: colors.overlay, // Semi-transparent overlay
     },
     modalView: {
       margin: spacing.md,
@@ -39,7 +39,7 @@ export const CustomModal: React.FC<CustomModalProps> = ({
       borderRadius: responsive.getResponsiveSize(10, 15, 20),
       padding: spacing.lg,
       alignItems: 'center',
-      shadowColor: '#000',
+      shadowColor: colors.shadow,
       shadowOffset: {
         width: 0,
         height: 2,
@@ -51,7 +51,7 @@ export const CustomModal: React.FC<CustomModalProps> = ({
       maxWidth: 400, // Max width for larger screens
     },
     modalTitle: {
-      ...typography.h3,
+      ...typography.title,
       marginBottom: spacing.sm,
       textAlign: 'center',
       color: colors.text,
@@ -78,8 +78,9 @@ export const CustomModal: React.FC<CustomModalProps> = ({
       marginHorizontal: spacing.xs,
     },
     buttonText: {
-      ...typography.button,
-      color: colors.buttonText,
+      ...typography.body,
+      fontWeight: 'bold',
+      color: colors.white,
     },
     defaultButton: {
       backgroundColor: colors.primary,
@@ -88,7 +89,7 @@ export const CustomModal: React.FC<CustomModalProps> = ({
       backgroundColor: colors.secondary,
     },
     destructiveButton: {
-      backgroundColor: colors.error,
+      backgroundColor: colors.danger,
     },
   });
 
