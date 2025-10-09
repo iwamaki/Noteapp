@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { ListItem } from '../../components/ListItem';
 import { ChatInputBar } from '../../features/chat/ChatInputBar';
-import { ChatContext } from '../../services/llmService';
+import { ChatContext } from '../../services/llmService/types';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { useNoteListLogic } from './hooks/useNoteListLogic';
 import { useNoteListHeader } from './hooks/useNoteListHeader';

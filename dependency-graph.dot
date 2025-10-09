@@ -135,6 +135,7 @@ strict digraph "dependency-cruiser output"{
     subgraph "cluster_app" {label="app" subgraph "cluster_app/services" {label="services" "app/services/api.ts" [label=<api.ts> tooltip="api.ts" URL="app/services/api.ts" fillcolor="#ddfeff"] } }
     "app/services/api.ts" -> "app/services/llmService.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/services" {label="services" "app/services/llmService.ts" [label=<llmService.ts> tooltip="llmService.ts" URL="app/services/llmService.ts" fillcolor="#ddfeff"] } }
+    "app/services/llmService.ts" -> "app/utils/loggerConfig.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/settings" {label="settings" "app/settings/SettingsScreen.tsx" [label=<SettingsScreen.tsx> tooltip="SettingsScreen.tsx" URL="app/settings/SettingsScreen.tsx" fillcolor="#bbfeff"] } }
     "app/settings/SettingsScreen.tsx" -> "app/components/CustomHeader.tsx"
     "app/settings/SettingsScreen.tsx" -> "app/design/theme/ThemeContext.tsx"
@@ -143,5 +144,6 @@ strict digraph "dependency-cruiser output"{
     "app/settings/SettingsScreen.tsx" -> "app/settings/settingsStore.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/settings" {label="settings" "app/settings/settingsStore.ts" [label=<settingsStore.ts> tooltip="settingsStore.ts" URL="app/settings/settingsStore.ts" fillcolor="#ddfeff"] } }
     subgraph "cluster_app" {label="app" subgraph "cluster_app/utils" {label="utils" "app/utils/logger.ts" [label=<logger.ts> tooltip="logger.ts" URL="app/utils/logger.ts" fillcolor="#ddfeff"] } }
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/utils" {label="utils" "app/utils/loggerConfig.ts" [label=<loggerConfig.ts> tooltip="loggerConfig.ts" URL="app/utils/loggerConfig.ts" fillcolor="#ddfeff"] } }
     subgraph "cluster_shared" {label="shared" subgraph "cluster_shared/types" {label="types" "shared/types/note.ts" [label=<note.ts> tooltip="note.ts" URL="shared/types/note.ts" fillcolor="#ddfeff"] } }
 }

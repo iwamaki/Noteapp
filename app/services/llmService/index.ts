@@ -1,211 +1,31 @@
 /**
- * @file llmService.ts
- * @summary このファイルは、LLM（大規模言語モデル）サービスとの連携に必要な型定義、ユーティリティ、および主要なサービスロジックを提供します。
- * 会話履歴の管理、LLMコマンドの検証、およびバックエンドAPIとの通信を担当します。
- * @responsibility LLM関連のデータ構造の定義、会話のライフサイクル管理、APIリクエストの送信とレスポンス処理、エラーハンドリング、およびLLMプロバイダーとモデルの設定と管理を行います。
+ * @file llmService/index.ts
+ * @summary This file provides the main service logic for interacting with the LLM (Large Language Model) service.
+ * It handles API communication with the backend, manages LLM provider and model settings, and orchestrates various functionalities.
+ * @responsibility Manages the lifecycle of conversations, sends API requests, processes responses, handles errors, and manages LLM provider and model configurations.
  */
 
 import axios from 'axios';
-import { loggerConfig } from '../utils/loggerConfig';
-
-// LLMサービス関連の型定義とユーティリティ関数
-export interface ChatMessage {
-  role: 'user' | 'ai' | 'system';
-  content: string;
-  timestamp: Date;
-}
-
-// チャットコンテキスト
-export interface ChatContext {
-  currentPath?: string;
-  fileList?: Array<{
-    name: string;
-    type: string;
-    size?: string;
-    hasContent?: boolean;
-  }>;
-  currentFile?: string;
-  currentFileContent?: {
-    filename: string;
-    content: string;
-    size: string;
-    type: string;
-  };
-  attachedFileContent?: {
-    filename: string;
-    content: string;
-  };
-  isEditMode?: boolean;
-  selectedFiles?: string[];
-  timestamp?: string;
-  openFileInfo?: string;
-  customPrompt?: {
-    id: string;
-    name: string;
-    content: string;
-    description?: string;
-    enabled: boolean;
-    createdAt: Date;
-  };
-  conversationHistory?: ChatMessage[];
-}
-
-// LLMプロバイダー情報
-export interface LLMProvider {
-  name: string;
-  defaultModel: string;
-  models: string[];
-  status: 'available' | 'unavailable' | 'error';
-}
-
-// LLMコマンド
-export interface LLMCommand {
-  action: string;
-  path?: string;
-  content?: string;
-  description?: string;
-  source?: string;
-  destination?: string;
-  paths?: string[];
-  sources?: string[];
-}
-
-// LLMレスポンス
-export interface LLMResponse {
-  message: string;
-  commands?: LLMCommand[];
-  provider?: string;
-  model?: string;
-  historyCount?: number;
-  shouldSuggestNewChat?: boolean;
-  warning?: string;
-}
-
-// LLMヘルスステータス
-export interface LLMHealthStatus {
-  status: 'ok' | 'error';
-  providers: Record<string, LLMProvider>;
-}
-
-// LLM設定
-export interface LLMConfig {
-  maxHistorySize: number;
-  apiTimeout: number;
-  baseUrl: string;
-}
-
-// エラークラス
-export class LLMError extends Error {
-  constructor(
-    message: string,
-    public code: string,
-    public statusCode?: number
-  ) {
-    super(message);
-    this.name = 'LLMError';
-  }
-}
-
-/**
- * 会話履歴管理クラス（インスタンス化対応）
- */
-export class ConversationHistory {
-  private history: ChatMessage[] = [];
-  private maxHistorySize: number;
-
-  constructor(maxHistorySize = 100) {
-    this.maxHistorySize = maxHistorySize;
-  }
-
-  getHistory(): ChatMessage[] {
-    return [...this.history];
-  }
-
-  addMessage(message: ChatMessage): void {
-    this.history.push(message);
-    this.trimHistory();
-  }
-
-  addExchange(userMessage: string, aiResponse: string): void {
-    const timestamp = new Date();
-
-    this.addMessage({
-      role: 'user',
-      content: userMessage,
-      timestamp
-    });
-
-    this.addMessage({
-      role: 'ai',
-      content: aiResponse,
-      timestamp
-    });
-  }
-
-  clear(): void {
-    this.history = [];
-  }
-
-  getHistoryStatus(): { count: number; totalChars: number } {
-    const totalChars = this.history.reduce((sum, msg) => sum + msg.content.length, 0);
-    return {
-      count: this.history.length,
-      totalChars
-    };
-  }
-
-  private trimHistory(): void {
-    if (this.history.length > this.maxHistorySize) {
-      this.history = this.history.slice(-this.maxHistorySize);
-    }
-  }
-}
-
-/**
- * コマンド検証ユーティリティ
- */
-export class CommandValidator {
-  private static readonly ALLOWED_ACTIONS = [
-    'create_file', 'create_directory', 'delete_file', 'copy_file', 'move_file',
-    'read_file', 'edit_file', 'list_files',
-    'batch_delete', 'batch_copy', 'batch_move'
-  ] as const;
-
-  static validate(command: LLMCommand): void {
-    if (!command.action) {
-      throw new LLMError('アクションが指定されていません', 'MISSING_ACTION');
-    }
-
-    if (!this.ALLOWED_ACTIONS.includes(command.action as any)) {
-      throw new LLMError(`許可されていないアクション: ${command.action}`, 'INVALID_ACTION');
-    }
-
-    // パスの安全性をチェック
-    const paths = [command.path, command.source, command.destination].filter(Boolean);
-    for (const path of paths) {
-      this.validatePath(path!);
-    }
-
-    // バッチ操作のパス配列をチェック
-    if (command.paths || command.sources) {
-      const pathArray = command.paths || command.sources;
-      if (!Array.isArray(pathArray)) {
-        throw new LLMError('バッチ操作のパスは配列である必要があります', 'INVALID_BATCH_PATHS');
-      }
-      pathArray.forEach(this.validatePath);
-    }
-  }
-
-  private static validatePath(path: string): void {
-    if (typeof path !== 'string' || path.includes('..')) {
-      throw new LLMError(`不正なパス: ${path}`, 'INVALID_PATH');
-    }
-  }
-}
+import { loggerConfig } from '../../utils/loggerConfig';
+import {
+  ChatMessage,
+  ChatContext,
+  LLMProvider,
+  LLMResponse,
+  LLMHealthStatus,
+  LLMConfig,
+} from './types';
+import { LLMError } from './LLMError';
+import { ConversationHistory } from './ConversationHistory';
 
 /**
  * LLMサービスメインクラス（インスタンス化対応）
  */
+// Re-export types
+export type { ChatMessage, ChatContext, LLMProvider, LLMResponse, LLMHealthStatus, LLMConfig, LLMCommand } from './types';
+export { LLMError } from './LLMError';
+export { ConversationHistory } from './ConversationHistory';
+
 export class LLMService {
   private config: LLMConfig;
   private conversationHistory: ConversationHistory;
@@ -222,7 +42,7 @@ export class LLMService {
       maxHistorySize: 100,
       apiTimeout: 30000,
       baseUrl: process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:8000',
-      ...config
+      ...config,
     };
 
     this.conversationHistory = new ConversationHistory(this.config.maxHistorySize);
@@ -265,12 +85,12 @@ export class LLMService {
       const history = this.conversationHistory.getHistory().map(msg => ({
         role: msg.role,
         content: msg.content,
-        timestamp: msg.timestamp.toISOString()
+        timestamp: msg.timestamp.toISOString(),
       }));
 
       const enrichedContext = {
         ...context,
-        conversationHistory: history
+        conversationHistory: history,
       };
 
       loggerConfig.debug('llm', `Request #${requestId} - About to send request to: ${this.config.baseUrl}/api/chat`);
@@ -279,7 +99,7 @@ export class LLMService {
         provider: this.currentProvider,
         model: this.currentModel,
         contextKeys: Object.keys(enrichedContext),
-        historyLength: history.length
+        historyLength: history.length,
       });
 
       // axiosを使用してリクエストを送信（タイムアウト付き）
@@ -287,12 +107,12 @@ export class LLMService {
         message,
         provider: this.currentProvider,
         model: this.currentModel,
-        context: enrichedContext
+        context: enrichedContext,
       }, {
         timeout: this.config.apiTimeout,
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
       }).then(response => {
         loggerConfig.info('llm', `Request #${requestId} - Request completed, status: ${response.status}`);
         // リクエストが成功したらタイムアウトをクリア
@@ -356,7 +176,7 @@ export class LLMService {
           statusText: error.response?.statusText,
           data: error.response?.data,
           hasRequest: !!error.request,
-          hasResponse: !!error.response
+          hasResponse: !!error.response,
         });
 
         if (error.code === 'ECONNABORTED') {
@@ -469,19 +289,5 @@ export class LLMService {
 
   clearHistory(): void {
     this.conversationHistory.clear();
-  }
-}
-
-
-// パスユーティリティ
-export class PathUtils {
-  static joinPath(basePath: string, ...segments: string[]): string {
-    let result = basePath.replace(/\/+$/, ''); // 末尾のスラッシュを除去
-    for (const segment of segments) {
-      if (segment) {
-        result += '/' + segment.replace(/^\/+/, ''); // 先頭のスラッシュを除去
-      }
-    }
-    return result || '/';
   }
 }
