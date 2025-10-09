@@ -3,7 +3,7 @@
  * @summary ノート編集画面のヘッダータイトル入力コンポーネント
  */
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   TextInput,
   StyleSheet,
@@ -42,6 +42,10 @@ export const NoteEditHeader: React.FC<NoteEditHeaderProps> = ({
   const { colors, typography, spacing } = useTheme();
   const [localTitle, setLocalTitle] = useState(title);
   const isComposingRef = useRef(false);
+
+  useEffect(() => {
+    setLocalTitle(title);
+  }, [title]);
 
   const styles = StyleSheet.create({
     container: {
