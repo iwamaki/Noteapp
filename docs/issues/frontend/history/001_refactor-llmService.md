@@ -1,7 +1,7 @@
 ---
 title: "B_001_Refactor llmService.ts for improved modularity"
 id: 001
-status: new
+status: done
 priority: medium
 attempt_count: 0
 tags: [refactoring, code-structure, maintainability]
