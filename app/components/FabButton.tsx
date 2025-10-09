@@ -5,7 +5,7 @@
  */
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
-import { responsive } from '../utils/commonStyles';
+import { responsive } from '../styles/commonStyles';
 import { useTheme } from '../theme/ThemeContext';
 
 interface FabButtonProps {
