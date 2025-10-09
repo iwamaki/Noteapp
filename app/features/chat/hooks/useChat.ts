@@ -26,6 +26,7 @@ export const useChat = (
 ) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const isLoadingRef = useRef(false);
   const { settings } = useSettingsStore();
 
   const chatAreaHeight = useRef(new Animated.Value(CHAT_AREA_INITIAL_HEIGHT)).current;
@@ -113,13 +114,14 @@ export const useChat = (
     logger.debug('chat', 'sendMessage called with:', { inputText, options });
     logger.debug('chat', 'Current note state:', { currentNoteTitle, currentNoteContent });
     const trimmedInput = inputText.trim();
-    if (!trimmedInput || isLoading) {
+    if (!trimmedInput || isLoadingRef.current) {
       logger.debug('chat', 'sendMessage aborted (empty input or loading)');
       return;
     }
 
     const userMessage = createMessage('user', trimmedInput);
     addMessage(userMessage);
+    isLoadingRef.current = true;
     setIsLoading(true);
 
     try {
@@ -146,10 +148,11 @@ export const useChat = (
     } catch (error) {
       handleError(error);
     } finally {
+      isLoadingRef.current = false;
       setIsLoading(false);
       logger.debug('chat', '==========sendMessage finished==========');
     }
-  }, [isLoading, context, currentNoteTitle, currentNoteContent, createMessage, addMessage, handleLLMResponse, handleError]);
+  }, [context, currentNoteTitle, currentNoteContent, createMessage, addMessage, handleLLMResponse, handleError, settings.llmProvider, settings.llmModel]);
 
   return {
     messages,
