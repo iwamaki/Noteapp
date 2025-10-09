@@ -12,7 +12,7 @@ import { FileEditor, ViewMode } from './components/FileEditor';
 import { useNoteEditor } from './hooks/useNoteEditor';
 import { useNoteEditHeader } from './hooks/useNoteEditHeader';
 import { useTheme } from '../../theme/ThemeContext';
-import { ChatInputBar } from '../chat/ChatInputBar';
+import { ChatInputBar } from '../../features/chat/ChatInputBar';
 import { ChatContext } from '../../services/llmService';
 
 type NoteEditScreenRouteProp = RouteProp<RootStackParamList, 'NoteEdit'>;
