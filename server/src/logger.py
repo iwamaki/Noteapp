@@ -11,6 +11,10 @@ from typing import Union, Dict, Any, Optional
 class JsonFormatter(logging.Formatter):
     """JSONフォーマットでログを出力するフォーマッタ"""
     
+    def default_serializer(self, obj):
+        """JSONシリアル化できないオブジェクトを文字列に変換する"""
+        return str(obj)
+
     def format(self, record):
         log_data = {
             "timestamp": datetime.utcnow().isoformat(),
@@ -25,7 +29,7 @@ class JsonFormatter(logging.Formatter):
             log_data["message"] = record.getMessage()
             
         # JSON形式を読みやすいようにインデントして出力
-        return json.dumps(log_data, ensure_ascii=False, indent=2)
+        return json.dumps(log_data, ensure_ascii=False, indent=2, default=self.default_serializer)
 
 def setup_logger():
     """アプリケーションのロガーを設定する"""
