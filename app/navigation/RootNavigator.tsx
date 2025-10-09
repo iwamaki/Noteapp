@@ -13,10 +13,10 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { RootStackParamList } from './types';
 import { View, StyleSheet } from 'react-native';
 
-import NoteListScreen from '../features/note-list/NoteListScreen';
-import NoteEditScreen from '../features/note-edit/NoteEditScreen';
-import DiffViewScreen from '../features/diff-view/DiffViewScreen';
-import VersionHistoryScreen from '../features/version-history/VersionHistoryScreen';
+import NoteListScreen from '../screen/note-list/NoteListScreen';
+import NoteEditScreen from '../screen/note-edit/NoteEditScreen';
+import DiffViewScreen from '../screen/diff-view/DiffViewScreen';
+import VersionHistoryScreen from '../screen/version-history/VersionHistoryScreen';
 import SettingsScreen from '../settings/SettingsScreen';
 
 // スタックナビゲーターの作成
