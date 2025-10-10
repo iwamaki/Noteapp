@@ -165,6 +165,8 @@ class ChatService {
   public resetChat(): void {
     logger.debug('chatService', 'Resetting chat history');
     this.messages = [];
+    // LLMServiceの会話履歴もクリア
+    APIService.clearHistory();
     this.notifyListeners();
   }
 
