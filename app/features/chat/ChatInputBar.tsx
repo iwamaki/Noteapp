@@ -17,46 +17,23 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useChat } from './hooks/useChat';
-import { ChatContext, LLMCommand } from '../../services/llmService/types/types';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { ChatHistory } from './components/ChatHistory';
 
-// チャット入力バーコンポーネントのプロパティ
-interface ChatInputBarProps {
-  context?: ChatContext;
-  onCommandReceived?: (commands: LLMCommand[]) => void;
-  currentNoteTitle?: string;
-  currentNoteContent?: string;
-  onSendMessageRef?: (sendMessageFn: (message: string, options?: { isNoteAttached?: boolean }) => Promise<void>) => void;
-}
-
-// チャット入力バーコンポーネント
-export const ChatInputBar: React.FC<ChatInputBarProps> = ({
-  context,
-  onCommandReceived,
-  currentNoteTitle,
-  currentNoteContent,
-  onSendMessageRef,
-}) => {
+// チャット入力バーコンポーネント（プロパティ不要）
+export const ChatInputBar: React.FC = () => {
   const { colors, typography } = useTheme();
   const {
     messages,
     isLoading,
     sendMessage,
-    resetChat, // 追加
+    resetChat,
     chatAreaHeight,
     panResponder,
-  } = useChat(context, onCommandReceived, currentNoteTitle, currentNoteContent);
+  } = useChat();
   const [inputText, setInputText] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
   const positionAnimation = useRef(new Animated.Value(0)).current;
-
-  // sendMessage関数を親コンポーネントに公開
-  useEffect(() => {
-    if (onSendMessageRef) {
-      onSendMessageRef(sendMessage);
-    }
-  }, [sendMessage, onSendMessageRef]);
 
   // キーボードイベントのリスナー
   useEffect(() => {
