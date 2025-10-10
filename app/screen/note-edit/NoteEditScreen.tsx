@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, Platform, ActivityIndicator, Keyboard, Animated } from 'react-native';
+import { Platform, Keyboard, Animated, StyleSheet } from 'react-native';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/types';
 import { FileEditor, ViewMode } from './components/FileEditor';
 import { useNoteEditor } from './hooks/useNoteEditor';
 import { useNoteEditHeader } from './hooks/useNoteEditHeader';
 import { useNoteEditChatContext } from './hooks/useNoteEditChatContext';
-import { useTheme } from '../../design/theme/ThemeContext';
 import { ChatInputBar } from '../../features/chat/ChatInputBar';
 import { CustomModal } from '../../components/CustomModal';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { MainContainer } from '../../components/MainContainer';
 
 type NoteEditScreenRouteProp = RouteProp<RootStackParamList, 'NoteEdit'>;
 
@@ -18,7 +18,6 @@ const CHAT_INPUT_HEIGHT = Platform.OS === 'ios' ? 90 : 100;
 
 // ノート編集画面コンポーネント
 function NoteEditScreen() {
-  const { colors } = useTheme();
   const route = useRoute<NoteEditScreenRouteProp>();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { noteId } = route.params || {};
@@ -117,38 +116,22 @@ function NoteEditScreen() {
     setContent,
   });
 
-  // スタイルの定義
   const styles = StyleSheet.create({
-    container: {
+    animatedContainer: {
       flex: 1,
-      backgroundColor: colors.background,
-    },
-    contentContainer: {
-      flex: 1,
-    },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
     },
   });
 
   return (
-    <View style={styles.container}>
-      <Animated.View style={[styles.contentContainer, { paddingBottom: paddingBottomAnim }]}>
-        {isLoading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={colors.primary} />
-          </View>
-        ) : (
-          <FileEditor
-            filename={title}
-            initialContent={content}
-            mode={viewMode}
-            onModeChange={setViewMode}
-            onContentChange={setContent}
-          />
-        )}
+    <MainContainer isLoading={isLoading}>
+      <Animated.View style={[styles.animatedContainer, { paddingBottom: paddingBottomAnim }]}>
+        <FileEditor
+          filename={title}
+          initialContent={content}
+          mode={viewMode}
+          onModeChange={setViewMode}
+          onContentChange={setContent}
+        />
       </Animated.View>
       <ChatInputBar />
       <CustomModal
@@ -177,7 +160,7 @@ function NoteEditScreen() {
           setNextAction(null); // アクションをクリア
         }}
       />
-    </View>
+    </MainContainer>
   );
 }
 

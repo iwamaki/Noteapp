@@ -1,9 +1,7 @@
 import React from 'react';
 import {
-  View,
   StyleSheet,
   FlatList,
-  ActivityIndicator,
   Platform,
 } from 'react-native';
 import { ListItem } from '../../components/ListItem';
@@ -14,6 +12,7 @@ import { useNoteListHeader } from './hooks/useNoteListHeader';
 import { useNoteListChatContext } from './hooks/useNoteListChatContext';
 import { NoteListEmptyState } from './components/NoteListEmptyState';
 import { NoteListFabButton } from './components/NoteListFabButton';
+import { MainContainer } from '../../components/MainContainer';
 
 // 入力バーの高さ（概算）
 const CHAT_INPUT_HEIGHT = Platform.OS === 'ios' ? 78 : 66;
@@ -48,10 +47,6 @@ function NoteListScreen() {
   useNoteListChatContext({ notes });
 
   const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.secondary,
-    },
     centered: {
       justifyContent: 'center',
       alignItems: 'center',
@@ -69,16 +64,6 @@ function NoteListScreen() {
       padding: spacing.md,
     },
   });
-
-  // ローディング中の表示
-  if (loading.isLoading && notes.length === 0) {
-    return (
-      <View style={[styles.container, styles.centered]}>
-        <ActivityIndicator size="large" color={colors.primary} />
-        <ChatInputBar />
-      </View>
-    );
-  }
 
   // ノートリストのレンダラー
   const renderItem = ({ item }: { item: (typeof notes)[0] }) => (
@@ -101,7 +86,10 @@ function NoteListScreen() {
 
   // メインの表示
   return (
-    <View style={styles.container}>
+    <MainContainer
+      backgroundColor={colors.secondary}
+      isLoading={loading.isLoading && notes.length === 0}
+    >
       {notes.length === 0 && !loading.isLoading ? (
         <NoteListEmptyState
           containerStyle={styles.centered}
@@ -123,7 +111,7 @@ function NoteListScreen() {
         isSelectionMode={isSelectionMode}
         onPress={handleCreateNote}
       />
-    </View>
+    </MainContainer>
   );
 }
 
