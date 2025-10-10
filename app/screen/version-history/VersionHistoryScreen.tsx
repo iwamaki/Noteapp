@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useCallback, useLayoutEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Alert } from 'react-native';
 import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
@@ -16,6 +16,7 @@ import { useTheme } from '../../design/theme/ThemeContext';
 import { useCustomHeader } from '../../components/CustomHeader';
 import { Ionicons } from '@expo/vector-icons';
 import { ListItem } from '../../components/ListItem';
+import { MainContainer } from '../../components/MainContainer';
 
 type VersionHistoryScreenNavigationProp = StackNavigationProp<RootStackParamList, 'VersionHistory'>;
 type VersionHistoryScreenRouteProp = ReturnType<typeof useRoute<import('@react-navigation/native').RouteProp<RootStackParamList, 'VersionHistory'>>>;
@@ -101,15 +102,10 @@ function VersionHistoryScreen() {
   };
 
   const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.secondary,
-    },
     centered: {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: colors.background,
     },
     errorText: {
       color: colors.danger,
@@ -146,34 +142,28 @@ function VersionHistoryScreen() {
     );
   };
 
-  if (loading) {
-    return <ActivityIndicator style={styles.centered} size="large" color={colors.primary} />;
-  }
-
-  if (error) {
-    return (
-      <View style={styles.centered}>
-        <Text style={styles.errorText}>Error: {error}</Text>
-      </View>
-    );
-  }
-
-  if (versions.length === 0) {
-    return (
-      <View style={styles.centered}>
-        <Text style={styles.emptyText}>No version history found for this note.</Text>
-      </View>
-    );
-  }
-
   return (
-    <FlatList
-      style={styles.container}
-      data={versions}
-      renderItem={renderItem}
-      keyExtractor={(item) => item.id}
-      contentContainerStyle={styles.listContainer}
-    />
+    <MainContainer
+      backgroundColor={colors.secondary}
+      isLoading={loading}
+    >
+      {error ? (
+        <View style={styles.centered}>
+          <Text style={styles.errorText}>Error: {error}</Text>
+        </View>
+      ) : versions.length === 0 ? (
+        <View style={styles.centered}>
+          <Text style={styles.emptyText}>No version history found for this note.</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={versions}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContainer}
+        />
+      )}
+    </MainContainer>
   );
 }
 
