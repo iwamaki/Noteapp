@@ -136,27 +136,6 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
       color: colors.text,
       fontWeight: '600',
     },
-    attachButton: {
-      alignSelf: 'flex-end',
-      marginRight: 8,
-      marginBottom: 8,
-      paddingHorizontal: 10,
-      paddingVertical: 6,
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: 20,
-    },
-    attachButtonText: {
-      fontSize: typography.caption.fontSize,
-      color: colors.text,
-    },
-    attachButtonActive: {
-      backgroundColor: colors.primary,
-      borderColor: colors.primary,
-    },
-    attachButtonTextActive: {
-      color: colors.white,
-    },
     textInput: {
       flex: 1,
       borderWidth: 1,

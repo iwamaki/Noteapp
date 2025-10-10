@@ -95,8 +95,8 @@ export const useChat = (
     addMessage(errorMessage);
   }, [createMessage, addMessage]);
 
-  const sendMessage = useCallback(async (inputText: string, options?: { isNoteAttached?: boolean }) => {
-    logger.debug('chat', 'sendMessage called with:', { inputText, options });
+  const sendMessage = useCallback(async (inputText: string) => {
+    logger.debug('chat', 'sendMessage called with:', { inputText });
     logger.debug('chat', 'Current note state:', { currentNoteTitle, currentNoteContent });
     const trimmedInput = inputText.trim();
     if (!trimmedInput || isLoadingRef.current) {
@@ -116,15 +116,6 @@ export const useChat = (
 
       // コンテキストを動的に構築
       const dynamicContext = { ...context };
-      if (options?.isNoteAttached && currentNoteTitle && currentNoteContent) {
-        dynamicContext.attachedFileContent = {
-          filename: currentNoteTitle,
-          content: currentNoteContent,
-        };
-        logger.debug('chat', 'Attaching note content to context:', dynamicContext.attachedFileContent);
-      } else if (options?.isNoteAttached) {
-        logger.debug('chat', 'isNoteAttached is true but note data is missing:', { currentNoteTitle, currentNoteContent });
-      }
 
       logger.debug('llm', 'Sending message to API with context:', dynamicContext);
       logger.debug('llm', 'Using provider:', settings.llmProvider, 'model:', settings.llmModel);
