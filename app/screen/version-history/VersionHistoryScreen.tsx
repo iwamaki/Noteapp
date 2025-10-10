@@ -122,16 +122,39 @@ function VersionHistoryScreen() {
       ...typography.body,
       color: colors.textSecondary,
     },
+    itemTitle: {
+      ...typography.title,
+      marginBottom: spacing.xs,
+      color: colors.text,
+    },
+    itemSubtitle: {
+      ...typography.body,
+      color: colors.textSecondary,
+    },
+    itemDescription: {
+      ...typography.body,
+      color: colors.textSecondary,
+      marginTop: spacing.xs / 2,
+    },
   });
 
   const renderItem = ({ item }: { item: NoteVersion }) => (
     <ListItem
-      title={`Version ${item.version} ${item.id === 'current' ? '(Current)' : ''}`}
-      subtitle={format(new Date(item.createdAt), 'yyyy/MM/dd HH:mm:ss')}
-      description={item.content}
       onPress={() => handleSelectVersion(item)}
       disabled={item.id === 'current'}
-    />
+    >
+      <Text style={styles.itemTitle} numberOfLines={1}>
+        {`Version ${item.version} ${item.id === 'current' ? '(Current)' : ''}`}
+      </Text>
+      <Text style={styles.itemSubtitle} numberOfLines={1}>
+        {format(new Date(item.createdAt), 'yyyy/MM/dd HH:mm:ss')}
+      </Text>
+      {item.content && (
+        <Text style={styles.itemDescription} numberOfLines={2}>
+          {item.content}
+        </Text>
+      )}
+    </ListItem>
   );
 
   if (loading) {

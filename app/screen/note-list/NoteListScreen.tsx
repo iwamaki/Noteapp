@@ -5,6 +5,7 @@ import {
   FlatList,
   ActivityIndicator,
   Platform,
+  Text,
 } from 'react-native';
 import { ListItem } from '../../components/ListItem';
 import { ChatInputBar } from '../../features/chat/ChatInputBar';
@@ -20,7 +21,7 @@ const CHAT_INPUT_HEIGHT = Platform.OS === 'ios' ? 78 : 66;
 
 // ノート一覧画面コンポーネント
 function NoteListScreen() {
-  const { colors, spacing } = useTheme();
+  const { colors, spacing, typography } = useTheme();
 
   const {
     notes,
@@ -68,6 +69,15 @@ function NoteListScreen() {
     listContent: {
       padding: spacing.md,
     },
+    itemTitle: {
+      ...typography.title,
+      marginBottom: spacing.xs,
+      color: colors.text,
+    },
+    itemSubtitle: {
+      ...typography.body,
+      color: colors.textSecondary,
+    },
   });
 
   // ローディング中の表示
@@ -83,13 +93,20 @@ function NoteListScreen() {
   // ノートリストのレンダラー
   const renderItem = ({ item }: { item: (typeof notes)[0] }) => (
     <ListItem
-      title={item.title}
-      subtitle={item.content}
       onPress={() => handleSelectNote(item.id)}
       onLongPress={() => handleLongPressNote(item.id)}
       isSelected={selectedNoteIds.has(item.id)}
       isSelectionMode={isSelectionMode}
-    />
+    >
+      <Text style={styles.itemTitle} numberOfLines={1}>
+        {item.title || '無題のノート'}
+      </Text>
+      {item.content && (
+        <Text style={styles.itemSubtitle} numberOfLines={1}>
+          {item.content}
+        </Text>
+      )}
+    </ListItem>
   );
 
   // メインの表示

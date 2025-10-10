@@ -9,27 +9,23 @@ import { responsive } from '../design/styles/commonStyles';
 import { useTheme } from '../design/theme/ThemeContext';
 
 interface ListItemProps {
-  title: string;
-  subtitle?: string;
-  description?: string; // 追加のテキストコンテンツ用
   onPress: () => void;
   onLongPress?: () => void;
   rightElement?: React.ReactNode;
   disabled?: boolean;
   isSelected?: boolean;
   isSelectionMode?: boolean;
+  children?: React.ReactNode;
 }
 
 export const ListItem: React.FC<ListItemProps> = ({
-  title,
-  subtitle,
-  description, // description propを追加
   onPress,
   onLongPress,
   rightElement,
   disabled = false,
   isSelected = false,
   isSelectionMode = false,
+  children,
 }) => {
   const { colors, spacing, shadows, typography } = useTheme();
 
@@ -45,20 +41,6 @@ export const ListItem: React.FC<ListItemProps> = ({
     },
     content: {
       flex: 1,
-    },
-    title: {
-      ...typography.title,
-      marginBottom: spacing.xs,
-      color: colors.text,
-    },
-    subtitle: {
-      ...typography.body,
-      color: colors.textSecondary,
-    },
-    description: {
-      ...typography.body,
-      color: colors.textSecondary,
-      marginTop: spacing.xs / 2,
     },
     rightContainer: {
       marginLeft: spacing.md,
@@ -119,19 +101,7 @@ export const ListItem: React.FC<ListItemProps> = ({
         </View>
       )}
       <View style={styles.content}>
-        <Text style={styles.title} numberOfLines={1}>
-          {title || '無題のノート'}
-        </Text>
-        {subtitle && (
-          <Text style={styles.subtitle} numberOfLines={1}>
-            {subtitle}
-          </Text>
-        )}
-        {description && (
-          <Text style={styles.description} numberOfLines={2}>
-            {description}
-          </Text>
-        )}
+        {children}
       </View>
       {rightElement && (
         <View style={styles.rightContainer}>
