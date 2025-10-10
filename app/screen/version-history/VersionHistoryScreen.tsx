@@ -15,6 +15,7 @@ import { format } from 'date-fns';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { useCustomHeader } from '../../components/CustomHeader';
 import { Ionicons } from '@expo/vector-icons';
+import { ListItem } from '../../components/ListItem';
 
 type VersionHistoryScreenNavigationProp = StackNavigationProp<RootStackParamList, 'VersionHistory'>;
 type VersionHistoryScreenRouteProp = ReturnType<typeof useRoute<import('@react-navigation/native').RouteProp<RootStackParamList, 'VersionHistory'>>>;
@@ -117,27 +118,6 @@ function VersionHistoryScreen() {
     listContainer: {
       padding: spacing.md,
     },
-    itemContainer: {
-      backgroundColor: colors.background,
-      padding: spacing.lg,
-      marginVertical: spacing.sm,
-      borderRadius: 8,
-      borderWidth: 1,
-      borderColor: colors.border,
-    },
-    itemTitle: {
-      ...typography.subtitle,
-      color: colors.text,
-    },
-    itemDate: {
-      ...typography.caption,
-      color: colors.textSecondary,
-      marginVertical: spacing.xs,
-    },
-    itemPreview: {
-      ...typography.body,
-      color: colors.textSecondary,
-    },
     emptyText: {
       ...typography.body,
       color: colors.textSecondary,
@@ -145,21 +125,13 @@ function VersionHistoryScreen() {
   });
 
   const renderItem = ({ item }: { item: NoteVersion }) => (
-    <TouchableOpacity 
-      style={styles.itemContainer} 
+    <ListItem
+      title={`Version ${item.version} ${item.id === 'current' ? '(Current)' : ''}`}
+      subtitle={format(new Date(item.createdAt), 'yyyy/MM/dd HH:mm:ss')}
+      description={item.content}
       onPress={() => handleSelectVersion(item)}
       disabled={item.id === 'current'}
-    >
-      <Text style={styles.itemTitle}>
-        Version {item.version} {item.id === 'current' && '(Current)'}
-      </Text>
-      <Text style={styles.itemDate}>
-        {format(new Date(item.createdAt), 'yyyy/MM/dd HH:mm:ss')}
-      </Text>
-      <Text style={styles.itemPreview} numberOfLines={2}>
-        {item.content}
-      </Text>
-    </TouchableOpacity>
+    />
   );
 
   if (loading) {

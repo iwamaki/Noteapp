@@ -11,6 +11,7 @@ import { useTheme } from '../design/theme/ThemeContext';
 interface ListItemProps {
   title: string;
   subtitle?: string;
+  description?: string; // 追加のテキストコンテンツ用
   onPress: () => void;
   onLongPress?: () => void;
   rightElement?: React.ReactNode;
@@ -22,6 +23,7 @@ interface ListItemProps {
 export const ListItem: React.FC<ListItemProps> = ({
   title,
   subtitle,
+  description, // description propを追加
   onPress,
   onLongPress,
   rightElement,
@@ -52,6 +54,11 @@ export const ListItem: React.FC<ListItemProps> = ({
     subtitle: {
       ...typography.body,
       color: colors.textSecondary,
+    },
+    description: {
+      ...typography.body,
+      color: colors.textSecondary,
+      marginTop: spacing.xs / 2,
     },
     rightContainer: {
       marginLeft: spacing.md,
@@ -118,6 +125,11 @@ export const ListItem: React.FC<ListItemProps> = ({
         {subtitle && (
           <Text style={styles.subtitle} numberOfLines={1}>
             {subtitle}
+          </Text>
+        )}
+        {description && (
+          <Text style={styles.description} numberOfLines={2}>
+            {description}
           </Text>
         )}
       </View>
