@@ -5,9 +5,9 @@ import { RootStackParamList } from '../../navigation/types';
 import { FileEditor, ViewMode } from './components/FileEditor';
 import { useNoteEditor } from './hooks/useNoteEditor';
 import { useNoteEditHeader } from './hooks/useNoteEditHeader';
+import { useNoteEditChatContext } from './hooks/useNoteEditChatContext';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { ChatInputBar } from '../../features/chat/ChatInputBar';
-import { ChatContext, LLMCommand, } from '../../services/llmService/types/types';
 import { CustomModal } from '../../components/CustomModal';
 import { StackNavigationProp } from '@react-navigation/stack';
 
@@ -110,52 +110,12 @@ function NoteEditScreen() {
     canRedo,
   });
 
-  // チャットエリアの作成
-  const chatContext: ChatContext = {
-    currentFile: note?.id,
-    currentFileContent: {
-      filename: title,
-      content: content,
-    },
-  };
-
-  // コマンドハンドラーの定義（拡張性を考慮したマップパターン）
-  const handleEditFile = (command: LLMCommand) => {
-    if (typeof command.content === 'string') {
-      const newContent = command.content.replace(/^---\s*/, '').replace(/\s*---$/, '');
-      setContent(newContent);
-    }
-  };
-
-  const handleReadFile = (command: LLMCommand) => {
-    // read_fileコマンドの処理
-    // Agent実装により、read_fileはバックエンドで自動的に処理されるため、
-    // フロントエンドでは特に何もする必要がありません
-    console.log(`[read_file] ファイル読み込みコマンドを受信: ${command.path}`);
-    console.log(`[read_file] このコマンドはバックエンドのAgentで既に処理済みです`);
-
-    // 将来的な拡張: 読み込んだファイルをUIに表示する、など
-  };
-
-  // コマンドハンドラーマップ（新しいツールの追加が容易）
-  const commandHandlers: Record<string, (command: LLMCommand) => void | Promise<void>> = {
-    'edit_file': handleEditFile,
-    'read_file': handleReadFile,
-    // 将来的に他のツールを追加する場合は、ここに追加するだけ
-    // 例: 'create_file': handleCreateFile,
-    //     'delete_file': handleDeleteFile,
-  };
-
-  const handleCommandReceived = (commands: LLMCommand[]) => {
-    for (const command of commands) {
-      const handler = commandHandlers[command.action];
-      if (handler) {
-        handler(command);
-      } else {
-        console.warn(`[NoteEditScreen] 未知のコマンド: ${command.action}`);
-      }
-    }
-  };
+  // チャットコンテキストプロバイダーを登録
+  useNoteEditChatContext({
+    title,
+    content,
+    setContent,
+  });
 
   // スタイルの定義
   const styles = StyleSheet.create({
@@ -190,12 +150,7 @@ function NoteEditScreen() {
           />
         )}
       </Animated.View>
-      <ChatInputBar
-        context={chatContext}
-        onCommandReceived={handleCommandReceived}
-        currentNoteTitle={title}
-        currentNoteContent={content}
-      />
+      <ChatInputBar />
       <CustomModal
         isVisible={isConfirmModalVisible}
         title="変更を破棄しますか？"

@@ -8,10 +8,10 @@ import {
 } from 'react-native';
 import { ListItem } from '../../components/ListItem';
 import { ChatInputBar } from '../../features/chat/ChatInputBar';
-import { ChatContext } from '../../services/llmService/types/types';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { useNoteListLogic } from './hooks/useNoteListLogic';
 import { useNoteListHeader } from './hooks/useNoteListHeader';
+import { useNoteListChatContext } from './hooks/useNoteListChatContext';
 import { NoteListEmptyState } from './components/NoteListEmptyState';
 import { NoteListFabButton } from './components/NoteListFabButton';
 
@@ -43,6 +43,9 @@ function NoteListScreen() {
     handleDeleteSelected,
     handleCopySelected,
   });
+
+  // チャットコンテキストプロバイダーを登録
+  useNoteListChatContext({ notes });
 
   const styles = StyleSheet.create({
     container: {
@@ -89,12 +92,6 @@ function NoteListScreen() {
     />
   );
 
-  // チャットコンテキストの設定
-  const chatContext: ChatContext = {
-    currentPath: '/',
-    fileList: notes.map(note => ({ name: note.title, type: 'file' })),
-  };
-
   // メインの表示
   return (
     <View style={styles.container}>
@@ -114,7 +111,7 @@ function NoteListScreen() {
           contentContainerStyle={[styles.listContent, { paddingBottom: CHAT_INPUT_HEIGHT + spacing.xl }]}
         />
       )}
-      <ChatInputBar context={chatContext} />
+      <ChatInputBar />
       <NoteListFabButton
         isSelectionMode={isSelectionMode}
         onPress={handleCreateNote}

@@ -1,5 +1,5 @@
 // app/utils/logger.ts
-type LogCategory = 'chat' | 'system' | 'note' | 'diff' | 'llm' | 'default';
+type LogCategory = 'chat' | 'chatService' | 'system' | 'note' | 'diff' | 'llm' | 'default';
 type LogLevel = 'debug' | 'warn' | 'error';
 
 let enabledCategories: LogCategory[] | 'all' = 'all';
