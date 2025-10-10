@@ -15,6 +15,7 @@ import {
   Animated,
   Keyboard,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useChat } from './hooks/useChat';
 import { ChatContext, LLMCommand } from '../../services/llmService/types/types';
 import { useTheme } from '../../design/theme/ThemeContext';
@@ -116,7 +117,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
     },
     inputArea: {
       flexDirection: 'row',
-      alignItems: 'flex-end',
+      alignItems: 'center', // ここを 'flex-end' から 'center' に変更
       paddingHorizontal: 10,
       paddingVertical: 8,
       paddingBottom: Platform.OS === 'ios' ? 20 : 35,
@@ -148,7 +149,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
       color: colors.text,
       maxHeight: 100,
       marginRight: 8,
-      minHeight: 40,
+      minHeight: 44,
     },
     sendButton: {
       backgroundColor: colors.primary,
@@ -214,14 +215,12 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
           onPress={handleSendMessage}
           disabled={!canSendMessage}
         >
-          <Text
-            style={[
-              styles.sendButtonText,
-              !canSendMessage && styles.disabledButtonText,
-            ]}
-          >
-            送信
-          </Text>
+          <Ionicons
+            name="send"
+            size={24}
+            color={colors.white}
+            style={!canSendMessage && styles.disabledButtonText}
+          />
         </TouchableOpacity>
       </View>
     </Animated.View>
