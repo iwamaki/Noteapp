@@ -189,7 +189,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
 
       {/* 入力エリア（常に表示） */}
       <View style={styles.inputArea}>
-        {!isExpanded && messages.length > 0 && (
+        {!isExpanded && (
           <TouchableOpacity
             onPress={() => setIsExpanded(true)}
             style={styles.expandButton}
