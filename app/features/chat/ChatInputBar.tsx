@@ -194,7 +194,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
             onPress={() => setIsExpanded(true)}
             style={styles.expandButton}
           >
-            <Text style={styles.expandButtonText}>▲ {messages.length}</Text>
+            <Text style={styles.expandButtonText}>▲ {messages.filter(msg => msg.role === 'user').length}</Text>
           </TouchableOpacity>
         )}
         <TextInput
