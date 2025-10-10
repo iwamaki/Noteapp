@@ -17,6 +17,7 @@ interface ChatHistoryProps {
   messages: ChatMessage[];
   isLoading: boolean;
   onCollapse: () => void;
+  onResetChat: () => void; // 追加
   messageAreaHeight: Animated.AnimatedValue;
   panHandlers: PanResponderInstance['panHandlers'];
 }
@@ -25,6 +26,7 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
   messages,
   isLoading,
   onCollapse,
+  onResetChat, // 追加
   messageAreaHeight,
   panHandlers,
 }) => {
@@ -45,6 +47,15 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
     },    
     collapseButtonText: {
       color: colors.textSecondary,      
+      fontSize: typography.subtitle.fontSize,
+    },
+
+    resetButton: {
+      padding: 4,
+      marginRight: 8, // ▽ボタンとの間にスペースを設ける
+    },
+    resetButtonText: {
+      color: colors.textSecondary,
       fontSize: typography.subtitle.fontSize,
     },
 
@@ -95,9 +106,14 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
     <Animated.View style={[styles.messagesArea, { height: messageAreaHeight }]}>
       <View style={styles.messagesHeader} {...panHandlers}>
         <Text style={styles.messagesHeaderTitle}>チャット履歴</Text>
-        <TouchableOpacity onPress={onCollapse} style={styles.collapseButton}>
-          <Text style={styles.collapseButtonText}>▼</Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row' }}>
+          <TouchableOpacity onPress={onResetChat} style={styles.resetButton}>
+            <Text style={styles.resetButtonText}>リセット</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={onCollapse} style={styles.collapseButton}>
+            <Text style={styles.collapseButtonText}>▼</Text>
+          </TouchableOpacity>
+        </View>
       </View>
       <ScrollView
         ref={scrollViewRef}

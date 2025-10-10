@@ -80,6 +80,11 @@ export const useChat = (
     setMessages(prev => [...prev, message]);
   }, []);
 
+  const resetChat = useCallback(() => {
+    logger.debug('chat', 'Resetting chat history.');
+    setMessages([]);
+  }, []);
+
 
   const handleError = useCallback((error: unknown) => {
     logger.debug('chat', 'Handling error:', error);
@@ -148,6 +153,7 @@ export const useChat = (
     messages,
     isLoading,
     sendMessage,
+    resetChat, // 追加
     chatAreaHeight,
     panResponder,
   };

@@ -43,6 +43,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
     messages,
     isLoading,
     sendMessage,
+    resetChat, // 追加
     chatAreaHeight,
     panResponder,
   } = useChat(context, onCommandReceived, currentNoteTitle, currentNoteContent);
@@ -182,6 +183,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
           messages={messages}
           isLoading={isLoading}
           onCollapse={() => setIsExpanded(false)}
+          onResetChat={resetChat} // 追加
           messageAreaHeight={chatAreaHeight}
           panHandlers={panResponder.panHandlers}
         />
