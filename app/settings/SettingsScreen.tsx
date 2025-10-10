@@ -19,6 +19,7 @@ import { useCustomHeader } from '../components/CustomHeader';
 import APIService from '../services/llmService/api';
 import { LLMProvider } from '../services/llmService/types/types';
 import { Ionicons } from '@expo/vector-icons';
+import { ListItem } from '../components/ListItem';
 
 function SettingsScreen() {
   const { colors, spacing, typography } = useTheme();
@@ -67,47 +68,17 @@ function SettingsScreen() {
   const renderPicker = (
     label: string,
     value: string,
-    options: { label: string; value: string }[]
+    options: { label: string; value: string }[],
+    onChange: (value: string) => void
   ) => (
-    <View style={styles.pickerContainer}>
-      <Text style={styles.optionLabel}>{label}</Text>
-      <View style={styles.pickerButtons}>
-        {options.map((option) => (
-          <TouchableOpacity
-            key={option.value}
-            style={[
-              styles.pickerButton,
-              value === option.value && styles.pickerButtonActive,
-            ]}
-            onPress={() => {
-              const updateKey = label === 'テーマ' ? 'theme' :
-                              label === 'フォントサイズ' ? 'fontSize' :
-                              label === 'デフォルトエディタモード' ? 'defaultEditorMode' :
-                              label === 'プライバシーモード' ? 'privacyMode' :
-                              label === 'LLMプロバイダー' ? 'llmProvider' :
-                              label === 'モデル' ? 'llmModel' : '';
-              if (updateKey) {
-                const updates: any = { [updateKey]: option.value };
-                // プロバイダー変更時はデフォルトモデルも設定
-                if (updateKey === 'llmProvider' && llmProviders[option.value]) {
-                  updates.llmModel = llmProviders[option.value].defaultModel;
-                }
-                updateSettings(updates);
-              }
-            }}
-          >
-            <Text
-              style={[
-                styles.pickerButtonText,
-                value === option.value && styles.pickerButtonTextActive,
-              ]}
-            >
-              {option.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-    </View>
+    <ListItem.Container>
+      <ListItem.Title>{label}</ListItem.Title>
+      <ListItem.ButtonGroup
+        options={options}
+        value={value}
+        onChange={onChange}
+      />
+    </ListItem.Container>
   );
 
   // スタイルの定義
@@ -131,43 +102,6 @@ function SettingsScreen() {
       textAlign: 'center',
       marginBottom: spacing.xl,
     },
-    pickerContainer: {
-      backgroundColor: colors.background,
-      padding: spacing.lg,
-      borderRadius: 8,
-      marginBottom: spacing.sm,
-    },
-    optionLabel: {
-      ...typography.body,
-      color: colors.text,
-      flex: 1,
-    },
-    pickerButtons: {
-      flexDirection: 'row',
-      marginTop: spacing.md,
-      gap: spacing.sm,
-      flexWrap: 'wrap',
-    },
-    pickerButton: {
-      paddingVertical: spacing.sm,
-      paddingHorizontal: spacing.lg,
-      borderRadius: 6,
-      backgroundColor: colors.secondary,
-      borderWidth: 1,
-      borderColor: colors.border,
-    },
-    pickerButtonActive: {
-      backgroundColor: colors.primary,
-      borderColor: colors.primary,
-    },
-    pickerButtonText: {
-      ...typography.body,
-      color: colors.text,
-    },
-    pickerButtonTextActive: {
-      color: colors.background,
-      fontWeight: '600',
-    },
     resetButton: {
       backgroundColor: colors.danger,
       padding: spacing.lg,
@@ -180,11 +114,7 @@ function SettingsScreen() {
       ...typography.subtitle,
       color: colors.background,
     },
-    loadingContainer: {
-      backgroundColor: colors.background,
-      padding: spacing.lg,
-      borderRadius: 8,
-      marginBottom: spacing.sm,
+    loadingContent: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.md,
@@ -208,26 +138,38 @@ function SettingsScreen() {
       <View style={styles.content}>
         {renderSection('表示設定')}
 
-        {renderPicker('テーマ', settings.theme, [
-          { label: 'ライト', value: 'light' },
-          { label: 'ダーク', value: 'dark' },
-          { label: 'システム', value: 'system' },
-        ])}
+        {renderPicker(
+          'テーマ',
+          settings.theme,
+          [
+            { label: 'ライト', value: 'light' },
+            { label: 'ダーク', value: 'dark' },
+            { label: 'システム', value: 'system' },
+          ],
+          (value) => updateSettings({ theme: value as 'light' | 'dark' | 'system' })
+        )}
 
-        {renderPicker('フォントサイズ', settings.fontSize, [
-          { label: '小', value: 'small' },
-          { label: '中', value: 'medium' },
-          { label: '大', value: 'large' },
-          { label: '特大', value: 'xlarge' },
-        ])}
+        {renderPicker(
+          'フォントサイズ',
+          settings.fontSize,
+          [
+            { label: '小', value: 'small' },
+            { label: '中', value: 'medium' },
+            { label: '大', value: 'large' },
+            { label: '特大', value: 'xlarge' },
+          ],
+          (value) => updateSettings({ fontSize: value as 'small' | 'medium' | 'large' | 'xlarge' })
+        )}
 
         {renderSection('LLM設定')}
 
         {isLoadingProviders ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="small" color={colors.primary} />
-            <Text style={styles.loadingText}>LLMプロバイダーを読み込み中...</Text>
-          </View>
+          <ListItem.Container>
+            <View style={styles.loadingContent}>
+              <ActivityIndicator size="small" color={colors.primary} />
+              <Text style={styles.loadingText}>LLMプロバイダーを読み込み中...</Text>
+            </View>
+          </ListItem.Container>
         ) : (
           <>
             {renderPicker(
@@ -236,7 +178,15 @@ function SettingsScreen() {
               Object.entries(llmProviders).map(([key, provider]) => ({
                 label: `${provider.name}${provider.status === 'unavailable' ? ' (利用不可)' : ''}`,
                 value: key,
-              }))
+              })),
+              (value) => {
+                const updates: any = { llmProvider: value };
+                // プロバイダー変更時はデフォルトモデルも設定
+                if (llmProviders[value]) {
+                  updates.llmModel = llmProviders[value].defaultModel;
+                }
+                updateSettings(updates);
+              }
             )}
 
             {settings.llmProvider && llmProviders[settings.llmProvider] && (
@@ -246,7 +196,8 @@ function SettingsScreen() {
                 llmProviders[settings.llmProvider].models.map((model: string) => ({
                   label: model,
                   value: model,
-                }))
+                })),
+                (value) => updateSettings({ llmModel: value })
               )
             )}
           </>
