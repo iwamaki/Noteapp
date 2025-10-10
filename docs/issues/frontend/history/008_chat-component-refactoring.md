@@ -1,7 +1,7 @@
 ---
 title: "[A]_008_チャットコンポーネントの汎用化と動的な画面コンテキスト共有"
 id: 8
-status: new
+status: done
 priority: A:high
 attempt_count: 0
 tags: [UI, chat, refactoring, architecture]

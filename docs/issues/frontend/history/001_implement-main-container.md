@@ -1,7 +1,7 @@
 ---
 title: "[B:medium]_001_画面共通のMainContainerコンポーネント導入"
 id: 001
-status: new
+status: done
 priority: B:medium
 attempt_count: 0
 tags: [UI, refactoring, component]
