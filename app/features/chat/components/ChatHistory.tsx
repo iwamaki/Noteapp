@@ -97,6 +97,10 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
       fontWeight: '600',
     },
 
+    headerButtonContainer: {
+      flexDirection: 'row',
+    },
+
     messagesScrollView: {
       flex: 1,
     },
@@ -106,7 +110,7 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
     <Animated.View style={[styles.messagesArea, { height: messageAreaHeight }]}>
       <View style={styles.messagesHeader} {...panHandlers}>
         <Text style={styles.messagesHeaderTitle}>チャット履歴</Text>
-        <View style={{ flexDirection: 'row' }}>
+        <View style={styles.headerButtonContainer}>
           <TouchableOpacity onPress={onResetChat} style={styles.resetButton}>
             <Text style={styles.resetButtonText}>リセット</Text>
           </TouchableOpacity>

@@ -161,11 +161,6 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
       alignItems: 'center',
       minHeight: 40,
     },
-    sendButtonText: {
-      color: colors.white,
-      fontSize: typography.subtitle.fontSize,
-      fontWeight: '600',
-    },
     disabledButton: {
       backgroundColor: colors.textSecondary,
       opacity: 0.5,
