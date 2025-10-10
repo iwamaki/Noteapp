@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useCallback, useLayoutEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, Alert } from 'react-native';
 import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
@@ -122,40 +122,29 @@ function VersionHistoryScreen() {
       ...typography.body,
       color: colors.textSecondary,
     },
-    itemTitle: {
-      ...typography.title,
-      marginBottom: spacing.xs,
-      color: colors.text,
-    },
-    itemSubtitle: {
-      ...typography.body,
-      color: colors.textSecondary,
-    },
-    itemDescription: {
-      ...typography.body,
-      color: colors.textSecondary,
-      marginTop: spacing.xs / 2,
-    },
   });
 
-  const renderItem = ({ item }: { item: NoteVersion }) => (
-    <ListItem
-      onPress={() => handleSelectVersion(item)}
-      disabled={item.id === 'current'}
-    >
-      <Text style={styles.itemTitle} numberOfLines={1}>
-        {`Version ${item.version} ${item.id === 'current' ? '(Current)' : ''}`}
-      </Text>
-      <Text style={styles.itemSubtitle} numberOfLines={1}>
-        {format(new Date(item.createdAt), 'yyyy/MM/dd HH:mm:ss')}
-      </Text>
-      {item.content && (
-        <Text style={styles.itemDescription} numberOfLines={2}>
-          {item.content}
-        </Text>
-      )}
-    </ListItem>
-  );
+  const renderItem = ({ item }: { item: NoteVersion }) => {
+    const versionLabel = `Version ${item.version}${item.id === 'current' ? ' (Current)' : ''}`;
+    return (
+      <ListItem.Container
+        onPress={() => handleSelectVersion(item)}
+        disabled={item.id === 'current'}
+      >
+        <ListItem.Title numberOfLines={1}>
+          {versionLabel}
+        </ListItem.Title>
+        <ListItem.Subtitle numberOfLines={1}>
+          {format(new Date(item.createdAt), 'yyyy/MM/dd HH:mm:ss')}
+        </ListItem.Subtitle>
+        {item.content && (
+          <ListItem.Description numberOfLines={2}>
+            {item.content}
+          </ListItem.Description>
+        )}
+      </ListItem.Container>
+    );
+  };
 
   if (loading) {
     return <ActivityIndicator style={styles.centered} size="large" color={colors.primary} />;

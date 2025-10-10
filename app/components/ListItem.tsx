@@ -4,12 +4,16 @@
  * @responsibility ノート一覧などのリスト表示において、各アイテムのタイトル、サブタイトル、選択状態、およびアクションを視覚的に表現する責任があります。
  */
 import React from 'react';
-import { TouchableOpacity, Text, View, StyleSheet } from 'react-native';
+import { TouchableOpacity, Text, View, StyleSheet, TextStyle } from 'react-native';
 import { responsive } from '../design/styles/commonStyles';
 import { useTheme } from '../design/theme/ThemeContext';
 
-interface ListItemProps {
-  onPress: () => void;
+// ============================================================
+// Container Component (Main ListItem)
+// ============================================================
+
+interface ListItemContainerProps {
+  onPress?: () => void;
   onLongPress?: () => void;
   rightElement?: React.ReactNode;
   disabled?: boolean;
@@ -18,7 +22,7 @@ interface ListItemProps {
   children?: React.ReactNode;
 }
 
-export const ListItem: React.FC<ListItemProps> = ({
+const ListItemContainer: React.FC<ListItemContainerProps> = ({
   onPress,
   onLongPress,
   rightElement,
@@ -27,7 +31,7 @@ export const ListItem: React.FC<ListItemProps> = ({
   isSelectionMode = false,
   children,
 }) => {
-  const { colors, spacing, shadows, typography } = useTheme();
+  const { colors, spacing, shadows } = useTheme();
 
   const styles = StyleSheet.create({
     container: {
@@ -38,6 +42,8 @@ export const ListItem: React.FC<ListItemProps> = ({
       ...shadows.small,
       flexDirection: 'row',
       alignItems: 'center',
+      borderWidth: 2,
+      borderColor: 'transparent',
     },
     content: {
       flex: 1,
@@ -51,19 +57,18 @@ export const ListItem: React.FC<ListItemProps> = ({
     },
     selected: {
       backgroundColor: colors.primary + '20',
-      borderWidth: 2,
       borderColor: colors.primary,
     },
     selectionMode: {
       backgroundColor: colors.background,
     },
     checkboxContainer: {
-      marginRight: spacing.md,
+      marginLeft: spacing.md,
     },
     checkbox: {
       width: 24,
       height: 24,
-      borderRadius: 12,
+      borderRadius: 4,
       borderWidth: 2,
       borderColor: colors.textSecondary,
       alignItems: 'center',
@@ -91,8 +96,11 @@ export const ListItem: React.FC<ListItemProps> = ({
       ]}
       onPress={onPress}
       onLongPress={onLongPress}
-      disabled={disabled}
+      disabled={disabled || !onPress}
     >
+      <View style={styles.content}>
+        {children}
+      </View>
       {isSelectionMode && (
         <View style={styles.checkboxContainer}>
           <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
@@ -100,10 +108,7 @@ export const ListItem: React.FC<ListItemProps> = ({
           </View>
         </View>
       )}
-      <View style={styles.content}>
-        {children}
-      </View>
-      {rightElement && (
+      {!isSelectionMode && rightElement && (
         <View style={styles.rightContainer}>
           {rightElement}
         </View>
@@ -111,3 +116,172 @@ export const ListItem: React.FC<ListItemProps> = ({
     </TouchableOpacity>
   );
 };
+
+// ============================================================
+// Subcomponents
+// ============================================================
+
+interface ListItemTitleProps {
+  children: React.ReactNode;
+  numberOfLines?: number;
+  style?: TextStyle;
+}
+
+const ListItemTitle: React.FC<ListItemTitleProps> = ({ children, numberOfLines = 1, style }) => {
+  const { colors, spacing, typography } = useTheme();
+
+  const styles = StyleSheet.create({
+    title: {
+      ...typography.title,
+      marginBottom: spacing.xs,
+      color: colors.text,
+    },
+  });
+
+  return (
+    <Text style={[styles.title, style]} numberOfLines={numberOfLines}>
+      {children}
+    </Text>
+  );
+};
+
+interface ListItemSubtitleProps {
+  children: React.ReactNode;
+  numberOfLines?: number;
+  style?: TextStyle;
+}
+
+const ListItemSubtitle: React.FC<ListItemSubtitleProps> = ({ children, numberOfLines = 1, style }) => {
+  const { colors, typography } = useTheme();
+
+  const styles = StyleSheet.create({
+    subtitle: {
+      ...typography.body,
+      color: colors.textSecondary,
+    },
+  });
+
+  return (
+    <Text style={[styles.subtitle, style]} numberOfLines={numberOfLines}>
+      {children}
+    </Text>
+  );
+};
+
+interface ListItemDescriptionProps {
+  children: React.ReactNode;
+  numberOfLines?: number;
+  style?: TextStyle;
+}
+
+const ListItemDescription: React.FC<ListItemDescriptionProps> = ({ children, numberOfLines = 2, style }) => {
+  const { colors, spacing, typography } = useTheme();
+
+  const styles = StyleSheet.create({
+    description: {
+      ...typography.body,
+      color: colors.textSecondary,
+      marginTop: spacing.xs / 2,
+    },
+  });
+
+  return (
+    <Text style={[styles.description, style]} numberOfLines={numberOfLines}>
+      {children}
+    </Text>
+  );
+};
+
+interface ListItemButtonGroupOption {
+  label: string;
+  value: string;
+}
+
+interface ListItemButtonGroupProps {
+  options: ListItemButtonGroupOption[];
+  value: string;
+  onChange: (value: string) => void;
+  disabled?: boolean;
+}
+
+const ListItemButtonGroup: React.FC<ListItemButtonGroupProps> = ({
+  options,
+  value,
+  onChange,
+  disabled = false,
+}) => {
+  const { colors, spacing, typography } = useTheme();
+
+  const styles = StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+      marginTop: spacing.md,
+      gap: spacing.sm,
+      flexWrap: 'wrap',
+    },
+    button: {
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.lg,
+      borderRadius: 6,
+      backgroundColor: colors.secondary,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    buttonActive: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    buttonDisabled: {
+      opacity: 0.5,
+    },
+    buttonText: {
+      ...typography.body,
+      color: colors.text,
+    },
+    buttonTextActive: {
+      color: colors.background,
+      fontWeight: '600',
+    },
+  });
+
+  return (
+    <View style={styles.container}>
+      {options.map((option) => (
+        <TouchableOpacity
+          key={option.value}
+          style={[
+            styles.button,
+            value === option.value && styles.buttonActive,
+            disabled && styles.buttonDisabled,
+          ]}
+          onPress={() => !disabled && onChange(option.value)}
+          disabled={disabled}
+        >
+          <Text
+            style={[
+              styles.buttonText,
+              value === option.value && styles.buttonTextActive,
+            ]}
+          >
+            {option.label}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+};
+
+// ============================================================
+// Exports
+// ============================================================
+
+export const ListItem = {
+  Container: ListItemContainer,
+  Title: ListItemTitle,
+  Subtitle: ListItemSubtitle,
+  Description: ListItemDescription,
+  ButtonGroup: ListItemButtonGroup,
+};
+
+// Backward compatibility: default export as Container
+export default ListItemContainer;
