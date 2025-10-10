@@ -46,7 +46,6 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
     panResponder,
   } = useChat(context, onCommandReceived, currentNoteTitle, currentNoteContent);
   const [inputText, setInputText] = useState('');
-  const [isNoteAttached, setIsNoteAttached] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const positionAnimation = useRef(new Animated.Value(0)).current;
 
@@ -96,9 +95,8 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
     const trimmedInput = inputText.trim();
     if (trimmedInput.length > 0 && !isLoading) {
   
-      await sendMessage(trimmedInput, { isNoteAttached });
+      await sendMessage(trimmedInput);
       setInputText('');
-      setIsNoteAttached(false); // 送信後にリセット
     }
   };
 
@@ -219,22 +217,6 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = ({
             <Text style={styles.expandButtonText}>▲ {messages.length}</Text>
           </TouchableOpacity>
         )}
-        <TouchableOpacity
-          onPress={() => setIsNoteAttached(prev => !prev)}
-          style={[
-            styles.attachButton,
-            isNoteAttached && styles.attachButtonActive,
-          ]}
-        >
-          <Text
-            style={[
-              styles.attachButtonText,
-              isNoteAttached && styles.attachButtonTextActive,
-            ]}
-          >
-            + Note
-          </Text>
-        </TouchableOpacity>
         <TextInput
           style={styles.textInput}
           placeholder="メッセージを入力..."
