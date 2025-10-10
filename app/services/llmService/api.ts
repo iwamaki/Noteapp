@@ -67,6 +67,11 @@ export class APIService {
     return this.llmServiceInstance.getAvailableProviders();
   }
 
+  // 会話履歴のクリア
+  static clearHistory() {
+    this.llmServiceInstance.clearHistory();
+  }
+
 }
 
 export { LLMService } from './index';
