@@ -4,7 +4,7 @@
  * @responsibility アプリケーション全体のナビゲーションスタックを設定し、主要な画面間の遷移を管理する責任があります。
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   NavigationContainer,
   useNavigationContainerRef,
@@ -28,10 +28,19 @@ const Stack = createStackNavigator<RootStackParamList>();
 function RootNavigator() {
   const navigationRef = useNavigationContainerRef();
   const { keyboardHeight } = useKeyboard();
+  const [currentRouteName, setCurrentRouteName] = useState<string | undefined>(undefined);
 
   return (
     <View style={styles.container}>
-      <NavigationContainer ref={navigationRef}>
+      <NavigationContainer
+        ref={navigationRef}
+        onReady={() => {
+          setCurrentRouteName(navigationRef.current?.getCurrentRoute()?.name);
+        }}
+        onStateChange={() => {
+          setCurrentRouteName(navigationRef.current?.getCurrentRoute()?.name);
+        }}
+      >
         <Stack.Navigator initialRouteName="NoteList">
           <Stack.Screen name="NoteList" component={NoteListScreen} options={{ title: 'Notes' }} />
           <Stack.Screen name="NoteEdit" component={NoteEditScreen} options={{ title: 'Edit Note' }} />
@@ -40,9 +49,11 @@ function RootNavigator() {
           <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
         </Stack.Navigator>
       </NavigationContainer>
-      <View style={{ bottom: keyboardHeight }}>
-        <ChatInputBar />
-      </View>
+      {(currentRouteName === 'NoteList' || currentRouteName === 'NoteEdit') && (
+        <View style={{ bottom: keyboardHeight }}>
+          <ChatInputBar />
+        </View>
+      )}
     </View>
   );
 }
