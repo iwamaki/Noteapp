@@ -23,6 +23,8 @@ strict digraph "dependency-cruiser output"{
     subgraph "cluster_app" {label="app" subgraph "cluster_app/components" {label="components" "app/components/ListItem.tsx" [label=<ListItem.tsx> tooltip="ListItem.tsx" URL="app/components/ListItem.tsx" fillcolor="#bbfeff"] } }
     "app/components/ListItem.tsx" -> "app/design/styles/commonStyles.ts"
     "app/components/ListItem.tsx" -> "app/design/theme/ThemeContext.tsx"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/components" {label="components" "app/components/MainContainer.tsx" [label=<MainContainer.tsx> tooltip="MainContainer.tsx" URL="app/components/MainContainer.tsx" fillcolor="#bbfeff"] } }
+    "app/components/MainContainer.tsx" -> "app/design/theme/ThemeContext.tsx"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/data" {label="data" "app/data/asyncStorageUtils.ts" [label=<asyncStorageUtils.ts> tooltip="asyncStorageUtils.ts" URL="app/data/asyncStorageUtils.ts" fillcolor="#ddfeff"] } }
     subgraph "cluster_app" {label="app" subgraph "cluster_app/design" {label="design" subgraph "cluster_app/design/styles" {label="styles" "app/design/styles/commonStyles.ts" [label=<commonStyles.ts> tooltip="commonStyles.ts" URL="app/design/styles/commonStyles.ts" fillcolor="#ddfeff"] } } }
     subgraph "cluster_app" {label="app" subgraph "cluster_app/design" {label="design" subgraph "cluster_app/design/theme" {label="theme" "app/design/theme/ThemeContext.tsx" [label=<ThemeContext.tsx> tooltip="ThemeContext.tsx" URL="app/design/theme/ThemeContext.tsx" fillcolor="#bbfeff"] } } }
@@ -54,7 +56,7 @@ strict digraph "dependency-cruiser output"{
     "app/navigation/RootNavigator.tsx" -> "app/navigation/types.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/navigation" {label="navigation" "app/navigation/types.ts" [label=<types.ts> tooltip="types.ts" URL="app/navigation/types.ts" fillcolor="#ddfeff"] } }
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/diff-view" {label="diff-view" "app/screen/diff-view/DiffViewScreen.tsx" [label=<DiffViewScreen.tsx> tooltip="DiffViewScreen.tsx" URL="app/screen/diff-view/DiffViewScreen.tsx" fillcolor="#bbfeff"] } } }
-    "app/screen/diff-view/DiffViewScreen.tsx" -> "app/design/theme/ThemeContext.tsx"
+    "app/screen/diff-view/DiffViewScreen.tsx" -> "app/components/MainContainer.tsx"
     "app/screen/diff-view/DiffViewScreen.tsx" -> "app/screen/diff-view/components/DiffViewer.tsx"
     "app/screen/diff-view/DiffViewScreen.tsx" -> "app/screen/diff-view/hooks/useDiffView.tsx"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/diff-view" {label="diff-view" subgraph "cluster_app/screen/diff-view/components" {label="components" "app/screen/diff-view/components/DiffViewer.tsx" [label=<DiffViewer.tsx> tooltip="DiffViewer.tsx" URL="app/screen/diff-view/components/DiffViewer.tsx" fillcolor="#bbfeff"] } } } }
@@ -69,7 +71,7 @@ strict digraph "dependency-cruiser output"{
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/diff-view" {label="diff-view" subgraph "cluster_app/screen/diff-view/services" {label="services" "app/screen/diff-view/services/diffService.ts" [label=<diffService.ts> tooltip="diffService.ts" URL="app/screen/diff-view/services/diffService.ts" fillcolor="#ddfeff"] } } } }
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-edit" {label="note-edit" "app/screen/note-edit/NoteEditScreen.tsx" [label=<NoteEditScreen.tsx> tooltip="NoteEditScreen.tsx" URL="app/screen/note-edit/NoteEditScreen.tsx" fillcolor="#bbfeff"] } } }
     "app/screen/note-edit/NoteEditScreen.tsx" -> "app/components/CustomModal.tsx"
-    "app/screen/note-edit/NoteEditScreen.tsx" -> "app/design/theme/ThemeContext.tsx"
+    "app/screen/note-edit/NoteEditScreen.tsx" -> "app/components/MainContainer.tsx"
     "app/screen/note-edit/NoteEditScreen.tsx" -> "app/features/chat/ChatInputBar.tsx"
     "app/screen/note-edit/NoteEditScreen.tsx" -> "app/navigation/types.ts"
     "app/screen/note-edit/NoteEditScreen.tsx" -> "app/screen/note-edit/components/FileEditor.tsx"
@@ -109,6 +111,7 @@ strict digraph "dependency-cruiser output"{
     "app/screen/note-edit/noteStorage.ts" -> "app/data/asyncStorageUtils.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-list" {label="note-list" "app/screen/note-list/NoteListScreen.tsx" [label=<NoteListScreen.tsx> tooltip="NoteListScreen.tsx" URL="app/screen/note-list/NoteListScreen.tsx" fillcolor="#bbfeff"] } } }
     "app/screen/note-list/NoteListScreen.tsx" -> "app/components/ListItem.tsx"
+    "app/screen/note-list/NoteListScreen.tsx" -> "app/components/MainContainer.tsx"
     "app/screen/note-list/NoteListScreen.tsx" -> "app/design/theme/ThemeContext.tsx"
     "app/screen/note-list/NoteListScreen.tsx" -> "app/features/chat/ChatInputBar.tsx"
     "app/screen/note-list/NoteListScreen.tsx" -> "app/screen/note-list/components/NoteListEmptyState.tsx"
@@ -140,6 +143,8 @@ strict digraph "dependency-cruiser output"{
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/version-history" {label="version-history" "app/screen/version-history/VersionHistoryScreen.tsx" [label=<VersionHistoryScreen.tsx> tooltip="VersionHistoryScreen.tsx" URL="app/screen/version-history/VersionHistoryScreen.tsx" fillcolor="#bbfeff"] } } }
     "app/screen/version-history/VersionHistoryScreen.tsx" -> "shared/types/note.ts"
     "app/screen/version-history/VersionHistoryScreen.tsx" -> "app/components/CustomHeader.tsx"
+    "app/screen/version-history/VersionHistoryScreen.tsx" -> "app/components/ListItem.tsx"
+    "app/screen/version-history/VersionHistoryScreen.tsx" -> "app/components/MainContainer.tsx"
     "app/screen/version-history/VersionHistoryScreen.tsx" -> "app/design/theme/ThemeContext.tsx"
     "app/screen/version-history/VersionHistoryScreen.tsx" -> "app/navigation/types.ts"
     "app/screen/version-history/VersionHistoryScreen.tsx" -> "app/screen/note-edit/noteStorage.ts"
@@ -179,6 +184,7 @@ strict digraph "dependency-cruiser output"{
     subgraph "cluster_app" {label="app" subgraph "cluster_app/services" {label="services" subgraph "cluster_app/services/llmService" {label="llmService" subgraph "cluster_app/services/llmService/utils" {label="utils" "app/services/llmService/utils/HttpClient.ts" [label=<HttpClient.ts> tooltip="HttpClient.ts" URL="app/services/llmService/utils/HttpClient.ts" fillcolor="#ddfeff"] } } } }
     subgraph "cluster_app" {label="app" subgraph "cluster_app/settings" {label="settings" "app/settings/SettingsScreen.tsx" [label=<SettingsScreen.tsx> tooltip="SettingsScreen.tsx" URL="app/settings/SettingsScreen.tsx" fillcolor="#bbfeff"] } }
     "app/settings/SettingsScreen.tsx" -> "app/components/CustomHeader.tsx"
+    "app/settings/SettingsScreen.tsx" -> "app/components/ListItem.tsx"
     "app/settings/SettingsScreen.tsx" -> "app/design/theme/ThemeContext.tsx"
     "app/settings/SettingsScreen.tsx" -> "app/services/llmService/api.ts"
     "app/settings/SettingsScreen.tsx" -> "app/services/llmService/types/types.ts"
