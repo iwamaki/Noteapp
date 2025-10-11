@@ -18,6 +18,8 @@ import NoteEditScreen from '../screen/note-edit/NoteEditScreen';
 import DiffViewScreen from '../screen/diff-view/DiffViewScreen';
 import VersionHistoryScreen from '../screen/version-history/VersionHistoryScreen';
 import SettingsScreen from '../settings/SettingsScreen';
+import { ChatInputBar } from '../features/chat/ChatInputBar';
+import { useKeyboard } from '../design/theme/KeyboardProvider';
 
 // スタックナビゲーターの作成
 const Stack = createStackNavigator<RootStackParamList>();
@@ -25,6 +27,7 @@ const Stack = createStackNavigator<RootStackParamList>();
 // RootNavigatorコンポーネント
 function RootNavigator() {
   const navigationRef = useNavigationContainerRef();
+  const { keyboardHeight } = useKeyboard();
 
   return (
     <View style={styles.container}>
@@ -37,6 +40,9 @@ function RootNavigator() {
           <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
         </Stack.Navigator>
       </NavigationContainer>
+      <View style={{ bottom: keyboardHeight }}>
+        <ChatInputBar />
+      </View>
     </View>
   );
 }

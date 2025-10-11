@@ -2,10 +2,8 @@ import React from 'react';
 import {
   StyleSheet,
   FlatList,
-  Platform,
 } from 'react-native';
 import { ListItem } from '../../components/ListItem';
-import { ChatInputBar } from '../../features/chat/ChatInputBar';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { useNoteListLogic } from './hooks/useNoteListLogic';
 import { useNoteListHeader } from './hooks/useNoteListHeader';
@@ -13,13 +11,13 @@ import { useNoteListChatContext } from './hooks/useNoteListChatContext';
 import { NoteListEmptyState } from './components/NoteListEmptyState';
 import { NoteListFabButton } from './components/NoteListFabButton';
 import { MainContainer } from '../../components/MainContainer';
-
-// 入力バーの高さ（概算）
-const CHAT_INPUT_HEIGHT = Platform.OS === 'ios' ? 78 : 66;
+import { useKeyboard } from '../../design/theme/KeyboardProvider';
+import { CHAT_INPUT_HEIGHT } from '../../design/constants';
 
 // ノート一覧画面コンポーネント
 function NoteListScreen() {
   const { colors, spacing } = useTheme();
+  const { keyboardHeight } = useKeyboard();
 
   const {
     notes,
@@ -103,10 +101,9 @@ function NoteListScreen() {
           style={styles.list}
           onRefresh={fetchNotes}
           refreshing={loading.isLoading}
-          contentContainerStyle={[styles.listContent, { paddingBottom: CHAT_INPUT_HEIGHT + spacing.xl }]}
+          contentContainerStyle={[{ paddingBottom: keyboardHeight + CHAT_INPUT_HEIGHT + spacing.xl }, styles.listContent]}
         />
       )}
-      <ChatInputBar />
       <NoteListFabButton
         isSelectionMode={isSelectionMode}
         onPress={handleCreateNote}
