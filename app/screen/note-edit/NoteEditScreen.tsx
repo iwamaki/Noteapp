@@ -5,11 +5,11 @@ import { RootStackParamList } from '../../navigation/types';
 import { FileEditor, ViewMode } from './components/FileEditor';
 import { useNoteEditor } from './hooks/useNoteEditor';
 import { useNoteEditHeader } from './hooks/useNoteEditHeader';
-import { useNoteEditChatContext } from './hooks/useNoteEditChatContext';
+import { useNoteEditChatContext } from '../../features/chat/hooks/useNoteEditChatContext';
 import { CustomModal } from '../../components/CustomModal';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { MainContainer } from '../../components/MainContainer';
-import { useKeyboard } from '../../design/theme/KeyboardProvider';
+import { useKeyboard } from '../../contexts/KeyboardContext';
 import { CHAT_INPUT_HEIGHT } from '../../design/constants';
 
 type NoteEditScreenRouteProp = RouteProp<RootStackParamList, 'NoteEdit'>;

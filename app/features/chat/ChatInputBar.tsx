@@ -58,7 +58,7 @@ export const ChatInputBar: React.FC = () => {
     },
     inputArea: {
       flexDirection: 'row',
-      alignItems: 'center', // ここを 'flex-end' から 'center' に変更
+      alignItems: 'center', 
       paddingHorizontal: 10,
       paddingVertical: 8,
       paddingBottom: Platform.OS === 'ios' ? 20 : 35,

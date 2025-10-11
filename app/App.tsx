@@ -10,7 +10,7 @@ import RootNavigator from './navigation/RootNavigator';
 import { ThemeProvider } from './design/theme/ThemeContext';
 import { useSettingsStore } from './settings/settingsStore';
 import { logger } from './utils/logger';
-import { KeyboardProvider } from './design/theme/KeyboardProvider';
+import { KeyboardProvider } from './contexts/KeyboardContext';
 
 export default function App() {
   const { loadSettings } = useSettingsStore();

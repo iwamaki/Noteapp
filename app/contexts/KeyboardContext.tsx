@@ -1,6 +1,6 @@
 
 /**
- * @file KeyboardProvider.tsx
+ * @file KeyboardContext.tsx
  * @summary キーボードの高さをグローバルに提供するためのReact Context Provider
  * @description このコンポーネントは、キーボードの表示・非表示イベントを監視し、
  * キーボードの高さをアプリケーション全体で利用可能なコンテキストとして提供します。

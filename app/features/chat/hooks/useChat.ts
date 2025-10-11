@@ -20,7 +20,7 @@ const CHAT_AREA_INITIAL_HEIGHT = 250;   // 初期高さ
  * チャット機能のカスタムフック
  *
  * このフックは、ChatServiceと連携してチャット機能を提供します。
- * 以前のバージョンとは異なり、context、onCommandReceived、currentNoteTitle、currentNoteContentなどの
+ * context、onCommandReceived、currentNoteTitle、currentNoteContentなどの
  * プロパティは不要になりました。これらの情報はChatServiceを通じて動的に取得されます。
  */
 export const useChat = () => {
