@@ -18,7 +18,7 @@ import NoteEditScreen from '../screen/note-edit/NoteEditScreen';
 import DiffViewScreen from '../screen/diff-view/DiffViewScreen';
 import VersionHistoryScreen from '../screen/version-history/VersionHistoryScreen';
 import SettingsScreen from '../settings/SettingsScreen';
-import { ChatInputBar } from '../features/chat/ChatInputBar';
+import { ChatInputBar } from '../features/chat/components/ChatInputBar';
 import { useKeyboard } from '../contexts/KeyboardContext';
 
 // スタックナビゲーターの作成

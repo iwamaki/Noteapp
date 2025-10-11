@@ -14,9 +14,9 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useChat } from './hooks/useChat';
-import { useTheme } from '../../design/theme/ThemeContext';
-import { ChatHistory } from './components/ChatHistory';
+import { useChat } from '../hooks/useChat';
+import { useTheme } from '../../../design/theme/ThemeContext';
+import { ChatHistory } from '../components/ChatHistory';
 
 // チャット入力バーコンポーネント（プロパティ不要）
 export const ChatInputBar: React.FC = () => {
