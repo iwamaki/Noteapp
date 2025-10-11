@@ -4,7 +4,7 @@
  * @responsibility ユーザーがメッセージを入力して送信するためのUIを提供し、チャット履歴の表示と管理、およびキーボードの表示状態に応じたレイアウト調整を行う責任があります。
  */
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   TextInput,
@@ -12,8 +12,6 @@ import {
   StyleSheet,
   Text,
   Platform,
-  Animated,
-  Keyboard,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useChat } from './hooks/useChat';
@@ -33,41 +31,6 @@ export const ChatInputBar: React.FC = () => {
   } = useChat();
   const [inputText, setInputText] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
-  const positionAnimation = useRef(new Animated.Value(0)).current;
-
-  // キーボードイベントのリスナー
-  useEffect(() => {
-    const keyboardWillShow = (e: any) => {
-      const height = e.endCoordinates.height;
-      Animated.timing(positionAnimation, {
-        toValue: height,
-        duration: e.duration || 250,
-        useNativeDriver: false,
-      }).start();
-    };
-
-    // キーボードが隠れたときの処理
-    const keyboardWillHide = (e: any) => {
-      Animated.timing(positionAnimation, {
-        toValue: 0,
-        duration: e.duration || 250,
-        useNativeDriver: false,
-      }).start();
-    };
-
-    const showEvent =
-      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-    const hideEvent =
-      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-
-    const showSubscription = Keyboard.addListener(showEvent, keyboardWillShow);
-    const hideSubscription = Keyboard.addListener(hideEvent, keyboardWillHide);
-
-    return () => {
-      showSubscription.remove();
-      hideSubscription.remove();
-    };
-  }, []);
 
   // メッセージ送信処理
   const handleSendMessage = async () => {
@@ -148,7 +111,7 @@ export const ChatInputBar: React.FC = () => {
   });
 
   return (
-    <Animated.View style={[styles.container, { bottom: positionAnimation }]}>
+    <View style={styles.container}>
       {/* メッセージ履歴エリア（展開可能） */}
       {isExpanded && (
         <ChatHistory
@@ -197,6 +160,6 @@ export const ChatInputBar: React.FC = () => {
           />
         </TouchableOpacity>
       </View>
-    </Animated.View>
+    </View>
   );
 };

@@ -10,6 +10,7 @@ import RootNavigator from './navigation/RootNavigator';
 import { ThemeProvider } from './design/theme/ThemeContext';
 import { useSettingsStore } from './settings/settingsStore';
 import { logger } from './utils/logger';
+import { KeyboardProvider } from './design/theme/KeyboardProvider';
 
 export default function App() {
   const { loadSettings } = useSettingsStore();
@@ -24,7 +25,9 @@ export default function App() {
 
   return (
     <ThemeProvider>
-      <RootNavigator />
+      <KeyboardProvider>
+        <RootNavigator />
+      </KeyboardProvider>
     </ThemeProvider>
   );
 }

@@ -43,7 +43,7 @@ const ListItemContainer: React.FC<ListItemContainerProps> = ({
       flexDirection: 'row',
       alignItems: 'center',
       borderWidth: 2,
-      borderColor: 'transparent',
+      borderColor: colors.transparent,
     },
     content: {
       flex: 1,

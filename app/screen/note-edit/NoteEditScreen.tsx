@@ -1,26 +1,25 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Platform, Keyboard, Animated, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/types';
 import { FileEditor, ViewMode } from './components/FileEditor';
 import { useNoteEditor } from './hooks/useNoteEditor';
 import { useNoteEditHeader } from './hooks/useNoteEditHeader';
 import { useNoteEditChatContext } from './hooks/useNoteEditChatContext';
-import { ChatInputBar } from '../../features/chat/ChatInputBar';
 import { CustomModal } from '../../components/CustomModal';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { MainContainer } from '../../components/MainContainer';
+import { useKeyboard } from '../../design/theme/KeyboardProvider';
+import { CHAT_INPUT_HEIGHT } from '../../design/constants';
 
 type NoteEditScreenRouteProp = RouteProp<RootStackParamList, 'NoteEdit'>;
-
-// 入力バーの高さ（概算）
-const CHAT_INPUT_HEIGHT = Platform.OS === 'ios' ? 90 : 100;
 
 // ノート編集画面コンポーネント
 function NoteEditScreen() {
   const route = useRoute<NoteEditScreenRouteProp>();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { noteId } = route.params || {};
+  const { keyboardHeight } = useKeyboard();
 
   const {
     note,
@@ -40,7 +39,6 @@ function NoteEditScreen() {
   const [viewMode, setViewMode] = useState<ViewMode>('edit');
   const [isConfirmModalVisible, setConfirmModalVisible] = useState(false);
   const [nextAction, setNextAction] = useState<any>(null); 
-  const paddingBottomAnim = useRef(new Animated.Value(CHAT_INPUT_HEIGHT)).current;
 
   useEffect(() => {
     const beforeRemoveListener = (e: any) => {
@@ -58,39 +56,6 @@ function NoteEditScreen() {
       navigation.removeListener('beforeRemove', beforeRemoveListener);
     };
   }, [navigation, isDirty, isLoading]);
-
-
-  // キーボードイベントのリスナー
-  useEffect(() => {
-    const keyboardWillShow = (e: any) => {
-      const height = e.endCoordinates.height;
-      Animated.timing(paddingBottomAnim, {
-        toValue: CHAT_INPUT_HEIGHT + height,
-        duration: e.duration || 250,
-        useNativeDriver: false,
-      }).start();
-    };
-
-    const keyboardWillHide = (e: any) => {
-      Animated.timing(paddingBottomAnim, {
-        toValue: CHAT_INPUT_HEIGHT,
-        duration: e.duration || 250,
-        useNativeDriver: false,
-      }).start();
-    };
-
-    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-
-    const showSubscription = Keyboard.addListener(showEvent, keyboardWillShow);
-    const hideSubscription = Keyboard.addListener(hideEvent, keyboardWillHide);
-
-    return () => {
-      showSubscription.remove();
-      hideSubscription.remove();
-    };
-  }, [paddingBottomAnim]);
-
 
   // ヘッダーの設定
   useNoteEditHeader({
@@ -124,7 +89,7 @@ function NoteEditScreen() {
 
   return (
     <MainContainer isLoading={isLoading}>
-      <Animated.View style={[styles.animatedContainer, { paddingBottom: paddingBottomAnim }]}>
+      <View style={[styles.animatedContainer, { paddingBottom: keyboardHeight + CHAT_INPUT_HEIGHT }]}>
         <FileEditor
           filename={title}
           initialContent={content}
@@ -132,8 +97,7 @@ function NoteEditScreen() {
           onModeChange={setViewMode}
           onContentChange={setContent}
         />
-      </Animated.View>
-      <ChatInputBar />
+      </View>
       <CustomModal
         isVisible={isConfirmModalVisible}
         title="変更を破棄しますか？"
