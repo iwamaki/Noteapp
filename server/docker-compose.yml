@@ -13,8 +13,8 @@ services:
       - GCP_PROJECT_ID=${GCP_PROJECT_ID}
       - OPENAI_API_SECRET_ID=${OPENAI_API_SECRET_ID}
       - GEMINI_API_SECRET_ID=${GEMINI_API_SECRET_ID}
-      # - LOG_LEVEL=INFO  # 本番用（簡潔ログ）
-      - LOG_LEVEL=DEBUG  # 開発用（詳細ログ）
+      - LOG_LEVEL=INFO  # 本番用（簡潔ログ）
+      # - LOG_LEVEL=DEBUG  # 開発用（詳細ログ）
     restart: unless-stopped
     command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
     # user: "1000:1000"
