@@ -4,6 +4,7 @@ strict digraph "dependency-cruiser output"{
     edge [arrowhead="vee" arrowsize="0.6" penwidth="2" color="#64748b" fontname="Helvetica" fontsize="9"]
 
     subgraph "cluster_app" {label="app" "app/App.tsx" [label=<App.tsx> tooltip="App.tsx" URL="app/App.tsx" fillcolor="#bbfeff"] }
+    "app/App.tsx" -> "app/design/theme/KeyboardProvider.tsx"
     "app/App.tsx" -> "app/design/theme/ThemeContext.tsx"
     "app/App.tsx" -> "app/navigation/RootNavigator.tsx"
     "app/App.tsx" -> "app/settings/settingsStore.ts"
@@ -26,7 +27,9 @@ strict digraph "dependency-cruiser output"{
     subgraph "cluster_app" {label="app" subgraph "cluster_app/components" {label="components" "app/components/MainContainer.tsx" [label=<MainContainer.tsx> tooltip="MainContainer.tsx" URL="app/components/MainContainer.tsx" fillcolor="#bbfeff"] } }
     "app/components/MainContainer.tsx" -> "app/design/theme/ThemeContext.tsx"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/data" {label="data" "app/data/asyncStorageUtils.ts" [label=<asyncStorageUtils.ts> tooltip="asyncStorageUtils.ts" URL="app/data/asyncStorageUtils.ts" fillcolor="#ddfeff"] } }
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/design" {label="design" "app/design/constants.ts" [label=<constants.ts> tooltip="constants.ts" URL="app/design/constants.ts" fillcolor="#ddfeff"] } }
     subgraph "cluster_app" {label="app" subgraph "cluster_app/design" {label="design" subgraph "cluster_app/design/styles" {label="styles" "app/design/styles/commonStyles.ts" [label=<commonStyles.ts> tooltip="commonStyles.ts" URL="app/design/styles/commonStyles.ts" fillcolor="#ddfeff"] } } }
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/design" {label="design" subgraph "cluster_app/design/theme" {label="theme" "app/design/theme/KeyboardProvider.tsx" [label=<KeyboardProvider.tsx> tooltip="KeyboardProvider.tsx" URL="app/design/theme/KeyboardProvider.tsx" fillcolor="#bbfeff"] } } }
     subgraph "cluster_app" {label="app" subgraph "cluster_app/design" {label="design" subgraph "cluster_app/design/theme" {label="theme" "app/design/theme/ThemeContext.tsx" [label=<ThemeContext.tsx> tooltip="ThemeContext.tsx" URL="app/design/theme/ThemeContext.tsx" fillcolor="#bbfeff"] } } }
     "app/design/theme/ThemeContext.tsx" -> "app/settings/settingsStore.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" "app/features/chat/ChatInputBar.tsx" [label=<ChatInputBar.tsx> tooltip="ChatInputBar.tsx" URL="app/features/chat/ChatInputBar.tsx" fillcolor="#bbfeff"] } } }
@@ -48,6 +51,8 @@ strict digraph "dependency-cruiser output"{
     subgraph "cluster_app" {label="app" "app/index.ts" [label=<index.ts> tooltip="index.ts" URL="app/index.ts" fillcolor="#ddfeff"] }
     "app/index.ts" -> "app/App.tsx"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/navigation" {label="navigation" "app/navigation/RootNavigator.tsx" [label=<RootNavigator.tsx> tooltip="RootNavigator.tsx" URL="app/navigation/RootNavigator.tsx" fillcolor="#bbfeff"] } }
+    "app/navigation/RootNavigator.tsx" -> "app/design/theme/KeyboardProvider.tsx"
+    "app/navigation/RootNavigator.tsx" -> "app/features/chat/ChatInputBar.tsx"
     "app/navigation/RootNavigator.tsx" -> "app/screen/diff-view/DiffViewScreen.tsx"
     "app/navigation/RootNavigator.tsx" -> "app/screen/note-edit/NoteEditScreen.tsx"
     "app/navigation/RootNavigator.tsx" -> "app/screen/note-list/NoteListScreen.tsx"
@@ -72,7 +77,8 @@ strict digraph "dependency-cruiser output"{
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-edit" {label="note-edit" "app/screen/note-edit/NoteEditScreen.tsx" [label=<NoteEditScreen.tsx> tooltip="NoteEditScreen.tsx" URL="app/screen/note-edit/NoteEditScreen.tsx" fillcolor="#bbfeff"] } } }
     "app/screen/note-edit/NoteEditScreen.tsx" -> "app/components/CustomModal.tsx"
     "app/screen/note-edit/NoteEditScreen.tsx" -> "app/components/MainContainer.tsx"
-    "app/screen/note-edit/NoteEditScreen.tsx" -> "app/features/chat/ChatInputBar.tsx"
+    "app/screen/note-edit/NoteEditScreen.tsx" -> "app/design/constants.ts"
+    "app/screen/note-edit/NoteEditScreen.tsx" -> "app/design/theme/KeyboardProvider.tsx"
     "app/screen/note-edit/NoteEditScreen.tsx" -> "app/navigation/types.ts"
     "app/screen/note-edit/NoteEditScreen.tsx" -> "app/screen/note-edit/components/FileEditor.tsx"
     "app/screen/note-edit/NoteEditScreen.tsx" -> "app/screen/note-edit/hooks/useNoteEditChatContext.ts"
@@ -112,8 +118,9 @@ strict digraph "dependency-cruiser output"{
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-list" {label="note-list" "app/screen/note-list/NoteListScreen.tsx" [label=<NoteListScreen.tsx> tooltip="NoteListScreen.tsx" URL="app/screen/note-list/NoteListScreen.tsx" fillcolor="#bbfeff"] } } }
     "app/screen/note-list/NoteListScreen.tsx" -> "app/components/ListItem.tsx"
     "app/screen/note-list/NoteListScreen.tsx" -> "app/components/MainContainer.tsx"
+    "app/screen/note-list/NoteListScreen.tsx" -> "app/design/constants.ts"
+    "app/screen/note-list/NoteListScreen.tsx" -> "app/design/theme/KeyboardProvider.tsx"
     "app/screen/note-list/NoteListScreen.tsx" -> "app/design/theme/ThemeContext.tsx"
-    "app/screen/note-list/NoteListScreen.tsx" -> "app/features/chat/ChatInputBar.tsx"
     "app/screen/note-list/NoteListScreen.tsx" -> "app/screen/note-list/components/NoteListEmptyState.tsx"
     "app/screen/note-list/NoteListScreen.tsx" -> "app/screen/note-list/components/NoteListFabButton.tsx"
     "app/screen/note-list/NoteListScreen.tsx" -> "app/screen/note-list/hooks/useNoteListChatContext.ts"

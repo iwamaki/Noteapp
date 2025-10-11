@@ -19,7 +19,7 @@ import DiffViewScreen from '../screen/diff-view/DiffViewScreen';
 import VersionHistoryScreen from '../screen/version-history/VersionHistoryScreen';
 import SettingsScreen from '../settings/SettingsScreen';
 import { ChatInputBar } from '../features/chat/ChatInputBar';
-import { useKeyboard } from '../design/theme/KeyboardProvider';
+import { useKeyboard } from '../contexts/KeyboardContext';
 
 // スタックナビゲーターの作成
 const Stack = createStackNavigator<RootStackParamList>();

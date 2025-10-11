@@ -7,11 +7,11 @@ import { ListItem } from '../../components/ListItem';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { useNoteListLogic } from './hooks/useNoteListLogic';
 import { useNoteListHeader } from './hooks/useNoteListHeader';
-import { useNoteListChatContext } from './hooks/useNoteListChatContext';
+import { useNoteListChatContext } from '../../features/chat/hooks/useNoteListChatContext';
 import { NoteListEmptyState } from './components/NoteListEmptyState';
 import { NoteListFabButton } from './components/NoteListFabButton';
 import { MainContainer } from '../../components/MainContainer';
-import { useKeyboard } from '../../design/theme/KeyboardProvider';
+import { useKeyboard } from '../../contexts/KeyboardContext';
 import { CHAT_INPUT_HEIGHT } from '../../design/constants';
 
 // ノート一覧画面コンポーネント

@@ -17,7 +17,7 @@ interface ChatHistoryProps {
   messages: ChatMessage[];
   isLoading: boolean;
   onCollapse: () => void;
-  onResetChat: () => void; // 追加
+  onResetChat: () => void; 
   messageAreaHeight: Animated.AnimatedValue;
   panHandlers: PanResponderInstance['panHandlers'];
 }
@@ -26,7 +26,7 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
   messages,
   isLoading,
   onCollapse,
-  onResetChat, // 追加
+  onResetChat, 
   messageAreaHeight,
   panHandlers,
 }) => {
@@ -52,7 +52,7 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
 
     resetButton: {
       padding: 4,
-      marginRight: 8, // ▽ボタンとの間にスペースを設ける
+      marginRight: 8, 
     },
     resetButtonText: {
       color: colors.textSecondary,
