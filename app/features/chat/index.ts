@@ -5,14 +5,12 @@
  *                 画面とチャット機能を疎結合にするためのサービス層を提供します
  */
 
-import APIService, { ChatContext } from '../llmService/api';
-import { ChatMessage, LLMCommand } from '../llmService/types/types';
+import APIService, { ChatContext } from '../../services/llmService/api';
+import { ChatMessage, LLMCommand } from '../../services/llmService/types/types';
 import { logger } from '../../utils/logger';
 import { ActiveScreenContextProvider, ActiveScreenContext, ChatServiceListener } from './types';
 
 /**
- * ChatService
- *
  * シングルトンクラスとして機能し、アプリケーション全体でチャットの状態を管理します。
  * 各画面は ActiveScreenContextProvider を実装し、このサービスに登録することで、
  * 疎結合な形で画面コンテキストをLLMと共有できます。

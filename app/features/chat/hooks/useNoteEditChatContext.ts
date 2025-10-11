@@ -6,9 +6,9 @@
  */
 
 import { useEffect, useRef } from 'react';
-import { ActiveScreenContextProvider, ActiveScreenContext } from '../../../services/chatService/types';
+import { ActiveScreenContextProvider, ActiveScreenContext } from '../types';
 import { LLMCommand } from '../../../services/llmService/types/types';
-import ChatService from '../../../services/chatService';
+import ChatService from '../index';
 import { logger } from '../../../utils/logger';
 
 interface UseNoteEditChatContextParams {

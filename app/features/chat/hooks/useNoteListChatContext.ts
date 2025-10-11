@@ -5,8 +5,8 @@
  */
 
 import { useEffect, useRef } from 'react';
-import { ActiveScreenContextProvider, ActiveScreenContext } from '../../../services/chatService/types';
-import ChatService from '../../../services/chatService';
+import { ActiveScreenContextProvider, ActiveScreenContext } from '../types';
+import ChatService from '../index';
 import { logger } from '../../../utils/logger';
 
 interface Note {

@@ -9,7 +9,7 @@ import { Animated, PanResponder } from 'react-native';
 import { ChatMessage } from '../../../services/llmService/index';
 import { logger } from '../../../utils/logger';
 import { useSettingsStore } from '../../../settings/settingsStore';
-import ChatService from '../../../services/chatService';
+import ChatService from '../index';
 
 // チャットエリアの高さの制限値
 const CHAT_AREA_MIN_HEIGHT = 150;       // 最小高さ
