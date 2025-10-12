@@ -1,7 +1,7 @@
 ---
 title: "B_009_設定画面へのListItem汎用化適用"
 id: 009
-status: new
+status: done
 priority: medium
 attempt_count: 0
 tags: [UI, refactoring, ListItem]
