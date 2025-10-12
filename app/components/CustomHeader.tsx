@@ -138,6 +138,8 @@ export const useCustomHeader = () => {
     // ヘッダー自体のスタイルもテーマに合わせる
     headerStyle: {
       backgroundColor: colors.secondary,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
     },
     headerTintColor: colors.primary,
   });

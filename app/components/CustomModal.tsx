@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   Pressable,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useTheme } from '../design/theme/ThemeContext';
 import { responsive } from '../design/styles/commonStyles';
@@ -143,29 +145,34 @@ export const CustomModal: React.FC<CustomModalProps> = ({
       onRequestClose={onClose}
     >
       <Pressable style={styles.centeredView} onPress={onClose}>
-        <Pressable style={styles.modalView}>
-          <Text style={styles.modalTitle}>{title}</Text>
-          {message && <Text style={styles.modalMessage}>{message}</Text>}
-          {children && <View style={styles.childrenContainer}>{children}</View>}
-          <View style={styles.buttonContainer}>
-            {buttons.map((button, index) => {
-              const { button: buttonStyle, text: textStyle } = getButtonStyles(
-                button.style
-              );
-              return (
-                <TouchableOpacity
-                  key={index}
-                  style={[styles.button, buttonStyle]}
-                  onPress={button.onPress}
-                >
-                  <Text style={[styles.buttonText, textStyle]}>{
-                    button.text
-                  }</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </Pressable>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+        >
+          <Pressable style={styles.modalView} onPress={(e) => e.stopPropagation()}>
+            <Text style={styles.modalTitle}>{title}</Text>
+            {message && <Text style={styles.modalMessage}>{message}</Text>}
+            {children && <View style={styles.childrenContainer}>{children}</View>}
+            <View style={styles.buttonContainer}>
+              {buttons.map((button, index) => {
+                const { button: buttonStyle, text: textStyle } = getButtonStyles(
+                  button.style
+                );
+                return (
+                  <TouchableOpacity
+                    key={index}
+                    style={[styles.button, buttonStyle]}
+                    onPress={button.onPress}
+                  >
+                    <Text style={[styles.buttonText, textStyle]}>{
+                      button.text
+                    }</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </Pressable>
+        </KeyboardAvoidingView>
       </Pressable>
     </Modal>
   );
