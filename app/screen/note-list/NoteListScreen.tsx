@@ -1,16 +1,18 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   StyleSheet,
   FlatList,
 } from 'react-native';
-import { ListItem } from '../../components/ListItem';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { useNoteListLogic } from './hooks/useNoteListLogic';
 import { useNoteListHeader } from './hooks/useNoteListHeader';
 import { useNoteListChatContext } from '../../features/chat/hooks/useNoteListChatContext';
 import { NoteListEmptyState } from './components/NoteListEmptyState';
 import { NoteListFabButton } from './components/NoteListFabButton';
+import { CreateItemModal } from './components/CreateItemModal';
+import { TreeListItem } from './components/TreeListItem';
 import { MainContainer } from '../../components/MainContainer';
+import { flattenTree } from './treeUtils';
 import { useKeyboard } from '../../contexts/KeyboardContext';
 import { CHAT_INPUT_HEIGHT } from '../../design/constants';
 
@@ -18,20 +20,29 @@ import { CHAT_INPUT_HEIGHT } from '../../design/constants';
 function NoteListScreen() {
   const { colors, spacing } = useTheme();
   const { keyboardHeight } = useKeyboard();
+  const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
 
   const {
-    notes,
+    items,
+    treeNodes,
     loading,
     isSelectionMode,
     selectedNoteIds,
-    handleSelectNote,
-    handleLongPressNote,
+    selectedFolderIds,
+    handleSelectItem,
+    handleLongPressItem,
     handleCancelSelection,
     handleDeleteSelected,
     handleCopySelected,
-    handleCreateNote,
-    fetchNotes,
+    // handleCreateNote,
+    handleCreateNoteWithPath,
+    // handleCreateFolder, // 将来のフォルダ作成UI用に予約
+    // fetchItems,
+    folderNavigation,
   } = useNoteListLogic();
+
+  // ツリーをフラット化してFlatListで表示
+  const flattenedTree = flattenTree(treeNodes);
 
   useNoteListHeader({
     isSelectionMode,
@@ -42,7 +53,10 @@ function NoteListScreen() {
   });
 
   // チャットコンテキストプロバイダーを登録
-  useNoteListChatContext({ notes });
+  useNoteListChatContext({
+    items,
+    currentPath: folderNavigation.currentPath,
+  });
 
   const styles = StyleSheet.create({
     centered: {
@@ -55,58 +69,64 @@ function NoteListScreen() {
       textAlign: 'center',
       paddingHorizontal: spacing.xl,
     },
-    list: {
-      flex: 1,
-    },
     listContent: {
       padding: spacing.md,
     },
   });
 
-  // ノートリストのレンダラー
-  const renderItem = ({ item }: { item: (typeof notes)[0] }) => (
-    <ListItem.Container
-      onPress={() => handleSelectNote(item.id)}
-      onLongPress={() => handleLongPressNote(item.id)}
-      isSelected={selectedNoteIds.has(item.id)}
-      isSelectionMode={isSelectionMode}
-    >
-      <ListItem.Title numberOfLines={1}>
-        {item.title || '無題のノート'}
-      </ListItem.Title>
-      {item.content && (
-        <ListItem.Subtitle numberOfLines={1}>
-          {item.content}
-        </ListItem.Subtitle>
-      )}
-    </ListItem.Container>
-  );
+  // ツリーアイテムのレンダラー
+  const renderTreeItem = useCallback(({ item: node }: { item: (typeof flattenedTree)[0] }) => {
+    const isSelected = node.type === 'folder'
+      ? selectedFolderIds.has(node.id)
+      : selectedNoteIds.has(node.id);
+
+    const fileSystemItem = {
+      type: node.type,
+      item: node.item,
+    } as any;
+
+    return (
+      <TreeListItem
+        node={node}
+        isSelected={isSelected}
+        isSelectionMode={isSelectionMode}
+        onPress={() => handleSelectItem(fileSystemItem)}
+        onLongPress={() => handleLongPressItem(fileSystemItem)}
+      />
+    );
+  }, [selectedFolderIds, selectedNoteIds, isSelectionMode, handleSelectItem, handleLongPressItem]);
 
   // メインの表示
   return (
     <MainContainer
       backgroundColor={colors.secondary}
-      isLoading={loading.isLoading && notes.length === 0}
+      isLoading={loading.isLoading && items.length === 0}
     >
-      {notes.length === 0 && !loading.isLoading ? (
+      {flattenedTree.length === 0 && !loading.isLoading ? (
         <NoteListEmptyState
           containerStyle={styles.centered}
           messageStyle={styles.emptyMessage}
         />
       ) : (
         <FlatList
-          data={notes}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id}
-          style={styles.list}
-          onRefresh={fetchNotes}
-          refreshing={loading.isLoading}
-          contentContainerStyle={[{ paddingBottom: keyboardHeight + CHAT_INPUT_HEIGHT + spacing.xl }, styles.listContent]}
+          data={flattenedTree}
+          renderItem={renderTreeItem}
+          keyExtractor={(node) => `${node.type}-${node.id}`}
+          contentContainerStyle={[
+            { paddingBottom: keyboardHeight + CHAT_INPUT_HEIGHT + spacing.xl },
+            styles.listContent
+          ]}
         />
       )}
       <NoteListFabButton
         isSelectionMode={isSelectionMode}
-        onPress={handleCreateNote}
+        onPress={() => setIsCreateModalVisible(true)}
+      />
+      <CreateItemModal
+        visible={isCreateModalVisible}
+        currentPath={folderNavigation.currentPath}
+        onClose={() => setIsCreateModalVisible(false)}
+        onCreate={handleCreateNoteWithPath}
       />
     </MainContainer>
   );

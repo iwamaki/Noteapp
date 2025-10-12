@@ -74,6 +74,7 @@ export class NoteEditStorage {
       title: data.title,
       content: data.content,
       tags: data.tags || [],
+      path: data.path || '/',
       createdAt: now,
       updatedAt: now,
       version: 1,

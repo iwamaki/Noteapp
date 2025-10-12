@@ -7,7 +7,7 @@ from langchain.schema import HumanMessage, SystemMessage, AIMessage, BaseMessage
 from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from src.models import ChatResponse, ChatContext, LLMCommand
-from src.tools.file_tools import AVAILABLE_TOOLS, set_file_context
+from src.tools.file_tools import AVAILABLE_TOOLS, set_file_context, set_directory_context
 from .base import BaseLLMProvider
 from src.logger import logger, log_llm_raw
 
@@ -53,6 +53,18 @@ class OpenAIProvider(BaseLLMProvider):
             logger.info(f"File context set from attached: {context.attachedFileContent.get('filename')}")
         else:
             set_file_context(None)
+
+        # ディレクトリコンテキストを設定（NoteListScreenからの情報）
+        if context and hasattr(context, 'activeScreen'):
+            active_screen = context.activeScreen
+            if active_screen:
+                set_directory_context({
+                    'currentPath': active_screen.get('currentPath', '/'),
+                    'fileList': active_screen.get('fileList', [])
+                })
+                logger.info(f"Directory context set: {active_screen.get('currentPath')}")
+        else:
+            set_directory_context(None)
 
         # 会話履歴を構築
         chat_history: List[BaseMessage] = []

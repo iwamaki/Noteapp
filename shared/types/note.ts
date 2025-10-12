@@ -11,6 +11,7 @@ export interface Note {
   createdAt: Date;
   updatedAt: Date;
   version: number;
+  path: string; // フォルダパス（例: "/", "/folder1/", "/folder1/subfolder/"）
 }
 
 export interface NoteVersion {
@@ -21,10 +22,19 @@ export interface NoteVersion {
   createdAt: Date;
 }
 
+export interface Folder {
+  id: string;
+  name: string;
+  path: string; // 親フォルダのパス
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface CreateNoteData {
   title: string;
   content: string;
   tags?: string[];
+  path?: string; // デフォルトは "/"
 }
 
 export interface UpdateNoteData {
@@ -32,4 +42,20 @@ export interface UpdateNoteData {
   title?: string;
   content?: string;
   tags?: string[];
+  path?: string; // ノートの移動に使用
 }
+
+export interface CreateFolderData {
+  name: string;
+  path: string; // 親フォルダのパス
+}
+
+export interface UpdateFolderData {
+  id: string;
+  name?: string;
+  path?: string; // フォルダの移動に使用
+}
+
+export type FileSystemItem =
+  | { type: 'note'; item: Note }
+  | { type: 'folder'; item: Folder };
