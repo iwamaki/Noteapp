@@ -1,4 +1,3 @@
-import { Note, Folder } from '@shared/types/note';
 import { TreeNode, flattenTree } from '../screen/note-list/utils/treeUtils';
 import { NoteListStorage } from '../screen/note-list/noteStorage';
 
