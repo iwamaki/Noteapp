@@ -115,6 +115,11 @@ export const CustomModal: React.FC<CustomModalProps> = ({
     destructiveButtonText: {
       color: colors.white,
     },
+    keyboardAvoidingView: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
   });
 
   const getButtonStyles = (style: CustomModalButton['style']) => {
@@ -147,7 +152,7 @@ export const CustomModal: React.FC<CustomModalProps> = ({
       <Pressable style={styles.centeredView} onPress={onClose}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+          style={styles.keyboardAvoidingView}
         >
           <Pressable style={styles.modalView} onPress={(e) => e.stopPropagation()}>
             <Text style={styles.modalTitle}>{title}</Text>

@@ -12,7 +12,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Keyboard, Platform, KeyboardEvent } from 'react-native';
+import { Keyboard, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // コンポーネントのレイアウト計算に使用される定数（=チャット入力バーのパディング含めた高さ）
@@ -49,21 +49,18 @@ export interface ChatLayoutMetrics {
  */
 export function useChatLayoutMetrics(additionalContentPadding: number = 16): ChatLayoutMetrics {
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
-  const [keyboardHeight, setKeyboardHeight] = useState(0); // New state for keyboard height
   const insets = useSafeAreaInsets();
 
   useEffect(() => {
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
     const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
 
-    const handleKeyboardShow = (event: KeyboardEvent) => { // Add event parameter
+    const handleKeyboardShow = () => {
       setKeyboardVisible(true);
-      setKeyboardHeight(event.endCoordinates.height); // Capture keyboard height
     };
 
     const handleKeyboardHide = () => {
       setKeyboardVisible(false);
-      setKeyboardHeight(0); // Reset keyboard height
     };
 
     const showSubscription = Keyboard.addListener(showEvent, handleKeyboardShow);
