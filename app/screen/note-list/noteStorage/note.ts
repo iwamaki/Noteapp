@@ -38,12 +38,26 @@ export const copyNotes = async (sourceIds: string[]): Promise<Note[]> => {
   for (const id of sourceIds) {
     const noteToCopy = notes.find(note => note.id === id);
     if (noteToCopy) {
+      // Find a unique title for the copied note
+      let newTitle = `Copy of ${noteToCopy.title}`;
+      let counter = 1;
+      const normalizedPath = PathUtils.normalizePath(noteToCopy.path);
+
+      // Check if the title already exists, and if so, add a number
+      while (
+        notes.some(n => PathUtils.normalizePath(n.path) === normalizedPath && n.title === newTitle) ||
+        copiedNotes.some(n => PathUtils.normalizePath(n.path) === normalizedPath && n.title === newTitle)
+      ) {
+        newTitle = `Copy of ${noteToCopy.title} (${counter})`;
+        counter++;
+      }
+
       const newNote: Note = {
         ...noteToCopy,
         id: uuidv4(),
         createdAt: now,
         updatedAt: now,
-        title: `Copy of ${noteToCopy.title}`,
+        title: newTitle,
         version: 1,
       };
       copiedNotes.push(newNote);
@@ -58,18 +72,33 @@ export const copyNotes = async (sourceIds: string[]): Promise<Note[]> => {
 
 export const createNote = async (data: CreateNoteData): Promise<Note> => {
   const now = new Date();
+  const normalizedPath = PathUtils.normalizePath(data.path || '/');
+
+  const notes = await getAllNotesRaw();
+
+  // Check for duplicate note title in the same path
+  const duplicateExists = notes.some(
+    note => PathUtils.normalizePath(note.path) === normalizedPath && note.title === data.title
+  );
+
+  if (duplicateExists) {
+    throw new StorageError(
+      `A note with title "${data.title}" already exists in path "${normalizedPath}"`,
+      'DUPLICATE_ITEM'
+    );
+  }
+
   const newNote: Note = {
     id: uuidv4(),
     title: data.title,
     content: data.content,
     tags: data.tags || [],
-    path: PathUtils.normalizePath(data.path || '/'),
+    path: normalizedPath,
     createdAt: now,
     updatedAt: now,
     version: 1,
   };
 
-  const notes = await getAllNotesRaw();
   notes.push(newNote);
   await saveAllNotes(notes);
   return newNote;
@@ -84,6 +113,24 @@ export const updateNote = async (data: UpdateNoteData): Promise<Note> => {
   }
 
   const existingNote = notes[noteIndex];
+  const newTitle = data.title ?? existingNote.title;
+  const newPath = data.path ? PathUtils.normalizePath(data.path) : existingNote.path;
+
+  // Check for duplicate note title in the same path (excluding the current note)
+  const duplicateExists = notes.some(
+    note =>
+      note.id !== data.id &&
+      PathUtils.normalizePath(note.path) === newPath &&
+      note.title === newTitle
+  );
+
+  if (duplicateExists) {
+    throw new StorageError(
+      `A note with title "${newTitle}" already exists in path "${newPath}"`,
+      'DUPLICATE_ITEM'
+    );
+  }
+
   const updatedNote = {
     ...existingNote,
     ...data,
@@ -102,7 +149,25 @@ export const moveNote = async (noteId: string, newPath: string): Promise<Note> =
     throw new StorageError(`Note with id ${noteId} not found`, 'NOT_FOUND');
   }
 
-  notes[noteIndex].path = PathUtils.normalizePath(newPath);
+  const normalizedNewPath = PathUtils.normalizePath(newPath);
+  const noteTitle = notes[noteIndex].title;
+
+  // Check for duplicate note title in the destination path
+  const duplicateExists = notes.some(
+    note =>
+      note.id !== noteId &&
+      PathUtils.normalizePath(note.path) === normalizedNewPath &&
+      note.title === noteTitle
+  );
+
+  if (duplicateExists) {
+    throw new StorageError(
+      `A note with title "${noteTitle}" already exists in path "${normalizedNewPath}"`,
+      'DUPLICATE_ITEM'
+    );
+  }
+
+  notes[noteIndex].path = normalizedNewPath;
   notes[noteIndex].updatedAt = new Date();
   await saveAllNotes(notes);
   return notes[noteIndex];

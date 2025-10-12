@@ -4,7 +4,8 @@
  * @responsibility インデント、展開/折りたたみアイコン、フォルダ/ノートの視覚的表現
  */
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { TreeNode } from '../utils/treeUtils';
 import { ListItem } from '../../../components/ListItem';
@@ -34,7 +35,7 @@ export const TreeListItem: React.FC<TreeListItemProps> = ({
 
   const styles = StyleSheet.create({
     container: {
-      marginLeft: spacing.md + indentSize,
+      marginLeft: spacing.md - spacing.xs + indentSize, // Adjusted for more left alignment
       marginRight: spacing.md,
     },
     contentContainer: {
@@ -43,17 +44,12 @@ export const TreeListItem: React.FC<TreeListItemProps> = ({
       flex: 1,
     },
     iconContainer: {
-      marginRight: spacing.sm,
-      width: 24,
-      alignItems: 'center',
+      marginRight: spacing.sm, // Increased gap
+      width: 'auto',
+      alignItems: 'flex-start',
     },
     iconPlaceholder: {
       width: 16,
-    },
-    expandIcon: {
-      ...typography.body,
-      fontSize: 16,
-      color: colors.textSecondary,
     },
     textContainer: {
       flex: 1,
@@ -62,8 +58,13 @@ export const TreeListItem: React.FC<TreeListItemProps> = ({
 
   const renderIcon = () => {
     if (node.type === 'folder') {
-      const expandIcon = node.isExpanded ? '▼' : '▶';
-      return <Text style={styles.expandIcon}>{expandIcon}</Text>;
+      return (
+        <MaterialCommunityIcons
+          name={node.isExpanded ? 'folder-open' : 'folder'}
+          size={typography.body.fontSize * 1.7}
+          color={colors.textSecondary}
+        />
+      );
     }
     return <View style={styles.iconPlaceholder} />; // フォルダでない場合にスペースを確保
   };
@@ -71,7 +72,7 @@ export const TreeListItem: React.FC<TreeListItemProps> = ({
   const renderTitle = () => {
     if (node.type === 'folder') {
       const folder = node.item as Folder;
-      return `📁 ${folder.name}`;
+      return folder.name;
     }
     const note = node.item as Note;
     return note.title || '無題のノート';
