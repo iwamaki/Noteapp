@@ -52,7 +52,7 @@ export const NoteEditHeader: React.FC<NoteEditHeaderProps> = ({
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      width: responsive.getResponsiveSize(220, 260, 300),
+      width: responsive.getResponsiveSize(180, 220, 260),
     },
     headerTitle: {
       ...typography.title,
