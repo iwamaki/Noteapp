@@ -4,6 +4,7 @@ import { useIsFocused } from '@react-navigation/native';
 import { NoteListStorage } from '../noteStorage';
 import { buildTree, TreeNode } from '../utils/treeUtils';
 import { FileSystemItem } from '@shared/types/note';
+import { checkTreeConsistency } from '../../../utils/debugUtils';
 
 export const useNoteTree = (currentPath: string) => {
   const [treeNodes, setTreeNodes] = useState<TreeNode[]>([]);
@@ -21,6 +22,10 @@ export const useNoteTree = (currentPath: string) => {
 
       const tree = buildTree(folders, notes, expandedFolderIds);
       setTreeNodes(tree);
+
+      if (__DEV__) {
+        await checkTreeConsistency(tree);
+      }
 
       const fetchedItems = await NoteListStorage.getItemsByPath(currentPath);
       setItems(fetchedItems);
