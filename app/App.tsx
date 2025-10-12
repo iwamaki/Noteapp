@@ -7,6 +7,7 @@
  */
 import React, { useEffect } from 'react';
 import { StatusBar } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import RootNavigator from './navigation/RootNavigator';
 import { ThemeProvider, useTheme } from './design/theme/ThemeContext';
 import { useSettingsStore } from './settings/settingsStore';
@@ -39,10 +40,12 @@ export default function App() {
   }, []);
 
   return (
-    <ThemeProvider>
-      <KeyboardProvider>
-        <AppContent />
-      </KeyboardProvider>
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <KeyboardProvider>
+          <AppContent />
+        </KeyboardProvider>
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }

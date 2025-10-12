@@ -29,10 +29,18 @@ export const KeyboardProvider: React.FC<{ children: React.ReactNode }> = ({
     const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
 
     const keyboardWillShow = (e: any) => {
-      setKeyboardHeight(e.endCoordinates.height);
+      const { height } = e.endCoordinates;
+
+      console.log('[KeyboardContext] Keyboard show:', {
+        platform: Platform.OS,
+        keyboardHeight: height,
+      });
+
+      setKeyboardHeight(height);
     };
 
     const keyboardWillHide = () => {
+      console.log('[KeyboardContext] Keyboard hide');
       setKeyboardHeight(0);
     };
 

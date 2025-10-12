@@ -1,5 +1,5 @@
-import React, { useCallback } from 'react';
-import { StyleSheet, FlatList } from 'react-native';
+import React, { useCallback, useState, useEffect } from 'react';
+import { StyleSheet, FlatList, Keyboard, Platform } from 'react-native';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { useNoteList } from './hooks/useNoteList'; // Updated import
 import { useNoteListHeader } from './hooks/useNoteListHeader';
@@ -11,12 +11,27 @@ import { TreeListItem } from './components/TreeListItem';
 import { RenameItemModal } from './components/RenameItemModal';
 import { MainContainer } from '../../components/MainContainer';
 import { flattenTree } from './utils/treeUtils';
-import { useKeyboard } from '../../contexts/KeyboardContext';
 import { CHAT_INPUT_HEIGHT } from '../../design/constants';
 
 function NoteListScreen() {
   const { colors, spacing } = useTheme();
-  const { keyboardHeight } = useKeyboard();
+  const [isKeyboardVisible, setKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      () => setKeyboardVisible(true)
+    );
+    const hideSubscription = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => setKeyboardVisible(false)
+    );
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
 
   const {
     treeNodes,
@@ -107,7 +122,7 @@ function NoteListScreen() {
           renderItem={renderTreeItem}
           keyExtractor={(node) => `${node.type}-${node.id}`}
           contentContainerStyle={[
-            { paddingBottom: keyboardHeight + CHAT_INPUT_HEIGHT + spacing.xl },
+            { paddingBottom: isKeyboardVisible ? 0 : CHAT_INPUT_HEIGHT + spacing.xl },
             styles.listContent,
           ]}
         />
