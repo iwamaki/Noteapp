@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Keyboard, Platform } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/types';
 import { FileEditor, ViewMode } from './components/FileEditor';
@@ -9,7 +9,7 @@ import { useNoteEditChatContext } from '../../features/chat/hooks/useNoteEditCha
 import { CustomModal } from '../../components/CustomModal';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { MainContainer } from '../../components/MainContainer';
-import { CHAT_INPUT_HEIGHT } from '../../design/constants';
+import { useChatLayoutMetrics } from '../../features/chat/layouts/useChatLayoutMetrics';
 
 type NoteEditScreenRouteProp = RouteProp<RootStackParamList, 'NoteEdit'>;
 
@@ -18,7 +18,7 @@ function NoteEditScreen() {
   const route = useRoute<NoteEditScreenRouteProp>();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { noteId } = route.params || {};
-  const [isKeyboardVisible, setKeyboardVisible] = useState(false);
+  const { contentBottomPadding } = useChatLayoutMetrics(0);
 
   const {
     note,
@@ -37,23 +37,7 @@ function NoteEditScreen() {
 
   const [viewMode, setViewMode] = useState<ViewMode>('edit');
   const [isConfirmModalVisible, setConfirmModalVisible] = useState(false);
-  const [nextAction, setNextAction] = useState<any>(null);
-
-  useEffect(() => {
-    const showSubscription = Keyboard.addListener(
-      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
-      () => setKeyboardVisible(true)
-    );
-    const hideSubscription = Keyboard.addListener(
-      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
-      () => setKeyboardVisible(false)
-    );
-
-    return () => {
-      showSubscription.remove();
-      hideSubscription.remove();
-    };
-  }, []); 
+  const [nextAction, setNextAction] = useState<any>(null); 
 
   useEffect(() => {
     const beforeRemoveListener = (e: any) => {
@@ -104,7 +88,7 @@ function NoteEditScreen() {
 
   return (
     <MainContainer isLoading={isLoading}>
-      <View style={[styles.animatedContainer, { paddingBottom: isKeyboardVisible ? 0 : CHAT_INPUT_HEIGHT }]}>
+      <View style={[styles.animatedContainer, { paddingBottom: contentBottomPadding }]}>
         <FileEditor
           filename={title}
           initialContent={content}

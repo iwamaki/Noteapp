@@ -12,7 +12,6 @@ import RootNavigator from './navigation/RootNavigator';
 import { ThemeProvider, useTheme } from './design/theme/ThemeContext';
 import { useSettingsStore } from './settings/settingsStore';
 import { logger } from './utils/logger';
-import { KeyboardProvider } from './contexts/KeyboardContext';
 
 const AppContent = () => {
   const { themeMode, colors } = useTheme();
@@ -42,9 +41,7 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        <KeyboardProvider>
-          <AppContent />
-        </KeyboardProvider>
+        <AppContent />
       </ThemeProvider>
     </SafeAreaProvider>
   );

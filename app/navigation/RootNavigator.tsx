@@ -18,7 +18,7 @@ import NoteEditScreen from '../screen/note-edit/NoteEditScreen';
 import DiffViewScreen from '../screen/diff-view/DiffViewScreen';
 import VersionHistoryScreen from '../screen/version-history/VersionHistoryScreen';
 import SettingsScreen from '../settings/SettingsScreen';
-import { ChatInputBar } from '../features/chat/components/ChatInputBar';
+import { ChatLayout } from '../features/chat/layouts/ChatLayout';
 
 // スタックナビゲーターの作成
 const Stack = createStackNavigator<RootStackParamList>();
@@ -47,11 +47,7 @@ function RootNavigator() {
           <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
         </Stack.Navigator>
       </NavigationContainer>
-      {(currentRouteName === 'NoteList' || currentRouteName === 'NoteEdit') && (
-        <View style={styles.chatInputContainer}>
-          <ChatInputBar />
-        </View>
-      )}
+      <ChatLayout visible={currentRouteName === 'NoteList' || currentRouteName === 'NoteEdit'} />
     </View>
   );
 }
@@ -59,12 +55,6 @@ function RootNavigator() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  chatInputContainer: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
   },
 });
 
