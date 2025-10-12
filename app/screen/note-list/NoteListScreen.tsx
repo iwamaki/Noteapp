@@ -12,12 +12,10 @@ import { FabButton } from '../../components/FabButton';
 import { CreateItemModal } from './components/CreateItemModal';
 import { TreeListItem } from './components/TreeListItem';
 import { RenameItemModal } from './components/RenameItemModal';
-import { MoveItemModal } from './components/MoveItemModal';
 import { MainContainer } from '../../components/MainContainer';
 import { flattenTree } from './utils/treeUtils';
 import { useKeyboard } from '../../contexts/KeyboardContext';
 import { CHAT_INPUT_HEIGHT } from '../../design/constants';
-import { Folder } from '@shared/types/note';
 
 // ノート一覧画面コンポーネント
 function NoteListScreen() {
@@ -43,11 +41,11 @@ function NoteListScreen() {
     itemToRename,
     handleRenameItem,
     setIsRenameModalVisible,
-    isMoveModalVisible,
-    handleOpenMoveModal,
-    handleMoveSelectedItems,
+    isMoveMode, // New: from useNoteListLogic
+    startMoveMode, // New: from useNoteListLogic
+    cancelMoveMode, // New: from useNoteListLogic
+    handleSelectDestinationFolder, // New: from useNoteListLogic
     handleOpenRenameModal,
-    setIsMoveModalVisible,
   } = useNoteListLogic();
 
   // ツリーをフラット化してFlatListで表示
@@ -61,7 +59,9 @@ function NoteListScreen() {
     handleDeleteSelected,
     handleCopySelected,
     handleOpenRenameModal,
-    handleOpenMoveModal,
+    startMoveMode,
+    isMoveMode,
+    cancelMoveMode,
   });
 
   // チャットコンテキストプロバイダーを登録
@@ -104,9 +104,11 @@ function NoteListScreen() {
         isSelectionMode={isSelectionMode}
         onPress={() => handleSelectItem(fileSystemItem)}
         onLongPress={() => handleLongPressItem(fileSystemItem)}
+        isMoveMode={isMoveMode} // Pass isMoveMode
+        onSelectDestinationFolder={handleSelectDestinationFolder} // Pass handler
       />
     );
-  }, [selectedFolderIds, selectedNoteIds, isSelectionMode, handleSelectItem, handleLongPressItem]);
+  }, [selectedFolderIds, selectedNoteIds, isSelectionMode, handleSelectItem, handleLongPressItem, isMoveMode, handleSelectDestinationFolder]);
 
   // メインの表示
   return (
@@ -130,7 +132,7 @@ function NoteListScreen() {
           ]}
         />
       )}
-      {!isSelectionMode && <FabButton onPress={() => setIsCreateModalVisible(true)} />}
+      {!isSelectionMode && !isMoveMode && <FabButton onPress={() => setIsCreateModalVisible(true)} />}
       <CreateItemModal
         visible={isCreateModalVisible}
         currentPath={folderNavigation.currentPath}
@@ -146,13 +148,6 @@ function NoteListScreen() {
           onRename={handleRenameItem}
         />
       )}
-      <MoveItemModal
-        visible={isMoveModalVisible}
-        currentPath={folderNavigation.currentPath}
-        folders={items.filter(item => item.type === 'folder').map(item => item.item as Folder)}
-        onClose={() => setIsMoveModalVisible(false)}
-        onMove={handleMoveSelectedItems}
-      />
     </MainContainer>
   );
 }
