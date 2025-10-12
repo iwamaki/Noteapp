@@ -1,27 +1,59 @@
 
-import { useCallback } from 'react';
-import { useFolderNavigation } from './useFolderNavigation';
+import { useCallback, useState } from 'react';
 import { useNoteTree } from './useNoteTree';
 import { useItemSelection } from './useItemSelection';
 import { useItemActions } from './useItemActions';
-import { useModals } from './useModals';
-import { FileSystemItem, Folder } from '@shared/types/note';
+import { FileSystemItem, Folder, Note } from '@shared/types/note';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../../navigation/types';
+import { flattenTree } from '../utils/treeUtils';
 
 export const useNoteList = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
-  const folderNavigation = useFolderNavigation();
+
+  // --- Folder Navigation (integrated from useFolderNavigation) ---
+  // Currently, tree view is primary so we only need currentPath state
+  // Future: Can add breadcrumbs and navigation methods if needed
+  const [currentPath] = useState<string>('/');
   const {
     treeNodes,
     loading,
     toggleFolderExpand,
     refreshTree,
-  } = useNoteTree(folderNavigation.currentPath);
+  } = useNoteTree(currentPath);
 
   const selection = useItemSelection();
 
-  const modals = useModals(() => treeNodes);
+  // --- Modal State Management (integrated from useModals) ---
+  const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
+  const [isRenameModalVisible, setIsRenameModalVisible] = useState(false);
+  const [itemToRename, setItemToRename] = useState<FileSystemItem | null>(null);
+
+  const openCreateModal = useCallback(() => {
+    setIsCreateModalVisible(true);
+  }, []);
+
+  const closeCreateModal = useCallback(() => {
+    setIsCreateModalVisible(false);
+  }, []);
+
+  const openRenameModal = useCallback((id: string, type: 'note' | 'folder') => {
+    const flattened = flattenTree(treeNodes);
+    const node = flattened.find(node => node.type === type && node.item.id === id);
+    if (node) {
+      if (node.type === 'folder') {
+        setItemToRename({ type: 'folder', item: node.item as Folder });
+      } else {
+        setItemToRename({ type: 'note', item: node.item as Note });
+      }
+      setIsRenameModalVisible(true);
+    }
+  }, [treeNodes]);
+
+  const closeRenameModal = useCallback(() => {
+    setIsRenameModalVisible(false);
+    setItemToRename(null);
+  }, []);
 
   // Memoize the callback without depending on actions
   const handleActionSuccess = useCallback(() => {
@@ -32,7 +64,7 @@ export const useNoteList = () => {
   const actions = useItemActions({
     selectedNoteIds: selection.selectedNoteIds,
     selectedFolderIds: selection.selectedFolderIds,
-    currentPath: folderNavigation.currentPath,
+    currentPath: currentPath,
     onSuccess: handleActionSuccess,
   });
 
@@ -63,26 +95,26 @@ export const useNoteList = () => {
 
   // Rename modal needs to call the action
   const handleRename = useCallback(async (newName: string) => {
-    if (modals.renameModal.item) {
-      await actions.handleRenameItem(modals.renameModal.item, newName);
+    if (itemToRename) {
+      await actions.handleRenameItem(itemToRename, newName);
     }
-    modals.renameModal.close();
-  }, [actions, modals.renameModal]);
-  
+    closeRenameModal();
+  }, [actions, itemToRename, closeRenameModal]);
+
   // Create modal needs to call the action
   const handleCreate = useCallback(async (inputPath: string) => {
     await actions.handleCreateItem(inputPath);
-    modals.createModal.close();
-  }, [actions, modals.createModal]);
+    closeCreateModal();
+  }, [actions, closeCreateModal]);
 
 
   return {
     // Data and loading state
     treeNodes,
     loading,
-    
-    // Folder navigation
-    folderNavigation,
+
+    // Folder navigation (simplified - only exposing currentPath)
+    currentPath,
 
     // Item selection
     selection,
@@ -94,11 +126,16 @@ export const useNoteList = () => {
 
     // Modals
     createModal: {
-      ...modals.createModal,
+      isVisible: isCreateModalVisible,
+      open: openCreateModal,
+      close: closeCreateModal,
       onCreate: handleCreate,
     },
     renameModal: {
-      ...modals.renameModal,
+      isVisible: isRenameModalVisible,
+      item: itemToRename,
+      open: openRenameModal,
+      close: closeRenameModal,
       onRename: handleRename,
     },
   };

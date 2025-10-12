@@ -1,4 +1,4 @@
-import { TreeNode, flattenTree } from '../screen/note-list/utils/treeUtils';
+import { TreeNode } from '../screen/note-list/utils/treeUtils';
 import { NoteListStorage } from '../screen/note-list/noteStorage';
 
 /**
@@ -8,16 +8,30 @@ import { NoteListStorage } from '../screen/note-list/noteStorage';
  * @param treeNodes The tree structure from the UI state.
  * @throws An error if an inconsistency is detected.
  */
+/**
+ * Recursively collects all nodes from the tree, including children of collapsed folders.
+ */
+const collectAllNodes = (nodes: TreeNode[]): TreeNode[] => {
+  const result: TreeNode[] = [];
+  for (const node of nodes) {
+    result.push(node);
+    if (node.children.length > 0) {
+      result.push(...collectAllNodes(node.children));
+    }
+  }
+  return result;
+};
+
 export const checkTreeConsistency = async (treeNodes: TreeNode[]): Promise<void> => {
   try {
     // 1. Get the source of truth from storage
     const allNotes = await NoteListStorage.getAllNotes();
     const allFolders = await NoteListStorage.getAllFolders();
 
-    // 2. Get the UI data
-    const flattenedUiTree = flattenTree(treeNodes);
-    const uiNotes = flattenedUiTree.filter(node => node.type === 'note');
-    const uiFolders = flattenedUiTree.filter(node => node.type === 'folder');
+    // 2. Get the UI data - collect ALL nodes including those in collapsed folders
+    const allUiNodes = collectAllNodes(treeNodes);
+    const uiNotes = allUiNodes.filter(node => node.type === 'note');
+    const uiFolders = allUiNodes.filter(node => node.type === 'folder');
 
     // 3. Compare counts
     if (allNotes.length !== uiNotes.length) {

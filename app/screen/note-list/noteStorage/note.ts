@@ -1,8 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { Note, CreateNoteData } from '@shared/types/note';
 import { PathUtils } from '../utils/pathUtils';
-import { getAllNotesRaw, saveAllNotes } from './raw';
-import { StorageError } from './error';
+import { getAllNotesRaw, saveAllNotes, StorageError } from './storage';
 
 export interface UpdateNoteData {
   id: string;

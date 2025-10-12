@@ -1,8 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { Folder, CreateFolderData, UpdateFolderData } from '@shared/types/note';
 import { PathUtils } from '../utils/pathUtils';
-import { getAllFoldersRaw, saveAllFolders, getAllNotesRaw, saveAllNotes } from './raw';
-import { StorageError } from './error';
+import { getAllFoldersRaw, saveAllFolders, getAllNotesRaw, saveAllNotes, StorageError } from './storage';
 import { getNotesByPath } from './note';
 
 export const getAllFolders = async (): Promise<Folder[]> => {
@@ -57,24 +56,28 @@ export const updateFolder = async (data: UpdateFolderData): Promise<Folder> => {
   if (oldFullPath !== newFullPath) {
     const allNotes = await getAllNotesRaw();
 
+    // Update all notes whose path starts with oldFullPath
     allNotes.forEach(note => {
       if (note.path === oldFullPath) {
         note.path = newFullPath;
-      } else if (note.path.startsWith(oldFullPath + '/')) {
+      } else if (note.path.startsWith(oldFullPath)) {
+        // Since oldFullPath already ends with '/', we don't need to add another '/'
         note.path = newFullPath + note.path.substring(oldFullPath.length);
       }
     });
 
+    // Update all child folders whose path starts with oldFullPath
     allFolders.forEach(folder => {
       if (folder.id === data.id) return;
 
       if (folder.path === oldFullPath) {
         folder.path = newFullPath;
-      } else if (folder.path.startsWith(oldFullPath + '/')) {
+      } else if (folder.path.startsWith(oldFullPath)) {
+        // Since oldFullPath already ends with '/', we don't need to add another '/'
         folder.path = newFullPath + folder.path.substring(oldFullPath.length);
       }
     });
-    
+
     await saveAllNotes(allNotes);
   }
 

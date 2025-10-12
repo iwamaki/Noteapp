@@ -45,7 +45,7 @@ export const useItemActions = ({
 
       if (__DEV__) {
         console.log('✅ Delete operation completed successfully');
-        const { logStorageState } = require('../../../utils/debugUtils');
+        const { logStorageState } = await import('../../../utils/debugUtils');
         await logStorageState();
       }
 
@@ -53,7 +53,7 @@ export const useItemActions = ({
     } catch (error) {
       console.error("❌ Failed to delete selected items:", error);
       if (__DEV__) {
-        const { logStorageState } = require('../../../utils/debugUtils');
+        const { logStorageState } = await import('../../../utils/debugUtils');
         await logStorageState();
       }
     }
@@ -157,7 +157,7 @@ export const useItemActions = ({
       if (__DEV__) {
         console.log('✅ Move operation completed successfully');
         // Log storage state after move
-        const { logStorageState } = require('../../../utils/debugUtils');
+        const { logStorageState } = await import('../../../utils/debugUtils');
         await logStorageState();
       }
 
@@ -166,7 +166,7 @@ export const useItemActions = ({
     } catch (error) {
       console.error("❌ Failed to move items:", error);
       if (__DEV__) {
-        const { logStorageState } = require('../../../utils/debugUtils');
+        const { logStorageState } = await import('../../../utils/debugUtils');
         await logStorageState();
       }
     }
