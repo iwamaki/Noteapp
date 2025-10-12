@@ -66,9 +66,13 @@ function VersionHistoryScreen() {
             version: fetchedCurrentNote.version,
             createdAt: fetchedCurrentNote.updatedAt,
           };
-          setVersions([currentVersion, ...fetchedVersions]);
+          // Sort historical versions by createdAt in descending order (newest first)
+          const sortedFetchedVersions = fetchedVersions.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+          setVersions([currentVersion, ...sortedFetchedVersions]);
         } else {
-          setVersions(fetchedVersions);
+          // Sort historical versions by createdAt in descending order (newest first)
+          const sortedFetchedVersions = fetchedVersions.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+          setVersions(sortedFetchedVersions);
         }
       }
     } catch (e) {

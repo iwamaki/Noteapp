@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { View, Modal, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '../design/theme/ThemeContext';
-import { HeaderButton } from './HeaderButton';
+import { useTheme } from '../../../design/theme/ThemeContext';
+import { HeaderButton } from '../../../components/HeaderButton';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../navigation/types';
+import { RootStackParamList } from '../../../navigation/types';
 
 interface OverflowMenuProps {
   onCreateNew: () => void;

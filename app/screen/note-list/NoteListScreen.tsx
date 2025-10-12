@@ -5,7 +5,7 @@ import { useNoteList } from './hooks/useNoteList';
 import { useNoteListHeader } from './hooks/useNoteListHeader';
 import { useNoteListChatContext } from '../../features/chat/hooks/useNoteListChatContext';
 import { NoteListEmptyState } from './components/NoteListEmptyState';
-import { OverflowMenu } from '../../components/OverflowMenu';
+import { OverflowMenu } from './components/OverflowMenu';
 import { CreateItemModal } from './components/CreateItemModal';
 import { TreeListItem } from './components/TreeListItem';
 import { RenameItemModal } from './components/RenameItemModal';
