@@ -12,7 +12,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Keyboard, Platform } from 'react-native';
+import { Keyboard, Platform, KeyboardEvent } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // コンポーネントのレイアウト計算に使用される定数（=チャット入力バーのパディング含めた高さ）
@@ -22,7 +22,6 @@ export const CHAT_INPUT_BAR_HEIGHT = Platform.OS === 'ios' ? 60 : 60;
  * チャットレイアウトのメトリクス情報
  */
 export interface ChatLayoutMetrics {
-
   isKeyboardVisible: boolean;
   chatInputBarHeight: number;
   chatInputBarBottomPadding: number;
@@ -50,18 +49,21 @@ export interface ChatLayoutMetrics {
  */
 export function useChatLayoutMetrics(additionalContentPadding: number = 16): ChatLayoutMetrics {
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0); // New state for keyboard height
   const insets = useSafeAreaInsets();
 
   useEffect(() => {
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
     const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
 
-    const handleKeyboardShow = () => {
+    const handleKeyboardShow = (event: KeyboardEvent) => { // Add event parameter
       setKeyboardVisible(true);
+      setKeyboardHeight(event.endCoordinates.height); // Capture keyboard height
     };
 
     const handleKeyboardHide = () => {
       setKeyboardVisible(false);
+      setKeyboardHeight(0); // Reset keyboard height
     };
 
     const showSubscription = Keyboard.addListener(showEvent, handleKeyboardShow);
@@ -73,10 +75,10 @@ export function useChatLayoutMetrics(additionalContentPadding: number = 16): Cha
     };
   }, []);
 
-
   const chatInputBarBottomPadding = isKeyboardVisible ? 8 : Math.max(insets.bottom, 8);
-  const contentBottomPadding = isKeyboardVisible ? 8 : CHAT_INPUT_BAR_HEIGHT + additionalContentPadding;
-
+  const contentBottomPadding = isKeyboardVisible
+    ? CHAT_INPUT_BAR_HEIGHT + additionalContentPadding // Removed keyboardHeight
+    : CHAT_INPUT_BAR_HEIGHT + additionalContentPadding;
 
   return {
     isKeyboardVisible,
