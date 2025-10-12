@@ -20,6 +20,14 @@ export const useNoteListLogic = () => {
   const [selectedNoteIds, setSelectedNoteIds] = useState<Set<string>>(new Set());
   const [selectedFolderIds, setSelectedFolderIds] = useState<Set<string>>(new Set());
 
+  // Rename modal state
+  const [isRenameModalVisible, setIsRenameModalVisible] = useState(false);
+  const [itemToRename, setItemToRename] = useState<FileSystemItem | null>(null);
+
+  // Move modal state
+  const [isMoveModalVisible, setIsMoveModalVisible] = useState(false);
+  const [itemsToMove, setItemsToMove] = useState<FileSystemItem[]>([]);
+
   // Function to fetch items (notes and folders) for tree view
   const fetchItems = useCallback(async () => {
     setLoading(true);
@@ -190,6 +198,86 @@ export const useNoteListLogic = () => {
     }
   }, [fetchItems, folderNav.currentPath]);
 
+  // Open rename modal
+  const handleOpenRenameModal = useCallback((id: string, type: 'note' | 'folder') => {
+    const item = items.find(i => i.item.id === id && i.type === type);
+    if (item) {
+      setItemToRename(item);
+      setIsRenameModalVisible(true);
+    }
+  }, [items]);
+
+  // Handle rename action
+  const handleRenameItem = useCallback(async (newName: string) => {
+    if (!itemToRename) return;
+
+    try {
+      if (itemToRename.type === 'folder') {
+        await NoteListStorage.updateFolder({
+          id: itemToRename.item.id,
+          name: newName,
+          path: itemToRename.item.path, // pathは変更しない
+        });
+      } else if (itemToRename.type === 'note') {
+        await NoteListStorage.updateNote({
+          id: itemToRename.item.id,
+          title: newName,
+        });
+      }
+      await fetchItems();
+      handleCancelSelection();
+    } catch (error) {
+      console.error("Failed to rename item:", error);
+    } finally {
+      setItemToRename(null);
+      setIsRenameModalVisible(false);
+    }
+  }, [itemToRename, fetchItems, handleCancelSelection]);
+
+  // Open move modal
+  const handleOpenMoveModal = useCallback(() => {
+    const selectedItems: FileSystemItem[] = [];
+    selectedNoteIds.forEach(id => {
+      const note = items.find(item => item.type === 'note' && item.item.id === id);
+      if (note) selectedItems.push(note);
+    });
+    selectedFolderIds.forEach(id => {
+      const folder = items.find(item => item.type === 'folder' && item.item.id === id);
+      if (folder) selectedItems.push(folder);
+    });
+
+    if (selectedItems.length > 0) {
+      setItemsToMove(selectedItems);
+      setIsMoveModalVisible(true);
+    }
+  }, [selectedNoteIds, selectedFolderIds, items]);
+
+  // Handle move action
+  const handleMoveSelectedItems = useCallback(async (destinationPath: string) => {
+    if (itemsToMove.length === 0) return;
+
+    try {
+      for (const item of itemsToMove) {
+        if (item.type === 'note') {
+          await NoteListStorage.moveNote(item.item.id, destinationPath);
+        } else if (item.type === 'folder') {
+          // フォルダのパスを変更する（名前は変更しない）
+          await NoteListStorage.updateFolder({
+            id: item.item.id,
+            path: destinationPath,
+          });
+        }
+      }
+      await fetchItems();
+      handleCancelSelection();
+    } catch (error) {
+      console.error("Failed to move items:", error);
+    } finally {
+      setItemsToMove([]);
+      setIsMoveModalVisible(false);
+    }
+  }, [itemsToMove, fetchItems, handleCancelSelection]);
+
   return {
     items,
     treeNodes,
@@ -208,5 +296,15 @@ export const useNoteListLogic = () => {
     fetchItems,
     folderNavigation: folderNav,
     expandedFolderIds,
+    isRenameModalVisible,
+    itemToRename,
+    handleOpenRenameModal,
+    handleRenameItem,
+    setIsRenameModalVisible,
+    isMoveModalVisible,
+    itemsToMove,
+    handleOpenMoveModal,
+    handleMoveSelectedItems,
+    setIsMoveModalVisible,
   };
 };
