@@ -28,25 +28,7 @@ export interface ChatLayoutMetrics {
   contentBottomPadding: number;
 }
 
-/**
- * チャットレイアウトメトリクスを提供するカスタムフック
- *
- * @param additionalContentPadding - コンテンツに追加する下部パディング（オプション、デフォルト: 16）
- * @returns ChatLayoutMetrics
- *
- * @example
- * ```tsx
- * function NoteListScreen() {
- *   const { contentBottomPadding, isKeyboardVisible } = useChatLayoutMetrics(24);
- *
- *   return (
- *     <FlatList
- *       contentContainerStyle={{ paddingBottom: contentBottomPadding }}
- *     />
- *   );
- * }
- * ```
- */
+
 export function useChatLayoutMetrics(additionalContentPadding: number = 16): ChatLayoutMetrics {
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
   const insets = useSafeAreaInsets();
@@ -74,7 +56,7 @@ export function useChatLayoutMetrics(additionalContentPadding: number = 16): Cha
 
   const chatInputBarBottomPadding = isKeyboardVisible ? 8 : Math.max(insets.bottom, 8);
   const contentBottomPadding = isKeyboardVisible
-    ? CHAT_INPUT_BAR_HEIGHT + additionalContentPadding // Removed keyboardHeight
+    ? CHAT_INPUT_BAR_HEIGHT + additionalContentPadding 
     : CHAT_INPUT_BAR_HEIGHT + additionalContentPadding;
 
   return {
