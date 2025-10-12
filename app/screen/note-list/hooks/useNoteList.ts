@@ -23,13 +23,10 @@ export const useNoteList = () => {
 
   const modals = useModals(() => treeNodes);
 
+  // Memoize the callback without depending on actions
   const handleActionSuccess = useCallback(() => {
     refreshTree();
     selection.clearSelection();
-    // After move action, exit move mode
-    if (actions.moveMode.isActive) {
-      actions.moveMode.cancel();
-    }
   }, [refreshTree, selection]);
 
   const actions = useItemActions({

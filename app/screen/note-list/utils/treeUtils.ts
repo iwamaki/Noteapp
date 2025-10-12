@@ -28,11 +28,25 @@ export function buildTree(
   allNotes: Note[],
   expandedFolderIds: Set<string>
 ): TreeNode[] {
+  if (__DEV__) {
+    console.log('🌲 Building tree from storage:', {
+      totalFolders: allFolders.length,
+      totalNotes: allNotes.length,
+      expandedFolders: expandedFolderIds.size,
+    });
+  }
+
   // ルートレベルのアイテムを取得
   const rootItems = getRootItems(allFolders, allNotes);
 
   // ツリーを構築
-  return rootItems.map(item => buildTreeNode(item, allFolders, allNotes, expandedFolderIds, 0));
+  const tree = rootItems.map(item => buildTreeNode(item, allFolders, allNotes, expandedFolderIds, 0));
+
+  if (__DEV__) {
+    console.log(`🌲 Tree built: ${tree.length} root items`);
+  }
+
+  return tree;
 }
 
 /**
