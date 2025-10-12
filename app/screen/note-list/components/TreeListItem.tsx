@@ -16,6 +16,8 @@ interface TreeListItemProps {
   isSelectionMode: boolean;
   onPress: () => void;
   onLongPress: () => void;
+  isMoveMode: boolean; // New prop
+  onSelectDestinationFolder: (folder: Folder) => void; // New prop
 }
 
 export const TreeListItem: React.FC<TreeListItemProps> = ({
@@ -24,6 +26,8 @@ export const TreeListItem: React.FC<TreeListItemProps> = ({
   isSelectionMode,
   onPress,
   onLongPress,
+  isMoveMode, // Destructure new prop
+  onSelectDestinationFolder, // Destructure new prop
 }) => {
   const { colors, spacing, typography } = useTheme();
   const indentSize = node.depth * 20;
@@ -85,10 +89,18 @@ export const TreeListItem: React.FC<TreeListItemProps> = ({
     return null;
   };
 
+  const handlePress = () => {
+    if (isMoveMode && node.type === 'folder') {
+      onSelectDestinationFolder(node.item as Folder);
+    } else {
+      onPress();
+    }
+  };
+
   return (
     <View style={styles.container}>
       <ListItem.Container
-        onPress={onPress}
+        onPress={handlePress}
         onLongPress={onLongPress}
         isSelected={isSelected}
         isSelectionMode={isSelectionMode}

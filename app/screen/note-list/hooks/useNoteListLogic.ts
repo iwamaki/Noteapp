@@ -1,10 +1,10 @@
 import { useEffect, useCallback, useState } from 'react';
 import { useNavigation, NavigationProp, useIsFocused } from '@react-navigation/native';
 import { RootStackParamList } from '../../../navigation/types';
-import { FileSystemItem } from '@shared/types/note';
-import { NoteListStorage } from '../noteStorage';
+import { FileSystemItem, Folder, Note } from '@shared/types/note';
+import { NoteListStorage, PathUtils } from '../noteStorage';
 import { useFolderNavigation } from './useFolderNavigation';
-import { buildTree, TreeNode } from '../utils/treeUtils';
+import { buildTree, flattenTree, TreeNode } from '../utils/treeUtils';
 
 export const useNoteListLogic = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
@@ -24,8 +24,8 @@ export const useNoteListLogic = () => {
   const [isRenameModalVisible, setIsRenameModalVisible] = useState(false);
   const [itemToRename, setItemToRename] = useState<FileSystemItem | null>(null);
 
-  // Move modal state
-  const [isMoveModalVisible, setIsMoveModalVisible] = useState(false);
+  // Move mode state
+  const [isMoveMode, setIsMoveMode] = useState(false); // New state for move mode
   const [itemsToMove, setItemsToMove] = useState<FileSystemItem[]>([]);
 
   // Function to fetch items (notes and folders) for tree view
@@ -75,6 +75,13 @@ export const useNoteListLogic = () => {
 
   // Item selection handler (tree version)
   const handleSelectItem = useCallback((item: FileSystemItem) => {
+    if (isMoveMode) { // If in move mode, tapping a folder selects it as destination
+      if (item.type === 'folder') {
+        handleSelectDestinationFolder(item.item as Folder);
+      }
+      return; // Prevent normal selection behavior in move mode
+    }
+
     if (item.type === 'folder') {
       if (isSelectionMode) {
         setSelectedFolderIds(prev => {
@@ -105,11 +112,11 @@ export const useNoteListLogic = () => {
         navigation.navigate('NoteEdit', { noteId: item.item.id });
       }
     }
-  }, [isSelectionMode, navigation, toggleFolderExpand]);
+  }, [isMoveMode, isSelectionMode, navigation, toggleFolderExpand]); // Added isMoveMode to dependencies
 
   // Item long press handler
   const handleLongPressItem = useCallback((item: FileSystemItem) => {
-    if (!isSelectionMode) {
+    if (!isSelectionMode && !isMoveMode) { // Prevent long press if in move mode
       setIsSelectionMode(true);
       if (item.type === 'folder') {
         setSelectedFolderIds(new Set([item.item.id]));
@@ -117,7 +124,7 @@ export const useNoteListLogic = () => {
         setSelectedNoteIds(new Set([item.item.id]));
       }
     }
-  }, [isSelectionMode]);
+  }, [isSelectionMode, isMoveMode]); // Added isMoveMode to dependencies
 
   // Cancel selection handler
   const handleCancelSelection = useCallback(() => {
@@ -156,7 +163,7 @@ export const useNoteListLogic = () => {
       handleCancelSelection();
     } catch (error) {
       console.error("Failed to copy selected notes:", error);
-    }
+    } 
   }, [selectedNoteIds, fetchItems, handleCancelSelection]);
 
   // Create note handler
@@ -234,49 +241,60 @@ export const useNoteListLogic = () => {
     }
   }, [itemToRename, fetchItems, handleCancelSelection]);
 
-  // Open move modal
-  const handleOpenMoveModal = useCallback(() => {
+  // Start move mode
+  const startMoveMode = useCallback(() => {
     const selectedItems: FileSystemItem[] = [];
+    const flattened = flattenTree(treeNodes);
+
     selectedNoteIds.forEach(id => {
-      const note = items.find(item => item.type === 'note' && item.item.id === id);
-      if (note) selectedItems.push(note);
+      const node = flattened.find(node => node.type === 'note' && node.item.id === id);
+      if (node) selectedItems.push({ type: 'note', item: node.item as Note });
     });
     selectedFolderIds.forEach(id => {
-      const folder = items.find(item => item.type === 'folder' && item.item.id === id);
-      if (folder) selectedItems.push(folder);
+      const node = flattened.find(node => node.type === 'folder' && node.item.id === id);
+      if (node) selectedItems.push({ type: 'folder', item: node.item as Folder });
     });
 
     if (selectedItems.length > 0) {
       setItemsToMove(selectedItems);
-      setIsMoveModalVisible(true);
+      setIsMoveMode(true);
+      setIsSelectionMode(false); // Exit selection mode when entering move mode
+      setSelectedNoteIds(new Set());
+      setSelectedFolderIds(new Set());
     }
   }, [selectedNoteIds, selectedFolderIds, items]);
 
-  // Handle move action
-  const handleMoveSelectedItems = useCallback(async (destinationPath: string) => {
+  // Cancel move mode
+  const cancelMoveMode = useCallback(() => {
+    setIsMoveMode(false);
+    setItemsToMove([]);
+  }, []);
+
+  // Handle move action to a destination folder
+  const handleSelectDestinationFolder = useCallback(async (destinationFolder: Folder) => {
     if (itemsToMove.length === 0) return;
 
     try {
       for (const item of itemsToMove) {
         if (item.type === 'note') {
-          await NoteListStorage.moveNote(item.item.id, destinationPath);
+          await NoteListStorage.moveNote(item.item.id, PathUtils.getFullPath(destinationFolder.path, destinationFolder.name));
         } else if (item.type === 'folder') {
           // フォルダのパスを変更する（名前は変更しない）
           await NoteListStorage.updateFolder({
             id: item.item.id,
-            path: destinationPath,
+            path: PathUtils.getFullPath(destinationFolder.path, destinationFolder.name),
           });
         }
       }
       await fetchItems();
-      handleCancelSelection();
+      cancelMoveMode(); // Reset move mode after successful move
+      handleCancelSelection(); // Also clear any lingering selection
     } catch (error) {
       console.error("Failed to move items:", error);
     } finally {
       setItemsToMove([]);
-      setIsMoveModalVisible(false);
     }
-  }, [itemsToMove, fetchItems, handleCancelSelection]);
+  }, [itemsToMove, fetchItems, cancelMoveMode, handleCancelSelection]);
 
   return {
     items,
@@ -301,10 +319,10 @@ export const useNoteListLogic = () => {
     handleOpenRenameModal,
     handleRenameItem,
     setIsRenameModalVisible,
-    isMoveModalVisible,
+    isMoveMode, // Expose new state
     itemsToMove,
-    handleOpenMoveModal,
-    handleMoveSelectedItems,
-    setIsMoveModalVisible,
+    startMoveMode, // Expose new function
+    cancelMoveMode, // Expose new function
+    handleSelectDestinationFolder, // Expose new function
   };
 };
