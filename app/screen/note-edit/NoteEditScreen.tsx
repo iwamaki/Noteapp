@@ -100,7 +100,7 @@ function NoteEditScreen() {
       <CustomModal
         isVisible={isConfirmModalVisible}
         title="変更を破棄しますか？"
-        message="保存されていない変更があります。本当に破棄してよろしいですか？"
+        message="保存されていない変更があります。"
         buttons={[
           {
             text: 'キャンセル',
