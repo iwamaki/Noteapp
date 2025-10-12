@@ -19,7 +19,6 @@ import DiffViewScreen from '../screen/diff-view/DiffViewScreen';
 import VersionHistoryScreen from '../screen/version-history/VersionHistoryScreen';
 import SettingsScreen from '../settings/SettingsScreen';
 import { ChatInputBar } from '../features/chat/components/ChatInputBar';
-import { useKeyboard } from '../contexts/KeyboardContext';
 
 // スタックナビゲーターの作成
 const Stack = createStackNavigator<RootStackParamList>();
@@ -27,7 +26,6 @@ const Stack = createStackNavigator<RootStackParamList>();
 // RootNavigatorコンポーネント
 function RootNavigator() {
   const navigationRef = useNavigationContainerRef();
-  const { keyboardHeight } = useKeyboard();
   const [currentRouteName, setCurrentRouteName] = useState<string | undefined>(undefined);
 
   return (
@@ -50,7 +48,7 @@ function RootNavigator() {
         </Stack.Navigator>
       </NavigationContainer>
       {(currentRouteName === 'NoteList' || currentRouteName === 'NoteEdit') && (
-        <View style={{ bottom: keyboardHeight }}>
+        <View style={styles.chatInputContainer}>
           <ChatInputBar />
         </View>
       )}
@@ -61,6 +59,12 @@ function RootNavigator() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  chatInputContainer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
 });
 
