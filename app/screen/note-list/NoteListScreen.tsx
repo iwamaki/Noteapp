@@ -5,7 +5,7 @@ import { useNoteList } from './hooks/useNoteList';
 import { useNoteListHeader } from './hooks/useNoteListHeader';
 import { useNoteListChatContext } from '../../features/chat/hooks/useNoteListChatContext';
 import { NoteListEmptyState } from './components/NoteListEmptyState';
-import { FabButton } from '../../components/FabButton';
+import { OverflowMenu } from '../../components/OverflowMenu';
 import { CreateItemModal } from './components/CreateItemModal';
 import { TreeListItem } from './components/TreeListItem';
 import { RenameItemModal } from './components/RenameItemModal';
@@ -42,6 +42,12 @@ function NoteListScreen() {
     startMoveMode: actions.moveMode.start,
     isMoveMode: actions.moveMode.isActive,
     cancelMoveMode: actions.moveMode.cancel,
+    rightButtons: [
+      {
+        icon: <OverflowMenu onCreateNew={createModal.open} />,
+        onPress: () => {}, // This onPress will not be used as the OverflowMenu handles its own actions
+      },
+    ],
   });
 
   // TODO: useNoteListChatContext needs to be updated to work with the new structure
@@ -111,9 +117,7 @@ function NoteListScreen() {
           ]}
         />
       )}
-      {!selection.isSelectionMode && !actions.moveMode.isActive && (
-        <FabButton onPress={createModal.open} />
-      )}
+
       <CreateItemModal
         visible={createModal.isVisible}
         currentPath={currentPath}

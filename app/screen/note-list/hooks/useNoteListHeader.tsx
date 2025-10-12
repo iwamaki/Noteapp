@@ -4,7 +4,6 @@ import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../../navigation/types';
 import { useCustomHeader, HeaderConfig } from '../../../components/CustomHeader';
 import { useTheme } from '../../../design/theme/ThemeContext';
-import { Ionicons } from '@expo/vector-icons';
 
 interface UseNoteListHeaderProps {
   isSelectionMode: boolean;
@@ -17,6 +16,7 @@ interface UseNoteListHeaderProps {
   startMoveMode: () => void; // Changed from handleOpenMoveModal
   isMoveMode: boolean; // New prop
   cancelMoveMode: () => void; // New prop
+  rightButtons?: HeaderConfig['rightButtons']; // Add rightButtons prop
 }
 
 // ノート一覧画面のヘッダー設定を管理するカスタムフック
@@ -31,6 +31,7 @@ export const useNoteListHeader = ({
   startMoveMode, // Changed from handleOpenMoveModal
   isMoveMode, // Destructure new prop
   cancelMoveMode, // Destructure new prop
+  rightButtons, // Destructure new prop
 }: UseNoteListHeaderProps) => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const { createHeaderConfig } = useCustomHeader();
@@ -54,7 +55,7 @@ export const useNoteListHeader = ({
       );
     } else if (isSelectionMode) {
       const selectedCount = selectedNoteIds.size + selectedFolderIds.size;
-      const rightButtons: HeaderConfig['rightButtons'] = [
+      const selectionRightButtons: HeaderConfig['rightButtons'] = [
         {
           title: 'コピー',
           onPress: handleCopySelected,
@@ -70,14 +71,14 @@ export const useNoteListHeader = ({
       // 1つのアイテムだけが選択されている場合に「名前変更」ボタンを追加
       if (selectedFolderIds.size === 1 && selectedNoteIds.size === 0) {
         const selectedFolderId = Array.from(selectedFolderIds)[0];
-        rightButtons.unshift({
+        selectionRightButtons.unshift({
           title: '名前変更',
           onPress: () => handleOpenRenameModal(selectedFolderId, 'folder'),
           variant: 'secondary'
         });
       } else if (selectedNoteIds.size === 1 && selectedFolderIds.size === 0) {
         const selectedNoteId = Array.from(selectedNoteIds)[0];
-        rightButtons.unshift({
+        selectionRightButtons.unshift({
           title: '名前変更',
           onPress: () => handleOpenRenameModal(selectedNoteId, 'note'),
           variant: 'secondary'
@@ -86,7 +87,7 @@ export const useNoteListHeader = ({
 
       // 選択中のアイテムがある場合に「移動」ボタンを追加
       if (selectedCount > 0) {
-        rightButtons.unshift({
+        selectionRightButtons.unshift({
           title: '移動',
           onPress: startMoveMode, // Use new startMoveMode
           variant: 'secondary'
@@ -99,17 +100,15 @@ export const useNoteListHeader = ({
           leftButtons: [
             { title: 'キャンセル', onPress: handleCancelSelection, variant: 'secondary' },
           ],
-          rightButtons: rightButtons,
+          rightButtons: selectionRightButtons,
         })
       );
     } else {
       navigation.setOptions(
         createHeaderConfig({
-          rightButtons: [
-            { icon: <Ionicons name="settings-outline" size={24} color={colors.primary} />, onPress: () => navigation.navigate('Settings'), variant: 'primary' },
-          ],
+          rightButtons: rightButtons,
         })
       );
     }
-  }, [navigation, createHeaderConfig, isSelectionMode, selectedNoteIds.size, selectedFolderIds.size, handleCancelSelection, handleCopySelected, handleDeleteSelected, handleOpenRenameModal, startMoveMode, isMoveMode, cancelMoveMode, colors, renderTitle]);
+  }, [navigation, createHeaderConfig, isSelectionMode, selectedNoteIds.size, selectedFolderIds.size, handleCancelSelection, handleCopySelected, handleDeleteSelected, handleOpenRenameModal, startMoveMode, isMoveMode, cancelMoveMode, colors, renderTitle, rightButtons]);
 };

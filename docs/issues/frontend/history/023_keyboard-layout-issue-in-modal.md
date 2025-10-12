@@ -1,7 +1,7 @@
 ---
 title: "A_023_ChatInputBar is positioned too high when keyboard is visible"
 id: 023
-status: open
+status: done
 priority: high
 attempt_count: 5
 tags: [UI, bug, keyboard, layout]
