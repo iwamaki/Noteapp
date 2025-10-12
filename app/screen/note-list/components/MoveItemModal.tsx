@@ -108,6 +108,12 @@ export const MoveItemModal: React.FC<MoveItemModalProps> = ({
       color: colors.text,
       marginLeft: spacing.sm,
     },
+    emptyListText: {
+      ...typography.body,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      padding: spacing.md,
+    },
     buttonContainer: {
       flexDirection: 'row',
       justifyContent: 'flex-end',
@@ -138,9 +144,6 @@ export const MoveItemModal: React.FC<MoveItemModalProps> = ({
     },
     moveButtonText: {
       color: colors.white,
-    },
-    disabledButton: {
-      opacity: 0.5,
     },
   });
 
@@ -186,7 +189,7 @@ export const MoveItemModal: React.FC<MoveItemModalProps> = ({
             renderItem={renderFolderItem}
             keyExtractor={(item) => item.id}
             ListEmptyComponent={
-              <Text style={{ ...typography.body, color: colors.textSecondary, textAlign: 'center', padding: spacing.md }}>
+              <Text style={styles.emptyListText}>
                 このフォルダにはサブフォルダがありません。
               </Text>
             }

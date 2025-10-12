@@ -1,5 +1,12 @@
 import React from 'react';
-import { Modal, View, Text, TouchableOpacity, StyleSheet, Pressable } from 'react-native';
+import {
+  Modal,
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Pressable,
+} from 'react-native';
 import { useTheme } from '../design/theme/ThemeContext';
 import { responsive } from '../design/styles/commonStyles';
 
@@ -15,6 +22,7 @@ interface CustomModalProps {
   message?: string;
   buttons: CustomModalButton[];
   onClose: () => void;
+  children?: React.ReactNode;
 }
 
 export const CustomModal: React.FC<CustomModalProps> = ({
@@ -23,6 +31,7 @@ export const CustomModal: React.FC<CustomModalProps> = ({
   message,
   buttons,
   onClose,
+  children,
 }) => {
   const { colors, typography, spacing } = useTheme();
 
@@ -38,7 +47,7 @@ export const CustomModal: React.FC<CustomModalProps> = ({
       backgroundColor: colors.background,
       borderRadius: responsive.getResponsiveSize(10, 15, 20),
       padding: spacing.lg,
-      alignItems: 'center',
+      alignItems: 'stretch', // Changed to stretch for children
       shadowColor: colors.shadow,
       shadowOffset: {
         width: 0,
@@ -62,9 +71,13 @@ export const CustomModal: React.FC<CustomModalProps> = ({
       textAlign: 'center',
       color: colors.textSecondary,
     },
+    childrenContainer: {
+      marginVertical: spacing.md,
+    },
     buttonContainer: {
       flexDirection: 'row',
-      justifyContent: 'space-around',
+      justifyContent: 'flex-end',
+      gap: spacing.md,
       width: '100%',
       marginTop: spacing.md,
     },
@@ -75,23 +88,52 @@ export const CustomModal: React.FC<CustomModalProps> = ({
       minWidth: 80,
       alignItems: 'center',
       justifyContent: 'center',
-      marginHorizontal: spacing.xs,
     },
     buttonText: {
       ...typography.body,
       fontWeight: 'bold',
-      color: colors.white,
     },
     defaultButton: {
       backgroundColor: colors.primary,
     },
+    defaultButtonText: {
+      color: colors.white,
+    },
     cancelButton: {
       backgroundColor: colors.secondary,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    cancelButtonText: {
+      color: colors.text,
     },
     destructiveButton: {
       backgroundColor: colors.danger,
     },
+    destructiveButtonText: {
+      color: colors.white,
+    },
   });
+
+  const getButtonStyles = (style: CustomModalButton['style']) => {
+    switch (style) {
+      case 'cancel':
+        return {
+          button: styles.cancelButton,
+          text: styles.cancelButtonText,
+        };
+      case 'destructive':
+        return {
+          button: styles.destructiveButton,
+          text: styles.destructiveButtonText,
+        };
+      default:
+        return {
+          button: styles.defaultButton,
+          text: styles.defaultButtonText,
+        };
+    }
+  };
 
   return (
     <Modal
@@ -104,26 +146,24 @@ export const CustomModal: React.FC<CustomModalProps> = ({
         <Pressable style={styles.modalView}>
           <Text style={styles.modalTitle}>{title}</Text>
           {message && <Text style={styles.modalMessage}>{message}</Text>}
+          {children && <View style={styles.childrenContainer}>{children}</View>}
           <View style={styles.buttonContainer}>
-            {buttons.map((button, index) => (
-              <TouchableOpacity
-                key={index}
-                style={[
-                  styles.button,
-                  button.style === 'cancel'
-                    ? styles.cancelButton
-                    : button.style === 'destructive'
-                    ? styles.destructiveButton
-                    : styles.defaultButton,
-                ]}
-                onPress={() => {
-                  button.onPress?.();
-                  onClose(); // Close modal after button press
-                }}
-              >
-                <Text style={styles.buttonText}>{button.text}</Text>
-              </TouchableOpacity>
-            ))}
+            {buttons.map((button, index) => {
+              const { button: buttonStyle, text: textStyle } = getButtonStyles(
+                button.style
+              );
+              return (
+                <TouchableOpacity
+                  key={index}
+                  style={[styles.button, buttonStyle]}
+                  onPress={button.onPress}
+                >
+                  <Text style={[styles.buttonText, textStyle]}>{
+                    button.text
+                  }</Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </Pressable>
       </Pressable>

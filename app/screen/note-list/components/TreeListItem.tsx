@@ -1,12 +1,14 @@
 /**
  * @file TreeListItem.tsx
  * @summary ツリー構造用のリストアイテムコンポーネント
- * @responsibility インデント、展開/折りたたみアイコン、フォルダ/ノートの視覚的表現、ドラッグハンドル
+ * @responsibility インデント、展開/折りたたみアイコン、フォルダ/ノートの視覚的表現
  */
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { TreeNode } from '../utils/treeUtils';
+import { ListItem } from '../../../components/ListItem';
+import { Note, Folder } from '@shared/types/note';
 
 interface TreeListItemProps {
   node: TreeNode;
@@ -23,41 +25,26 @@ export const TreeListItem: React.FC<TreeListItemProps> = ({
   onPress,
   onLongPress,
 }) => {
-  const { colors, spacing, typography, shadows } = useTheme();
-
-  // インデントの計算（各階層ごとに20pxずつ）
+  const { colors, spacing, typography } = useTheme();
   const indentSize = node.depth * 20;
 
   const styles = StyleSheet.create({
     container: {
-      backgroundColor: colors.background,
-      borderRadius: 8,
-      marginBottom: spacing.md,
       marginLeft: spacing.md + indentSize,
       marginRight: spacing.md,
-      padding: spacing.md,
-      ...shadows.small,
+    },
+    contentContainer: {
       flexDirection: 'row',
       alignItems: 'center',
-      borderWidth: 2,
-      borderColor: colors.transparent,
-    },
-    selected: {
-      backgroundColor: colors.primary + '20',
-      borderColor: colors.primary,
-    },
-    selectionMode: {
-      backgroundColor: colors.background,
-    },
-    content: {
       flex: 1,
-      flexDirection: 'row',
-      alignItems: 'center',
     },
     iconContainer: {
       marginRight: spacing.sm,
       width: 24,
       alignItems: 'center',
+    },
+    iconPlaceholder: {
+      width: 16,
     },
     expandIcon: {
       ...typography.body,
@@ -67,103 +54,53 @@ export const TreeListItem: React.FC<TreeListItemProps> = ({
     textContainer: {
       flex: 1,
     },
-    title: {
-      ...typography.title,
-      color: colors.text,
-    },
-    subtitle: {
-      ...typography.body,
-      color: colors.textSecondary,
-      marginTop: spacing.xs / 2,
-    },
-    checkboxContainer: {
-      marginLeft: spacing.md,
-    },
-    checkbox: {
-      width: 24,
-      height: 24,
-      borderRadius: 4,
-      borderWidth: 2,
-      borderColor: colors.textSecondary,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: colors.transparent,
-    },
-    checkboxSelected: {
-      backgroundColor: colors.primary,
-      borderColor: colors.primary,
-    },
-    checkboxText: {
-      color: colors.white,
-      fontSize: 16,
-      fontWeight: 'bold',
-    },
   });
 
   const renderIcon = () => {
     if (node.type === 'folder') {
-      // フォルダの展開/折りたたみアイコン
       const expandIcon = node.isExpanded ? '▼' : '▶';
       return <Text style={styles.expandIcon}>{expandIcon}</Text>;
     }
-    return null;
+    return <View style={styles.iconPlaceholder} />; // フォルダでない場合にスペースを確保
   };
 
   const renderTitle = () => {
     if (node.type === 'folder') {
-      const folder = node.item as any;
+      const folder = node.item as Folder;
       return `📁 ${folder.name}`;
-    } else {
-      const note = node.item as any;
-      return note.title || '無題のノート';
     }
+    const note = node.item as Note;
+    return note.title || '無題のノート';
   };
 
   const renderSubtitle = () => {
     if (node.type === 'note') {
-      const note = node.item as any;
-      if (note.content) {
-        return (
-          <Text style={styles.subtitle} numberOfLines={1}>
-            {note.content}
-          </Text>
-        );
-      }
+      const note = node.item as Note;
+      return note.content ? (
+        <ListItem.Description numberOfLines={1}>
+          {note.content}
+        </ListItem.Description>
+      ) : null;
     }
     return null;
   };
 
   return (
-    <View
-      style={[
-        styles.container,
-        isSelected && styles.selected,
-        isSelectionMode && styles.selectionMode,
-      ]}
-    >
-      {/* メインコンテンツ */}
-      <TouchableOpacity
-        style={styles.content}
+    <View style={styles.container}>
+      <ListItem.Container
         onPress={onPress}
         onLongPress={onLongPress}
+        isSelected={isSelected}
+        isSelectionMode={isSelectionMode}
       >
-        <View style={styles.iconContainer}>{renderIcon()}</View>
-        <View style={styles.textContainer}>
-          <Text style={styles.title} numberOfLines={1}>
-            {renderTitle()}
-          </Text>
-          {renderSubtitle()}
-        </View>
-      </TouchableOpacity>
-
-      {/* 選択モードのチェックボックス */}
-      {isSelectionMode && (
-        <View style={styles.checkboxContainer}>
-          <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
-            {isSelected && <Text style={styles.checkboxText}>✓</Text>}
+        <View style={styles.contentContainer}>
+          <View style={styles.iconContainer}>{renderIcon()}</View>
+          <View style={styles.textContainer}>
+            <ListItem.Title numberOfLines={1}>{renderTitle()}</ListItem.Title>
+            {renderSubtitle()}
           </View>
         </View>
-      )}
+      </ListItem.Container>
     </View>
   );
 };
