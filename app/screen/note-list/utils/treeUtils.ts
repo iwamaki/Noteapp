@@ -4,7 +4,7 @@
  * @responsibility フラットなFileSystemItemをツリー構造（TreeNode）に変換
  */
 import { FileSystemItem, Folder, Note } from '../../../../shared/types/note';
-import { PathUtils } from '../noteStorage';
+import { PathUtils } from './pathUtils';
 
 export interface TreeNode {
   id: string;

@@ -5,7 +5,7 @@
  */
 
 import { useState, useCallback } from 'react';
-import { PathUtils } from '../noteStorage';
+import { PathUtils } from '../utils/pathUtils';
 
 export const useFolderNavigation = () => {
   const [currentPath, setCurrentPath] = useState<string>('/');
