@@ -115,6 +115,7 @@ type Theme = {
   spacing: typeof spacing;
   typography: ReturnType<typeof getTypographyForSize>;
   shadows: ReturnType<typeof getShadows>;
+  themeMode: 'light' | 'dark';
 };
 
 const ThemeContext = createContext<Theme | null>(null);
@@ -136,7 +137,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const typography = getTypographyForSize(settings.fontSize);
     const shadows = getShadows(colors.shadow);
 
-    return { colors, spacing, typography, shadows };
+    return { colors, spacing, typography, shadows, themeMode: effectiveTheme };
   }, [settings.theme, settings.fontSize, systemColorScheme]);
 
   return (

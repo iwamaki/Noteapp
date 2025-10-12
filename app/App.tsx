@@ -6,11 +6,26 @@
  * すべてのコア機能にアクセスできるようにすることです。
  */
 import React, { useEffect } from 'react';
+import { StatusBar } from 'react-native';
 import RootNavigator from './navigation/RootNavigator';
-import { ThemeProvider } from './design/theme/ThemeContext';
+import { ThemeProvider, useTheme } from './design/theme/ThemeContext';
 import { useSettingsStore } from './settings/settingsStore';
 import { logger } from './utils/logger';
 import { KeyboardProvider } from './contexts/KeyboardContext';
+
+const AppContent = () => {
+  const { themeMode, colors } = useTheme();
+
+  return (
+    <>
+      <StatusBar
+        barStyle={themeMode === 'dark' ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.secondary}
+      />
+      <RootNavigator />
+    </>
+  );
+};
 
 export default function App() {
   const { loadSettings } = useSettingsStore();
@@ -26,7 +41,7 @@ export default function App() {
   return (
     <ThemeProvider>
       <KeyboardProvider>
-        <RootNavigator />
+        <AppContent />
       </KeyboardProvider>
     </ThemeProvider>
   );
