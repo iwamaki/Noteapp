@@ -11,20 +11,17 @@ import {
   TouchableOpacity,
   StyleSheet,
   Text,
-  Platform,
-  Keyboard,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useChat } from '../hooks/useChat';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { ChatHistory } from '../components/ChatHistory';
+import { useChatLayoutMetrics } from '../layouts/useChatLayoutMetrics';
 
 // チャット入力バーコンポーネント（プロパティ不要）
 export const ChatInputBar: React.FC = () => {
   const { colors, typography } = useTheme();
-  const insets = useSafeAreaInsets();
-  const [isKeyboardVisible, setKeyboardVisible] = useState(false);
+  const { chatInputBarBottomPadding } = useChatLayoutMetrics();
   const {
     messages,
     isLoading,
@@ -35,28 +32,6 @@ export const ChatInputBar: React.FC = () => {
   } = useChat();
   const [inputText, setInputText] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
-
-  React.useEffect(() => {
-    const showSubscription = Keyboard.addListener(
-      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
-      () => {
-        console.log('[ChatInputBar] Keyboard visible, removing bottom padding');
-        setKeyboardVisible(true);
-      }
-    );
-    const hideSubscription = Keyboard.addListener(
-      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
-      () => {
-        console.log('[ChatInputBar] Keyboard hidden, adding bottom padding:', Math.max(insets.bottom, 8));
-        setKeyboardVisible(false);
-      }
-    );
-
-    return () => {
-      showSubscription.remove();
-      hideSubscription.remove();
-    };
-  }, [insets.bottom]);
 
   // メッセージ送信処理
   const handleSendMessage = async () => {
@@ -71,14 +46,6 @@ export const ChatInputBar: React.FC = () => {
   // 送信可能かどうかの判定
   const canSendMessage = inputText.trim().length > 0 && !isLoading;
 
-  const bottomPadding = isKeyboardVisible ? 0 : Math.max(insets.bottom, 8);
-
-  console.log('[ChatInputBar] Rendering with:', {
-    isKeyboardVisible,
-    insetsBottom: insets.bottom,
-    calculatedPaddingBottom: bottomPadding,
-  });
-
   const styles = StyleSheet.create({
     container: {
       backgroundColor: colors.secondary,
@@ -90,8 +57,7 @@ export const ChatInputBar: React.FC = () => {
       alignItems: 'center',
       paddingHorizontal: 10,
       paddingVertical: 8,
-      // キーボードが表示されている時は下部paddingなし、非表示の時は安全領域を確保
-      paddingBottom: bottomPadding,
+      paddingBottom: chatInputBarBottomPadding,
       backgroundColor: colors.secondary,
     },
     expandButton: {
