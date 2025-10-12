@@ -3,8 +3,8 @@
  * @summary ツリー構造変換ユーティリティ
  * @responsibility フラットなFileSystemItemをツリー構造（TreeNode）に変換
  */
-import { FileSystemItem, Folder, Note } from '../../../shared/types/note';
-import { PathUtils } from './noteStorage';
+import { FileSystemItem, Folder, Note } from '../../../../shared/types/note';
+import { PathUtils } from '../noteStorage';
 
 export interface TreeNode {
   id: string;

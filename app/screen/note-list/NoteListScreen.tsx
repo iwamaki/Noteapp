@@ -12,7 +12,7 @@ import { NoteListFabButton } from './components/NoteListFabButton';
 import { CreateItemModal } from './components/CreateItemModal';
 import { TreeListItem } from './components/TreeListItem';
 import { MainContainer } from '../../components/MainContainer';
-import { flattenTree } from './treeUtils';
+import { flattenTree } from './utils/treeUtils';
 import { useKeyboard } from '../../contexts/KeyboardContext';
 import { CHAT_INPUT_HEIGHT } from '../../design/constants';
 
