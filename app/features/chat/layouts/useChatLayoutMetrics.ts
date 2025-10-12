@@ -15,26 +15,17 @@ import { useState, useEffect } from 'react';
 import { Keyboard, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-/**
- * ChatInputBarの固定高さ
- * iOS: 88px, Android: 92px
- */
-export const CHAT_INPUT_BAR_HEIGHT = Platform.OS === 'ios' ? 88 : 92;
+// コンポーネントのレイアウト計算に使用される定数（=チャット入力バーのパディング含めた高さ）
+export const CHAT_INPUT_BAR_HEIGHT = Platform.OS === 'ios' ? 60 : 60;
 
 /**
  * チャットレイアウトのメトリクス情報
  */
 export interface ChatLayoutMetrics {
-  /** キーボードが表示されているかどうか */
+
   isKeyboardVisible: boolean;
-
-  /** ChatInputBarの高さ */
   chatInputBarHeight: number;
-
-  /** ChatInputBarのbottom padding（SafeAreaを考慮） */
   chatInputBarBottomPadding: number;
-
-  /** 画面コンテンツのbottom padding（ChatInputBarの高さ + 追加マージン） */
   contentBottomPadding: number;
 }
 
@@ -82,11 +73,10 @@ export function useChatLayoutMetrics(additionalContentPadding: number = 16): Cha
     };
   }, []);
 
-  // ChatInputBarのbottom padding: キーボード表示時は0、非表示時はSafeArea
-  const chatInputBarBottomPadding = isKeyboardVisible ? 0 : Math.max(insets.bottom, 8);
 
-  // 画面コンテンツのbottom padding: キーボード表示時は0、非表示時はChatInputBar高さ + 追加マージン
-  const contentBottomPadding = isKeyboardVisible ? 0 : CHAT_INPUT_BAR_HEIGHT + additionalContentPadding;
+  const chatInputBarBottomPadding = isKeyboardVisible ? 8 : Math.max(insets.bottom, 8);
+  const contentBottomPadding = isKeyboardVisible ? 8 : CHAT_INPUT_BAR_HEIGHT + additionalContentPadding;
+
 
   return {
     isKeyboardVisible,
