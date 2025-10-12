@@ -192,29 +192,60 @@ export class NoteListStorage {
   }
 
   static async updateFolder(data: UpdateFolderData): Promise<Folder> {
-    const folders = await this.getAllFoldersRaw();
-    const folderIndex = folders.findIndex(f => f.id === data.id);
+    const allFolders = await this.getAllFoldersRaw();
+    const folderIndex = allFolders.findIndex(f => f.id === data.id);
 
     if (folderIndex === -1) {
       throw new StorageError(`Folder with id ${data.id} not found`, 'NOT_FOUND');
     }
 
-    const oldFolder = folders[folderIndex];
-    const oldFullPath = PathUtils.getFullPath(oldFolder.path, oldFolder.name);
+    const folderToUpdate = allFolders[folderIndex];
+    const oldFullPath = PathUtils.getFullPath(folderToUpdate.path, folderToUpdate.name);
 
-    if (data.name) folders[folderIndex].name = data.name;
-    if (data.path) folders[folderIndex].path = PathUtils.normalizePath(data.path);
-    folders[folderIndex].updatedAt = new Date();
+    // 変更を適用
+    const newName = data.name ?? folderToUpdate.name;
+    const newPath = data.path ? PathUtils.normalizePath(data.path) : folderToUpdate.path;
+    const newFullPath = PathUtils.getFullPath(newPath, newName);
 
-    const newFullPath = PathUtils.getFullPath(folders[folderIndex].path, folders[folderIndex].name);
+    // 変更がない場合は何もしない
+    if (oldFullPath === newFullPath && folderToUpdate.name === newName && folderToUpdate.path === newPath) {
+      return folderToUpdate;
+    }
+    
+    folderToUpdate.name = newName;
+    folderToUpdate.path = newPath;
+    folderToUpdate.updatedAt = new Date();
 
-    // フォルダ名やパスが変更された場合、子要素のパスも更新
+    // 子孫のパスを更新する必要があるかチェック
     if (oldFullPath !== newFullPath) {
-      await this.updateChildrenPaths(oldFullPath, newFullPath);
+      const allNotes = await this.getAllNotesRaw();
+
+      // 子ノートのパスを更新
+      allNotes.forEach(note => {
+        if (note.path === oldFullPath) {
+          note.path = newFullPath;
+        } else if (note.path.startsWith(oldFullPath + '/')) {
+          note.path = newFullPath + note.path.substring(oldFullPath.length);
+        }
+      });
+
+      // 子フォルダのパスを更新
+      allFolders.forEach(folder => {
+        // 自分自身は既に更新済みなのでスキップ
+        if (folder.id === data.id) return;
+
+        if (folder.path === oldFullPath) {
+          folder.path = newFullPath;
+        } else if (folder.path.startsWith(oldFullPath + '/')) {
+          folder.path = newFullPath + folder.path.substring(oldFullPath.length);
+        }
+      });
+      
+      await this.saveAllNotes(allNotes);
     }
 
-    await this.saveAllFolders(folders);
-    return folders[folderIndex];
+    await this.saveAllFolders(allFolders);
+    return folderToUpdate;
   }
 
   static async deleteFolder(folderId: string, deleteContents: boolean = false): Promise<void> {
@@ -244,29 +275,6 @@ export class NoteListStorage {
   }
 
   // --- Helper Methods ---
-  private static async updateChildrenPaths(oldPath: string, newPath: string): Promise<void> {
-    const notes = await this.getAllNotesRaw();
-    const folders = await this.getAllFoldersRaw();
-
-    // ノートのパスを更新
-    notes.forEach(note => {
-      if (note.path.startsWith(oldPath)) {
-        note.path = note.path.replace(oldPath, newPath);
-      }
-    });
-
-    // フォルダのパスを更新
-    folders.forEach(folder => {
-      const fullPath = PathUtils.getFullPath(folder.path, folder.name);
-      if (fullPath.startsWith(oldPath)) {
-        folder.path = folder.path.replace(oldPath, newPath);
-      }
-    });
-
-    await this.saveAllNotes(notes);
-    await this.saveAllFolders(folders);
-  }
-
   private static async deleteItemsInPath(path: string, recursive: boolean): Promise<void> {
     let notes = await this.getAllNotesRaw();
     let folders = await this.getAllFoldersRaw();
