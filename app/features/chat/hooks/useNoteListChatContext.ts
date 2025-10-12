@@ -8,47 +8,47 @@ import { useEffect, useRef } from 'react';
 import { ActiveScreenContextProvider, ActiveScreenContext } from '../types';
 import ChatService from '../index';
 import { logger } from '../../../utils/logger';
-
-interface Note {
-  id: string;
-  title: string;
-  content: string;
-}
+import { FileSystemItem } from '@shared/types/note';
 
 interface UseNoteListChatContextParams {
-  notes: Note[];
+  items: FileSystemItem[];
+  currentPath: string;
 }
 
 /**
  * ノート一覧画面用のチャットコンテキストプロバイダーフック
  *
  * このフックは、ノート一覧画面のコンテキストをChatServiceに登録します。
- * LLMには、現在表示されているノートのリストを提供します。
+ * LLMには、現在表示されているノートとフォルダのリストを提供します。
  */
 export const useNoteListChatContext = ({
-  notes,
+  items,
+  currentPath,
 }: UseNoteListChatContextParams): void => {
-  // 最新のnotesを参照するためのref
-  const notesRef = useRef(notes);
+  // 最新のitemsとcurrentPathを参照するためのref
+  const itemsRef = useRef(items);
+  const currentPathRef = useRef(currentPath);
 
   // refを更新
   useEffect(() => {
-    notesRef.current = notes;
-  }, [notes]);
+    itemsRef.current = items;
+    currentPathRef.current = currentPath;
+  }, [items, currentPath]);
 
   useEffect(() => {
     // ActiveScreenContextProviderの実装
     const contextProvider: ActiveScreenContextProvider = {
       getScreenContext: async (): Promise<ActiveScreenContext> => {
         logger.debug('chatService', '[useNoteListChatContext] Getting screen context', {
-          notesCount: notesRef.current.length,
+          itemsCount: itemsRef.current.length,
+          currentPath: currentPathRef.current,
         });
 
         return {
-          currentPath: '/',
-          fileList: notesRef.current.map(note => ({
-            name: note.title,
-            type: 'file' as const,
+          currentPath: currentPathRef.current,
+          fileList: itemsRef.current.map(item => ({
+            name: item.type === 'folder' ? item.item.name : item.item.title,
+            type: item.type === 'folder' ? 'directory' : 'file',
           })),
         };
       },
