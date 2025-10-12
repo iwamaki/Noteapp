@@ -33,6 +33,8 @@ function NoteEditScreen() {
     canUndo,
     canRedo,
     isDirty,
+    wordWrap,
+    toggleWordWrap,
   } = useNoteEditor(noteId);
 
   const [viewMode, setViewMode] = useState<ViewMode>('edit');
@@ -71,6 +73,10 @@ function NoteEditScreen() {
     onRedo: redo,
     canUndo,
     canRedo,
+    isWordWrapEnabled: wordWrap,
+    onToggleWordWrap: toggleWordWrap,
+    originalNoteContent: note?.content ?? '',
+    currentContent: content,
   });
 
   // チャットコンテキストプロバイダーを登録
@@ -95,6 +101,7 @@ function NoteEditScreen() {
           mode={viewMode}
           onModeChange={setViewMode}
           onContentChange={setContent}
+          wordWrap={wordWrap}
         />
       </View>
       <CustomModal

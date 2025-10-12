@@ -26,9 +26,14 @@ export const useNoteEditor = (noteId: string | undefined) => {
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
+  const [wordWrap, setWordWrap] = useState(true);
 
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isUndoRedoing = useRef<boolean>(false);
+
+  const toggleWordWrap = useCallback(() => {
+    setWordWrap((prev) => !prev);
+  }, []);
 
   useEffect(() => {
     const fetchNote = async () => {
@@ -188,5 +193,7 @@ export const useNoteEditor = (noteId: string | undefined) => {
     canUndo,
     canRedo,
     isDirty,
+    wordWrap,
+    toggleWordWrap,
   };
 };

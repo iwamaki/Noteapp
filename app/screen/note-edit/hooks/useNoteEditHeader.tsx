@@ -6,13 +6,14 @@
 import React, { useLayoutEffect } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { Alert } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { RootStackParamList } from '../../../navigation/types';
 import { useCustomHeader } from '../../../components/CustomHeader';
 import { ViewMode } from '../components/FileEditor';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { NoteEditHeader } from '../components/NoteEditHeader';
+import { NoteEditOverflowMenu } from '../components/NoteEditOverflowMenu';
 
 interface UseNoteEditHeaderProps {
   title: string;
@@ -28,6 +29,10 @@ interface UseNoteEditHeaderProps {
   onRedo: () => void;
   canUndo: boolean;
   canRedo: boolean;
+  isWordWrapEnabled: boolean;
+  onToggleWordWrap: () => void;
+  originalNoteContent: string;
+  currentContent: string;
 }
 
 export const useNoteEditHeader = ({
@@ -44,58 +49,55 @@ export const useNoteEditHeader = ({
   onRedo,
   canUndo,
   canRedo,
+  isWordWrapEnabled,
+  onToggleWordWrap,
+  originalNoteContent,
+  currentContent,
 }: UseNoteEditHeaderProps) => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { createHeaderConfig } = useCustomHeader();
   const { colors } = useTheme();
 
   useLayoutEffect(() => {
-    const showMenu = () => {
-      Alert.alert('メニュー', undefined, [
-        {
-          text: 'ビューモード切替',
-          onPress: () => {
-            if (viewMode === 'edit') {
-              onViewModeChange('preview');
-            } else {
-              onViewModeChange('edit');
-            }
-          },
-        },
-        {
-          text: 'バージョン履歴',
-          onPress: () => {
-            navigation.navigate('VersionHistory', { noteId: activeNoteId || '' });
-          },
-        },
-        {
-          text: 'キャンセル',
-          style: 'cancel',
-        },
-      ]);
+    const handleToggleViewMode = () => {
+      onViewModeChange(viewMode === 'edit' ? 'preview' : 'edit');
     };
 
-    const rightButtons: Array<{
-      title?: string;
-      icon?: React.ReactNode;
-      onPress: () => void;
-      variant?: 'primary' | 'secondary' | 'danger';
-      disabled?: boolean;
-    }> = [];
+    const handleShowVersionHistory = () => {
+            navigation.navigate('VersionHistory', { noteId: activeNoteId || '' });
+    };
+
+    const handleShowDiffView = () => {
+      navigation.navigate('DiffView', {
+        mode: 'readonly',
+        originalContent: originalNoteContent,
+        newContent: currentContent,
+      });
+    };
+
+    const rightButtons: Array<React.ReactNode> = [];
 
     if (!isLoading) {
-      rightButtons.push({
-        icon: <Ionicons name="save-outline" size={24} color={isDirty ? colors.primary : colors.textSecondary} />,
-        onPress: onSave,
-        variant: 'primary',
-        disabled: !isDirty,
-      });
+      rightButtons.push(
+        <Ionicons
+          name="save-outline"
+          size={24}
+          color={isDirty ? colors.primary : colors.textSecondary}
+          onPress={onSave}
+          disabled={!isDirty}
+          style={styles.saveIcon}
+        />
+      );
 
-      rightButtons.push({
-        icon: <Ionicons name="menu-outline" size={24} color={colors.textSecondary} />,
-        onPress: showMenu,
-        variant: 'secondary',
-      });
+      rightButtons.push(
+        <NoteEditOverflowMenu
+          onToggleViewMode={handleToggleViewMode}
+          onShowVersionHistory={handleShowVersionHistory}
+          onShowDiffView={handleShowDiffView}
+          onToggleWordWrap={onToggleWordWrap}
+          isWordWrapEnabled={isWordWrapEnabled}
+        />
+      );
     }
 
     navigation.setOptions(
@@ -118,7 +120,7 @@ export const useNoteEditHeader = ({
             variant: 'secondary',
           },
         ],
-        rightButtons,
+        rightButtons: rightButtons.map((button, index) => ({ title: `button-${index}`, icon: button, onPress: () => {} })),
       })
     );
   }, [
@@ -138,5 +140,15 @@ export const useNoteEditHeader = ({
     canRedo,
     createHeaderConfig,
     colors,
+    isWordWrapEnabled,
+    onToggleWordWrap,
+    originalNoteContent,
+    currentContent,
   ]);
 };
+
+const styles = StyleSheet.create({
+  saveIcon: {
+    marginLeft: 16, // Add left margin to push it further right
+  },
+});
