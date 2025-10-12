@@ -1,11 +1,11 @@
 import { FileSystemItem, Note } from '@shared/types/note';
 import { PathUtils } from '../utils/pathUtils';
-import { getAllNotesRaw, saveAllNotes, getAllFoldersRaw } from './raw';
+import { getAllNotesRaw, saveAllNotes, getAllFoldersRaw, StorageError } from './storage';
 import * as NoteFns from './note';
 import * as FolderFns from './folder';
 
 // Re-export error class
-export { StorageError } from './error';
+export { StorageError };
 
 // --- Composite & Helper Methods ---
 

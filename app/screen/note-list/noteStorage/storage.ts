@@ -1,10 +1,17 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Note, Folder } from '@shared/types/note';
 import StorageUtils from '@data/asyncStorageUtils';
-import { StorageError } from './error';
 
 const NOTES_STORAGE_KEY = '@notes';
 const FOLDERS_STORAGE_KEY = '@folders';
+
+// --- Error Class ---
+export class StorageError extends Error {
+  constructor(message: string, public code: string, public originalError?: any) {
+    super(message);
+    this.name = 'StorageError';
+  }
+}
 
 // --- Raw Note Methods ---
 export const getAllNotesRaw = async (): Promise<Note[]> => {

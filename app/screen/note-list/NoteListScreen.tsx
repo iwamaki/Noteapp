@@ -21,7 +21,7 @@ function NoteListScreen() {
   const {
     treeNodes,
     loading,
-    folderNavigation,
+    currentPath,
     selection,
     handleSelectItem,
     handleLongPressItem,
@@ -48,8 +48,8 @@ function NoteListScreen() {
   // TODO: useNoteListChatContext needs to be updated to work with the new structure
   // For now, we pass an empty array to avoid breaking the app.
   useNoteListChatContext({
-    items: [], 
-    currentPath: folderNavigation.currentPath,
+    items: [],
+    currentPath: currentPath,
   });
 
   const styles = StyleSheet.create({
@@ -117,7 +117,7 @@ function NoteListScreen() {
       )}
       <CreateItemModal
         visible={createModal.isVisible}
-        currentPath={folderNavigation.currentPath}
+        currentPath={currentPath}
         onClose={createModal.close}
         onCreate={createModal.onCreate}
       />
