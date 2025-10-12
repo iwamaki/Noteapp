@@ -26,13 +26,12 @@ tags: [frontend, backend, feature, data-model, storage, ui]
 
 - [x] ノートがフォルダ内に保存され、階層的に表示されること。
 - [x] ユーザーが新しいフォルダを作成できること。
-- [x] ユーザーがフォルダの名前を変更できること。
+- [ ] ユーザーがフォルダの名前を変更できること。
 - [x] ユーザーがフォルダを削除できること（フォルダ内のノートも適切に処理されること）。
-- [x] ユーザーがノートをフォルダ間で移動できること。
-- [x] ノート一覧画面で、現在のフォルダパスが表示され、フォルダ間のナビゲーション（親フォルダへの移動、サブフォルダへの移動）ができること。
-- [x] LLMが現在のフォルダ構造を認識し、`read_file` や `edit_file` コマンドでフルパスを指定してノートを操作できること。
-- [x] LLMが `create_directory`, `list_directory`, `move_item`, `delete_item` などの新しいファイルシステムツールを利用できること。
-- [x] 既存のノートデータが新しい構造に適切に移行されること（移行戦略を別途検討）。
+- [ ] ユーザーがノートをフォルダ間で移動できること。
+- [ ] LLMが現在のフォルダ構造を認識し、`read_file` や `edit_file` コマンドでフルパスを指定してノートを操作できること。
+- [ ] LLMが `create_directory`, `list_directory`, `move_item`, `delete_item` などの新しいファイルシステムツールを利用できること。
+
 
 ## 関連ファイル (Related Files)
 
@@ -43,7 +42,7 @@ tags: [frontend, backend, feature, data-model, storage, ui]
 -   `app/screen/note-list/hooks/useNoteListLogic.ts`
 -   `app/features/chat/hooks/useNoteListChatContext.ts`
 -   `app/features/chat/hooks/useNoteEditChatContext.ts`
--   `app/services/llmService/types/types.ts`
+-   `app/services/llmService/types/`
 -   `app/components/ListItem.tsx`
 -   `server/src/tools/file_tools.py`
 
@@ -79,7 +78,7 @@ tags: [frontend, backend, feature, data-model, storage, ui]
         - パス指定による自動フォルダ作成機能 (`ensureFoldersExist`, `createNoteWithPath`)
         - 既存ノートの自動移行機能 (`migrateExistingNotes`)
 
-    3. **ツリー構造の実装** (`app/screen/note-list/treeUtils.ts`)
+    3. **ツリー構造の実装** (`app/screen/note-list/utils/treeUtils.ts`)
         - `TreeNode` インターフェースを定義（階層、展開状態、子要素を含む）
         - `buildTree` 関数: フラットなフォルダ/ノート配列から階層ツリーを構築
         - `flattenTree` 関数: ツリー構造をFlatListで表示可能な平坦配列に変換

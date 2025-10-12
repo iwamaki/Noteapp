@@ -6,7 +6,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useTheme } from '../../../design/theme/ThemeContext';
-import { TreeNode } from '../treeUtils';
+import { TreeNode } from '../utils/treeUtils';
 
 interface TreeListItemProps {
   node: TreeNode;

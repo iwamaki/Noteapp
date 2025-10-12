@@ -4,7 +4,7 @@ import { RootStackParamList } from '../../../navigation/types';
 import { FileSystemItem } from '@shared/types/note';
 import { NoteListStorage } from '../noteStorage';
 import { useFolderNavigation } from './useFolderNavigation';
-import { buildTree, TreeNode } from '../treeUtils';
+import { buildTree, TreeNode } from '../utils/treeUtils';
 
 export const useNoteListLogic = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
