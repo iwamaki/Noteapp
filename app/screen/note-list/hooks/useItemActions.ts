@@ -24,17 +24,38 @@ export const useItemActions = ({
 
   const handleDeleteSelected = useCallback(async () => {
     try {
-      if (selectedNoteIds.size > 0) {
-        await NoteListStorage.deleteNotes(Array.from(selectedNoteIds));
+      const noteIds = Array.from(selectedNoteIds);
+      const folderIds = Array.from(selectedFolderIds);
+
+      if (__DEV__) {
+        console.log('🗑️  Starting delete operation:', {
+          noteIds,
+          folderIds,
+        });
       }
-      if (selectedFolderIds.size > 0) {
-        for (const folderId of selectedFolderIds) {
+
+      if (noteIds.length > 0) {
+        await NoteListStorage.deleteNotes(noteIds);
+      }
+      if (folderIds.length > 0) {
+        for (const folderId of folderIds) {
           await NoteListStorage.deleteFolder(folderId, true);
         }
       }
+
+      if (__DEV__) {
+        console.log('✅ Delete operation completed successfully');
+        const { logStorageState } = require('../../../utils/debugUtils');
+        await logStorageState();
+      }
+
       onSuccess();
     } catch (error) {
-      console.error("Failed to delete selected items:", error);
+      console.error("❌ Failed to delete selected items:", error);
+      if (__DEV__) {
+        const { logStorageState } = require('../../../utils/debugUtils');
+        await logStorageState();
+      }
     }
   }, [selectedNoteIds, selectedFolderIds, onSuccess]);
 
@@ -88,12 +109,23 @@ export const useItemActions = ({
       const folderIds = Array.from(selectedFolderIds);
       const destinationPath = PathUtils.getFullPath(destinationFolder.path, destinationFolder.name);
 
+      if (__DEV__) {
+        console.log('🔄 Starting move operation:', {
+          noteIds,
+          folderIds,
+          destinationPath,
+        });
+      }
+
       // 不正な移動を防ぐためのチェック
       if (folderIds.length > 0) {
         const allFolders = await NoteListStorage.getAllFolders();
         for (const folderId of folderIds) {
           const folderToMove = allFolders.find(f => f.id === folderId);
-          if (!folderToMove) continue;
+          if (!folderToMove) {
+            console.warn(`Folder with id ${folderId} not found, skipping`);
+            continue;
+          }
 
           const sourcePath = PathUtils.getFullPath(folderToMove.path, folderToMove.name);
 
@@ -106,17 +138,37 @@ export const useItemActions = ({
         }
       }
 
+      // Move notes
       for (const noteId of noteIds) {
+        if (__DEV__) {
+          console.log(`  Moving note ${noteId} to ${destinationPath}`);
+        }
         await NoteListStorage.moveNote(noteId, destinationPath);
       }
+
+      // Move folders
       for (const folderId of folderIds) {
+        if (__DEV__) {
+          console.log(`  Moving folder ${folderId} to ${destinationPath}`);
+        }
         await NoteListStorage.updateFolder({ id: folderId, path: destinationPath });
       }
-      
+
+      if (__DEV__) {
+        console.log('✅ Move operation completed successfully');
+        // Log storage state after move
+        const { logStorageState } = require('../../../utils/debugUtils');
+        await logStorageState();
+      }
+
       onSuccess();
       cancelMoveMode();
     } catch (error) {
-      console.error("Failed to move items:", error);
+      console.error("❌ Failed to move items:", error);
+      if (__DEV__) {
+        const { logStorageState } = require('../../../utils/debugUtils');
+        await logStorageState();
+      }
     }
   }, [selectedNoteIds, selectedFolderIds, onSuccess, cancelMoveMode]);
 
