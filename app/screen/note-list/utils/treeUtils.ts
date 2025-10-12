@@ -65,22 +65,19 @@ function buildTreeNode(
     const folderPath = PathUtils.getFullPath(folder.path, folder.name);
     const isExpanded = expandedFolderIds.has(folder.id);
 
-    // 子要素を取得（展開中の場合のみ）
-    let children: TreeNode[] = [];
-    if (isExpanded) {
-      const childFolders = allFolders
-        .filter(f => PathUtils.normalizePath(f.path) === folderPath)
-        .map(f => ({ type: 'folder' as const, item: f }));
 
-      const childNotes = allNotes
-        .filter(n => PathUtils.normalizePath(n.path) === folderPath)
-        .map(n => ({ type: 'note' as const, item: n }));
+    const childFolders = allFolders
+      .filter(f => PathUtils.normalizePath(f.path) === folderPath)
+      .map(f => ({ type: 'folder' as const, item: f }));
 
-      const childItems = [...childFolders, ...childNotes];
-      children = childItems.map(child =>
-        buildTreeNode(child, allFolders, allNotes, expandedFolderIds, depth + 1)
-      );
-    }
+    const childNotes = allNotes
+      .filter(n => PathUtils.normalizePath(n.path) === folderPath)
+      .map(n => ({ type: 'note' as const, item: n }));
+
+    const childItems = [...childFolders, ...childNotes];
+    const children = childItems.map(child =>
+      buildTreeNode(child, allFolders, allNotes, expandedFolderIds, depth + 1)
+    );
 
     return {
       id: folder.id,
