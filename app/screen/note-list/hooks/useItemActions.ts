@@ -1,5 +1,6 @@
 
 import { useCallback, useState } from 'react';
+import { Alert } from 'react-native';
 import { NoteListStorage } from '../noteStorage';
 import { PathUtils } from '../utils/pathUtils';
 import { FileSystemItem, Folder } from '@shared/types/note';
@@ -52,6 +53,10 @@ export const useItemActions = ({
       onSuccess();
     } catch (error) {
       console.error("❌ Failed to delete selected items:", error);
+      Alert.alert(
+        'Delete Failed',
+        error instanceof Error ? error.message : 'Failed to delete selected items'
+      );
       if (__DEV__) {
         const { logStorageState } = await import('../../../utils/debugUtils');
         await logStorageState();
@@ -67,6 +72,10 @@ export const useItemActions = ({
       onSuccess();
     } catch (error) {
       console.error("Failed to copy selected notes:", error);
+      Alert.alert(
+        'Copy Failed',
+        error instanceof Error ? error.message : 'Failed to copy selected notes'
+      );
     }
   }, [selectedNoteIds, onSuccess]);
 
@@ -77,6 +86,10 @@ export const useItemActions = ({
       navigation.navigate('NoteEdit', { noteId: newNote.id });
     } catch (error) {
       console.error("Failed to create note with path:", error);
+      Alert.alert(
+        'Create Failed',
+        error instanceof Error ? error.message : 'Failed to create note'
+      );
     }
   }, [navigation, currentPath, onSuccess]);
 
@@ -90,6 +103,10 @@ export const useItemActions = ({
       onSuccess();
     } catch (error) {
       console.error("Failed to rename item:", error);
+      Alert.alert(
+        'Rename Failed',
+        error instanceof Error ? error.message : 'Failed to rename item'
+      );
     }
   }, [onSuccess]);
 
@@ -132,7 +149,11 @@ export const useItemActions = ({
           // フォルダを自分自身やその子孫に移動させない
           if (destinationPath.startsWith(sourcePath)) {
             console.error("Cannot move a folder into itself or a descendant.", { sourcePath, destinationPath });
-            // TODO: ユーザーにエラーを通知する
+            Alert.alert(
+              'Move Failed',
+              'Cannot move a folder into itself or its descendant'
+            );
+            cancelMoveMode();
             return;
           }
         }
@@ -165,6 +186,10 @@ export const useItemActions = ({
       cancelMoveMode();
     } catch (error) {
       console.error("❌ Failed to move items:", error);
+      Alert.alert(
+        'Move Failed',
+        error instanceof Error ? error.message : 'Failed to move items'
+      );
       if (__DEV__) {
         const { logStorageState } = await import('../../../utils/debugUtils');
         await logStorageState();

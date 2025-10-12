@@ -16,15 +16,30 @@ export const getFoldersByPath = async (path: string): Promise<Folder[]> => {
 
 export const createFolder = async (data: CreateFolderData): Promise<Folder> => {
   const now = new Date();
+  const normalizedPath = PathUtils.normalizePath(data.path);
+
+  const folders = await getAllFoldersRaw();
+
+  // Check for duplicate folder name in the same path
+  const duplicateExists = folders.some(
+    folder => PathUtils.normalizePath(folder.path) === normalizedPath && folder.name === data.name
+  );
+
+  if (duplicateExists) {
+    throw new StorageError(
+      `A folder with name "${data.name}" already exists in path "${normalizedPath}"`,
+      'DUPLICATE_ITEM'
+    );
+  }
+
   const newFolder: Folder = {
     id: uuidv4(),
     name: data.name,
-    path: PathUtils.normalizePath(data.path),
+    path: normalizedPath,
     createdAt: now,
     updatedAt: now,
   };
 
-  const folders = await getAllFoldersRaw();
   folders.push(newFolder);
   await saveAllFolders(folders);
   return newFolder;
@@ -47,6 +62,21 @@ export const updateFolder = async (data: UpdateFolderData): Promise<Folder> => {
 
   if (oldFullPath === newFullPath && folderToUpdate.name === newName && folderToUpdate.path === newPath) {
     return folderToUpdate;
+  }
+
+  // Check for duplicate folder name in the same path (excluding the current folder)
+  const duplicateExists = allFolders.some(
+    folder =>
+      folder.id !== data.id &&
+      PathUtils.normalizePath(folder.path) === newPath &&
+      folder.name === newName
+  );
+
+  if (duplicateExists) {
+    throw new StorageError(
+      `A folder with name "${newName}" already exists in path "${newPath}"`,
+      'DUPLICATE_ITEM'
+    );
   }
   
   folderToUpdate.name = newName;
