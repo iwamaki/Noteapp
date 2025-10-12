@@ -33,7 +33,7 @@ export const FabButton: React.FC<FabButtonProps> = ({
       alignItems: 'center',
       justifyContent: 'center',
       right: spacing.xxl,
-      bottom: spacing.xxl + 80,
+      bottom: spacing.xxl + 60,
       ...shadows.large,
     },
     fabText: {
