@@ -3,18 +3,10 @@
  * @summary ノート/フォルダ作成モーダル - パス指定に対応
  * @responsibility "aaa/bbb/note.txt" のような入力からフォルダ構造を自動作成
  */
-import React, { useState } from 'react';
-import {
-  Modal,
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, StyleSheet } from 'react-native';
 import { useTheme } from '../../../design/theme/ThemeContext';
+import { CustomModal } from '../../../components/CustomModal';
 
 interface CreateItemModalProps {
   visible: boolean;
@@ -29,36 +21,23 @@ export const CreateItemModal: React.FC<CreateItemModalProps> = ({
   onClose,
   onCreate,
 }) => {
-  const { colors, spacing, typography, shadows } = useTheme();
+  const { colors, spacing, typography } = useTheme();
   const [inputValue, setInputValue] = useState('');
 
+  useEffect(() => {
+    if (visible) {
+      setInputValue('');
+    }
+  }, [visible]);
+
+  const handleCreate = () => {
+    if (inputValue.trim()) {
+      onCreate(inputValue.trim());
+      onClose();
+    }
+  };
+
   const styles = StyleSheet.create({
-    overlay: {
-      flex: 1,
-      backgroundColor: colors.overlay,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    modalContainer: {
-      backgroundColor: colors.background,
-      borderRadius: 12,
-      padding: spacing.xl,
-      width: '85%',
-      maxWidth: 400,
-      ...shadows.large,
-    },
-    title: {
-      ...typography.title,
-      fontSize: 20,
-      color: colors.text,
-      marginBottom: spacing.sm,
-    },
-    description: {
-      ...typography.body,
-      color: colors.textSecondary,
-      marginBottom: spacing.md,
-      lineHeight: 20,
-    },
     currentPathLabel: {
       ...typography.body,
       color: colors.textSecondary,
@@ -85,123 +64,48 @@ export const CreateItemModal: React.FC<CreateItemModalProps> = ({
       ...typography.body,
       fontSize: 12,
       color: colors.textSecondary,
-      marginBottom: spacing.lg,
       fontStyle: 'italic',
-    },
-    buttonContainer: {
-      flexDirection: 'row',
-      justifyContent: 'flex-end',
-      gap: spacing.md,
-    },
-    button: {
-      paddingVertical: spacing.sm,
-      paddingHorizontal: spacing.lg,
-      borderRadius: 8,
-      minWidth: 80,
-      alignItems: 'center',
-    },
-    cancelButton: {
-      backgroundColor: colors.secondary,
-      borderWidth: 1,
-      borderColor: colors.border,
-    },
-    createButton: {
-      backgroundColor: colors.primary,
-    },
-    buttonText: {
-      ...typography.body,
-      fontWeight: '600',
-    },
-    cancelButtonText: {
-      color: colors.text,
-    },
-    createButtonText: {
-      color: colors.white,
-    },
-    disabledButton: {
-      opacity: 0.5,
     },
   });
 
-  const handleCreate = () => {
-    if (inputValue.trim()) {
-      onCreate(inputValue.trim());
-      setInputValue('');
-      onClose();
-    }
-  };
-
-  const handleCancel = () => {
-    setInputValue('');
-    onClose();
-  };
-
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={handleCancel}
+    <CustomModal
+      isVisible={visible}
+      title="新規作成"
+      message={`ファイル名またはパスを入力してください。\nフォルダは自動的に作成されます。`}
+      onClose={onClose}
+      buttons={[
+        {
+          text: 'キャンセル',
+          style: 'cancel',
+          onPress: onClose,
+        },
+        {
+          text: '作成',
+          style: 'default',
+          onPress: handleCreate,
+        },
+      ]}
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.overlay}
-      >
-        <TouchableOpacity
-          style={StyleSheet.absoluteFill}
-          activeOpacity={1}
-          onPress={handleCancel}
+      <View>
+        <Text style={styles.currentPathLabel}>現在の場所：</Text>
+        <Text style={styles.currentPath}>{currentPath}</Text>
+
+        <TextInput
+          style={styles.input}
+          placeholder="例: note.txt または folder1/note.txt"
+          placeholderTextColor={colors.textSecondary}
+          value={inputValue}
+          onChangeText={setInputValue}
+          autoFocus
+          onSubmitEditing={handleCreate}
         />
-        <View style={styles.modalContainer}>
-          <Text style={styles.title}>新規作成</Text>
-          <Text style={styles.description}>
-            ファイル名またはパスを入力してください。
-            {'\n'}フォルダは自動的に作成されます。
-          </Text>
 
-          <Text style={styles.currentPathLabel}>現在の場所：</Text>
-          <Text style={styles.currentPath}>{currentPath}</Text>
-
-          <TextInput
-            style={styles.input}
-            placeholder="例: note.txt または folder1/note.txt"
-            placeholderTextColor={colors.textSecondary}
-            value={inputValue}
-            onChangeText={setInputValue}
-            autoFocus
-            onSubmitEditing={handleCreate}
-          />
-
-          <Text style={styles.exampleText}>
-            💡 &quot;aaa/bbb/note.txt&quot; と入力すると、
-            {'\n'}   aaa/bbb フォルダが自動作成されます
-          </Text>
-
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={[styles.button, styles.cancelButton]}
-              onPress={handleCancel}
-            >
-              <Text style={[styles.buttonText, styles.cancelButtonText]}>
-                キャンセル
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.button,
-                styles.createButton,
-                !inputValue.trim() && styles.disabledButton,
-              ]}
-              onPress={handleCreate}
-              disabled={!inputValue.trim()}
-            >
-              <Text style={[styles.buttonText, styles.createButtonText]}>
-                作成
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </KeyboardAvoidingView>
-    </Modal>
+        <Text style={styles.exampleText}>
+          💡 &quot;aaa/bbb/note.txt&quot; と入力すると、
+          {'\n'}   aaa/bbb フォルダが自動作成されます
+        </Text>
+      </View>
+    </CustomModal>
   );
 };

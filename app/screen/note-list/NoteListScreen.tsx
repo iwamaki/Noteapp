@@ -8,7 +8,7 @@ import { useNoteListLogic } from './hooks/useNoteListLogic';
 import { useNoteListHeader } from './hooks/useNoteListHeader';
 import { useNoteListChatContext } from '../../features/chat/hooks/useNoteListChatContext';
 import { NoteListEmptyState } from './components/NoteListEmptyState';
-import { NoteListFabButton } from './components/NoteListFabButton';
+import { FabButton } from '../../components/FabButton';
 import { CreateItemModal } from './components/CreateItemModal';
 import { TreeListItem } from './components/TreeListItem';
 import { RenameItemModal } from './components/RenameItemModal';
@@ -130,10 +130,7 @@ function NoteListScreen() {
           ]}
         />
       )}
-      <NoteListFabButton
-        isSelectionMode={isSelectionMode}
-        onPress={() => setIsCreateModalVisible(true)}
-      />
+      {!isSelectionMode && <FabButton onPress={() => setIsCreateModalVisible(true)} />}
       <CreateItemModal
         visible={isCreateModalVisible}
         currentPath={folderNavigation.currentPath}
