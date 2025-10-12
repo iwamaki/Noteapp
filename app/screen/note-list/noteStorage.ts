@@ -67,6 +67,14 @@ export class PathUtils {
   }
 }
 
+interface UpdateNoteData {
+  id: string;
+  title?: string;
+  content?: string;
+  tags?: string[];
+  path?: string;
+}
+
 export class NoteListStorage {
   // --- Private Raw Note Methods ---
   private static async getAllNotesRaw(): Promise<Note[]> {
@@ -171,6 +179,25 @@ export class NoteListStorage {
     notes.push(newNote);
     await this.saveAllNotes(notes);
     return newNote;
+  }
+
+  static async updateNote(data: UpdateNoteData): Promise<Note> {
+    const notes = await this.getAllNotesRaw();
+    const noteIndex = notes.findIndex(n => n.id === data.id);
+
+    if (noteIndex === -1) {
+      throw new StorageError(`Note with id ${data.id} not found`, 'NOT_FOUND');
+    }
+
+    const existingNote = notes[noteIndex];
+    const updatedNote = {
+      ...existingNote,
+      ...data,
+      updatedAt: new Date(),
+    };
+    notes[noteIndex] = updatedNote;
+    await this.saveAllNotes(notes);
+    return updatedNote;
   }
 
   static async moveNote(noteId: string, newPath: string): Promise<Note> {

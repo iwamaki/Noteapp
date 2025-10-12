@@ -13,14 +13,14 @@ export interface HeaderConfig {
   leftButtons?: Array<{
     title?: string;
     icon?: React.ReactNode; // Add icon property
-    onPress: () => void;
+    onPress: () => void | Promise<void>;
     variant?: 'primary' | 'secondary' | 'danger';
     disabled?: boolean;
   }>;
   rightButtons?: Array<{
     title?: string;
     icon?: React.ReactNode; // Add icon property
-    onPress: () => void;
+    onPress: () => void | Promise<void>;
     variant?: 'primary' | 'secondary' | 'danger';
     disabled?: boolean;
   }>;

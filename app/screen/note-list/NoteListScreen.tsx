@@ -11,10 +11,13 @@ import { NoteListEmptyState } from './components/NoteListEmptyState';
 import { NoteListFabButton } from './components/NoteListFabButton';
 import { CreateItemModal } from './components/CreateItemModal';
 import { TreeListItem } from './components/TreeListItem';
+import { RenameItemModal } from './components/RenameItemModal';
+import { MoveItemModal } from './components/MoveItemModal';
 import { MainContainer } from '../../components/MainContainer';
 import { flattenTree } from './utils/treeUtils';
 import { useKeyboard } from '../../contexts/KeyboardContext';
 import { CHAT_INPUT_HEIGHT } from '../../design/constants';
+import { Folder } from '@shared/types/note';
 
 // ノート一覧画面コンポーネント
 function NoteListScreen() {
@@ -34,11 +37,17 @@ function NoteListScreen() {
     handleCancelSelection,
     handleDeleteSelected,
     handleCopySelected,
-    // handleCreateNote,
     handleCreateNoteWithPath,
-    // handleCreateFolder, // 将来のフォルダ作成UI用に予約
-    // fetchItems,
     folderNavigation,
+    isRenameModalVisible,
+    itemToRename,
+    handleRenameItem,
+    setIsRenameModalVisible,
+    isMoveModalVisible,
+    handleOpenMoveModal,
+    handleMoveSelectedItems,
+    handleOpenRenameModal,
+    setIsMoveModalVisible,
   } = useNoteListLogic();
 
   // ツリーをフラット化してFlatListで表示
@@ -47,9 +56,12 @@ function NoteListScreen() {
   useNoteListHeader({
     isSelectionMode,
     selectedNoteIds,
+    selectedFolderIds,
     handleCancelSelection,
     handleDeleteSelected,
     handleCopySelected,
+    handleOpenRenameModal,
+    handleOpenMoveModal,
   });
 
   // チャットコンテキストプロバイダーを登録
@@ -127,6 +139,22 @@ function NoteListScreen() {
         currentPath={folderNavigation.currentPath}
         onClose={() => setIsCreateModalVisible(false)}
         onCreate={handleCreateNoteWithPath}
+      />
+      {itemToRename && (
+        <RenameItemModal
+          visible={isRenameModalVisible}
+          initialName={itemToRename.type === 'folder' ? itemToRename.item.name : itemToRename.item.title}
+          itemType={itemToRename.type}
+          onClose={() => setIsRenameModalVisible(false)}
+          onRename={handleRenameItem}
+        />
+      )}
+      <MoveItemModal
+        visible={isMoveModalVisible}
+        currentPath={folderNavigation.currentPath}
+        folders={items.filter(item => item.type === 'folder').map(item => item.item as Folder)}
+        onClose={() => setIsMoveModalVisible(false)}
+        onMove={handleMoveSelectedItems}
       />
     </MainContainer>
   );
