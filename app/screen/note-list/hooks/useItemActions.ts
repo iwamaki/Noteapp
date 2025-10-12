@@ -2,7 +2,7 @@
 import { useCallback, useState } from 'react';
 import { NoteListStorage } from '../noteStorage';
 import { PathUtils } from '../utils/pathUtils';
-import { FileSystemItem, Folder, Note } from '@shared/types/note';
+import { FileSystemItem, Folder } from '@shared/types/note';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../../navigation/types';
 
@@ -87,6 +87,24 @@ export const useItemActions = ({
       const noteIds = Array.from(selectedNoteIds);
       const folderIds = Array.from(selectedFolderIds);
       const destinationPath = PathUtils.getFullPath(destinationFolder.path, destinationFolder.name);
+
+      // 不正な移動を防ぐためのチェック
+      if (folderIds.length > 0) {
+        const allFolders = await NoteListStorage.getAllFolders();
+        for (const folderId of folderIds) {
+          const folderToMove = allFolders.find(f => f.id === folderId);
+          if (!folderToMove) continue;
+
+          const sourcePath = PathUtils.getFullPath(folderToMove.path, folderToMove.name);
+
+          // フォルダを自分自身やその子孫に移動させない
+          if (destinationPath.startsWith(sourcePath)) {
+            console.error("Cannot move a folder into itself or a descendant.", { sourcePath, destinationPath });
+            // TODO: ユーザーにエラーを通知する
+            return;
+          }
+        }
+      }
 
       for (const noteId of noteIds) {
         await NoteListStorage.moveNote(noteId, destinationPath);
