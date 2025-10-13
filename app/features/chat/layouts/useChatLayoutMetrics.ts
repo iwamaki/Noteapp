@@ -34,6 +34,7 @@ export function useChatLayoutMetrics(additionalContentPadding: number = 16): Cha
   const insets = useSafeAreaInsets();
 
   const appState = useRef(AppState.currentState); // To track app state
+  const previousInsets = useRef(insets); // 追加
 
   useEffect(() => {
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
@@ -52,9 +53,12 @@ export function useChatLayoutMetrics(additionalContentPadding: number = 16): Cha
 
     // Handle app state changes
     const handleAppStateChange = (nextAppState: AppStateStatus) => {
+      console.log('[ChatLayout] AppState change:', nextAppState, 'insets.bottom:', insets.bottom, 'previous:',
+      previousInsets.current.bottom);
       if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
         // App has come to the foreground
-        // Check keyboard metrics to determine current visibility
+        // Keep previous insets values until new values are properly updated
+        // This prevents the chat bar from dropping when returning to foreground
         const keyboardMetrics = Keyboard.metrics();
         if (keyboardMetrics) {
           setKeyboardVisible(true);
@@ -63,22 +67,31 @@ export function useChatLayoutMetrics(additionalContentPadding: number = 16): Cha
         }
       } else if (nextAppState.match(/inactive|background/)) {
         // App is going to background or inactive
-        setKeyboardVisible(false); // Assume keyboard is hidden when app is not active
+        // Store current insets before going to background
+        previousInsets.current = insets;
+        setKeyboardVisible(false);
       }
       appState.current = nextAppState;
     };
 
     const appStateSubscription = AppState.addEventListener('change', handleAppStateChange);
 
+    // Update previous insets when insets change
+    if (insets.bottom > 0) {
+      previousInsets.current = insets;
+    }
 
     return () => {
       showSubscription.remove();
       hideSubscription.remove();
       appStateSubscription.remove(); // Clean up AppState listener
     };
-  }, []);
+  }, [insets]);
 
-  const chatInputBarBottomPadding = isKeyboardVisible ? 8 : Math.max(insets.bottom, 8);
+  // Use previous insets if current insets.bottom is suspiciously small (likely during foreground transition)
+  const safeInsets = insets.bottom > 0 ? insets : previousInsets.current;
+  const chatInputBarBottomPadding = isKeyboardVisible ? 8 : Math.max(safeInsets.bottom, 8);
+  console.log('[ChatLayout] Using insets.bottom:', safeInsets.bottom, 'padding:', chatInputBarBottomPadding);
   const contentBottomPadding = isKeyboardVisible
     ? CHAT_INPUT_BAR_HEIGHT + additionalContentPadding 
     : CHAT_INPUT_BAR_HEIGHT + additionalContentPadding;
