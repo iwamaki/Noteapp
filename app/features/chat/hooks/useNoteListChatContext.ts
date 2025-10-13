@@ -101,7 +101,7 @@ export const useNoteListChatContext = ({
             name: command.content,
             path: command.path || '/',
           });
-          logger.info('chatService', `[useNoteListChatContext] Folder created: ${command.content}`);
+          logger.debug('chatService', `[useNoteListChatContext] Folder created: ${command.content}`);
         } catch (error) {
           logger.error('chatService', '[useNoteListChatContext] Error creating folder', error);
         }
@@ -116,7 +116,7 @@ export const useNoteListChatContext = ({
         try {
           // パスから対象を特定して移動
           // ここでは簡易実装（実際のUIでの移動ロジックと統合が必要）
-          logger.info('chatService', `[useNoteListChatContext] Move not fully implemented: ${command.source} -> ${command.destination}`);
+          logger.debug('chatService', `[useNoteListChatContext] Move not fully implemented: ${command.source} -> ${command.destination}`);
         } catch (error) {
           logger.error('chatService', '[useNoteListChatContext] Error moving item', error);
         }
@@ -130,7 +130,7 @@ export const useNoteListChatContext = ({
         try {
           // パスから対象を特定して削除
           // ここでは簡易実装（実際のUIでの削除ロジックと統合が必要）
-          logger.info('chatService', `[useNoteListChatContext] Delete not fully implemented: ${command.path}`);
+          logger.debug('chatService', `[useNoteListChatContext] Delete not fully implemented: ${command.path}`);
         } catch (error) {
           logger.error('chatService', '[useNoteListChatContext] Error deleting item', error);
         }
