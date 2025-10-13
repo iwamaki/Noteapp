@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { StyleSheet, FlatList } from 'react-native';
+import { StyleSheet, FlatList, View, TextInput } from 'react-native';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { useNoteList } from './hooks/useNoteList';
 import { useNoteListHeader } from './hooks/useNoteListHeader';
@@ -10,8 +10,10 @@ import { CreateItemModal } from './components/CreateItemModal';
 import { TreeListItem } from './components/TreeListItem';
 import { RenameItemModal } from './components/RenameItemModal';
 import { MainContainer } from '../../components/MainContainer';
-import { flattenTree } from './utils/treeUtils';
 import { useChatLayoutMetrics } from '../../features/chat/layouts/useChatLayoutMetrics';
+import { HeaderButton } from '../../components/HeaderButton';
+import { Ionicons } from '@expo/vector-icons';
+import { useSearch } from './hooks/useSearch';
 
 function NoteListScreen() {
   const { colors, spacing } = useTheme();
@@ -29,7 +31,52 @@ function NoteListScreen() {
     renameModal,
   } = useNoteList();
 
-  const flattenedTree = flattenTree(treeNodes);
+  const {
+    isSearchActive,
+    searchQuery,
+    setSearchQuery,
+    filteredNodes,
+    handleCancelSearch,
+    handleStartSearch,
+  } = useSearch(treeNodes);
+
+  const styles = StyleSheet.create({
+    centered: { justifyContent: 'center', alignItems: 'center' },
+    emptyMessage: {
+      fontSize: 16,
+      color: colors.textSecondary,
+      textAlign: 'center',
+      paddingHorizontal: spacing.xl,
+    },
+    listContent: { padding: spacing.md },
+    searchContainer: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.background,
+      borderRadius: spacing.sm,
+      paddingHorizontal: spacing.md,
+      height: 40,
+    },
+    searchInput: {
+      flex: 1,
+      color: colors.text,
+      fontSize: 16,
+    },
+  });
+
+  const searchInput = (
+    <View style={styles.searchContainer}>
+      <TextInput
+        style={styles.searchInput}
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+        placeholder="Search notes..."
+        placeholderTextColor={colors.textSecondary}
+        autoFocus
+      />
+    </View>
+  );
 
   useNoteListHeader({
     isSelectionMode: selection.isSelectionMode,
@@ -42,33 +89,27 @@ function NoteListScreen() {
     startMoveMode: actions.moveMode.start,
     isMoveMode: actions.moveMode.isActive,
     cancelMoveMode: actions.moveMode.cancel,
-    rightButtons: [
-      {
-        icon: <OverflowMenu onCreateNew={createModal.open} />,
-        onPress: () => {}, // This onPress will not be used as the OverflowMenu handles its own actions
-      },
-    ],
+    title: isSearchActive ? searchInput : undefined,
+    rightButtons: isSearchActive
+      ? [{ title: 'Cancel', onPress: handleCancelSearch, variant: 'secondary' }]
+      : [
+          {
+            icon: <Ionicons name="search" size={24} color={colors.text} />,
+            onPress: handleStartSearch,
+          },
+          {
+            icon: <OverflowMenu onCreateNew={createModal.open} />,
+            onPress: () => {}, // Not used
+          },
+        ],
   });
 
-  // TODO: useNoteListChatContext needs to be updated to work with the new structure
-  // For now, we pass an empty array to avoid breaking the app.
   useNoteListChatContext({
     items: [],
     currentPath: currentPath,
   });
 
-  const styles = StyleSheet.create({
-    centered: { justifyContent: 'center', alignItems: 'center' },
-    emptyMessage: {
-      fontSize: 16,
-      color: colors.textSecondary,
-      textAlign: 'center',
-      paddingHorizontal: spacing.xl,
-    },
-    listContent: { padding: spacing.md },
-  });
-
-  const renderTreeItem = useCallback(({ item: node }: { item: (typeof flattenedTree)[0] }) => {
+  const renderTreeItem = useCallback(({ item: node }: { item: any }) => {
     const isSelected = node.type === 'folder'
       ? selection.selectedFolderIds.has(node.id)
       : selection.selectedNoteIds.has(node.id);
@@ -99,16 +140,17 @@ function NoteListScreen() {
   return (
     <MainContainer
       backgroundColor={colors.secondary}
-      isLoading={loading && flattenedTree.length === 0}
+      isLoading={loading && filteredNodes.length === 0}
     >
-      {flattenedTree.length === 0 && !loading ? (
+      {filteredNodes.length === 0 && !loading ? (
         <NoteListEmptyState
           containerStyle={styles.centered}
           messageStyle={styles.emptyMessage}
+          message={searchQuery ? `No results for "${searchQuery}"` : 'This folder is empty. Tap the + icon to create a new note or folder.'}
         />
       ) : (
         <FlatList
-          data={flattenedTree}
+          data={filteredNodes}
           renderItem={renderTreeItem}
           keyExtractor={(node) => `${node.type}-${node.id}`}
           contentContainerStyle={[

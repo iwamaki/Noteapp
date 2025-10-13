@@ -13,13 +13,13 @@ interface UseNoteListHeaderProps {
   handleDeleteSelected: () => Promise<void>;
   handleCopySelected: () => Promise<void>;
   handleOpenRenameModal: (id: string, type: 'note' | 'folder') => void;
-  startMoveMode: () => void; // Changed from handleOpenMoveModal
-  isMoveMode: boolean; // New prop
-  cancelMoveMode: () => void; // New prop
-  rightButtons?: HeaderConfig['rightButtons']; // Add rightButtons prop
+  startMoveMode: () => void;
+  isMoveMode: boolean;
+  cancelMoveMode: () => void;
+  rightButtons?: HeaderConfig['rightButtons'];
+  title?: React.ReactNode;
 }
 
-// ノート一覧画面のヘッダー設定を管理するカスタムフック
 export const useNoteListHeader = ({
   isSelectionMode,
   selectedNoteIds,
@@ -28,10 +28,11 @@ export const useNoteListHeader = ({
   handleDeleteSelected,
   handleCopySelected,
   handleOpenRenameModal,
-  startMoveMode, // Changed from handleOpenMoveModal
-  isMoveMode, // Destructure new prop
-  cancelMoveMode, // Destructure new prop
-  rightButtons, // Destructure new prop
+  startMoveMode,
+  isMoveMode,
+  cancelMoveMode,
+  rightButtons,
+  title,
 }: UseNoteListHeaderProps) => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const { createHeaderConfig } = useCustomHeader();
@@ -41,7 +42,6 @@ export const useNoteListHeader = ({
     <Text style={{ color: colors.text }}>{count}件選択中</Text>
   ), [colors.text]);
 
-  // カスタムヘッダーの設定
   useLayoutEffect(() => {
     if (isMoveMode) {
       navigation.setOptions(
@@ -68,7 +68,6 @@ export const useNoteListHeader = ({
         },
       ];
 
-      // 1つのアイテムだけが選択されている場合に「名前変更」ボタンを追加
       if (selectedFolderIds.size === 1 && selectedNoteIds.size === 0) {
         const selectedFolderId = Array.from(selectedFolderIds)[0];
         selectionRightButtons.unshift({
@@ -85,11 +84,10 @@ export const useNoteListHeader = ({
         });
       }
 
-      // 選択中のアイテムがある場合に「移動」ボタンを追加
       if (selectedCount > 0) {
         selectionRightButtons.unshift({
           title: '移動',
-          onPress: startMoveMode, // Use new startMoveMode
+          onPress: startMoveMode,
           variant: 'secondary'
         });
       }
@@ -106,9 +104,15 @@ export const useNoteListHeader = ({
     } else {
       navigation.setOptions(
         createHeaderConfig({
+          title,
           rightButtons: rightButtons,
         })
       );
     }
-  }, [navigation, createHeaderConfig, isSelectionMode, selectedNoteIds.size, selectedFolderIds.size, handleCancelSelection, handleCopySelected, handleDeleteSelected, handleOpenRenameModal, startMoveMode, isMoveMode, cancelMoveMode, colors, renderTitle, rightButtons]);
+  }, [
+    navigation, createHeaderConfig, isSelectionMode, selectedNoteIds.size, 
+    selectedFolderIds.size, handleCancelSelection, handleCopySelected, 
+    handleDeleteSelected, handleOpenRenameModal, startMoveMode, isMoveMode, 
+    cancelMoveMode, colors, renderTitle, rightButtons, title
+  ]);
 };
