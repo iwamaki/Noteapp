@@ -3,11 +3,12 @@
 # @responsibility LLMが特定の操作（例: ファイル編集、ファイル読み込み）を実行する際に呼び出すことができる関数を提供し、
 # そのツールの引数と戻り値を定義することで、LLMとシステム間のインタラクションを仲介します。
 from langchain.tools import tool
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Any
 
 # グローバル変数でコンテキストを保持（Agentから設定される）
 _current_file_context: Optional[Dict[str, str]] = None
-_current_directory_context: Optional[Dict[str, any]] = None
+_current_directory_context: Optional[Dict[str, Any]] = None
+_all_files_context: Optional[List[Dict[str, str]]] = None
 
 
 def set_file_context(context: Optional[Dict[str, str]]):
@@ -21,15 +22,26 @@ def get_file_context() -> Optional[Dict[str, str]]:
     return _current_file_context
 
 
-def set_directory_context(context: Optional[Dict[str, any]]):
+def set_directory_context(context: Optional[Dict[str, Any]]):
     """現在のディレクトリコンテキストを設定する"""
     global _current_directory_context
     _current_directory_context = context
 
 
-def get_directory_context() -> Optional[Dict[str, any]]:
+def get_directory_context() -> Optional[Dict[str, Any]]:
     """現在のディレクトリコンテキストを取得する"""
     return _current_directory_context
+
+
+def set_all_files_context(all_files: Optional[List[Dict[str, str]]]):
+    """全ファイル情報を設定する"""
+    global _all_files_context
+    _all_files_context = all_files
+
+
+def get_all_files_context() -> Optional[List[Dict[str, str]]]:
+    """全ファイル情報を取得する"""
+    return _all_files_context
 
 
 @tool
@@ -53,36 +65,54 @@ def edit_file(filename: str, content: str) -> str:
 @tool
 def read_file(filename: str) -> str:
     """
-    現在開いているファイルの内容を読み取ります。
+    指定されたファイルの内容を読み取ります。
 
-    このツールは、ユーザーが現在編集しているファイルの内容を取得します。
-    ファイル名が現在のファイルと一致する場合、その内容を返します。
+    このツールは、ファイル名またはパスを指定してファイルの内容を取得します。
+    現在開いているファイルの場合は、その内容を直接返します。
+    それ以外の場合は、allFilesコンテキストから検索します。
 
     Args:
-        filename: 読み取るファイルのパス（例: "note.txt", "新しいノート"）
+        filename: 読み取るファイルのパスまたは名前（例: "/project/note.txt", "note.txt", "新しいノート"）
 
     Returns:
         ファイルの内容、またはファイルが見つからない場合はエラーメッセージ
     """
-    context = get_file_context()
+    # まず、現在開いているファイルかチェック
+    current_file_context = get_file_context()
+    if current_file_context:
+        current_filename = current_file_context.get('filename', '')
+        current_content = current_file_context.get('content', '')
 
-    if not context:
-        return "エラー: 現在開いているファイルの情報がありません。"
+        # ファイル名の比較（拡張子なしでも一致するように）
+        filename_without_ext = filename.replace('.txt', '').replace('.md', '').strip('/')
+        current_without_ext = current_filename.replace('.txt', '').replace('.md', '').strip('/')
 
-    current_filename = context.get('filename', '')
-    current_content = context.get('content', '')
+        if filename_without_ext in current_without_ext or current_without_ext in filename_without_ext:
+            if current_content:
+                return f"ファイル '{current_filename}' の内容:\n\n{current_content}"
+            else:
+                return f"ファイル '{current_filename}' は空です。"
 
-    # ファイル名の比較（拡張子なしでも一致するように）
-    filename_without_ext = filename.replace('.txt', '').replace('.md', '')
-    current_without_ext = current_filename.replace('.txt', '').replace('.md', '')
+    # allFilesコンテキストから検索
+    all_files = get_all_files_context()
+    if not all_files:
+        return f"エラー: ファイルシステム情報が利用できません。ファイル '{filename}' を読み取れません。"
 
-    if filename_without_ext in current_without_ext or current_without_ext in filename_without_ext:
-        if current_content:
-            return f"ファイル '{current_filename}' の内容:\n\n{current_content}"
-        else:
-            return f"ファイル '{current_filename}' は空です。"
-    else:
-        return f"エラー: ファイル '{filename}' は現在開かれていません。現在開いているファイル: '{current_filename}'"
+    # パスまたはタイトルで検索
+    normalized_filename = filename.strip('/')
+    for file_info in all_files:
+        if file_info.get('type') == 'file':
+            file_path = file_info.get('path', '').strip('/')
+            file_title = file_info.get('title', '')
+
+            # パスまたはタイトルで一致するか確認
+            if file_path == normalized_filename or file_title == normalized_filename:
+                # ファイルが見つかったが、内容は取得できない（AsyncStorageはフロントエンド側にある）
+                return f"ファイル '{file_title}' (パス: {file_path}) が見つかりましたが、内容を読み取るにはファイルを開いてから再度お試しください。\n\n現在開いているファイルのみ内容を読み取ることができます。"
+
+    # ファイルが見つからない
+    available_files = [f"{f.get('title')} ({f.get('path')})" for f in all_files if f.get('type') == 'file']
+    return f"エラー: ファイル '{filename}' が見つかりませんでした。\n\n利用可能なファイル:\n" + "\n".join(available_files[:10])
 
 
 @tool
@@ -90,7 +120,8 @@ def list_directory(path: str = "/") -> str:
     """
     指定されたディレクトリ内のファイルとフォルダのリストを取得します。
 
-    このツールは、現在のディレクトリコンテキストから情報を取得します。
+    このツールは、allFilesコンテキストから情報を取得し、
+    指定されたパス配下のファイル・フォルダをリストアップします。
 
     Args:
         path: リスト表示するディレクトリのパス（デフォルト: "/"）
@@ -98,27 +129,74 @@ def list_directory(path: str = "/") -> str:
     Returns:
         ディレクトリ内のアイテムリスト、またはエラーメッセージ
     """
+    # パスを正規化（末尾にスラッシュを追加）
+    normalized_path = path if path.endswith('/') else f"{path}/"
+    if normalized_path != '/' and not normalized_path.startswith('/'):
+        normalized_path = f"/{normalized_path}"
+
+    # まず現在のディレクトリコンテキストで一致するか確認
     dir_context = get_directory_context()
+    if dir_context:
+        current_path = dir_context.get('currentPath', '/')
+        current_normalized = current_path if current_path.endswith('/') else f"{current_path}/"
 
-    if not dir_context:
-        return "エラー: ディレクトリコンテキストが利用できません。"
+        if normalized_path == current_normalized:
+            file_list = dir_context.get('fileList', [])
+            if not file_list:
+                return f"ディレクトリ '{normalized_path}' は空です。"
 
-    current_path = dir_context.get('currentPath', '/')
-    file_list = dir_context.get('fileList', [])
+            result_lines = [f"ディレクトリ '{normalized_path}' の内容:"]
+            for item in file_list:
+                item_type = "📁" if item.get('type') == 'directory' else "📄"
+                item_name = item.get('name', 'unknown')
+                result_lines.append(f"{item_type} {item_name}")
 
-    # パスが一致するか確認
-    if path != current_path:
-        return f"エラー: パス '{path}' は現在のディレクトリ '{current_path}' と一致しません。"
+            return "\n".join(result_lines)
 
-    if not file_list:
-        return f"ディレクトリ '{current_path}' は空です。"
+    # allFilesコンテキストから検索
+    all_files = get_all_files_context()
+    if not all_files:
+        return "エラー: ファイルシステム情報が利用できません。"
 
-    # ファイルとフォルダを整形して返す
-    result_lines = [f"ディレクトリ '{current_path}' の内容:"]
-    for item in file_list:
-        item_type = "📁" if item.get('type') == 'directory' else "📄"
-        item_name = item.get('name', 'unknown')
-        result_lines.append(f"{item_type} {item_name}")
+    # 指定されたパス配下のアイテムをフィルタリング
+    items_in_path = []
+    for file_info in all_files:
+        file_path = file_info.get('path', '')
+        file_title = file_info.get('title', '')
+        file_type = file_info.get('type', 'file')
+
+        # パスから親ディレクトリを取得
+        if file_path.endswith('/'):
+            # ディレクトリの場合: /folder1/subfolder/ → /folder1/
+            parts = file_path.rstrip('/').split('/')
+            parent_path = '/'.join(parts[:-1]) + '/' if len(parts) > 1 else '/'
+        else:
+            # ファイルの場合（通常はこちら）
+            parent_path = '/'.join(file_path.split('/')[:-1]) + '/'
+            if parent_path == '/':
+                parent_path = '/'
+
+        # 指定されたパスと親パスが一致する場合のみリストに追加
+        if parent_path == normalized_path:
+            items_in_path.append({
+                'name': file_title,
+                'type': file_type,
+                'path': file_path
+            })
+
+    if not items_in_path:
+        return f"ディレクトリ '{normalized_path}' は空、または存在しません。"
+
+    # 結果を整形
+    result_lines = [f"ディレクトリ '{normalized_path}' の内容:"]
+    # ディレクトリを先に、ファイルを後に
+    directories = [item for item in items_in_path if item['type'] == 'directory']
+    files = [item for item in items_in_path if item['type'] == 'file']
+
+    for item in directories:
+        result_lines.append(f"📁 {item['name']}/")
+    for item in files:
+        result_lines.append(f"📄 {item['name']}")
 
     return "\n".join(result_lines)
 

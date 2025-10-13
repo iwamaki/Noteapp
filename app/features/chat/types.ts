@@ -20,6 +20,8 @@ export interface ActiveScreenContext {
   fileList?: { name: string; type: 'file' | 'directory' }[];
   /** 現在のパス */
   currentPath?: string;
+  /** 全ファイル・フォルダのリスト（階層構造の完全な情報） */
+  allFiles?: Array<{ path: string; title: string; type: 'file' | 'directory' }>;
   /** その他の画面固有の情報を追加可能 */
   [key: string]: any;
 }

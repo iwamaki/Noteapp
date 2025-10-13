@@ -38,6 +38,18 @@ export interface ChatContext {
     createdAt: Date;
   };
   conversationHistory?: ChatMessage[];
+  activeScreen?: {
+    currentPath: string;
+    fileList: Array<{
+      name: string;
+      type: string;
+    }>;
+  };
+  allFiles?: Array<{
+    path: string;
+    title: string;
+    type: 'file' | 'directory';
+  }>;
 }
 
 // LLMプロバイダー情報

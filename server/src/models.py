@@ -20,6 +20,8 @@ class ChatContext(BaseModel):
     currentFileContent: Optional[Dict[str, str]] = None  # 現在開いているファイルの内容 {"filename": "...", "content": "..."}
     attachedFileContent: Optional[Dict[str, str]] = None
     conversationHistory: Optional[List[Dict[str, Any]]] = None
+    activeScreen: Optional[Dict[str, Any]] = None
+    allFiles: Optional[List[Dict[str, Any]]] = None
 
 
 class ChatRequest(BaseModel):
@@ -33,6 +35,8 @@ class LLMCommand(BaseModel):
     action: str
     path: Optional[str] = None
     content: Optional[str] = None
+    source: Optional[str] = None
+    destination: Optional[str] = None
 
 
 class ChatResponse(BaseModel):
