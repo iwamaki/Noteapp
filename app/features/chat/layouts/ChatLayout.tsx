@@ -11,7 +11,7 @@
  */
 
 import React from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import { StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { ChatInputBar } from '../components/ChatInputBar';
 
 interface ChatLayoutProps {

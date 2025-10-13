@@ -24,7 +24,10 @@ class OpenAIProvider(BaseLLMProvider):
 
         # Agentのプロンプトテンプレートを作成
         self.prompt = ChatPromptTemplate.from_messages([
-            ("system", "あなたは親切で有能なAIアシスタントです。ユーザーのノート作成と編集をサポートします。利用可能なツールを使って、ユーザーの要求に応えてください。"),
+            ("system", "あなたは親切で有能なAIアシスタントです。ユーザーのノート作成と編集をサポートします。\n"
+                      "利用可能なツールを使って、ユーザーの要求に応えてください。\n"
+                      "もしユーザーの指定したファイル名が曖昧な場合は、まず `search_files` ツールを使って正確なファイルパスを特定してから、他のツール（`read_file`など）を使用してください。"
+            ),
             MessagesPlaceholder(variable_name="chat_history", optional=True),
             ("human", "{input}"),
             MessagesPlaceholder(variable_name="agent_scratchpad"),
