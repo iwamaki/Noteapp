@@ -31,6 +31,8 @@ tags: [UI, keyboard, bug]
 - `app/features/chat/layouts/ChatLayout.tsx`
 - `app/App.tsx`
 - `app/navigation/RootNavigator.tsx`
+- `app/screen/note-edit/NoteEditScreen.tsx`
+- `app/screen/note-list/NoteListScreen.tsx`
 
 ## 制約条件 (Constraints)
 
