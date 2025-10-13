@@ -5,11 +5,13 @@ import { useTheme } from '../../../design/theme/ThemeContext';
 interface NoteListEmptyStateProps {
   containerStyle: object;
   messageStyle: object;
+  message?: string;
 }
 
 export const NoteListEmptyState: React.FC<NoteListEmptyStateProps> = ({
   containerStyle,
   messageStyle,
+  message,
 }) => {
   const { spacing } = useTheme();
 
@@ -26,8 +28,14 @@ export const NoteListEmptyState: React.FC<NoteListEmptyStateProps> = ({
 
   return (
     <View style={[containerStyle, styles.emptyContainer]}>
-      <Text style={[messageStyle, styles.emptyMessage]}>ノートがありません。</Text>
-      <Text style={[messageStyle, styles.emptyMessage]}>下の「+」ボタンから新しいノートを作成しましょう。</Text>
+      {message ? (
+        <Text style={[messageStyle, styles.emptyMessage]}>{message}</Text>
+      ) : (
+        <>
+          <Text style={[messageStyle, styles.emptyMessage]}>ノートがありません。</Text>
+          <Text style={[messageStyle, styles.emptyMessage]}>下の「+」ボタンから新しいノートを作成しましょう。</Text>
+        </>
+      )}
     </View>
   );
 };
