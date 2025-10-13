@@ -240,6 +240,19 @@ class ChatService {
       chatContext.currentPath = screenContext.currentPath;
     }
 
+    // activeScreen フィールドを追加（バックエンドのディレクトリコンテキスト用）
+    if (screenContext.currentPath || screenContext.fileList) {
+      chatContext.activeScreen = {
+        currentPath: screenContext.currentPath || '/',
+        fileList: screenContext.fileList || [],
+      };
+    }
+
+    // 全ファイル情報を追加（階層構造の完全な情報）
+    if (screenContext.allFiles) {
+      chatContext.allFiles = screenContext.allFiles;
+    }
+
     return chatContext;
   }
 

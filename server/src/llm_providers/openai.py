@@ -7,7 +7,7 @@ from langchain.schema import HumanMessage, SystemMessage, AIMessage, BaseMessage
 from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from src.models import ChatResponse, ChatContext, LLMCommand
-from src.tools.file_tools import AVAILABLE_TOOLS, set_file_context, set_directory_context
+from src.tools.file_tools import AVAILABLE_TOOLS, set_file_context, set_directory_context, set_all_files_context
 from .base import BaseLLMProvider
 from src.logger import logger, log_llm_raw
 
@@ -65,6 +65,15 @@ class OpenAIProvider(BaseLLMProvider):
                 logger.info(f"Directory context set: {active_screen.get('currentPath')}")
         else:
             set_directory_context(None)
+
+        # 全ファイル情報を設定（階層構造の完全な情報）
+        if context and hasattr(context, 'allFiles'):
+            all_files = context.allFiles
+            if all_files:
+                set_all_files_context(all_files)
+                logger.info(f"All files context set: {len(all_files)} files")
+        else:
+            set_all_files_context(None)
 
         # 会話履歴を構築
         chat_history: List[BaseMessage] = []
@@ -145,19 +154,40 @@ class OpenAIProvider(BaseLLMProvider):
     def _extract_commands_from_agent_result(self, result: dict) -> Optional[List[LLMCommand]]:
         """
         AgentExecutorの実行結果から、フロントエンドで実行すべきコマンドを抽出する
-        （edit_fileのみ - read_fileはAgent内で処理済み）
+        （edit_file, create_directory, move_item, delete_item）
         """
         commands = []
         intermediate_steps = result.get("intermediate_steps", [])
 
         for action, observation in intermediate_steps:
-            # edit_fileツールが呼ばれた場合のみコマンドとして抽出
-            if hasattr(action, 'tool') and action.tool == 'edit_file':
-                tool_input = action.tool_input
+            if not hasattr(action, 'tool'):
+                continue
+
+            tool_name = action.tool
+            tool_input = action.tool_input
+
+            if tool_name == 'edit_file':
                 commands.append(LLMCommand(
                     action='edit_file',
                     path=tool_input.get('filename'),
                     content=tool_input.get('content')
+                ))
+            elif tool_name == 'create_directory':
+                commands.append(LLMCommand(
+                    action='create_directory',
+                    path=tool_input.get('path', '/'),
+                    content=tool_input.get('name')
+                ))
+            elif tool_name == 'move_item':
+                commands.append(LLMCommand(
+                    action='move_item',
+                    source=tool_input.get('source_path'),
+                    destination=tool_input.get('dest_path')
+                ))
+            elif tool_name == 'delete_item':
+                commands.append(LLMCommand(
+                    action='delete_item',
+                    path=tool_input.get('path')
                 ))
 
         return commands if commands else None
