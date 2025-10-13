@@ -11,7 +11,7 @@
  */
 
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { ChatInputBar } from '../components/ChatInputBar';
 
 interface ChatLayoutProps {
@@ -45,9 +45,13 @@ export function ChatLayout({ visible }: ChatLayoutProps) {
   }
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'position' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      style={styles.container}
+    >
       <ChatInputBar />
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
