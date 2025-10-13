@@ -11,8 +11,8 @@
  * - SafeAreaInsetsを考慮したpadding調整
  */
 
-import { useState, useEffect } from 'react';
-import { Keyboard, Platform } from 'react-native';
+import { useState, useEffect, useRef } from 'react';
+import { Keyboard, Platform, AppState, AppStateStatus } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // コンポーネントのレイアウト計算に使用される定数（=チャット入力バーのパディング含めた高さ）
@@ -33,6 +33,8 @@ export function useChatLayoutMetrics(additionalContentPadding: number = 16): Cha
   const [isKeyboardVisible, setKeyboardVisible] = useState(false);
   const insets = useSafeAreaInsets();
 
+  const appState = useRef(AppState.currentState); // To track app state
+
   useEffect(() => {
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
     const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
@@ -48,9 +50,31 @@ export function useChatLayoutMetrics(additionalContentPadding: number = 16): Cha
     const showSubscription = Keyboard.addListener(showEvent, handleKeyboardShow);
     const hideSubscription = Keyboard.addListener(hideEvent, handleKeyboardHide);
 
+    // Handle app state changes
+    const handleAppStateChange = (nextAppState: AppStateStatus) => {
+      if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
+        // App has come to the foreground
+        // Check keyboard metrics to determine current visibility
+        const keyboardMetrics = Keyboard.metrics();
+        if (keyboardMetrics) {
+          setKeyboardVisible(true);
+        } else {
+          setKeyboardVisible(false);
+        }
+      } else if (nextAppState.match(/inactive|background/)) {
+        // App is going to background or inactive
+        setKeyboardVisible(false); // Assume keyboard is hidden when app is not active
+      }
+      appState.current = nextAppState;
+    };
+
+    const appStateSubscription = AppState.addEventListener('change', handleAppStateChange);
+
+
     return () => {
       showSubscription.remove();
       hideSubscription.remove();
+      appStateSubscription.remove(); // Clean up AppState listener
     };
   }, []);
 
