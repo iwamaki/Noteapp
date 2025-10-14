@@ -4,7 +4,7 @@
  * @description ユーザーへのフィードバック（保存完了、エラーなど）を画面上部に表示します。
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Text, StyleSheet, Animated } from 'react-native';
 import { useTheme } from '../../../design/theme/ThemeContext';
 
@@ -26,6 +26,8 @@ export function ToastMessage({
   const translateY = useRef(new Animated.Value(20)).current;
 
   useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
     if (isVisible) {
       // 出現アニメーション
       Animated.parallel([
@@ -39,7 +41,12 @@ export function ToastMessage({
           duration: 300,
           useNativeDriver: true,
         }),
-      ]).start();
+      ]).start(() => {
+        // アニメーション完了後、durationに基づいて非表示タイマーを設定
+        timer = setTimeout(() => {
+          onHide?.();
+        }, duration);
+      });
     } else {
       // 終了アニメーション
       Animated.parallel([
@@ -58,7 +65,11 @@ export function ToastMessage({
         onHide?.();
       });
     }
-  }, [isVisible, opacity, translateY, onHide]);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [isVisible, opacity, translateY, onHide, duration]);
 
   if (!isVisible) {
     return null;

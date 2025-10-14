@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { StyleSheet, FlatList, View, TextInput } from 'react-native';
+import { StyleSheet, FlatList } from 'react-native';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { useNoteList } from './hooks/useNoteList';
 import { useNoteListHeader } from './hooks/useNoteListHeader';
@@ -13,6 +13,7 @@ import { MainContainer } from '../../components/MainContainer';
 import { useChatLayoutMetrics } from '../../features/chat/layouts/useChatLayoutMetrics';
 import { Ionicons } from '@expo/vector-icons';
 import { useSearch } from './hooks/useSearch';
+import { NoteListSearchBar } from './components/NoteListSearchBar';
 
 function NoteListScreen() {
   const { colors, spacing } = useTheme();
@@ -48,33 +49,15 @@ function NoteListScreen() {
       paddingHorizontal: spacing.xl,
     },
     listContent: { padding: spacing.md },
-    searchContainer: {
-      flex: 1,
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: colors.background,
-      borderRadius: spacing.sm,
-      paddingHorizontal: spacing.md,
-      height: 40,
-    },
-    searchInput: {
-      flex: 1,
-      color: colors.text,
-      fontSize: 16,
-    },
   });
 
   const searchInput = (
-    <View style={styles.searchContainer}>
-      <TextInput
-        style={styles.searchInput}
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-        placeholder="Search notes..."
-        placeholderTextColor={colors.textSecondary}
-        autoFocus
-      />
-    </View>
+    <NoteListSearchBar
+      searchQuery={searchQuery}
+      setSearchQuery={setSearchQuery}
+      placeholderTextColor={colors.textSecondary}
+      isSearchActive={isSearchActive}
+    />
   );
 
   useNoteListHeader({
@@ -101,6 +84,7 @@ function NoteListScreen() {
             onPress: () => {}, // Not used
           },
         ],
+    leftButtons: isSearchActive ? [] : undefined,
   });
 
   useNoteListChatContext({
