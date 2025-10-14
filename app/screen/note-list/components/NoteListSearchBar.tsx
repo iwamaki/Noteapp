@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, TextInput } from 'react-native';
 import { useTheme } from '../../../design/theme/ThemeContext';
 
@@ -18,6 +18,16 @@ export const NoteListSearchBar: React.FC<NoteListSearchBarProps> = ({
   isSearchActive = false,
 }) => {
   const { colors, spacing } = useTheme();
+  const [inputText, setInputText] = useState(searchQuery);
+
+  // 親コンポーネントからsearchQueryがリセットされた時に内部stateも更新
+  useEffect(() => {
+    setInputText(searchQuery);
+  }, [searchQuery]);
+
+  const handleSubmit = () => {
+    setSearchQuery(inputText);
+  };
 
   const styles = StyleSheet.create({
     searchContainer: {
@@ -38,11 +48,13 @@ export const NoteListSearchBar: React.FC<NoteListSearchBarProps> = ({
     <View style={styles.searchContainer}>
       <TextInput
         style={styles.searchInput}
-        value={searchQuery}
-        onChangeText={setSearchQuery}
+        value={inputText}
+        onChangeText={setInputText}
+        onSubmitEditing={handleSubmit}
         placeholder={placeholder}
         placeholderTextColor={placeholderTextColor || colors.textSecondary}
         autoFocus
+        returnKeyType="search"
       />
     </View>
   );
