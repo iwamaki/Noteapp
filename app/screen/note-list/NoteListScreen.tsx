@@ -73,7 +73,7 @@ function NoteListScreen() {
     cancelMoveMode: actions.moveMode.cancel,
     title: isSearchActive ? searchInput : undefined,
     rightButtons: isSearchActive
-      ? [{ title: 'Cancel', onPress: handleCancelSearch, variant: 'secondary' }]
+      ? []
       : [
           {
             icon: <Ionicons name="search" size={24} color={colors.text} />,
@@ -84,7 +84,9 @@ function NoteListScreen() {
             onPress: () => {}, // Not used
           },
         ],
-    leftButtons: isSearchActive ? [] : undefined,
+    leftButtons: isSearchActive
+      ? [{ icon: <Ionicons name="arrow-back" size={24} color={colors.text} />, onPress: handleCancelSearch }]
+      : undefined,
   });
 
   useNoteListChatContext({
