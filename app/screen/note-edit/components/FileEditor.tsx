@@ -8,8 +8,8 @@ import React, { useCallback } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useTheme } from '../../../design/theme/ThemeContext';
 
-import { MarkdownPreview } from './editors/MarkdownPreview';
-import { TextEditor } from './editors/TextEditor';
+import { MarkdownPreview } from './MarkdownPreview';
+import { TextEditor } from './TextEditor';
 
 // 表示モードの型定義
 export type ViewMode = 'content' | 'edit' | 'preview';
