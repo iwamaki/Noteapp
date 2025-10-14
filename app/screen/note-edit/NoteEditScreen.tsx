@@ -3,7 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/types';
 import { FileEditor, ViewMode as FileEditorViewMode } from './components/FileEditor';
-import { useNoteEditorV2 } from './hooks/useNoteEditorV2';
+import { useNoteEditor } from './hooks/useNoteEditor';
 import { useNoteEditHeader } from './hooks/useNoteEditHeader';
 import { useNoteEditChatContext } from '../../features/chat/hooks/useNoteEditChatContext';
 import { CustomModal } from '../../components/CustomModal';
@@ -41,7 +41,7 @@ function NoteEditScreen() {
     toggleWordWrap,
     viewMode,
     setViewMode,
-  } = useNoteEditorV2(noteId);
+  } = useNoteEditor(noteId);
 
   const [isConfirmModalVisible, setConfirmModalVisible] = useState(false);
   const [nextAction, setNextAction] = useState<any>(null);
