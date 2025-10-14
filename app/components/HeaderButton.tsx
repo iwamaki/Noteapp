@@ -90,6 +90,8 @@ export const HeaderButton: React.FC<HeaderButtonProps> = ({
               fontSize: responsive.getResponsiveSize(14, 16, 18),
             },
           ]}
+          numberOfLines={1}
+          ellipsizeMode="tail"
         >
           {title}
         </Text>
