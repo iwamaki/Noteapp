@@ -30,8 +30,8 @@ export const useSearch = (treeNodes: TreeNode[]) => {
       return flattenedTree;
     }
 
-    const query = searchOptions.caseSensitive
-      ? searchQuery.trim()
+    const query = searchOptions.caseSensitive 
+      ? searchQuery.trim() 
       : searchQuery.trim().toLowerCase();
 
     return flattenedTree.filter(node => {

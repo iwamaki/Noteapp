@@ -2,7 +2,7 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useIsFocused } from '@react-navigation/native';
 import { NoteListStorage } from '../noteStorage';
-import { buildTree } from '../utils/treeUtils';
+import { buildTree, TreeNode } from '../utils/treeUtils';
 import { FileSystemItem } from '@shared/types/note';
 import { checkTreeConsistency } from '../../../utils/debugUtils';
 
@@ -26,11 +26,11 @@ export const useNoteTree = (currentPath: string) => {
     const folderItems: FileSystemItem[] = folders
       .filter(f => f.path === currentPath)
       .map(f => ({ type: 'folder' as const, item: f }));
-
+    
     const noteItems: FileSystemItem[] = notes
       .filter(n => n.path === currentPath)
       .map(n => ({ type: 'note' as const, item: n }));
-
+    
     return [...folderItems, ...noteItems];
   }, [folders, notes, currentPath]);
 
@@ -88,7 +88,7 @@ export const useNoteTree = (currentPath: string) => {
       return newSet;
     });
   }, []);
-
+  
   const refreshTree = useCallback(() => {
     fetchItemsAndBuildTree();
   }, [fetchItemsAndBuildTree]);
