@@ -28,6 +28,8 @@ function RootNavigator() {
   const navigationRef = useNavigationContainerRef();
   const [currentRouteName, setCurrentRouteName] = useState<string | undefined>(undefined);
 
+  const shouldShowChat = currentRouteName === 'NoteList' || currentRouteName === 'NoteEdit';
+
   return (
     <View style={styles.container}>
       <NavigationContainer
@@ -47,7 +49,7 @@ function RootNavigator() {
           <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
         </Stack.Navigator>
       </NavigationContainer>
-      <ChatLayout visible={currentRouteName === 'NoteList' || currentRouteName === 'NoteEdit'} />
+      <ChatLayout visible={shouldShowChat} />
     </View>
   );
 }
