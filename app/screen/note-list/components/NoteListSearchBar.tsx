@@ -24,10 +24,8 @@ export const NoteListSearchBar: React.FC<NoteListSearchBarProps> = ({
       flex: 1,
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: colors.background,
-      borderRadius: spacing.sm,
       paddingHorizontal: isSearchActive ? spacing.sm : spacing.md,
-      height: 40,
+      paddingVertical: spacing.xs,
     },
     searchInput: {
       flex: 1,
