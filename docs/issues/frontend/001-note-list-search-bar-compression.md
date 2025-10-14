@@ -1,9 +1,9 @@
 ---
 title: "[B]_[001]_NoteListScreenの検索バーがヘッダーで圧縮される"
 id: 001
-status: new
+status: resolved
 priority: medium
-attempt_count: 0
+attempt_count: 1
 tags: [UI, navigation, bug, frontend]
 ---
 
