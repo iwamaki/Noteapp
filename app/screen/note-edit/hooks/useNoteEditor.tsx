@@ -14,7 +14,7 @@ import { useUnsavedChangesWarning } from './useUnsavedChangesWarning';
  * リファクタリング後のノートエディタフック
  * すべての機能を統合したシンプルなインターフェース
  */
-export const useNoteEditorV2 = (noteId?: string) => {
+export const useNoteEditor = (noteId?: string) => {
   // Zustandストアから状態とアクションを取得
   const store = useNoteEditorStore();
 
