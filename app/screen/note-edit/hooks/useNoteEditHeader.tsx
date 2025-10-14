@@ -9,7 +9,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { StyleSheet } from 'react-native';
 import { RootStackParamList } from '../../../navigation/types';
 import { useCustomHeader } from '../../../components/CustomHeader';
-import { ViewMode } from '../components/FileEditor';
+import type { ViewMode } from '../types';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { NoteEditHeader } from '../components/NoteEditHeader';

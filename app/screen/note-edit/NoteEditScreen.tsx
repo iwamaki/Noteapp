@@ -2,14 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/types';
-import { FileEditor, ViewMode } from './components/FileEditor';
-import { useNoteEditor } from './hooks/useNoteEditor';
+import { FileEditor, ViewMode as FileEditorViewMode } from './components/FileEditor';
+import { useNoteEditorV2 } from './hooks/useNoteEditorV2';
 import { useNoteEditHeader } from './hooks/useNoteEditHeader';
 import { useNoteEditChatContext } from '../../features/chat/hooks/useNoteEditChatContext';
 import { CustomModal } from '../../components/CustomModal';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { MainContainer } from '../../components/MainContainer';
 import { useChatLayoutMetrics } from '../../features/chat/layouts/useChatLayoutMetrics';
+import type { ViewMode } from './types';
 
 type NoteEditScreenRouteProp = RouteProp<RootStackParamList, 'NoteEdit'>;
 
@@ -26,8 +27,8 @@ function NoteEditScreen() {
     content,
     setContent,
     isLoading,
-    handleSave,
-    handleTitleChange,
+    save: handleSave,
+    setTitle: handleTitleChange,
     undo,
     redo,
     canUndo,
@@ -35,9 +36,9 @@ function NoteEditScreen() {
     isDirty,
     wordWrap,
     toggleWordWrap,
-  } = useNoteEditor(noteId);
-
-  const [viewMode, setViewMode] = useState<ViewMode>('edit');
+    viewMode,
+    setViewMode,
+  } = useNoteEditorV2(noteId);
   const [isConfirmModalVisible, setConfirmModalVisible] = useState(false);
   const [nextAction, setNextAction] = useState<any>(null); 
 
@@ -86,6 +87,18 @@ function NoteEditScreen() {
     setContent,
   });
 
+  // ViewModeの変換（新アーキテクチャの型 → FileEditorの型）
+  const mapViewModeToFileEditor = (mode: ViewMode): FileEditorViewMode => {
+    // 'diff'は現時点でFileEditorでサポートされていないため、'preview'にフォールバック
+    if (mode === 'diff') return 'preview';
+    return mode as FileEditorViewMode;
+  };
+
+  // FileEditorのViewMode変更を新アーキテクチャのViewModeに変換
+  const handleViewModeChange = (mode: FileEditorViewMode) => {
+    setViewMode(mode as ViewMode);
+  };
+
   const styles = StyleSheet.create({
     animatedContainer: {
       flex: 1,
@@ -98,8 +111,8 @@ function NoteEditScreen() {
         <FileEditor
           filename={title}
           initialContent={content}
-          mode={viewMode}
-          onModeChange={setViewMode}
+          mode={mapViewModeToFileEditor(viewMode)}
+          onModeChange={handleViewModeChange}
           onContentChange={setContent}
           wordWrap={wordWrap}
         />
