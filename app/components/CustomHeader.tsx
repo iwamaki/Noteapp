@@ -45,7 +45,7 @@ export const CustomHeader: React.FC<HeaderConfig> = ({
     },
     centerSection: {
       flex: 2,
-      alignItems: 'flex-start',
+      alignItems: 'stretch',
     },
     rightSection: {
       flex: 1,
@@ -101,6 +101,11 @@ export const useCustomHeader = () => {
 
   const createHeaderConfig = (config: HeaderConfig) => ({
     headerTitle: () => config.title || null,
+    headerTitleAlign: 'left' as const,
+    headerTitleContainerStyle: {
+      flex: 1,
+      paddingHorizontal: 0,
+    },
     headerLeft: () => {
       if (!config.leftButtons?.length) return null;
       return (
