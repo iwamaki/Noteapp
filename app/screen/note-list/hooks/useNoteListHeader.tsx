@@ -17,6 +17,7 @@ interface UseNoteListHeaderProps {
   isMoveMode: boolean;
   cancelMoveMode: () => void;
   rightButtons?: HeaderConfig['rightButtons'];
+  leftButtons?: HeaderConfig['leftButtons'];
   title?: React.ReactNode;
 }
 
