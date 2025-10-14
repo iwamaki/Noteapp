@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/types';
@@ -11,6 +11,8 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { MainContainer } from '../../components/MainContainer';
 import { useChatLayoutMetrics } from '../../features/chat/layouts/useChatLayoutMetrics';
 import type { ViewMode } from './types';
+import { ToastMessage } from './components/ToastMessage'; // ToastMessageをインポート
+import { useToastMessage } from './hooks/useToastMessage'; // useToastMessageをインポート
 
 type NoteEditScreenRouteProp = RouteProp<RootStackParamList, 'NoteEdit'>;
 
@@ -27,6 +29,7 @@ function NoteEditScreen() {
     content,
     setContent,
     isLoading,
+    isSaving, // isSavingを取得
     save: handleSave,
     setTitle: handleTitleChange,
     undo,
@@ -39,8 +42,21 @@ function NoteEditScreen() {
     viewMode,
     setViewMode,
   } = useNoteEditorV2(noteId);
+
   const [isConfirmModalVisible, setConfirmModalVisible] = useState(false);
-  const [nextAction, setNextAction] = useState<any>(null); 
+  const [nextAction, setNextAction] = useState<any>(null);
+  const { showToast, toastProps } = useToastMessage(); // useToastMessageフックを呼び出す
+
+  const prevIsSavingRef = useRef(isSaving);
+
+  // 保存状態に応じてトーストメッセージを表示
+  useEffect(() => {
+    // isSavingがtrueからfalseに変わったときに「保存しました！」を表示
+    if (prevIsSavingRef.current === true && isSaving === false) {
+      showToast('保存しました！', 2000); // 2秒後に自動的に非表示
+    }
+    prevIsSavingRef.current = isSaving;
+  }, [isSaving, showToast]);
 
   useEffect(() => {
     const beforeRemoveListener = (e: any) => {
@@ -107,6 +123,7 @@ function NoteEditScreen() {
 
   return (
     <MainContainer isLoading={isLoading}>
+      <ToastMessage {...toastProps} />
       <View style={[styles.animatedContainer, { paddingBottom: contentBottomPadding }]}>
         <FileEditor
           filename={title}
