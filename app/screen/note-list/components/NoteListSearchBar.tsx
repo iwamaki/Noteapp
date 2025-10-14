@@ -13,7 +13,7 @@ interface NoteListSearchBarProps {
 export const NoteListSearchBar: React.FC<NoteListSearchBarProps> = ({
   searchQuery,
   setSearchQuery,
-  placeholder = "Search notes...",
+  placeholder = "Search ...",
   placeholderTextColor,
   isSearchActive = false,
 }) => {
