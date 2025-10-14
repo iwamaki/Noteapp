@@ -4,6 +4,7 @@ import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../../navigation/types';
 import { useCustomHeader, HeaderConfig } from '../../../components/CustomHeader';
 import { useTheme } from '../../../design/theme/ThemeContext';
+import { Ionicons } from '@expo/vector-icons';
 
 interface UseNoteListHeaderProps {
   isSelectionMode: boolean;
@@ -33,6 +34,7 @@ export const useNoteListHeader = ({
   isMoveMode,
   cancelMoveMode,
   rightButtons,
+  leftButtons,
   title,
 }: UseNoteListHeaderProps) => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
@@ -49,7 +51,7 @@ export const useNoteListHeader = ({
         createHeaderConfig({
           title: <Text style={{ color: colors.text }}>移動先を選択</Text>,
           leftButtons: [
-            { title: 'キャンセル', onPress: cancelMoveMode, variant: 'secondary' },
+            { icon: <Ionicons name="arrow-back" size={24} color={colors.text} />, onPress: cancelMoveMode },
           ],
           rightButtons: [],
         })
@@ -97,7 +99,7 @@ export const useNoteListHeader = ({
         createHeaderConfig({
           title: renderTitle(selectedCount),
           leftButtons: [
-            { title: 'キャンセル', onPress: handleCancelSelection, variant: 'secondary' },
+            { icon: <Ionicons name="arrow-back" size={24} color={colors.text} />, onPress: handleCancelSelection },
           ],
           rightButtons: selectionRightButtons,
         })
@@ -107,6 +109,7 @@ export const useNoteListHeader = ({
         createHeaderConfig({
           title,
           rightButtons: rightButtons,
+          leftButtons: leftButtons,
         })
       );
     }
