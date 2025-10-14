@@ -11,7 +11,6 @@ import { TreeListItem } from './components/TreeListItem';
 import { RenameItemModal } from './components/RenameItemModal';
 import { MainContainer } from '../../components/MainContainer';
 import { useChatLayoutMetrics } from '../../features/chat/layouts/useChatLayoutMetrics';
-import { HeaderButton } from '../../components/HeaderButton';
 import { Ionicons } from '@expo/vector-icons';
 import { useSearch } from './hooks/useSearch';
 

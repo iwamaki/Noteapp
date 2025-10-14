@@ -3,10 +3,10 @@ import { useCallback, useState } from 'react';
 import { useNoteTree } from './useNoteTree';
 import { useItemSelection } from './useItemSelection';
 import { useItemActions } from './useItemActions';
-import { FileSystemItem, Folder, Note } from '@shared/types/note';
+import { useModalManager } from './useModalManager';
+import { FileSystemItem, Folder } from '@shared/types/note';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../../navigation/types';
-import { flattenTree } from '../utils/treeUtils';
 
 export const useNoteList = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
@@ -24,36 +24,8 @@ export const useNoteList = () => {
 
   const selection = useItemSelection();
 
-  // --- Modal State Management (integrated from useModals) ---
-  const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
-  const [isRenameModalVisible, setIsRenameModalVisible] = useState(false);
-  const [itemToRename, setItemToRename] = useState<FileSystemItem | null>(null);
-
-  const openCreateModal = useCallback(() => {
-    setIsCreateModalVisible(true);
-  }, []);
-
-  const closeCreateModal = useCallback(() => {
-    setIsCreateModalVisible(false);
-  }, []);
-
-  const openRenameModal = useCallback((id: string, type: 'note' | 'folder') => {
-    const flattened = flattenTree(treeNodes);
-    const node = flattened.find(node => node.type === type && node.item.id === id);
-    if (node) {
-      if (node.type === 'folder') {
-        setItemToRename({ type: 'folder', item: node.item as Folder });
-      } else {
-        setItemToRename({ type: 'note', item: node.item as Note });
-      }
-      setIsRenameModalVisible(true);
-    }
-  }, [treeNodes]);
-
-  const closeRenameModal = useCallback(() => {
-    setIsRenameModalVisible(false);
-    setItemToRename(null);
-  }, []);
+  // --- Modal State Management (using useModalManager) ---
+  const modals = useModalManager();
 
   // Memoize the callback without depending on actions
   const handleActionSuccess = useCallback(() => {
@@ -95,17 +67,17 @@ export const useNoteList = () => {
 
   // Rename modal needs to call the action
   const handleRename = useCallback(async (newName: string) => {
-    if (itemToRename) {
-      await actions.handleRenameItem(itemToRename, newName);
+    if (modals.rename.item) {
+      await actions.handleRenameItem(modals.rename.item, newName);
     }
-    closeRenameModal();
-  }, [actions, itemToRename, closeRenameModal]);
+    modals.rename.close();
+  }, [actions, modals.rename]);
 
   // Create modal needs to call the action
   const handleCreate = useCallback(async (inputPath: string) => {
     await actions.handleCreateItem(inputPath);
-    closeCreateModal();
-  }, [actions, closeCreateModal]);
+    modals.create.close();
+  }, [actions, modals.create]);
 
 
   return {
@@ -126,16 +98,16 @@ export const useNoteList = () => {
 
     // Modals
     createModal: {
-      isVisible: isCreateModalVisible,
-      open: openCreateModal,
-      close: closeCreateModal,
+      isVisible: modals.create.isVisible,
+      open: modals.create.open,
+      close: modals.create.close,
       onCreate: handleCreate,
     },
     renameModal: {
-      isVisible: isRenameModalVisible,
-      item: itemToRename,
-      open: openRenameModal,
-      close: closeRenameModal,
+      isVisible: modals.rename.isVisible,
+      item: modals.rename.item,
+      open: (id: string, type: 'note' | 'folder') => modals.rename.open(id, type, treeNodes),
+      close: modals.rename.close,
       onRename: handleRename,
     },
   };
