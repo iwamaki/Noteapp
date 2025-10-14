@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { v4 as uuidv4 } from 'uuid';
-import { Note, NoteVersion, CreateNoteData, UpdateNoteData } from '../../../shared/types/note';
+import { Note, NoteVersion, CreateNoteData, UpdateNoteData } from '../../../../shared/types/note';
 
 const NOTES_STORAGE_KEY = '@notes';
 const NOTE_VERSIONS_STORAGE_KEY = '@note_versions';
