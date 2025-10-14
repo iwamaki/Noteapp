@@ -7,7 +7,7 @@
 import { NoteRepository } from './NoteRepository';
 import { Note, NoteVersion } from '../types';
 import { CreateNoteData, UpdateNoteData } from '@shared/types/note';
-import { NoteEditStorage } from '../noteStorage';
+import { NoteEditStorage } from './noteStorage';
 
 /**
  * AsyncStorageを使用したリポジトリ実装
