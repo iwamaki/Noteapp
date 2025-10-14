@@ -6,7 +6,7 @@
 import React from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
 import Markdown from 'react-native-markdown-display';
-import { useTheme } from '../../../../design/theme/ThemeContext';
+import { useTheme } from '@design/theme/ThemeContext';
 
 interface MarkdownPreviewProps {
   content: string;
