@@ -40,9 +40,11 @@ export const usePlatformInfo = () => {
   });
 
   useEffect(() => {
+    console.log('usePlatformInfo: useEffect mounted'); // Add this
     const keyboardWillShowSub = Keyboard.addListener(
       Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
       (e) => {
+        console.log('KEYBOARD_HEIGHT_DEBUG:', e.endCoordinates.height);
         setKeyboardHeight(e.endCoordinates.height);
       }
     );
@@ -54,6 +56,7 @@ export const usePlatformInfo = () => {
     );
 
     return () => {
+      console.log('usePlatformInfo: useEffect cleanup'); // Add this
       keyboardWillShowSub.remove();
       keyboardWillHideSub.remove();
     };

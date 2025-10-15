@@ -60,7 +60,7 @@ export const ChatInputBar: React.FC = () => {
       position: 'absolute',
       left: 0,
       right: 0,
-      bottom: 0, // chatInputBarBottomPadding will handle the spacing
+      bottom: chatInputBarBottomPadding, // chatInputBarBottomPadding will handle the spacing
     },
     container: {
       backgroundColor: colors.secondary,
@@ -72,7 +72,6 @@ export const ChatInputBar: React.FC = () => {
       alignItems: 'center',
       paddingHorizontal: 10,
       paddingVertical: 8,
-      paddingBottom: chatInputBarBottomPadding,
       backgroundColor: colors.secondary,
     },
     expandButton: {
@@ -137,7 +136,7 @@ export const ChatInputBar: React.FC = () => {
         )}
 
         {/* 入力エリア（常に表示） */}
-        <View style={[styles.inputArea, { paddingBottom: chatInputBarBottomPadding }]}>
+        <View style={styles.inputArea}>
           {!isExpanded && (
             <TouchableOpacity
               onPress={() => setIsExpanded(true)}
