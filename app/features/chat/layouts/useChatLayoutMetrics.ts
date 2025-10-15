@@ -16,21 +16,20 @@ import { AppState, AppStateStatus, Platform } from 'react-native';
 import { logger } from '../../../utils/logger';
 import { usePlatformInfo } from '../../../utils/platformInfo';
 
-// コンポーネントのレイアウト計算に使用される定数（=チャット入力バーのパディング含めた高さ）
-export const CHAT_INPUT_BAR_HEIGHT = Platform.OS === 'ios' ? 60 : 60;
-
 /**
  * チャットレイアウトのメトリクス情報
  */
 export interface ChatLayoutMetrics {
   isKeyboardVisible: boolean;
-  chatInputBarHeight: number;
   chatInputBarBottomPadding: number;
   contentBottomPadding: number;
 }
 
 
-export function useChatLayoutMetrics(additionalContentPadding: number = 16): ChatLayoutMetrics {
+export function useChatLayoutMetrics(
+  chatInputBarHeight: number,
+  additionalContentPadding: number = 16
+): ChatLayoutMetrics {
   const { insets, keyboardHeight } = usePlatformInfo();
 
   const appState = useRef(AppState.currentState); // To track app state
@@ -68,15 +67,16 @@ export function useChatLayoutMetrics(additionalContentPadding: number = 16): Cha
 
   // Use previous insets if current insets.bottom is suspiciously small (likely during foreground transition)
   const safeInsets = insets.bottom > 0 ? insets : previousInsets.current;
-  const chatInputBarBottomPadding = keyboardHeight > 0 ? 8 : Math.max(safeInsets.bottom, 8);
+  const chatInputBarBottomPadding = keyboardHeight > 0
+    ? keyboardHeight
+    : Math.max(safeInsets.bottom, 0);
   logger.debug('chat', '[ChatLayout] Using insets.bottom:', safeInsets.bottom, 'padding:', chatInputBarBottomPadding, 'keyboardHeight:', keyboardHeight);
   const contentBottomPadding = keyboardHeight > 0
-    ? CHAT_INPUT_BAR_HEIGHT + additionalContentPadding + keyboardHeight
-    : CHAT_INPUT_BAR_HEIGHT + additionalContentPadding;
+    ? chatInputBarHeight + keyboardHeight + additionalContentPadding
+    : chatInputBarHeight + Math.max(safeInsets.bottom, 0) + additionalContentPadding;
 
   return {
     isKeyboardVisible: keyboardHeight > 0,
-    chatInputBarHeight: CHAT_INPUT_BAR_HEIGHT,
     chatInputBarBottomPadding,
     contentBottomPadding,
   };
