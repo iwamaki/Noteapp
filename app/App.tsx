@@ -11,10 +11,12 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import RootNavigator from './navigation/RootNavigator';
 import { ThemeProvider, useTheme } from './design/theme/ThemeContext';
 import { useSettingsStore } from './settings/settingsStore';
-import { logger } from './utils/logger';
+import { KeyboardAvoidingWrapper } from './components/KeyboardAvoidingWrapper';
+import { usePlatformInfo } from './utils/platformInfo';
 
 const AppContent = () => {
   const { themeMode, colors } = useTheme();
+  usePlatformInfo(); // Call the hook here
 
   return (
     <>
@@ -31,9 +33,6 @@ export default function App() {
   const { loadSettings } = useSettingsStore();
 
   useEffect(() => {
-    // アプリのログカテゴリを'chat'のみに設定
-    logger.setCategories(['chat', 'llm']);
-
     // ユーザー設定を読み込み
     loadSettings();
   }, []);
@@ -41,7 +40,9 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        <AppContent />
+        <KeyboardAvoidingWrapper>
+          <AppContent />
+        </KeyboardAvoidingWrapper>
       </ThemeProvider>
     </SafeAreaProvider>
   );
