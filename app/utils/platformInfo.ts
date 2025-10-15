@@ -52,10 +52,8 @@ export const usePlatformInfo = () => {
     logPlatformInfo('initial_mount', colorScheme);
 
     const handleAppStateChange = (nextAppState: AppStateStatus) => {
-      logger.debug('platformInfo', `AppState changed to: ${nextAppState}`);
       if (nextAppState === 'active') {
         const currentSystemColorScheme = Appearance.getColorScheme();
-        logger.debug('platformInfo', `App became active. Re-fetching system color scheme: ${currentSystemColorScheme}`);
         setColorScheme(currentSystemColorScheme);
         logPlatformInfo('app_active', currentSystemColorScheme);
       }
@@ -64,7 +62,6 @@ export const usePlatformInfo = () => {
     const appStateSubscription = AppState.addEventListener('change', handleAppStateChange);
 
     const handleColorSchemeChange = ({ colorScheme: newColorScheme }: { colorScheme: ColorSchemeName }) => {
-      logger.debug('platformInfo', `System color scheme changed to: ${newColorScheme}`);
       setColorScheme(newColorScheme);
       logPlatformInfo('color_scheme_change', newColorScheme);
     };
