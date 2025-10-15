@@ -5,6 +5,7 @@ import { NoteListStorage } from '../noteStorage';
 import { buildTree } from '../utils/treeUtils';
 import { FileSystemItem } from '@shared/types/note';
 import { checkTreeConsistency } from '../../../utils/debugUtils';
+import { logger } from '../../../utils/logger';
 
 export const useNoteTree = (currentPath: string) => {
   const [folders, setFolders] = useState<any[]>([]);
@@ -16,7 +17,7 @@ export const useNoteTree = (currentPath: string) => {
   // ツリーをメモ化 - folders、notes、expandedFolderIdsが変更された時のみ再計算
   const treeNodes = useMemo(() => {
     if (__DEV__) {
-      console.log('🌲 Rebuilding tree (memoized)');
+      logger.debug('tree', '🌲 Rebuilding tree (memoized)');
     }
     return buildTree(folders, notes, expandedFolderIds);
   }, [folders, notes, expandedFolderIds]);
@@ -38,7 +39,7 @@ export const useNoteTree = (currentPath: string) => {
     setLoading(true);
     try {
       if (__DEV__) {
-        console.log('📥 Fetching items...');
+        logger.debug('tree', '📥 Fetching items...');
       }
 
       await NoteListStorage.migrateExistingNotes();
@@ -46,7 +47,7 @@ export const useNoteTree = (currentPath: string) => {
       const fetchedNotes = await NoteListStorage.getAllNotes();
 
       if (__DEV__) {
-        console.log('📥 Fetched from storage:', {
+        logger.debug('tree', '📥 Fetched from storage:', {
           folders: fetchedFolders.length,
           notes: fetchedNotes.length,
         });
@@ -59,7 +60,7 @@ export const useNoteTree = (currentPath: string) => {
       if (__DEV__) {
         // 次のレンダリング後に整合性チェック
         setTimeout(async () => {
-          console.log('🔍 Running consistency check...');
+          logger.debug('tree', '🔍 Running consistency check...');
           const tree = buildTree(fetchedFolders, fetchedNotes, expandedFolderIds);
           await checkTreeConsistency(tree);
         }, 0);

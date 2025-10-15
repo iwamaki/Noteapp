@@ -4,7 +4,7 @@
  * @responsibility 各コンポーネントを統合し、LLMサービスの公開APIを提供
  */
 
-import { loggerConfig } from '../../utils/loggerConfig';
+import { logger } from '../../utils/logger';
 import type {
   ChatContext,
   LLMProvider,
@@ -76,8 +76,8 @@ export class LLMService {
         conversationHistory: history,
       };
 
-      loggerConfig.debug('llm', `Request #${requestId} - About to send request to: ${this.config.baseUrl}/api/chat`);
-      loggerConfig.debug('llm', `Request #${requestId} - Payload:`, {
+      logger.debug('llm', `Request #${requestId} - About to send request to: ${this.config.baseUrl}/api/chat`);
+      logger.debug('llm', `Request #${requestId} - Payload:`, {
         message,
         provider: this.providerManager.getCurrentProvider(),
         model: this.providerManager.getCurrentModel(),
@@ -93,7 +93,7 @@ export class LLMService {
         context: enrichedContext,
       });
 
-      loggerConfig.info('llm', `Request #${requestId} - Request completed, status: ${response.status}`);
+      logger.info('llm', `Request #${requestId} - Request completed, status: ${response.status}`);
 
       if (response.status < 200 || response.status >= 300) {
         throw new LLMError(
@@ -111,7 +111,7 @@ export class LLMService {
         data.message
       );
 
-      loggerConfig.info('llm', `Request #${requestId} - Successfully completed`);
+      logger.info('llm', `Request #${requestId} - Successfully completed`);
       return data;
     } catch (error) {
       // エラーハンドリングを委譲

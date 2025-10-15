@@ -4,7 +4,7 @@
  * @responsibility リクエストのライフサイクル管理、レート制限、リクエストトラッキング
  */
 
-import { loggerConfig } from '../../../utils/loggerConfig';
+import { logger } from '../../../utils/logger';
 
 export interface RequestManagerConfig {
   minRequestInterval?: number; // ミリ秒
@@ -35,14 +35,14 @@ export class RequestManager {
 
     // 既存の保留中リクエストがある場合は警告してクリア
     if (this.pendingRequests.size > 0) {
-      loggerConfig.warn('llm', `Warning: There are ${this.pendingRequests.size} pending requests`);
+      logger.warn('llm', `Warning: There are ${this.pendingRequests.size} pending requests`);
       this.pendingRequests.clear();
     }
 
     this.pendingRequests.add(requestId);
     this.lastRequestTime = Date.now();
 
-    loggerConfig.info('llm', `Request #${requestId} started. Pending requests: ${this.pendingRequests.size}`);
+    logger.info('llm', `Request #${requestId} started. Pending requests: ${this.pendingRequests.size}`);
 
     return requestId;
   }
@@ -52,7 +52,7 @@ export class RequestManager {
    */
   endRequest(requestId: number): void {
     this.pendingRequests.delete(requestId);
-    loggerConfig.debug('llm', `Request #${requestId} - Removed from pending. Remaining: ${this.pendingRequests.size}`);
+    logger.debug('llm', `Request #${requestId} - Removed from pending. Remaining: ${this.pendingRequests.size}`);
   }
 
   /**
@@ -71,7 +71,7 @@ export class RequestManager {
 
     if (this.lastRequestTime > 0 && timeSinceLastRequest < this.minRequestInterval) {
       const delay = this.minRequestInterval - timeSinceLastRequest;
-      loggerConfig.debug('llm', `Request #${requestId} - Waiting ${delay}ms before sending (rate limiting)`);
+      logger.debug('llm', `Request #${requestId} - Waiting ${delay}ms before sending (rate limiting)`);
       await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
