@@ -37,9 +37,9 @@ export const TextEditor: React.FC<TextEditorProps> = ({
       fontFamily: 'monospace',
       borderWidth: 1,
       borderColor: colors.border,
-      borderRadius: 8,
-      paddingHorizontal: 12,
-      paddingVertical: 12,
+      borderRadius: 0,
+      paddingHorizontal: 8,
+      paddingVertical: 8,
       backgroundColor: colors.background,
       color: colors.text,
       minWidth: wordWrap ? undefined : '1000%', // 折り返しなしの場合、非常に広い幅を確保

@@ -18,8 +18,8 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content }) => 
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
+      paddingHorizontal: 8,
+      paddingVertical: 8,
     },
   });
 
