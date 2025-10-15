@@ -67,7 +67,7 @@ export const ChatInputBar: React.FC = () => {
 
   const styles = StyleSheet.create({
     absoluteContainer: {
-      position: 'absolute',
+      position: 'relative',
       left: 0,
       right: 0,
       bottom: animatedBottom,
@@ -81,7 +81,8 @@ export const ChatInputBar: React.FC = () => {
       flexDirection: 'row',
       alignItems: 'center',
       paddingHorizontal: 10,
-      paddingVertical: 8,
+      paddingTop: 10,
+      paddingBottom: 10,
       backgroundColor: colors.secondary,
     },
     expandButton: {
