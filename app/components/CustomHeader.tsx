@@ -33,13 +33,11 @@ export const CustomHeader: React.FC<HeaderConfig> = ({
   rightButtons = [],
 }) => {
   const { spacing } = useTheme();
-  const insets = useSafeAreaInsets();
 
   const styles = StyleSheet.create({
     container: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingTop: insets.top, // Apply safe area inset to the top
     },
     leftSection: {
       flex: 1,
@@ -148,8 +146,7 @@ export const useCustomHeader = () => {
       backgroundColor: colors.secondary,
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
-      height: 60 + insets.top, // Adjust header height for safe area
-      paddingTop: insets.top,   // Add padding to push content below status bar
+      height: 44 + insets.top,
     },
     headerTintColor: colors.primary,
   });
