@@ -65,8 +65,16 @@ export const TreeListItem: React.FC<TreeListItemProps> = ({
           color={colors.textSecondary}
         />
       );
+    } else if (node.type === 'note') {
+      return (
+        <MaterialCommunityIcons
+          name="file-document"
+          size={typography.body.fontSize * 1.7}
+          color={colors.textSecondary}
+        />
+      );
     }
-    return <View style={styles.iconPlaceholder} />; // フォルダでない場合にスペースを確保
+    return <View style={styles.iconPlaceholder} />; // フォルダでもノートでもない場合にスペースを確保
   };
 
   const renderTitle = () => {

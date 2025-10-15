@@ -11,9 +11,9 @@ import { useSettingsStore } from '../../settings/settingsStore';
 // ライトテーマのカラーパレット
 const lightColors = {
   primary: '#007AFF',
-  secondary: '#f5f5f5',
-  background: '#fff',
-  text: '#000',
+  secondary: '#EEEEEE', // Adjusted secondary to a very light grey
+  background: '#fff', // Reverted background to white
+  text: '#333333', // Softer black for text
   textSecondary: '#666',
   border: '#ddd',
   shadow: '#000',
