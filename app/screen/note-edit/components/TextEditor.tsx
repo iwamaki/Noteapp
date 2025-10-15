@@ -30,6 +30,7 @@ export const TextEditor: React.FC<TextEditorProps> = ({
       flex: 1,
       paddingHorizontal: 16,
       paddingVertical: 12,
+      backgroundColor: colors.secondary,
     },
     textEditor: {
       flex: 1,

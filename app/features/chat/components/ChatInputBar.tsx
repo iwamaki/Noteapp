@@ -110,20 +110,15 @@ export const ChatInputBar: React.FC = () => {
       backgroundColor: colors.background,
       color: colors.text,
       maxHeight: 100,
-      marginRight: 8,
+      marginRight: 10, // Increased margin for better spacing
       minHeight: 44,
     },
     sendButton: {
-      backgroundColor: colors.primary,
-      paddingHorizontal: 20,
-      paddingVertical: 10,
-      borderRadius: 20,
       justifyContent: 'center',
       alignItems: 'center',
-      minHeight: 40,
+      // Removed: backgroundColor, padding, borderRadius, minHeight
     },
     disabledButton: {
-      backgroundColor: colors.textSecondary,
       opacity: 0.5,
     },
     disabledButtonText: {
@@ -176,8 +171,8 @@ export const ChatInputBar: React.FC = () => {
           >
             <Ionicons
               name="send"
-              size={24}
-              color={colors.white}
+              size={30}
+              color={colors.primary}
               style={!canSendMessage && styles.disabledButtonText}
             />
           </TouchableOpacity>
