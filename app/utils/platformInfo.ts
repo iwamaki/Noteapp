@@ -1,4 +1,4 @@
-import { Dimensions, Platform, StatusBar, AppState, AppStateStatus, PixelRatio, Appearance, ColorSchemeName } from 'react-native';
+import { Dimensions, Platform, StatusBar, AppState, AppStateStatus, PixelRatio, Appearance, ColorSchemeName, Keyboard } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { logger } from './logger'; // Import logger
 import { useEffect, useState } from 'react';
@@ -30,6 +30,7 @@ export const Layout = {
 export const usePlatformInfo = () => {
   const insets = useSafeAreaInsets();
   const [colorScheme, setColorScheme] = useState(Appearance.getColorScheme());
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   // Estimate status bar height (can be more precise with StatusBar.currentHeight on Android)
   const statusBarHeight = Platform.select({
@@ -38,11 +39,31 @@ export const usePlatformInfo = () => {
     default: insets.top,
   });
 
+  useEffect(() => {
+    const keyboardWillShowSub = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      (e) => {
+        setKeyboardHeight(e.endCoordinates.height);
+      }
+    );
+    const keyboardWillHideSub = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => {
+        setKeyboardHeight(0);
+      }
+    );
+
+    return () => {
+      keyboardWillShowSub.remove();
+      keyboardWillHideSub.remove();
+    };
+  }, []);
+
   // Estimate bottom navigation bar height (if applicable, often corresponds to bottom inset)
   const bottomNavBarHeight = insets.bottom;
 
   const logPlatformInfo = (trigger: string, currentColorScheme: string | null | undefined) => {
-    const formattedPlatformInfo = `Window Width: ${Math.round(width)}, Window Height: ${Math.round(height)}, Screen Width: ${Math.round(screenWidth)}, Screen Height: ${Math.round(screenHeight)}, Is Small Device: ${Layout.isSmallDevice}, Pixel Ratio: ${Layout.pixelRatio.toFixed(2)}, Font Scale: ${Layout.fontScale.toFixed(2)}, Is Portrait: ${Layout.isPortrait}, Is Landscape: ${Layout.isLandscape}, OS: ${Layout.os}, OS Version: ${Layout.osVersion}, Is Pad: ${Layout.isPad}, Is TV: ${Layout.isTV}, Status Bar Height: ${Math.round(statusBarHeight)}, Bottom Nav Bar Height: ${Math.round(bottomNavBarHeight)}, Insets Top: ${Math.round(insets.top)}, Insets Bottom: ${Math.round(insets.bottom)}, Insets Left: ${Math.round(insets.left)}, Insets Right: ${Math.round(insets.right)}, Color Scheme: ${currentColorScheme}`;
+    const formattedPlatformInfo = `Window Width: ${Math.round(width)}, Window Height: ${Math.round(height)}, Screen Width: ${Math.round(screenWidth)}, Screen Height: ${Math.round(screenHeight)}, Is Small Device: ${Layout.isSmallDevice}, Pixel Ratio: ${Layout.pixelRatio.toFixed(2)}, Font Scale: ${Layout.fontScale.toFixed(2)}, Is Portrait: ${Layout.isPortrait}, Is Landscape: ${Layout.isLandscape}, OS: ${Layout.os}, OS Version: ${Layout.osVersion}, Is Pad: ${Layout.isPad}, Is TV: ${Layout.isTV}, Status Bar Height: ${Math.round(statusBarHeight)}, Bottom Nav Bar Height: ${Math.round(bottomNavBarHeight)}, Insets Top: ${Math.round(insets.top)}, Insets Bottom: ${Math.round(insets.bottom)}, Insets Left: ${Math.round(insets.left)}, Insets Right: ${Math.round(insets.right)}, Color Scheme: ${currentColorScheme}, Keyboard Height: ${Math.round(keyboardHeight)}`;
 
     logger.debug('platformInfo', `usePlatformInfo Info (${trigger}): ${formattedPlatformInfo}`);
   };
@@ -80,6 +101,7 @@ export const usePlatformInfo = () => {
     statusBarHeight,
     bottomNavBarHeight,
     colorScheme,
+    keyboardHeight,
     // You can add more derived layout values here
   };
 };

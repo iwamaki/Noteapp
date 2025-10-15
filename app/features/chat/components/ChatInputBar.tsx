@@ -5,14 +5,13 @@
  * およびキーボードの表示状態に応じたレイアウト調整を全て自己管理する責任があります。
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   TextInput,
   TouchableOpacity,
   StyleSheet,
   Text,
-  Keyboard,
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -35,29 +34,6 @@ export const ChatInputBar: React.FC = () => {
   } = useChat();
   const [inputText, setInputText] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-
-  // キーボードの表示/非表示を監視
-  useEffect(() => {
-    const keyboardWillShow = Keyboard.addListener(
-      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
-      (e) => {
-        setKeyboardHeight(e.endCoordinates.height);
-      }
-    );
-
-    const keyboardWillHide = Keyboard.addListener(
-      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
-      () => {
-        setKeyboardHeight(0);
-      }
-    );
-
-    return () => {
-      keyboardWillShow.remove();
-      keyboardWillHide.remove();
-    };
-  }, []);
 
   // メッセージ送信処理
   const handleSendMessage = async () => {
@@ -77,7 +53,7 @@ export const ChatInputBar: React.FC = () => {
       position: 'absolute',
       left: 0,
       right: 0,
-      bottom: keyboardHeight,
+      bottom: 0, // chatInputBarBottomPadding will handle the spacing
     },
     container: {
       backgroundColor: colors.secondary,

@@ -1,4 +1,7 @@
-chore(frontend): Prepare for issue 37 - Save current state
+refactor: Revert detailed logging in platformInfo.ts
 
-Saving the current state of the frontend before starting significant changes for issue 37.
-- Minor adjustments in DiffViewScreen.tsx, useNoteEditor.tsx, and types.ts.
+Reverted the temporary detailed logging added to `handleAppStateChange` and
+`handleColorSchemeChange` in `app/utils/platformInfo.ts`.
+The purpose of these logs was to debug system theme detection, which has
+now been confirmed to be working correctly after `app.json` configuration
+and `expo-system-ui` installation.

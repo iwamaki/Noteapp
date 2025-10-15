@@ -1,5 +1,6 @@
 import { TreeNode } from '../screen/note-list/utils/treeUtils';
 import { NoteListStorage } from '../screen/note-list/noteStorage';
+import { logger } from './logger';
 
 /**
  * A debug utility to ensure consistency between the data in storage and the data in the UI tree.
@@ -89,7 +90,7 @@ export const checkTreeConsistency = async (treeNodes: TreeNode[]): Promise<void>
       }
     }
 
-    console.log('✅ Data consistency check passed.');
+    logger.debug('tree', '✅ Data consistency check passed.');
 
   } catch (error) {
     console.error('❌ DATA INCONSISTENCY DETECTED');

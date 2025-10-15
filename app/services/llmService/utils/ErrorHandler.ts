@@ -6,7 +6,7 @@
 
 import axios from 'axios';
 import { LLMError } from '../types/LLMError';
-import { loggerConfig } from '../../../utils/loggerConfig';
+import { logger } from '../../../utils/logger';
 
 /**
  * エラーハンドリングクラス
@@ -16,7 +16,7 @@ export class ErrorHandler {
    * エラーをLLMErrorに変換
    */
   static handleError(error: unknown, requestId: number, apiTimeout: number): never {
-    loggerConfig.error('llm', `Request #${requestId} - Error occurred:`, error);
+    logger.error('llm', `Request #${requestId} - Error occurred:`, error);
 
     // 既にLLMErrorの場合はそのままスロー
     if (error instanceof LLMError) {
@@ -52,7 +52,7 @@ export class ErrorHandler {
    * Axiosエラーを処理
    */
   private static handleAxiosError(error: any, requestId: number, apiTimeout: number): never {
-    loggerConfig.debug('llm', `Request #${requestId} - Axios error details:`, {
+    logger.debug('llm', `Request #${requestId} - Axios error details:`, {
       message: error.message,
       code: error.code,
       status: error.response?.status,

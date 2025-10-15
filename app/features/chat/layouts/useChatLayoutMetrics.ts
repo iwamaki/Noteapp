@@ -11,9 +11,10 @@
  * - SafeAreaInsetsを考慮したpadding調整
  */
 
-import { useState, useEffect, useRef } from 'react';
-import { Keyboard, Platform, AppState, AppStateStatus } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useEffect, useRef } from 'react';
+import { AppState, AppStateStatus, Platform } from 'react-native';
+import { logger } from '../../../utils/logger';
+import { usePlatformInfo } from '../../../utils/platformInfo';
 
 // コンポーネントのレイアウト計算に使用される定数（=チャット入力バーのパディング含めた高さ）
 export const CHAT_INPUT_BAR_HEIGHT = Platform.OS === 'ios' ? 60 : 60;
@@ -30,46 +31,25 @@ export interface ChatLayoutMetrics {
 
 
 export function useChatLayoutMetrics(additionalContentPadding: number = 16): ChatLayoutMetrics {
-  const [isKeyboardVisible, setKeyboardVisible] = useState(false);
-  const insets = useSafeAreaInsets();
+  const { insets, keyboardHeight } = usePlatformInfo();
 
   const appState = useRef(AppState.currentState); // To track app state
   const previousInsets = useRef(insets); // 追加
 
   useEffect(() => {
-    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-
-    const handleKeyboardShow = () => {
-      setKeyboardVisible(true);
-    };
-
-    const handleKeyboardHide = () => {
-      setKeyboardVisible(false);
-    };
-
-    const showSubscription = Keyboard.addListener(showEvent, handleKeyboardShow);
-    const hideSubscription = Keyboard.addListener(hideEvent, handleKeyboardHide);
-
     // Handle app state changes
     const handleAppStateChange = (nextAppState: AppStateStatus) => {
-      console.log('[ChatLayout] AppState change:', nextAppState, 'insets.bottom:', insets.bottom, 'previous:',
+      logger.debug('chat', '[ChatLayout] AppState change:', nextAppState, 'insets.bottom:', insets.bottom, 'previous:',
       previousInsets.current.bottom);
       if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
         // App has come to the foreground
         // Keep previous insets values until new values are properly updated
         // This prevents the chat bar from dropping when returning to foreground
-        const keyboardMetrics = Keyboard.metrics();
-        if (keyboardMetrics) {
-          setKeyboardVisible(true);
-        } else {
-          setKeyboardVisible(false);
-        }
+        // Keyboard visibility is now handled by usePlatformInfo
       } else if (nextAppState.match(/inactive|background/)) {
         // App is going to background or inactive
         // Store current insets before going to background
         previousInsets.current = insets;
-        setKeyboardVisible(false);
       }
       appState.current = nextAppState;
     };
@@ -82,22 +62,20 @@ export function useChatLayoutMetrics(additionalContentPadding: number = 16): Cha
     }
 
     return () => {
-      showSubscription.remove();
-      hideSubscription.remove();
       appStateSubscription.remove(); // Clean up AppState listener
     };
   }, [insets]);
 
   // Use previous insets if current insets.bottom is suspiciously small (likely during foreground transition)
   const safeInsets = insets.bottom > 0 ? insets : previousInsets.current;
-  const chatInputBarBottomPadding = isKeyboardVisible ? 8 : Math.max(safeInsets.bottom, 8);
-  console.log('[ChatLayout] Using insets.bottom:', safeInsets.bottom, 'padding:', chatInputBarBottomPadding);
-  const contentBottomPadding = isKeyboardVisible
-    ? CHAT_INPUT_BAR_HEIGHT + additionalContentPadding 
+  const chatInputBarBottomPadding = keyboardHeight > 0 ? 8 : Math.max(safeInsets.bottom, 8);
+  logger.debug('chat', '[ChatLayout] Using insets.bottom:', safeInsets.bottom, 'padding:', chatInputBarBottomPadding, 'keyboardHeight:', keyboardHeight);
+  const contentBottomPadding = keyboardHeight > 0
+    ? CHAT_INPUT_BAR_HEIGHT + additionalContentPadding + keyboardHeight
     : CHAT_INPUT_BAR_HEIGHT + additionalContentPadding;
 
   return {
-    isKeyboardVisible,
+    isKeyboardVisible: keyboardHeight > 0,
     chatInputBarHeight: CHAT_INPUT_BAR_HEIGHT,
     chatInputBarBottomPadding,
     contentBottomPadding,
