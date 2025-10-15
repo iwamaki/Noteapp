@@ -5,7 +5,7 @@
  * およびキーボードの表示状態に応じたレイアウト調整を全て自己管理する責任があります。
  */
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   TextInput,
@@ -17,6 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useChat } from '../hooks/useChat';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { ChatHistory } from '../components/ChatHistory';
+import { Animated } from 'react-native';
 import { useChatLayoutMetrics } from '../layouts/useChatLayoutMetrics';
 
 // チャット入力バーコンポーネント（プロパティ不要）
@@ -24,6 +25,15 @@ export const ChatInputBar: React.FC = () => {
   const { colors, typography } = useTheme();
   const [chatInputBarHeight, setChatInputBarHeight] = useState(0);
   const { bottomHeight } = useChatLayoutMetrics();
+  const animatedBottom = useRef(new Animated.Value(bottomHeight)).current;
+
+  useEffect(() => {
+    Animated.timing(animatedBottom, {
+      toValue: bottomHeight,
+      duration: 200, // Animation duration in milliseconds
+      useNativeDriver: false, // `useNativeDriver: true` is not supported for `bottom` property
+    }).start();
+  }, [bottomHeight]);
   const {
     messages,
     isLoading,
@@ -57,10 +67,10 @@ export const ChatInputBar: React.FC = () => {
 
   const styles = StyleSheet.create({
     absoluteContainer: {
-      position: 'relative',
+      position: 'absolute',
       left: 0,
       right: 0,
-      bottom: bottomHeight,
+      bottom: animatedBottom,
     },
     container: {
       backgroundColor: colors.secondary,
@@ -121,7 +131,7 @@ export const ChatInputBar: React.FC = () => {
   });
 
   return (
-    <View style={styles.absoluteContainer} onLayout={handleLayout}>
+    <Animated.View style={styles.absoluteContainer} onLayout={handleLayout}>
       <View style={styles.container}>
         {/* メッセージ履歴エリア（展開可能） */}
         {isExpanded && (
@@ -172,6 +182,6 @@ export const ChatInputBar: React.FC = () => {
           </TouchableOpacity>
         </View>
       </View>
-    </View>
+    </Animated.View>
   );
 };
