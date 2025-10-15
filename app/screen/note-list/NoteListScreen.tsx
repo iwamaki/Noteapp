@@ -10,14 +10,14 @@ import { CreateItemModal } from './components/CreateItemModal';
 import { TreeListItem } from './components/TreeListItem';
 import { RenameItemModal } from './components/RenameItemModal';
 import { MainContainer } from '../../components/MainContainer';
-import { useChatLayoutMetrics } from '../../features/chat/layouts/useChatLayoutMetrics';
+
 import { Ionicons } from '@expo/vector-icons';
 import { useSearch } from './hooks/useSearch';
 import { NoteListSearchBar } from './components/NoteListSearchBar';
 
 function NoteListScreen() {
   const { colors, spacing } = useTheme();
-  const { contentBottomPadding } = useChatLayoutMetrics(spacing.xl);
+
 
   const {
     treeNodes,
@@ -49,6 +49,9 @@ function NoteListScreen() {
       paddingHorizontal: spacing.xl,
     },
     listContent: { padding: spacing.md },
+    listContentWithPadding: {
+      paddingBottom: 0,
+    },
   });
 
   const searchInput = (
@@ -139,7 +142,7 @@ function NoteListScreen() {
           renderItem={renderTreeItem}
           keyExtractor={(node) => `${node.type}-${node.id}`}
           contentContainerStyle={[
-            { paddingBottom: contentBottomPadding },
+            styles.listContentWithPadding,
             styles.listContent,
           ]}
         />

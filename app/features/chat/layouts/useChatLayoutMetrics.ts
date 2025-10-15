@@ -12,7 +12,7 @@
  */
 
 import { useEffect, useRef } from 'react';
-import { AppState, AppStateStatus, Platform } from 'react-native';
+import { AppState, AppStateStatus } from 'react-native';
 import { logger } from '../../../utils/logger';
 import { usePlatformInfo } from '../../../utils/platformInfo';
 

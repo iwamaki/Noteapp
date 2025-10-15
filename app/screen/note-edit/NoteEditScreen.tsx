@@ -9,7 +9,7 @@ import { useNoteEditChatContext } from '../../features/chat/hooks/useNoteEditCha
 import { CustomModal } from '../../components/CustomModal';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { MainContainer } from '../../components/MainContainer';
-import { useChatLayoutMetrics } from '../../features/chat/layouts/useChatLayoutMetrics';
+
 import type { ViewMode } from './types';
 import { ToastMessage } from './components/ToastMessage'; // ToastMessageをインポート
 import { useToastMessage } from './hooks/useToastMessage'; // useToastMessageをインポート
@@ -21,7 +21,7 @@ function NoteEditScreen() {
   const route = useRoute<NoteEditScreenRouteProp>();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { noteId } = route.params || {};
-  const { contentBottomPadding } = useChatLayoutMetrics(0);
+
 
   const {
     note,
@@ -119,12 +119,15 @@ function NoteEditScreen() {
     animatedContainer: {
       flex: 1,
     },
+    contentPadding: {
+      paddingBottom: 0,
+    },
   });
 
   return (
     <MainContainer isLoading={isLoading}>
       <ToastMessage {...toastProps} />
-      <View style={[styles.animatedContainer, { paddingBottom: contentBottomPadding }]}>
+      <View style={[styles.animatedContainer, styles.contentPadding]}>
         <FileEditor
           filename={title}
           initialContent={content}
