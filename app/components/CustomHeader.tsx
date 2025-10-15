@@ -5,6 +5,7 @@
  */
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HeaderButton } from './HeaderButton';
 import { useTheme } from '../design/theme/ThemeContext';
 
@@ -32,12 +33,13 @@ export const CustomHeader: React.FC<HeaderConfig> = ({
   rightButtons = [],
 }) => {
   const { spacing } = useTheme();
+  const insets = useSafeAreaInsets();
 
   const styles = StyleSheet.create({
     container: {
       flexDirection: 'row',
       alignItems: 'center',
-      height: 44,
+      paddingTop: insets.top, // Apply safe area inset to the top
     },
     leftSection: {
       flex: 1,
@@ -93,6 +95,7 @@ export const CustomHeader: React.FC<HeaderConfig> = ({
 
 export const useCustomHeader = () => {
   const { colors } = useTheme(); // フックのトップレベルで useTheme を呼び出す
+  const insets = useSafeAreaInsets();
 
   const buttonContainerStyle = {
     flexDirection: 'row' as const,
@@ -145,6 +148,8 @@ export const useCustomHeader = () => {
       backgroundColor: colors.secondary,
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
+      height: 60 + insets.top, // Adjust header height for safe area
+      paddingTop: insets.top,   // Add padding to push content below status bar
     },
     headerTintColor: colors.primary,
   });

@@ -12,7 +12,6 @@ import {
 import { createStackNavigator } from '@react-navigation/stack';
 import { RootStackParamList } from './types';
 import { View, StyleSheet } from 'react-native';
-
 import NoteListScreen from '../screen/note-list/NoteListScreen';
 import NoteEditScreen from '../screen/note-edit/NoteEditScreen';
 import DiffViewScreen from '../screen/diff-view/DiffViewScreen';
