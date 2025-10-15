@@ -23,7 +23,7 @@ import { useChatLayoutMetrics } from '../layouts/useChatLayoutMetrics';
 export const ChatInputBar: React.FC = () => {
   const { colors, typography } = useTheme();
   const [chatInputBarHeight, setChatInputBarHeight] = useState(0);
-  const { chatInputBarBottomPadding } = useChatLayoutMetrics(chatInputBarHeight);
+  const { bottomHeight } = useChatLayoutMetrics();
   const {
     messages,
     isLoading,
@@ -57,10 +57,10 @@ export const ChatInputBar: React.FC = () => {
 
   const styles = StyleSheet.create({
     absoluteContainer: {
-      position: 'absolute',
+      position: 'relative',
       left: 0,
       right: 0,
-      bottom: chatInputBarBottomPadding, // chatInputBarBottomPadding will handle the spacing
+      bottom: bottomHeight,
     },
     container: {
       backgroundColor: colors.secondary,

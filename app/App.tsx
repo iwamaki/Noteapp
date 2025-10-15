@@ -13,19 +13,27 @@ import { ThemeProvider, useTheme } from './design/theme/ThemeContext';
 import { useSettingsStore } from './settings/settingsStore';
 // import { KeyboardAvoidingWrapper } from './components/KeyboardAvoidingWrapper'; 一旦ignore
 import { usePlatformInfo } from './utils/platformInfo';
+import { View, StyleSheet } from 'react-native';
 
 const AppContent = () => {
   const { themeMode, colors } = useTheme();
   usePlatformInfo(); // Call the hook here
 
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+  });
+
   return (
-    <>
+    <View style={styles.container}>
       <StatusBar
         barStyle={themeMode === 'dark' ? 'light-content' : 'dark-content'}
         backgroundColor={colors.secondary}
       />
       <RootNavigator />
-    </>
+    </View>
   );
 };
 
