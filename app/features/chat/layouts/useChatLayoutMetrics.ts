@@ -69,7 +69,7 @@ export function useChatLayoutMetrics(
   const safeInsets = insets.bottom > 0 ? insets : previousInsets.current;
   const chatInputBarBottomPadding = keyboardHeight > 0
     ? keyboardHeight
-    : Math.max(safeInsets.bottom, 0);
+    : 0; // Temporarily set to 0 when keyboard is not visible
   logger.debug('chat', '[ChatLayout] Using insets.bottom:', safeInsets.bottom, 'padding:', chatInputBarBottomPadding, 'keyboardHeight:', keyboardHeight);
   const contentBottomPadding = keyboardHeight > 0
     ? chatInputBarHeight + keyboardHeight + additionalContentPadding

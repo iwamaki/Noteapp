@@ -40,7 +40,7 @@ function RootNavigator() {
           setCurrentRouteName(navigationRef.current?.getCurrentRoute()?.name);
         }}
       >
-        <Stack.Navigator initialRouteName="NoteList">
+        <Stack.Navigator initialRouteName="NoteList" screenOptions={{ keyboardHandlingEnabled: false }}>
           <Stack.Screen name="NoteList" component={NoteListScreen} options={{ title: 'Notes' }} />
           <Stack.Screen name="NoteEdit" component={NoteEditScreen} options={{ title: 'Edit Note' }} />
           <Stack.Screen name="DiffView" component={DiffViewScreen} options={{ title: 'View Diff' }} />
@@ -48,7 +48,7 @@ function RootNavigator() {
           <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
         </Stack.Navigator>
       </NavigationContainer>
-      <ChatLayout visible={shouldShowChat} />
+          <ChatLayout visible={shouldShowChat} />
     </View>
   );
 }
