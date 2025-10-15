@@ -23,7 +23,8 @@ import { useChatLayoutMetrics } from '../layouts/useChatLayoutMetrics';
 // チャット入力バーコンポーネント（プロパティ不要）
 export const ChatInputBar: React.FC = () => {
   const { colors, typography } = useTheme();
-  const { chatInputBarBottomPadding } = useChatLayoutMetrics();
+  const [chatInputBarHeight, setChatInputBarHeight] = useState(0);
+  const { chatInputBarBottomPadding } = useChatLayoutMetrics(chatInputBarHeight);
   const {
     messages,
     isLoading,
@@ -34,6 +35,13 @@ export const ChatInputBar: React.FC = () => {
   } = useChat();
   const [inputText, setInputText] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
+
+  const handleLayout = (event: any) => {
+    const { height } = event.nativeEvent.layout;
+    if (height !== chatInputBarHeight) {
+      setChatInputBarHeight(height);
+    }
+  };
 
   // メッセージ送信処理
   const handleSendMessage = async () => {
@@ -115,7 +123,7 @@ export const ChatInputBar: React.FC = () => {
   });
 
   return (
-    <View style={styles.absoluteContainer}>
+    <View style={styles.absoluteContainer} onLayout={handleLayout}>
       <View style={styles.container}>
         {/* メッセージ履歴エリア（展開可能） */}
         {isExpanded && (
@@ -130,7 +138,7 @@ export const ChatInputBar: React.FC = () => {
         )}
 
         {/* 入力エリア（常に表示） */}
-        <View style={styles.inputArea}>
+        <View style={[styles.inputArea, { paddingBottom: chatInputBarBottomPadding }]}>
           {!isExpanded && (
             <TouchableOpacity
               onPress={() => setIsExpanded(true)}
