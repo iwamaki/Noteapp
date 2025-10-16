@@ -1,7 +1,6 @@
-refactor: Revert detailed logging in platformInfo.ts
+feat: Implement hybrid diffing with inline change detection
 
-Reverted the temporary detailed logging added to `handleAppStateChange` and
-`handleColorSchemeChange` in `app/utils/platformInfo.ts`.
-The purpose of these logs was to debug system theme detection, which has
-now been confirmed to be working correctly after `app.json` configuration
-and `expo-system-ui` installation.
+This commit introduces a hybrid diffing algorithm that combines line-level and character-level difference detection.
+- `diffService.ts`: Implements `calculateLineDiff` for line-based LCS and `convertToInlineChanges` for character-level inline changes. The `generateDiff` function now uses these to provide detailed inline change information for modified lines.
+- `DiffViewer.tsx`: Updated to display inline changes with distinct styling for insertions, deletions, and common parts within a line.
+- Added new test files for diffService.
