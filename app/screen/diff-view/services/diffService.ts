@@ -125,48 +125,58 @@ export const generateDiff = (originalText: string, newText: string): DiffLine[] 
 
   // ハンクを使わず、全ての行を差分に含める（簡略化）
   const diffLines: DiffLine[] = [];
-  let changeBlockId = 1;
+  let changeBlockIdCounter = 1;
   let origLineNum = 1;
   let newLineNum = 1;
-  let currentChangeBlockId: number | null = null;
 
-  // 全ての行変更を差分行に変換
-  for (const change of lineChanges) {
-    switch (change.type) {
-      case 'equal':
-        diffLines.push({
-          type: 'common',
-          content: change.content,
-          originalLineNumber: origLineNum++,
-          newLineNumber: newLineNum++,
-          changeBlockId: null
-        });
-        currentChangeBlockId = null;
-        break;
-      case 'delete':
-        if (currentChangeBlockId === null) {
-          currentChangeBlockId = changeBlockId++;
+  let i = 0;
+  while (i < lineChanges.length) {
+    const change = lineChanges[i];
+
+    if (change.type === 'equal') {
+      diffLines.push({
+        type: 'common',
+        content: change.content,
+        originalLineNumber: origLineNum++,
+        newLineNumber: newLineNum++,
+        changeBlockId: null
+      });
+      i++;
+    } else {
+      // 変更ブロックの開始
+      const currentChangeBlockId = changeBlockIdCounter++;
+      const deletedLines: DiffLine[] = [];
+      const addedLines: DiffLine[] = [];
+
+      let j = i;
+      while (j < lineChanges.length && lineChanges[j].type !== 'equal') {
+        const currentChange = lineChanges[j];
+        if (currentChange.type === 'delete') {
+          deletedLines.push({
+            type: 'deleted',
+            content: currentChange.content,
+            originalLineNumber: origLineNum++,
+            newLineNumber: null,
+            changeBlockId: currentChangeBlockId
+          });
+        } else if (currentChange.type === 'insert') {
+          addedLines.push({
+            type: 'added',
+            content: currentChange.content,
+            originalLineNumber: null,
+            newLineNumber: newLineNum++,
+            changeBlockId: currentChangeBlockId
+          });
         }
-        diffLines.push({
-          type: 'deleted',
-          content: change.content,
-          originalLineNumber: origLineNum++,
-          newLineNumber: null,
-          changeBlockId: currentChangeBlockId
-        });
-        break;
-      case 'insert':
-        if (currentChangeBlockId === null) {
-          currentChangeBlockId = changeBlockId++;
-        }
-        diffLines.push({
-          type: 'added',
-          content: change.content,
-          originalLineNumber: null,
-          newLineNumber: newLineNum++,
-          changeBlockId: currentChangeBlockId
-        });
-        break;
+        j++;
+      }
+
+      // 削除行を先に追加
+      diffLines.push(...deletedLines);
+      // 追加行を次に追加
+      diffLines.push(...addedLines);
+
+      i = j; // 次の処理は変更ブロックの次から
     }
   }
 
