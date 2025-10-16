@@ -146,7 +146,6 @@ export const useCustomHeader = () => {
       backgroundColor: colors.secondary,
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
-      height: 44 + insets.top,
     },
     headerTintColor: colors.text,
   });

@@ -17,7 +17,7 @@ export const NoteListSearchBar: React.FC<NoteListSearchBarProps> = ({
   placeholderTextColor,
   isSearchActive = false,
 }) => {
-  const { colors, spacing } = useTheme();
+  const { colors, spacing, typography } = useTheme();
   const [inputText, setInputText] = useState(searchQuery);
 
   // 親コンポーネントからsearchQueryがリセットされた時に内部stateも更新
@@ -35,12 +35,15 @@ export const NoteListSearchBar: React.FC<NoteListSearchBarProps> = ({
       flexDirection: 'row',
       alignItems: 'center',
       paddingHorizontal: isSearchActive ? spacing.sm : spacing.md,
-      paddingVertical: spacing.xs,
+      paddingVertical: spacing.sm,
     },
     searchInput: {
       flex: 1,
       color: colors.text,
-      fontSize: 16,
+      fontSize: typography.subtitle.fontSize,
+      textAlignVertical: 'center',
+      paddingVertical: 0,
+      includeFontPadding: false,
     },
   });
 
