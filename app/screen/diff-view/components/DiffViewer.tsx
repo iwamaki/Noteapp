@@ -7,7 +7,6 @@ import React from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
   ScrollView,
   StyleSheet,
 } from 'react-native';
@@ -16,15 +15,10 @@ import { useTheme } from '../../../design/theme/ThemeContext';
 
 interface DiffViewerProps {
   diff: DiffLine[];
-  selectedBlocks: Set<number>;
-  onBlockToggle: (blockId: number) => void;
-  isReadOnly?: boolean; // Add isReadOnly prop
 }
 
-export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, selectedBlocks, onBlockToggle, isReadOnly = false }) => {
+export const DiffViewer: React.FC<DiffViewerProps> = ({ diff }) => {
   const { colors, typography } = useTheme();
-  const processedBlocks = new Set<number>();
-
   const styles = StyleSheet.create({
     diffContainer: {
       flex: 1,
@@ -87,46 +81,9 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, selectedBlocks, on
       color: colors.text,
       paddingRight: 8,
     },
-    checkbox: {
-      width: 32,
-      height: 32,
-      borderRadius: 4,
-      borderWidth: 2,
-      borderColor: colors.primary,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: colors.background,
-    },
-    checkboxSelected: {
-      backgroundColor: colors.primary,
-    },
-    checkboxDisabled: {
-      borderColor: colors.textSecondary,
-      backgroundColor: colors.secondary,
-    },
-    checkboxText: {
-      fontSize: 16,
-      color: colors.primary,
-    },
-    checkboxTextSelected: {
-      color: colors.background,
-    },
-    checkboxTextDisabled: {
-      color: colors.textSecondary,
-    },
-    checkboxPlaceholder: {
-      width: 32,
-      height: 32,
-    },
   });
 
   const renderDiffLine = (line: DiffLine, index: number) => {
-    const showCheckbox = line.changeBlockId !== null && line.changeBlockId !== undefined && !processedBlocks.has(line.changeBlockId);
-
-    if (showCheckbox && line.changeBlockId) {
-      processedBlocks.add(line.changeBlockId);
-    }
-
     if (line.type === 'hunk-header') {
       return (
         <View key={index} style={styles.hunkHeader}>
@@ -161,27 +118,6 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff, selectedBlocks, on
         <Text style={styles.lineNumber}>{line.newLineNumber || ''}</Text>
         <Text style={[styles.prefix, { color: prefixColor }]}>{prefix}</Text>
         <Text style={styles.content}>{line.content}</Text>
-        {showCheckbox && line.changeBlockId !== null ? (
-          <TouchableOpacity
-            style={[
-              styles.checkbox,
-              selectedBlocks.has(line.changeBlockId!) && styles.checkboxSelected,
-              isReadOnly && styles.checkboxDisabled,
-            ]}
-            onPress={() => onBlockToggle(line.changeBlockId!)}
-            disabled={isReadOnly}
-          >
-            <Text style={[
-              styles.checkboxText,
-              selectedBlocks.has(line.changeBlockId!) && styles.checkboxTextSelected,
-              isReadOnly && styles.checkboxTextDisabled
-            ]}>
-              {selectedBlocks.has(line.changeBlockId!) ? '☑' : '☐'}
-            </Text>
-          </TouchableOpacity>
-        ) : (
-          <View style={styles.checkboxPlaceholder} />
-        )}
       </View>
     );
   };
