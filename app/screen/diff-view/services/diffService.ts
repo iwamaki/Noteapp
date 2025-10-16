@@ -4,12 +4,25 @@
  * @responsibility テキストの差分計算（LCSアルゴリズムに基づく）、差分行の型定義、および生成された差分データの整合性検証を行います。
  */
 
+/**
+ * 文字レベルの変更情報を表すインターフェース
+ */
+export interface InlineChange {
+  type: 'equal' | 'delete' | 'insert';
+  content: string;
+  startIndex: number;
+  endIndex: number;
+}
+
 export interface DiffLine {
   type: 'common' | 'added' | 'deleted';
   content: string;
   originalLineNumber: number | null;
   newLineNumber: number | null;
   changeBlockId?: number | null;
+
+  // 新規追加: 文字レベル差分情報（変更された行の詳細を表示するため）
+  inlineChanges?: InlineChange[];
 }
 
 /**
@@ -57,6 +70,47 @@ export const validateDataConsistency = (originalText: string, newText: string, d
 };
 
 /**
+ * 行ベースのLCS（Longest Common Subsequence）アルゴリズムを使用した差分計算
+ */
+const calculateLineDiff = (originalLines: string[], newLines: string[]): { type: 'equal' | 'delete' | 'insert'; content: string; }[] => {
+  const m = originalLines.length;
+  const n = newLines.length;
+
+  // LCSテーブルを構築
+  const lcs: number[][] = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
+
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      if (originalLines[i - 1] === newLines[j - 1]) {
+        lcs[i][j] = lcs[i - 1][j - 1] + 1;
+      } else {
+        lcs[i][j] = Math.max(lcs[i - 1][j], lcs[i][j - 1]);
+      }
+    }
+  }
+
+  // バックトラッキングで差分を構築
+  const changes: { type: 'equal' | 'delete' | 'insert'; content: string; }[] = [];
+  let i = m, j = n;
+
+  while (i > 0 || j > 0) {
+    if (i > 0 && j > 0 && originalLines[i - 1] === newLines[j - 1]) {
+      changes.unshift({ type: 'equal', content: originalLines[i - 1] });
+      i--;
+      j--;
+    } else if (i > 0 && (j === 0 || lcs[i - 1][j] >= lcs[i][j - 1])) {
+      changes.unshift({ type: 'delete', content: originalLines[i - 1] });
+      i--;
+    } else if (j > 0) {
+      changes.unshift({ type: 'insert', content: newLines[j - 1] });
+      j--;
+    }
+  }
+
+  return changes;
+};
+
+/**
  * 文字ベースのLCS（Longest Common Subsequence）アルゴリズムを使用した差分計算
  */
 const calculateCharDiff = (originalText: string, newText: string): { type: 'equal' | 'delete' | 'insert'; content: string; }[] => {
@@ -98,7 +152,37 @@ const calculateCharDiff = (originalText: string, newText: string): { type: 'equa
 };
 
 /**
- * 2つのテキストの文字単位の差分を生成し、DiffLine配列として返す
+ * 文字レベル差分をInlineChange配列に変換する
+ * @param charChanges 文字レベルの差分結果
+ * @returns InlineChange配列
+ */
+const convertToInlineChanges = (charChanges: { type: 'equal' | 'delete' | 'insert'; content: string; }[]): InlineChange[] => {
+  const inlineChanges: InlineChange[] = [];
+  let currentIndex = 0;
+
+  for (const change of charChanges) {
+    const startIndex = currentIndex;
+    const endIndex = startIndex + change.content.length;
+
+    inlineChanges.push({
+      type: change.type,
+      content: change.content,
+      startIndex,
+      endIndex
+    });
+
+    // delete の場合はインデックスを進めない（削除された文字はターゲット文字列に存在しないため）
+    if (change.type !== 'delete') {
+      currentIndex = endIndex;
+    }
+  }
+
+  return inlineChanges;
+};
+
+/**
+ * 2つのテキストのハイブリッド差分を生成し、DiffLine配列として返す
+ * 行ベースの差分を基本とし、変更された行については文字レベルの詳細情報も提供する
  * @param originalText 元のテキスト
  * @param newText 新しいテキスト
  * @returns DiffLine配列
@@ -112,131 +196,111 @@ export const generateDiff = (originalText: string, newText: string): DiffLine[] 
     return [];
   }
 
-  // 文字レベルで差分を計算
-  const charChanges = calculateCharDiff(normalizedOriginal, normalizedNew);
-
-  if (charChanges.length === 0) {
-    return [];
-  }
+  // Phase 1: 行レベルで差分を計算
+  const originalLines = normalizedOriginal.split('\n');
+  const newLines = normalizedNew.split('\n');
+  const lineChanges = calculateLineDiff(originalLines, newLines);
 
   const diffLines: DiffLine[] = [];
   let changeBlockIdCounter = 1;
-  let currentChangeBlockId: number | null = null;
   let origLineNum = 1;
   let newLineNum = 1;
 
-  // 文字単位の差分を行単位のDiffLineに変換
-  let currentLine = '';
-  let currentType: 'common' | 'added' | 'deleted' =
-    charChanges[0].type === 'equal' ? 'common' :
-    (charChanges[0].type === 'delete' ? 'deleted' : 'added');
+  let i = 0;
+  while (i < lineChanges.length) {
+    const change = lineChanges[i];
 
-  for (const change of charChanges) {
-    const changeType = change.type === 'equal' ? 'common' :
-                      (change.type === 'delete' ? 'deleted' : 'added');
-
-    // 改行を含む場合は分割処理
-    const parts = change.content.split('\n');
-
-    for (let i = 0; i < parts.length; i++) {
-      const part = parts[i];
-      const isLastPart = i === parts.length - 1;
-
-      // タイプが変わった場合、現在の行を確定
-      if (changeType !== currentType && currentLine.length > 0) {
-        // 変更ブロックIDの管理
-        if (currentType !== 'common') {
-          if (currentChangeBlockId === null) {
-            currentChangeBlockId = changeBlockIdCounter++;
-          }
-        } else {
-          currentChangeBlockId = null;
-        }
-
-        const lineOrigNum = currentType === 'added' ? null : origLineNum;
-        const lineNewNum = currentType === 'deleted' ? null : newLineNum;
-
-        diffLines.push({
-          type: currentType,
-          content: currentLine,
-          originalLineNumber: lineOrigNum,
-          newLineNumber: lineNewNum,
-          changeBlockId: currentChangeBlockId
-        });
-
-        // 行番号をインクリメント
-        if (currentType === 'common') {
-          origLineNum++;
-          newLineNum++;
-        } else if (currentType === 'deleted') {
-          origLineNum++;
-        } else if (currentType === 'added') {
-          newLineNum++;
-        }
-
-        currentLine = '';
-      }
-
-      currentType = changeType;
-      currentLine += part;
-
-      // 改行がある場合（最後のパート以外）
-      if (!isLastPart) {
-        // 変更ブロックIDの管理
-        if (currentType !== 'common') {
-          if (currentChangeBlockId === null) {
-            currentChangeBlockId = changeBlockIdCounter++;
-          }
-        } else {
-          currentChangeBlockId = null;
-        }
-
-        const lineOrigNum = currentType === 'added' ? null : origLineNum;
-        const lineNewNum = currentType === 'deleted' ? null : newLineNum;
-
-        diffLines.push({
-          type: currentType,
-          content: currentLine,
-          originalLineNumber: lineOrigNum,
-          newLineNumber: lineNewNum,
-          changeBlockId: currentChangeBlockId
-        });
-
-        // 行番号をインクリメント
-        if (currentType === 'common') {
-          origLineNum++;
-          newLineNum++;
-        } else if (currentType === 'deleted') {
-          origLineNum++;
-        } else if (currentType === 'added') {
-          newLineNum++;
-        }
-
-        currentLine = '';
-      }
-    }
-  }
-
-  // 最後の行を追加
-  if (currentLine.length > 0) {
-    if (currentType !== 'common') {
-      if (currentChangeBlockId === null) {
-        currentChangeBlockId = changeBlockIdCounter++;
-      }
+    if (change.type === 'equal') {
+      // 共通行はそのまま追加
+      diffLines.push({
+        type: 'common',
+        content: change.content,
+        originalLineNumber: origLineNum++,
+        newLineNumber: newLineNum++,
+        changeBlockId: null
+      });
+      i++;
     } else {
-      currentChangeBlockId = null;
+      // Phase 2: 変更ブロックの検出と処理
+      const currentChangeBlockId = changeBlockIdCounter++;
+      const deletedLines: string[] = [];
+      const addedLines: string[] = [];
+      const deletedLineNumbers: number[] = [];
+      const addedLineNumbers: number[] = [];
+
+      // 連続する削除・追加行を収集
+      let j = i;
+      while (j < lineChanges.length && lineChanges[j].type !== 'equal') {
+        const currentChange = lineChanges[j];
+        if (currentChange.type === 'delete') {
+          deletedLines.push(currentChange.content);
+          deletedLineNumbers.push(origLineNum++);
+        } else if (currentChange.type === 'insert') {
+          addedLines.push(currentChange.content);
+          addedLineNumbers.push(newLineNum++);
+        }
+        j++;
+      }
+
+      // Phase 3: 削除行と追加行のペアリングと文字レベル差分の適用
+      const minLength = Math.min(deletedLines.length, addedLines.length);
+
+      // ペアになる行については文字レベル差分を計算
+      for (let k = 0; k < minLength; k++) {
+        const deletedLine = deletedLines[k];
+        const addedLine = addedLines[k];
+
+        // 文字レベル差分を計算
+        const charChanges = calculateCharDiff(deletedLine, addedLine);
+        const inlineChanges = convertToInlineChanges(charChanges);
+
+        // 削除行を追加（文字レベル詳細付き）
+        diffLines.push({
+          type: 'deleted',
+          content: deletedLine,
+          originalLineNumber: deletedLineNumbers[k],
+          newLineNumber: null,
+          changeBlockId: currentChangeBlockId,
+          inlineChanges: inlineChanges.filter(c => c.type !== 'insert')
+        });
+
+        // 追加行を追加（文字レベル詳細付き）
+        diffLines.push({
+          type: 'added',
+          content: addedLine,
+          originalLineNumber: null,
+          newLineNumber: addedLineNumbers[k],
+          changeBlockId: currentChangeBlockId,
+          inlineChanges: inlineChanges.filter(c => c.type !== 'delete')
+        });
+      }
+
+      // ペアにならない残りの削除行（行全体が削除）
+      for (let k = minLength; k < deletedLines.length; k++) {
+        diffLines.push({
+          type: 'deleted',
+          content: deletedLines[k],
+          originalLineNumber: deletedLineNumbers[k],
+          newLineNumber: null,
+          changeBlockId: currentChangeBlockId
+          // inlineChangesは設定しない（行全体が削除のため）
+        });
+      }
+
+      // ペアにならない残りの追加行（行全体が追加）
+      for (let k = minLength; k < addedLines.length; k++) {
+        diffLines.push({
+          type: 'added',
+          content: addedLines[k],
+          originalLineNumber: null,
+          newLineNumber: addedLineNumbers[k],
+          changeBlockId: currentChangeBlockId
+          // inlineChangesは設定しない（行全体が追加のため）
+        });
+      }
+
+      i = j; // 次の処理は変更ブロックの次から
     }
-
-    const lineOrigNum = currentType === 'added' ? null : origLineNum;
-    const lineNewNum = currentType === 'deleted' ? null : newLineNum;
-
-    diffLines.push({
-      type: currentType,
-      content: currentLine,
-      originalLineNumber: lineOrigNum,
-      newLineNumber: lineNewNum,
-      changeBlockId: currentChangeBlockId
-    });
   }
 
   return diffLines;
