@@ -10,7 +10,7 @@ import {
   ScrollView,
   StyleSheet,
 } from 'react-native';
-import { DiffLine } from '../services/diffService';
+import { DiffLine, InlineChange } from '../services/diffService';
 import { useTheme } from '../../../design/theme/ThemeContext';
 
 interface DiffViewerProps {
@@ -66,7 +66,50 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff }) => {
       color: colors.text,
       paddingRight: 8,
     },
+    // インライン変更のスタイル
+    inlineEqual: {
+      // 変更なし部分は通常表示
+    },
+    inlineDelete: {
+      backgroundColor: colors.danger + '50',
+      textDecorationLine: 'line-through',
+      textDecorationColor: colors.danger,
+    },
+    inlineInsert: {
+      backgroundColor: colors.success + '50',
+      fontWeight: 'bold',
+    },
   });
+
+  const getInlineStyle = (type: InlineChange['type']) => {
+    switch (type) {
+      case 'delete':
+        return styles.inlineDelete;
+      case 'insert':
+        return styles.inlineInsert;
+      case 'equal':
+      default:
+        return styles.inlineEqual;
+    }
+  };
+
+  const renderInlineContent = (line: DiffLine) => {
+    if (!line.inlineChanges || line.inlineChanges.length === 0) {
+      // インライン変更がない場合は通常のテキスト表示
+      return <Text style={styles.content}>{line.content}</Text>;
+    }
+
+    // インライン変更がある場合は、各部分を個別にスタイリング
+    return (
+      <Text style={styles.content}>
+        {line.inlineChanges.map((change, idx) => (
+          <Text key={idx} style={getInlineStyle(change.type)}>
+            {change.content}
+          </Text>
+        ))}
+      </Text>
+    );
+  };
 
   const renderDiffLine = (line: DiffLine, index: number) => {
     let lineStyle: any = styles.diffLine;
@@ -94,7 +137,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff }) => {
         <Text style={styles.lineNumber}>{line.originalLineNumber || ''}</Text>
         <Text style={styles.lineNumber}>{line.newLineNumber || ''}</Text>
         <Text style={[styles.prefix, { color: prefixColor }]}>{prefix}</Text>
-        <Text style={styles.content}>{line.content}</Text>
+        {renderInlineContent(line)}
       </View>
     );
   };
