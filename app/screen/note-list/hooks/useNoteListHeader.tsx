@@ -39,17 +39,13 @@ export const useNoteListHeader = ({
 }: UseNoteListHeaderProps) => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const { createHeaderConfig } = useCustomHeader();
-  const { colors } = useTheme();
-
-  const renderTitle = useCallback((count: number): React.ReactNode => (
-    <Text style={{ color: colors.text }}>{count}件選択中</Text>
-  ), [colors.text]);
+  const { colors, typography } = useTheme();
 
   useLayoutEffect(() => {
     if (isMoveMode) {
       navigation.setOptions(
         createHeaderConfig({
-          title: <Text style={{ color: colors.text }}>移動先を選択</Text>,
+          title: <Text style={{ color: colors.text, fontSize: typography.subtitle.fontSize }}>移動先を選択</Text>,
           leftButtons: [
             { icon: <Ionicons name="arrow-back" size={24} color={colors.text} />, onPress: cancelMoveMode },
           ],
@@ -97,7 +93,7 @@ export const useNoteListHeader = ({
 
       navigation.setOptions(
         createHeaderConfig({
-          title: renderTitle(selectedCount),
+          title: undefined,
           leftButtons: [
             { icon: <Ionicons name="arrow-back" size={24} color={colors.text} />, onPress: handleCancelSelection },
           ],
@@ -114,9 +110,9 @@ export const useNoteListHeader = ({
       );
     }
   }, [
-    navigation, createHeaderConfig, isSelectionMode, selectedNoteIds.size, 
-    selectedFolderIds.size, handleCancelSelection, handleCopySelected, 
-    handleDeleteSelected, handleOpenRenameModal, startMoveMode, isMoveMode, 
-    cancelMoveMode, colors, renderTitle, rightButtons, title
+    navigation, createHeaderConfig, isSelectionMode, selectedNoteIds.size,
+    selectedFolderIds.size, handleCancelSelection, handleCopySelected,
+    handleDeleteSelected, handleOpenRenameModal, startMoveMode, isMoveMode,
+    cancelMoveMode, colors, typography, rightButtons, title, leftButtons
   ]);
 };
