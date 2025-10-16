@@ -15,9 +15,6 @@ function DiffViewScreen() {
     <MainContainer>
       <DiffViewer
         diff={diff}
-        selectedBlocks={new Set()}
-        onBlockToggle={() => {}}
-        isReadOnly={true}
       />
     </MainContainer>
   );
