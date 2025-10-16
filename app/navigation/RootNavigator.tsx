@@ -17,7 +17,7 @@ import DiffViewScreen from '../screen/diff-view/DiffViewScreen';
 import VersionHistoryScreen from '../screen/version-history/VersionHistoryScreen';
 import SettingsScreen from '../settings/SettingsScreen';
 import { ChatLayout } from '../features/chat/layouts/ChatLayout';
-
+import { useTheme } from '../design/theme/ThemeContext';
 
 
 // スタックナビゲーターの作成
@@ -27,6 +27,7 @@ const Stack = createStackNavigator<RootStackParamList>();
 function RootNavigator() {
   const navigationRef = useNavigationContainerRef();
   const [currentRouteName, setCurrentRouteName] = useState<string | undefined>(undefined);
+  const { colors } = useTheme();
 
   const shouldShowChat = currentRouteName === 'NoteList' || currentRouteName === 'NoteEdit';
 
@@ -41,7 +42,12 @@ function RootNavigator() {
           setCurrentRouteName(navigationRef.current?.getCurrentRoute()?.name);
         }}
       >
-        <Stack.Navigator initialRouteName="NoteList">
+        <Stack.Navigator
+          initialRouteName="NoteList"
+          screenOptions={{
+            headerTintColor: colors.text,
+          }}
+        >
           <Stack.Screen name="NoteList" component={NoteListScreen} options={{ title: 'Notes' }} />
           <Stack.Screen name="NoteEdit" component={NoteEditScreen} options={{ title: 'Edit Note' }} />
           <Stack.Screen name="DiffView" component={DiffViewScreen} options={{ title: 'View Diff' }} />

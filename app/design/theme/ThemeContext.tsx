@@ -29,10 +29,10 @@ const lightColors = {
 // ダークテーマのカラーパレット
 const darkColors = {
   primary: '#0A84FF',
-  secondary: '#484848',
-  background: '#363636',
+  secondary: '#2C2C2C',
+  background: '#1A1A1A',
   text: '#fff',
-  textSecondary: '#98989D',
+  textSecondary: '#888888',
   border: '#38383A',
   shadow: '#000',
   success: '#32D74B',

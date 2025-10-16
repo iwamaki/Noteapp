@@ -42,7 +42,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
       borderWidth: 1,
     },    
     userMarkdownText: {
-      color: colors.background,
+      color: colors.white,
     },
     userMessage: {
       alignSelf: 'flex-end',

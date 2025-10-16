@@ -31,7 +31,7 @@ const ListItemContainer: React.FC<ListItemContainerProps> = ({
   isSelectionMode = false,
   children,
 }) => {
-  const { colors, spacing, shadows } = useTheme();
+  const { colors, spacing } = useTheme();
 
   const styles = StyleSheet.create({
       container: {
@@ -54,32 +54,18 @@ const ListItemContainer: React.FC<ListItemContainerProps> = ({
     },
     selected: {
       backgroundColor: colors.primary + '20',
-      borderColor: colors.primary,
     },
-    selectionMode: {
-      backgroundColor: colors.background,
+    buttonText: {
+      color: colors.background,
+      fontWeight: '600',
     },
-    checkboxContainer: {
-      marginLeft: spacing.md,
-    },
-    checkbox: {
-      width: 24,
-      height: 24,
-      borderRadius: 4,
-      borderWidth: 2,
-      borderColor: colors.textSecondary,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: colors.transparent,
-    },
-    checkboxSelected: {
-      backgroundColor: colors.primary,
-      borderColor: colors.primary,
-    },
-    checkboxText: {
-      color: colors.white,
-      fontSize: 16,
-      fontWeight: 'bold',
+    bottomLine: {
+      height: 2,
+      backgroundColor: colors.border,
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
     },
   });
 
@@ -89,7 +75,6 @@ const ListItemContainer: React.FC<ListItemContainerProps> = ({
         styles.container,
         disabled && styles.disabled,
         isSelected && styles.selected,
-        isSelectionMode && styles.selectionMode
       ]}
       onPress={onPress}
       onLongPress={onLongPress}
@@ -98,18 +83,13 @@ const ListItemContainer: React.FC<ListItemContainerProps> = ({
       <View style={styles.content}>
         {children}
       </View>
-      {isSelectionMode && (
-        <View style={styles.checkboxContainer}>
-          <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
-            {isSelected && <Text style={styles.checkboxText}>✓</Text>}
-          </View>
-        </View>
-      )}
+
       {!isSelectionMode && rightElement && (
         <View style={styles.rightContainer}>
           {rightElement}
         </View>
       )}
+      <View style={styles.bottomLine} />
     </TouchableOpacity>
   );
 };
@@ -236,7 +216,7 @@ const ListItemButtonGroup: React.FC<ListItemButtonGroupProps> = ({
       color: colors.text,
     },
     buttonTextActive: {
-      color: colors.background,
+      color: colors.white,
       fontWeight: '600',
     },
   });
