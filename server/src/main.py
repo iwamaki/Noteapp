@@ -3,7 +3,8 @@
 # @responsibility FastAPIアプリケーションのインスタンス化、CORSミドルウェアの設定、および各ルーターのインクルードを行います。
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from src.routers import chat, llm_providers
+from src.llm.routers import chat_router
+from src.llm.routers import llm_providers_router
 
 app = FastAPI(title="LLM Note App API")
 
@@ -17,8 +18,8 @@ app.add_middleware(
 )
 
 # ルーターのインクルード
-app.include_router(chat.router)
-app.include_router(llm_providers.router)
+app.include_router(chat_router.router)
+app.include_router(llm_providers_router.router)
 
 # ルートエンドポイント
 @app.get("/")

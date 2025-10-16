@@ -4,7 +4,7 @@
 # @responsibility すべてのLLMプロバイダーが実装すべき共通のインターフェース（メソッド、プロパティ）を定義します。
 from abc import ABC, abstractmethod
 from typing import Optional
-from src.models import ChatResponse, ChatContext
+from src.llm.models import ChatResponse, ChatContext
 
 class BaseLLMProvider(ABC):
     """LLMプロバイダーの抽象基底クラス"""
