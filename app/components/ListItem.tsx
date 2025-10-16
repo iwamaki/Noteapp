@@ -34,16 +34,13 @@ const ListItemContainer: React.FC<ListItemContainerProps> = ({
   const { colors, spacing, shadows } = useTheme();
 
   const styles = StyleSheet.create({
-    container: {
-      backgroundColor: colors.background,
+      container: {
+      backgroundColor: colors.transparent,
       borderRadius: 0,
-      marginBottom: spacing.sm,
+      marginBottom: 0,
       padding: responsive.getResponsiveSize(spacing.sm, spacing.md, spacing.lg),
-      ...shadows.small,
       flexDirection: 'row',
       alignItems: 'center',
-      borderWidth: 2,
-      borderColor: colors.transparent,
     },
     content: {
       flex: 1,
