@@ -1,7 +1,7 @@
 /**
  * @file diffService.ts
  * @summary このファイルは、2つのテキスト間の文字単位の差分を計算し、その結果をUI表示に適した形式で提供するサービスロジックをカプセル化します。
- * @responsibility テキストの差分計算（LCSアルゴリズムに基づく）、差分行の型定義、および生成された差分データの整合性検証を行います。
+ * @responsibility テキストの差分計算（LCSアルゴリズムに基づく）、差分行の型定義を提供します。
  */
 
 export interface DiffLine {
@@ -11,50 +11,6 @@ export interface DiffLine {
   newLineNumber: number | null;
   changeBlockId?: number | null;
 }
-
-/**
- * データ整合性を検証する（文字ベース差分用）
- * @param originalText 元のテキスト
- * @param newText 新しいテキスト
- * @param diffLines 生成された差分行
- * @returns 整合性チェック結果
- */
-export const validateDataConsistency = (originalText: string, newText: string, diffLines: DiffLine[]): { isValid: boolean; error?: string } => {
-  // 差分から元テキストを再構築
-  const reconstructedOriginal: string[] = [];
-  const reconstructedNew: string[] = [];
-
-  diffLines.forEach(line => {
-    switch (line.type) {
-      case 'common':
-        reconstructedOriginal.push(line.content);
-        reconstructedNew.push(line.content);
-        break;
-      case 'deleted':
-        reconstructedOriginal.push(line.content);
-        break;
-      case 'added':
-        reconstructedNew.push(line.content);
-        break;
-    }
-  });
-
-  const reconstructedOriginalText = reconstructedOriginal.join('\n');
-  const reconstructedNewText = reconstructedNew.join('\n');
-
-  const normalizedOriginal = (originalText || '').replace(/\r\n/g, '\n');
-  const normalizedNew = (newText || '').replace(/\r\n/g, '\n');
-
-  if (reconstructedOriginalText !== normalizedOriginal) {
-    return { isValid: false, error: `元テキストの再構築に失敗: 期待値と実際値が不一致` };
-  }
-
-  if (reconstructedNewText !== normalizedNew) {
-    return { isValid: false, error: `新テキストの再構築に失敗: 期待値と実際値が不一致` };
-  }
-
-  return { isValid: true };
-};
 
 /**
  * 文字ベースのLCS（Longest Common Subsequence）アルゴリズムを使用した差分計算
@@ -122,8 +78,6 @@ export const generateDiff = (originalText: string, newText: string): DiffLine[] 
   const diffLines: DiffLine[] = [];
   let changeBlockIdCounter = 1;
   let currentChangeBlockId: number | null = null;
-  let origLineNum = 1;
-  let newLineNum = 1;
 
   // 文字単位の差分を行単位のDiffLineに変換
   let currentLine = '';
@@ -153,27 +107,13 @@ export const generateDiff = (originalText: string, newText: string): DiffLine[] 
           currentChangeBlockId = null;
         }
 
-        const lineOrigNum = currentType === 'added' ? null : origLineNum;
-        const lineNewNum = currentType === 'deleted' ? null : newLineNum;
-
         diffLines.push({
           type: currentType,
           content: currentLine,
-          originalLineNumber: lineOrigNum,
-          newLineNumber: lineNewNum,
+          originalLineNumber: null,
+          newLineNumber: null,
           changeBlockId: currentChangeBlockId
         });
-
-        // 行番号をインクリメント
-        if (currentType === 'common') {
-          origLineNum++;
-          newLineNum++;
-        } else if (currentType === 'deleted') {
-          origLineNum++;
-        } else if (currentType === 'added') {
-          newLineNum++;
-        }
-
         currentLine = '';
       }
 
@@ -191,27 +131,13 @@ export const generateDiff = (originalText: string, newText: string): DiffLine[] 
           currentChangeBlockId = null;
         }
 
-        const lineOrigNum = currentType === 'added' ? null : origLineNum;
-        const lineNewNum = currentType === 'deleted' ? null : newLineNum;
-
         diffLines.push({
           type: currentType,
           content: currentLine,
-          originalLineNumber: lineOrigNum,
-          newLineNumber: lineNewNum,
+          originalLineNumber: null,
+          newLineNumber: null,
           changeBlockId: currentChangeBlockId
         });
-
-        // 行番号をインクリメント
-        if (currentType === 'common') {
-          origLineNum++;
-          newLineNum++;
-        } else if (currentType === 'deleted') {
-          origLineNum++;
-        } else if (currentType === 'added') {
-          newLineNum++;
-        }
-
         currentLine = '';
       }
     }
@@ -227,14 +153,11 @@ export const generateDiff = (originalText: string, newText: string): DiffLine[] 
       currentChangeBlockId = null;
     }
 
-    const lineOrigNum = currentType === 'added' ? null : origLineNum;
-    const lineNewNum = currentType === 'deleted' ? null : newLineNum;
-
     diffLines.push({
       type: currentType,
       content: currentLine,
-      originalLineNumber: lineOrigNum,
-      newLineNumber: lineNewNum,
+      originalLineNumber: null,
+      newLineNumber: null,
       changeBlockId: currentChangeBlockId
     });
   }

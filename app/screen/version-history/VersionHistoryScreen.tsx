@@ -99,8 +99,8 @@ function VersionHistoryScreen() {
     navigation.navigate('DiffView', {
       noteId: currentNote.id,
       versionId: selectedVersion.id,
-      originalContent: selectedVersion.content,
-      newContent: currentNote.content,
+      originalContent: currentNote.content, // 現在のノートのコンテンツ
+      newContent: selectedVersion.content,          // 選択された過去のバージョンのコンテンツ
       mode: 'restore'
     });
   };

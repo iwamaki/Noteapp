@@ -44,21 +44,6 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff }) => {
     diffCommon: {
       backgroundColor: colors.secondary,
     },
-    hunkHeader: {
-      paddingVertical: 8,
-      paddingHorizontal: 16,
-      backgroundColor: colors.secondary,
-      borderTopWidth: 1,
-      borderBottomWidth: 1,
-      borderColor: colors.border,
-      marginVertical: 4,
-    },
-    hunkHeaderText: {
-      ...typography.caption,
-      color: colors.textSecondary,
-      fontFamily: 'monospace',
-      fontWeight: 'bold',
-    },
     lineNumber: {
       width: 30,
       ...typography.caption,
@@ -84,14 +69,6 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff }) => {
   });
 
   const renderDiffLine = (line: DiffLine, index: number) => {
-    if (line.type === 'hunk-header') {
-      return (
-        <View key={index} style={styles.hunkHeader}>
-          <Text style={styles.hunkHeaderText}>{line.content}</Text>
-        </View>
-      );
-    }
-
     let lineStyle: any = styles.diffLine;
     let prefix = ' ';
     let prefixColor = colors.textSecondary;
