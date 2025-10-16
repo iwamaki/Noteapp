@@ -139,8 +139,8 @@ function NoteEditScreen() {
       </View>
       <CustomModal
         isVisible={isConfirmModalVisible}
-        title="変更を破棄しますか？"
-        message="保存されていない変更があります。"
+        title="未保存の変更があります。"
+        message="保存しますか？"
         buttons={[
           {
             text: 'キャンセル',
@@ -148,7 +148,18 @@ function NoteEditScreen() {
             onPress: () => setConfirmModalVisible(false),
           },
           {
-            text: '破棄',
+            text: 'はい',
+            style: 'default',
+            onPress: () => {
+              setConfirmModalVisible(false);
+              handleSave(); // 変更を保存
+              if (nextAction) {
+                navigation.dispatch(nextAction);
+              }
+            },
+          },
+          {
+            text: 'いいえ',
             style: 'destructive',
             onPress: () => {
               setConfirmModalVisible(false);

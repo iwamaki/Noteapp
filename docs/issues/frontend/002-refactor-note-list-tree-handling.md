@@ -1,7 +1,7 @@
 ---
 title: "B_002_Refactor NoteList Tree Handling for Maintainability and Extensibility"
 id: 002
-status: new
+status: done
 priority: medium
 attempt_count: 0
 tags: [refactoring, frontend, note-list, tree-structure]
