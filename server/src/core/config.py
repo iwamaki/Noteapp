@@ -6,7 +6,7 @@ import os
 from google.cloud import secretmanager
 from google.api_core import exceptions
 from dotenv import load_dotenv
-from src.logger import logger
+from .logger import logger
 
 # 環境変数の読み込み
 load_dotenv()

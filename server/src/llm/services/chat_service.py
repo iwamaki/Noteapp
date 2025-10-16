@@ -2,12 +2,12 @@
 # @summary LLMプロバイダーを管理し、チャット処理を委譲します。
 # @responsibility リクエストに応じて適切なLLMプロバイダーを選択し、チャット処理を実行させます。
 from typing import Optional
-from src.config import settings
-from src.models import ChatResponse, ChatContext
-from src.llm_providers.base import BaseLLMProvider
-from src.llm_providers.openai import OpenAIProvider
-from src.llm_providers.gemini import GeminiProvider
-from src.logger import logger
+from src.core.config import settings
+from src.llm.models import ChatResponse, ChatContext
+from src.llm.providers.base import BaseLLMProvider
+from src.llm.providers.openai import OpenAIProvider
+from src.llm.providers.gemini import GeminiProvider
+from src.core.logger import logger
 
 class ChatService:
     def __init__(self):

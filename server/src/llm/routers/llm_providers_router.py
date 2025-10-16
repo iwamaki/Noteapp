@@ -2,8 +2,8 @@
 # @summary LLMプロバイダー情報とヘルスチェックのエンドポイントを定義します。
 # @responsibility /api/llm-providersおよび/api/healthへのGETリクエストを処理します。
 from fastapi import APIRouter
-from src.models import LLMProvider
-from src.config import settings
+from src.llm.models import LLMProvider
+from src.core.config import settings
 
 router = APIRouter()
 

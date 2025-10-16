@@ -6,10 +6,10 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.schema import HumanMessage, SystemMessage, AIMessage, BaseMessage
 from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
-from src.models import ChatResponse, ChatContext, LLMCommand
-from src.tools.file_tools import AVAILABLE_TOOLS, set_file_context, set_directory_context, set_all_files_context
+from src.llm.models import ChatResponse, ChatContext, LLMCommand
+from src.llm.tools.file_tools import AVAILABLE_TOOLS, set_file_context, set_directory_context, set_all_files_context
 from .base import BaseLLMProvider
-from src.logger import logger, log_llm_raw
+from src.core.logger import logger, log_llm_raw
 
 class GeminiProvider(BaseLLMProvider):
     """Google GeminiのLLMプロバイダー"""

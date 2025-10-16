@@ -5,7 +5,6 @@
  */
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HeaderButton } from './HeaderButton';
 import { useTheme } from '../design/theme/ThemeContext';
 
@@ -93,7 +92,7 @@ export const CustomHeader: React.FC<HeaderConfig> = ({
 
 export const useCustomHeader = () => {
   const { colors } = useTheme(); // フックのトップレベルで useTheme を呼び出す
-  const insets = useSafeAreaInsets();
+
 
   const buttonContainerStyle = {
     flexDirection: 'row' as const,

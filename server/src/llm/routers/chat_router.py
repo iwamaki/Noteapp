@@ -2,9 +2,9 @@
 # @summary チャット関連のAPIエンドポイントを定義します。
 # @responsibility /api/chatへのPOSTおよびGETリクエストを処理し、ChatServiceに処理を委譲します。
 from fastapi import APIRouter, HTTPException
-from src.models import ChatRequest
-from src.services.chat_service import ChatService
-from src.logger import logger
+from src.llm.models import ChatRequest
+from src.llm.services.chat_service import ChatService
+from src.core.logger import logger
 
 router = APIRouter()
 chat_service = ChatService()
