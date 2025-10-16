@@ -84,10 +84,9 @@ export const useDiffView = () => {
       createHeaderConfig({
         title: <Text style={{ color: colors.text, fontSize: typography.header.fontSize }}>{titleText}</Text>,
         leftButtons: [{
-          icon: <Ionicons name="arrow-back-outline" size={24} color={colors.textSecondary} />,
-          onPress: handleBack,
-          variant: 'secondary'
-        }],
+            icon: <Ionicons name="arrow-back-outline" size={24} color={colors.text} />,
+            onPress: () => navigation.goBack(),
+          }],
         rightButtons: rightButtons,
       })
     );

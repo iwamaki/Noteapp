@@ -39,9 +39,8 @@ function VersionHistoryScreen() {
         title: <Text style={{ color: colors.text, fontSize: typography.header.fontSize }}>バージョン履歴</Text>,
         leftButtons: [
           {
-            icon: <Ionicons name="arrow-back-outline" size={24} color={colors.textSecondary} />,
+            icon: <Ionicons name="arrow-back-outline" size={24} color={colors.text} />,
             onPress: () => navigation.goBack(),
-            variant: 'secondary',
           },
         ],
       })

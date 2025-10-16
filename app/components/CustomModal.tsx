@@ -59,7 +59,9 @@ export const CustomModal: React.FC<CustomModalProps> = ({
       shadowRadius: 4,
       elevation: 5,
       width: '80%', // Adjust as needed
-      maxWidth: 400, // Max width for larger screens
+      maxWidth: 400,
+      borderWidth: 2,
+      borderColor: colors.secondary,
     },
     modalTitle: {
       ...typography.title,

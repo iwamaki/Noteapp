@@ -115,7 +115,7 @@ export const useNoteEditHeader = ({
         ),
         leftButtons: [
           {
-            icon: <Ionicons name="arrow-back-outline" size={24} color={colors.textSecondary} />,
+            icon: <Ionicons name="arrow-back-outline" size={24} color={colors.text} />,
             onPress: () => navigation.goBack(),
             variant: 'secondary',
           },
