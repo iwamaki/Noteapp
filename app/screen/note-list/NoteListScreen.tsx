@@ -10,13 +10,18 @@ import { CreateItemModal } from './components/CreateItemModal';
 import { TreeListItem } from './components/TreeListItem';
 import { RenameItemModal } from './components/RenameItemModal';
 import { MainContainer } from '../../components/MainContainer';
+import { usePlatformInfo } from '../../utils/platformInfo';
 
 import { Ionicons } from '@expo/vector-icons';
 import { useSearch } from './hooks/useSearch';
 import { NoteListSearchBar } from './components/NoteListSearchBar';
 
+// ChatInputBarの推定高さ（paddingとinputエリアを含む）
+const CHAT_INPUT_BAR_HEIGHT = 74;
+
 function NoteListScreen() {
   const { colors, spacing } = useTheme();
+  const { keyboardHeight } = usePlatformInfo();
 
 
   const {
@@ -40,6 +45,9 @@ function NoteListScreen() {
     handleStartSearch,
   } = useSearch(treeNodes);
 
+  // キーボード + ChatInputBarの高さを計算してコンテンツが隠れないようにする
+  const chatBarOffset = CHAT_INPUT_BAR_HEIGHT + keyboardHeight;
+
   const styles = StyleSheet.create({
     centered: { justifyContent: 'center', alignItems: 'center' },
     emptyMessage: {
@@ -50,7 +58,7 @@ function NoteListScreen() {
     },
     listContent: { padding: spacing.md },
     listContentWithPadding: {
-      paddingBottom: 0,
+      paddingBottom: chatBarOffset,
     },
   });
 
