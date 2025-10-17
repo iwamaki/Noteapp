@@ -18,14 +18,22 @@ import { useChat } from '../hooks/useChat';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { ChatHistory } from '../components/ChatHistory';
 import { Animated } from 'react-native';
-import { useChatLayoutMetrics } from '../layouts/useChatLayoutMetrics';
+import { usePlatformInfo } from '../../../utils/platformInfo';
+import { logger } from '../../../utils/logger';
+// import { useChatLayoutMetrics } from '../layouts/useChatLayoutMetrics';
 
 // チャット入力バーコンポーネント（プロパティ不要）
 export const ChatInputBar: React.FC = () => {
   const { colors, typography } = useTheme();
   const [chatInputBarHeight, setChatInputBarHeight] = useState(0);
-  const { bottomHeight } = useChatLayoutMetrics();
+  const { keyboardHeight } = usePlatformInfo();
+  // const { bottomHeight } = useChatLayoutMetrics();
+  const bottomHeight = 0; // Temporarily set to 0 or a default value
   const animatedBottom = useRef(new Animated.Value(bottomHeight)).current;
+
+  useEffect(() => {
+    logger.debug('chat', `ChatInputBar Keyboard Height: ${keyboardHeight}`);
+  }, [keyboardHeight]);
 
   useEffect(() => {
     Animated.timing(animatedBottom, {

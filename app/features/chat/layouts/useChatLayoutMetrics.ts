@@ -10,6 +10,7 @@
  */
 
 import { usePlatformInfo } from '../../../utils/platformInfo';
+import { useEffect, useRef } from 'react';
 import { logger } from '../../../utils/logger';
 
 // ボトムナビの高さを取得
@@ -26,7 +27,14 @@ export function useChatLayoutMetrics(): ChatLayoutMetrics {
   const { keyboardHeight, bottomNavBarHeight } = usePlatformInfo();   // キーボードの高さを取得
   const isKeyboardVisible = keyboardHeight > 0;                       // キーボードの表示状態を判定
   const bottomHeight = (isKeyboardVisible ? keyboardHeight : 0) + bottomNavBarHeight;         // ChatInputBarのbottomの高さを計算
-  logger.debug('chat', 'bottomHeight:', bottomHeight); 
+
+  const prevBottomHeightRef = useRef(bottomHeight);
+  useEffect(() => {
+    if (prevBottomHeightRef.current !== bottomHeight) {
+      logger.debug('chat', 'bottomHeight changed to:', bottomHeight);
+      prevBottomHeightRef.current = bottomHeight;
+    }
+  }, [bottomHeight]);
 
   return {
     isKeyboardVisible,  // キーボードの表示状態
