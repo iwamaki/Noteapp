@@ -16,7 +16,6 @@ import { View, StyleSheet } from 'react-native';
 
 const AppContent = () => {
   const { themeMode, colors } = useTheme();
-  usePlatformInfo(); // Call the hook here
 
   const styles = StyleSheet.create({
     container: {

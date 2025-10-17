@@ -2,7 +2,7 @@
 # @summary このファイルは、LLM（大規模言語モデル）が利用できるツールを定義します。
 # @responsibility LLMが特定の操作（例: ファイル編集、ファイル読み込み）を実行する際に呼び出すことができる関数を提供し、
 # そのツールの引数と戻り値を定義することで、LLMとシステム間のインタラクションを仲介します。
-from langchain.tools import tool
+from langchain.tools import tool, BaseTool
 from typing import Optional, Dict, List, Any
 from difflib import get_close_matches
 
@@ -297,12 +297,12 @@ def delete_item(path: str) -> str:
 
 
 # 利用可能なツールのリスト
-AVAILABLE_TOOLS = [
-    edit_file,
-    read_file,
-    search_files,
-    list_directory,
-    create_directory,
-    move_item,
-    delete_item,
+AVAILABLE_TOOLS: List[BaseTool] = [
+    edit_file, # type: ignore
+    read_file, # type: ignore
+    search_files, # type: ignore
+    list_directory, # type: ignore
+    create_directory, # type: ignore
+    move_item, # type: ignore
+    delete_item, # type: ignore
 ]
