@@ -11,11 +11,9 @@ from src.core.logger import logger
 
 class ChatService:
     def __init__(self):
-        self.providers = {}
-        if settings.openai_api_key:
-            self.providers["openai"] = OpenAIProvider(api_key=settings.openai_api_key)
-        if settings.gemini_api_key:
-            self.providers["gemini"] = GeminiProvider(api_key=settings.gemini_api_key)
+        # プロバイダーインスタンスは get_provider() で動的に生成するため、
+        # ここでの事前初期化は不要（modelが確定していないため）
+        pass
 
     def get_provider(self, provider_name: str, model: str) -> Optional[BaseLLMProvider]:
         """指定されたプロバイダーとモデルに基づいてLLMプロバイダーインスタンスを取得する"""
