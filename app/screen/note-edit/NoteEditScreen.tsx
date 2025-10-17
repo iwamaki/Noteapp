@@ -9,6 +9,7 @@ import { useNoteEditChatContext } from '../../features/chat/hooks/useNoteEditCha
 import { CustomModal } from '../../components/CustomModal';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { MainContainer } from '../../components/MainContainer';
+import { usePlatformInfo } from '../../utils/platformInfo';
 
 import type { ViewMode } from './types';
 import { ToastMessage } from './components/ToastMessage'; // ToastMessageをインポート
@@ -16,11 +17,15 @@ import { useToastMessage } from './hooks/useToastMessage'; // useToastMessageを
 
 type NoteEditScreenRouteProp = RouteProp<RootStackParamList, 'NoteEdit'>;
 
+// ChatInputBarの推定高さ（paddingとinputエリアを含む）
+const CHAT_INPUT_BAR_HEIGHT = 74;
+
 // ノート編集画面コンポーネント
 function NoteEditScreen() {
   const route = useRoute<NoteEditScreenRouteProp>();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { noteId } = route.params || {};
+  const { keyboardHeight } = usePlatformInfo();
 
 
   const {
@@ -115,12 +120,15 @@ function NoteEditScreen() {
     setViewMode(mode as ViewMode);
   };
 
+  // キーボード + ChatInputBarの高さを計算してコンテンツが隠れないようにする
+  const chatBarOffset = CHAT_INPUT_BAR_HEIGHT + keyboardHeight;
+
   const styles = StyleSheet.create({
     animatedContainer: {
       flex: 1,
     },
     contentPadding: {
-      paddingBottom: 0,
+      paddingBottom: chatBarOffset,
     },
   });
 
