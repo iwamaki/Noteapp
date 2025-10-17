@@ -5,7 +5,7 @@
  * およびキーボードの表示状態に応じたレイアウト調整を全て自己管理する責任があります。
  */
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   TextInput,
@@ -17,31 +17,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { useChat } from '../hooks/useChat';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { ChatHistory } from '../components/ChatHistory';
-import { Animated } from 'react-native';
-import { usePlatformInfo } from '../../../utils/platformInfo';
-import { logger } from '../../../utils/logger';
-// import { useChatLayoutMetrics } from '../layouts/useChatLayoutMetrics';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // チャット入力バーコンポーネント（プロパティ不要）
 export const ChatInputBar: React.FC = () => {
   const { colors, typography } = useTheme();
-  const [chatInputBarHeight, setChatInputBarHeight] = useState(0);
-  const { keyboardHeight } = usePlatformInfo();
-  // const { bottomHeight } = useChatLayoutMetrics();
-  const bottomHeight = 0; // Temporarily set to 0 or a default value
-  const animatedBottom = useRef(new Animated.Value(bottomHeight)).current;
-
-  useEffect(() => {
-    logger.debug('chat', `ChatInputBar Keyboard Height: ${keyboardHeight}`);
-  }, [keyboardHeight]);
-
-  useEffect(() => {
-    Animated.timing(animatedBottom, {
-      toValue: bottomHeight,
-      duration: 200, // Animation duration in milliseconds
-      useNativeDriver: false, // `useNativeDriver: true` is not supported for `bottom` property
-    }).start();
-  }, [bottomHeight]);
+  const insets = useSafeAreaInsets();
   const {
     messages,
     isLoading,
@@ -52,13 +33,6 @@ export const ChatInputBar: React.FC = () => {
   } = useChat();
   const [inputText, setInputText] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
-
-  const handleLayout = (event: any) => {
-    const { height } = event.nativeEvent.layout;
-    if (height !== chatInputBarHeight) {
-      setChatInputBarHeight(height);
-    }
-  };
 
   // メッセージ送信処理
   const handleSendMessage = async () => {
@@ -74,16 +48,11 @@ export const ChatInputBar: React.FC = () => {
   const canSendMessage = inputText.trim().length > 0 && !isLoading;
 
   const styles = StyleSheet.create({
-    absoluteContainer: {
-      position: 'relative',
-      left: 0,
-      right: 0,
-      bottom: animatedBottom,
-    },
     container: {
       backgroundColor: colors.secondary,
       borderTopWidth: 1,
       borderTopColor: colors.border,
+      paddingBottom: insets.bottom,
     },
     inputArea: {
       flexDirection: 'row',
@@ -135,8 +104,7 @@ export const ChatInputBar: React.FC = () => {
   });
 
   return (
-    <Animated.View style={styles.absoluteContainer} onLayout={handleLayout}>
-      <View style={styles.container}>
+    <View style={styles.container}>
         {/* メッセージ履歴エリア（展開可能） */}
         {isExpanded && (
           <ChatHistory
@@ -185,7 +153,6 @@ export const ChatInputBar: React.FC = () => {
             />
           </TouchableOpacity>
         </View>
-      </View>
-    </Animated.View>
+    </View>
   );
 };

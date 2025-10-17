@@ -145,6 +145,7 @@ function NoteListScreen() {
             styles.listContentWithPadding,
             styles.listContent,
           ]}
+          keyboardShouldPersistTaps="handled"
         />
       )}
 
