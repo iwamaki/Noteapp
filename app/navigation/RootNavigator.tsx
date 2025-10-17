@@ -19,6 +19,7 @@ import VersionHistoryScreen from '../screen/version-history/VersionHistoryScreen
 import SettingsScreen from '../settings/SettingsScreen';
 import { ChatLayout } from '../features/chat/layouts/ChatLayout';
 import { useTheme } from '../design/theme/ThemeContext';
+import { usePlatformInfo } from '../utils/platformInfo';
 
 
 // スタックナビゲーターの作成
@@ -29,6 +30,7 @@ function RootNavigator() {
   const navigationRef = useNavigationContainerRef();
   const [currentRouteName, setCurrentRouteName] = useState<string | undefined>(undefined);
   const { colors } = useTheme();
+  const { keyboardHeight } = usePlatformInfo();
 
   const shouldShowChat = currentRouteName === 'NoteList' || currentRouteName === 'NoteEdit';
 
@@ -56,7 +58,7 @@ function RootNavigator() {
           <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
         </Stack.Navigator>
       </NavigationContainer>
-      <View style={styles.chatLayoutContainer}>
+      <View style={[styles.chatLayoutContainer, { marginBottom: keyboardHeight }]}>
         <ChatLayout visible={shouldShowChat} />
       </View>
     </>
