@@ -1,4 +1,6 @@
 // app/utils/logger.ts
+import { AppState, AppStateStatus } from 'react-native';
+
 type LogCategory = 'chat' | 'chatService' | 'system' | 'note' | 'diff' | 'llm' | 'default' | 'tree' | 'platformInfo';
 type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'none';
 
@@ -13,6 +15,7 @@ const LOG_LEVELS: Record<LogLevel, number> = {
 class Logger {
   private enabledCategories: LogCategory[] | 'all' = 'all';
   private currentLevel: LogLevel = 'debug';
+  private appState = AppState.currentState;
 
   constructor() {
     // 環境変数からログレベルを取得
@@ -28,7 +31,21 @@ class Logger {
         this.enabledCategories = envCategories.split(',').map((c: string) => c.trim()) as LogCategory[];
       }
     }
+
+    this._setupAppStateListener();
   }
+
+  private _setupAppStateListener() {
+    AppState.addEventListener('change', this._handleAppStateChange);
+  }
+
+  private _handleAppStateChange = (nextAppState: AppStateStatus) => {
+    if (this.appState.match(/inactive|background/) && nextAppState === 'active') {
+      this.info('system', 'App has come to the foreground!');
+    }
+    this.appState = nextAppState;
+    this.debug('system', `AppState changed to: ${nextAppState}`);
+  };
 
   setCategories(categories: LogCategory[] | 'all') {
     this.enabledCategories = categories;
