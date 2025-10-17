@@ -10,6 +10,7 @@ import {
   useNavigationContainerRef,
 } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import { View, StyleSheet } from 'react-native';
 import { RootStackParamList } from './types';
 import NoteListScreen from '../screen/note-list/NoteListScreen';
 import NoteEditScreen from '../screen/note-edit/NoteEditScreen';
@@ -55,10 +56,21 @@ function RootNavigator() {
           <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
         </Stack.Navigator>
       </NavigationContainer>
-      <ChatLayout visible={shouldShowChat} />
+      <View style={styles.chatLayoutContainer}>
+        <ChatLayout visible={shouldShowChat} />
+      </View>
     </>
   );
 }
 
+const styles = StyleSheet.create({
+  chatLayoutContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1,
+  },
+});
 
 export default RootNavigator;
