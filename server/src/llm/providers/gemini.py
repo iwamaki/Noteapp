@@ -1,9 +1,10 @@
 # @file gemini.py
 # @summary Google GeminiのLLMプロバイダーを実装します。
 # @responsibility BaseLLMProviderを継承し、GeminiのAPIと通信してチャット応答を生成します。
-from typing import Optional, List, Any, Dict
+from typing import Optional, List
+from pydantic.v1 import SecretStr
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.schema import HumanMessage, SystemMessage, AIMessage, BaseMessage
+from langchain.schema import HumanMessage, AIMessage, BaseMessage
 from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from src.llm.models import ChatResponse, ChatContext, LLMCommand
@@ -14,11 +15,17 @@ from src.core.logger import logger, log_llm_raw
 class GeminiProvider(BaseLLMProvider):
     """Google GeminiのLLMプロバイダー"""
 
-    def __init__(self, api_key: str, model: str = "gemini-2.5-flash"):
+    def __init__(self, api_key: str, model: str = "gemini-1.5-flash"):
         self.llm = ChatGoogleGenerativeAI(
-            model=model if model.startswith("gemini") else "gemini-2.5-flash",
-            google_api_key=api_key,
-            temperature=0.7
+            model=model if model.startswith("gemini") else "gemini-1.5-flash",
+            google_api_key=SecretStr(api_key),
+            temperature=0.7,
+            convert_system_message_to_human=True, # ★ 追加
+            client_options=None,
+            transport=None,
+            additional_headers=None,
+            client=None,
+            async_client=None,
         )
         self.model = model
 
@@ -36,7 +43,7 @@ class GeminiProvider(BaseLLMProvider):
         # Agentを作成
         self.agent = create_tool_calling_agent(self.llm, AVAILABLE_TOOLS, self.prompt)
         self.agent_executor = AgentExecutor(
-            agent=self.agent,
+            agent=self.agent,  # type: ignore[arg-type]
             tools=AVAILABLE_TOOLS,
             verbose=True,  # デバッグ用
             max_iterations=5,  # 最大5回までツールを呼び出せる

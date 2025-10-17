@@ -37,7 +37,7 @@ class ChatService:
 
         if not llm_provider:
             return ChatResponse(
-                message=f"申し訳ありません。現在LLMサービスが利用できません。APIキーを設定してください。",
+                message="申し訳ありません。現在LLMサービスが利用できません。APIキーを設定してください。",
                 provider=provider,
                 model=model
             )
