@@ -1,9 +1,9 @@
 ---
 title: "A_008_optimize-keyboard-avoidance-performance"
 id: 8
-status: new
+status: completed
 priority: high
-attempt_count: 0
+attempt_count: 1
 tags: [performance, keyboard, optimization, rendering]
 ---
 
@@ -44,13 +44,13 @@ A_007でキーボード回避ロジックを実装し、レイアウトの重複
 
 ## 受け入れ条件 (Acceptance Criteria)
 
-- [ ] `StyleSheet.create()`がコンポーネント関数内で呼ばれていない
-- [ ] `usePlatformInfo()`の呼び出しがアプリ全体で1箇所のみになっている
-- [ ] キーボードイベントリスナーが1セットのみ登録されている
-- [ ] ChatInputBarの高さが動的に計測され、ハードコーディングされた定数が削除されている
-- [ ] キーボード表示/非表示時のアニメーションが滑らかに動作する（目視確認）
-- [ ] 型チェックとlintが通る
-- [ ] 既存の機能（キーボード回避、コンテンツ表示）が正常に動作する
+- [x] `StyleSheet.create()`がコンポーネント関数内で呼ばれていない
+- [x] `usePlatformInfo()`の呼び出しがアプリ全体で1箇所のみになっている（KeyboardHeightContextに集約）
+- [x] キーボードイベントリスナーが1セットのみ登録されている
+- [x] ChatInputBarの高さが動的に計測され、ハードコーディングされた定数が削除されている
+- [x] キーボード表示/非表示時のアニメーションが滑らかに動作する（目視確認）
+- [x] 型チェックとlintが通る
+- [x] 既存の機能（キーボード回避、コンテンツ表示）が正常に動作する
 
 ## 関連ファイル (Related Files)
 
@@ -89,19 +89,59 @@ A_007でキーボード回避ロジックを実装し、レイアウトの重複
 - **メモ:** issue文書を作成し、次のセッションで実装に着手する準備が整った
 
 ---
+### 試行 #1（実装完了）✅
+
+- **試みたこと:**
+  1. `KeyboardHeightContext`を新規作成（`app/contexts/KeyboardHeightContext.tsx`）
+     - キーボードイベントリスナーを一元管理
+     - ChatInputBarの高さもContextで管理
+     - `useKeyboardHeight()`フックで各画面から高さを取得
+  2. `RootNavigator.tsx`を更新
+     - `KeyboardHeightProvider`でアプリ全体をラップ
+     - `usePlatformInfo()`を`useKeyboardHeight()`に置き換え
+     - 内部コンポーネント（`RootNavigatorContent`）に分離してContext利用
+  3. `NoteListScreen.tsx`を最適化
+     - 静的スタイルをコンポーネント外部に定義
+     - 動的スタイルを`useMemo`でメモ化
+     - `usePlatformInfo()`を`useKeyboardHeight()`に置き換え
+     - `CHAT_INPUT_BAR_HEIGHT`定数を削除し、Contextから取得
+  4. `NoteEditScreen.tsx`を最適化
+     - 静的スタイルをコンポーネント外部に定義
+     - 動的スタイルを`useMemo`でメモ化
+     - `usePlatformInfo()`を`useKeyboardHeight()`に置き換え
+     - `CHAT_INPUT_BAR_HEIGHT`定数を削除し、Contextから取得
+  5. `ChatInputBar.tsx`に`onLayout`実装
+     - コンテナに`onLayout`を追加し、実際の高さを計測
+     - `setChatInputBarHeight()`でContextに高さを報告
+- **結果:** ✅ 全ての受け入れ条件を達成
+  - キーボードイベントリスナーが1セットのみに削減（3セット→1セット）
+  - StyleSheet再生成の問題を解決
+  - ハードコーディングされた定数を削除
+  - 型チェック・lintが通過
+  - 動作確認済み（滑らかなアニメーション）
+- **メモ:**
+  - ThemeContextと同様の構造でKeyboardHeightContextを実装し、一貫性を保った
+  - 静的スタイルとメモ化により、不要な再レンダリングを削減
+  - ChatInputBarの実際の高さを動的に計測することで、デバイス間の差異に対応
+
+---
 
 ## AIへの申し送り事項 (Handover to AI)
 
-> **現在の状況:** パフォーマンス分析が完了し、問題点と解決策が明確になった。実装はまだ開始していない。
+> **現在の状況:** ✅ 実装完了。全ての受け入れ条件を達成し、動作確認も完了。
 >
-> **次のアクション:**
-> 1. `KeyboardHeightContext`を新規作成し、`usePlatformInfo()`の呼び出しをProviderレベルに集約
-> 2. NoteListScreenとNoteEditScreenの`StyleSheet.create()`を最適化（外部定義+useMemo）
-> 3. ChatInputBarに`onLayout`を実装し、動的に高さを計測
-> 4. 型チェック、lint、実機テストで動作確認
+> **実装内容:**
+> - `KeyboardHeightContext`を新規作成し、キーボードイベントリスナーとChatInputBar高さを一元管理
+> - RootNavigatorを`KeyboardHeightProvider`でラップ
+> - NoteListScreenとNoteEditScreenのStyleSheetを最適化（静的スタイル外部定義+useMemoでメモ化）
+> - ChatInputBarに`onLayout`を実装し、実際の高さを動的に計測
+> - ハードコーディングされた`CHAT_INPUT_BAR_HEIGHT`定数を全て削除
 >
-> **考慮事項/ヒント:**
-> - `docs/issues/frontend/reference/simple-chat-input-screen.tsx`を参考にすると良い
-> - StyleSheetの最適化では、`useMemo(() => [styles.static, { paddingBottom: offset }], [offset])`のパターンを使用
-> - KeyboardHeightContextは`app/design/theme/ThemeContext.tsx`と同様の構造で実装すると一貫性が保てる
-> - `platformInfo.ts`のキーボードイベントリスナー部分（82-102行目）をContextに移動する
+> **パフォーマンス改善効果:**
+> - キーボードイベントリスナーを3セットから1セットに削減（66%削減）
+> - StyleSheet再生成による不要な再レンダリングを削減
+> - デバイス間の高さの差異に動的に対応
+>
+> **次のセッションでの推奨事項:**
+> - 実機での長時間動作テストでパフォーマンスを測定
+> - 必要に応じて`platformInfo.ts`の不要なログ出力を削減（優先度: LOW）
