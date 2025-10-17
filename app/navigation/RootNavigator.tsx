@@ -19,18 +19,18 @@ import VersionHistoryScreen from '../screen/version-history/VersionHistoryScreen
 import SettingsScreen from '../settings/SettingsScreen';
 import { ChatLayout } from '../features/chat/layouts/ChatLayout';
 import { useTheme } from '../design/theme/ThemeContext';
-import { usePlatformInfo } from '../utils/platformInfo';
+import { KeyboardHeightProvider, useKeyboardHeight } from '../contexts/KeyboardHeightContext';
 
 
 // スタックナビゲーターの作成
 const Stack = createStackNavigator<RootStackParamList>();
 
-// RootNavigatorコンポーネント
-function RootNavigator() {
+// 内部ナビゲーターコンポーネント（KeyboardHeightProviderの内側で動作）
+function RootNavigatorContent() {
   const navigationRef = useNavigationContainerRef();
   const [currentRouteName, setCurrentRouteName] = useState<string | undefined>(undefined);
   const { colors } = useTheme();
-  const { keyboardHeight } = usePlatformInfo();
+  const { keyboardHeight } = useKeyboardHeight();
 
   const shouldShowChat = currentRouteName === 'NoteList' || currentRouteName === 'NoteEdit';
 
@@ -62,6 +62,15 @@ function RootNavigator() {
         <ChatLayout visible={shouldShowChat} />
       </View>
     </>
+  );
+}
+
+// RootNavigatorコンポーネント（Providerでラップ）
+function RootNavigator() {
+  return (
+    <KeyboardHeightProvider>
+      <RootNavigatorContent />
+    </KeyboardHeightProvider>
   );
 }
 

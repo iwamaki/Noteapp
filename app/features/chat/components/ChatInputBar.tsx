@@ -18,11 +18,13 @@ import { useChat } from '../hooks/useChat';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { ChatHistory } from '../components/ChatHistory';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useKeyboardHeight } from '../../../contexts/KeyboardHeightContext';
 
 // チャット入力バーコンポーネント（プロパティ不要）
 export const ChatInputBar: React.FC = () => {
   const { colors, typography } = useTheme();
   const insets = useSafeAreaInsets();
+  const { setChatInputBarHeight } = useKeyboardHeight();
   const {
     messages,
     isLoading,
@@ -33,6 +35,12 @@ export const ChatInputBar: React.FC = () => {
   } = useChat();
   const [inputText, setInputText] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // ChatInputBarの高さを計測してContextに報告
+  const handleLayout = (event: any) => {
+    const { height } = event.nativeEvent.layout;
+    setChatInputBarHeight(height);
+  };
 
   // メッセージ送信処理
   const handleSendMessage = async () => {
@@ -104,7 +112,7 @@ export const ChatInputBar: React.FC = () => {
   });
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} onLayout={handleLayout}>
         {/* メッセージ履歴エリア（展開可能） */}
         {isExpanded && (
           <ChatHistory
