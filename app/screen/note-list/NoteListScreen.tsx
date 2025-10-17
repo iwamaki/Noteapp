@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { StyleSheet, FlatList } from 'react-native';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { useNoteList } from './hooks/useNoteList';
@@ -10,19 +10,20 @@ import { CreateItemModal } from './components/CreateItemModal';
 import { TreeListItem } from './components/TreeListItem';
 import { RenameItemModal } from './components/RenameItemModal';
 import { MainContainer } from '../../components/MainContainer';
-import { usePlatformInfo } from '../../utils/platformInfo';
+import { useKeyboardHeight } from '../../contexts/KeyboardHeightContext';
 
 import { Ionicons } from '@expo/vector-icons';
 import { useSearch } from './hooks/useSearch';
 import { NoteListSearchBar } from './components/NoteListSearchBar';
 
-// ChatInputBarの推定高さ（paddingとinputエリアを含む）
-const CHAT_INPUT_BAR_HEIGHT = 74;
+// 静的スタイル（コンポーネント外部で定義）
+const staticStyles = StyleSheet.create({
+  centered: { justifyContent: 'center', alignItems: 'center' },
+});
 
 function NoteListScreen() {
   const { colors, spacing } = useTheme();
-  const { keyboardHeight } = usePlatformInfo();
-
+  const { keyboardHeight, chatInputBarHeight } = useKeyboardHeight();
 
   const {
     treeNodes,
@@ -46,10 +47,10 @@ function NoteListScreen() {
   } = useSearch(treeNodes);
 
   // キーボード + ChatInputBarの高さを計算してコンテンツが隠れないようにする
-  const chatBarOffset = CHAT_INPUT_BAR_HEIGHT + keyboardHeight;
+  const chatBarOffset = chatInputBarHeight + keyboardHeight;
 
-  const styles = StyleSheet.create({
-    centered: { justifyContent: 'center', alignItems: 'center' },
+  // 動的スタイル（テーマ依存、メモ化）
+  const dynamicStyles = useMemo(() => StyleSheet.create({
     emptyMessage: {
       fontSize: 16,
       color: colors.textSecondary,
@@ -57,10 +58,12 @@ function NoteListScreen() {
       paddingHorizontal: spacing.xl,
     },
     listContent: { padding: spacing.md },
-    listContentWithPadding: {
-      paddingBottom: chatBarOffset,
-    },
-  });
+  }), [colors.textSecondary, spacing.xl, spacing.md]);
+
+  // キーボードオフセット依存スタイル（メモ化）
+  const contentPaddingStyle = useMemo(() => ({
+    paddingBottom: chatBarOffset,
+  }), [chatBarOffset]);
 
   const searchInput = (
     <NoteListSearchBar
@@ -140,8 +143,8 @@ function NoteListScreen() {
     >
       {filteredNodes.length === 0 && !loading ? (
         <NoteListEmptyState
-          containerStyle={styles.centered}
-          messageStyle={styles.emptyMessage}
+          containerStyle={staticStyles.centered}
+          messageStyle={dynamicStyles.emptyMessage}
           message={searchQuery ? `No results for "${searchQuery}"` : 'This folder is empty. Tap the + icon to create a new note or folder.'}
         />
       ) : (
@@ -150,8 +153,8 @@ function NoteListScreen() {
           renderItem={renderTreeItem}
           keyExtractor={(node) => `${node.type}-${node.id}`}
           contentContainerStyle={[
-            styles.listContentWithPadding,
-            styles.listContent,
+            contentPaddingStyle,
+            dynamicStyles.listContent,
           ]}
           keyboardShouldPersistTaps="handled"
         />
