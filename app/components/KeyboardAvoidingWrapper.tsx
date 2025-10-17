@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { KeyboardAvoidingView, Platform, StyleSheet, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { logger } from '../utils/logger';
 
 interface KeyboardAvoidingWrapperProps {
   children: React.ReactNode;
@@ -25,11 +26,19 @@ export const KeyboardAvoidingWrapper: React.FC<KeyboardAvoidingWrapperProps> = (
     default: 0,
   });
 
+  const currentOffset = keyboardVerticalOffset ?? defaultOffset;
+
+  useEffect(() => {
+    logger.debug('system', `KeyboardAvoidingWrapper: keyboardVerticalOffset changed to ${currentOffset}`);
+  }, [currentOffset]);
+
+  logger.debug('system', 'KeyboardAvoidingWrapper: rendering');
+
   return (
     <KeyboardAvoidingView
       style={[styles.container, style]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'} // 'padding' or 'position' for iOS, 'height' for Android
-      keyboardVerticalOffset={keyboardVerticalOffset ?? defaultOffset}
+      keyboardVerticalOffset={currentOffset}
     >
       {children}
     </KeyboardAvoidingView>

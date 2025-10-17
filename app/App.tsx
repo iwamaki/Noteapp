@@ -11,7 +11,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import RootNavigator from './navigation/RootNavigator';
 import { ThemeProvider, useTheme } from './design/theme/ThemeContext';
 import { useSettingsStore } from './settings/settingsStore';
-// import { KeyboardAvoidingWrapper } from './components/KeyboardAvoidingWrapper'; 一旦ignore
+import { KeyboardAvoidingWrapper } from './components/KeyboardAvoidingWrapper';
 import { usePlatformInfo } from './utils/platformInfo';
 import { View, StyleSheet } from 'react-native';
 
@@ -48,9 +48,9 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        {/*<KeyboardAvoidingWrapper>*/}
+        <KeyboardAvoidingWrapper>
           <AppContent />
-        {/*</KeyboardAvoidingWrapper>*/}
+        </KeyboardAvoidingWrapper>
       </ThemeProvider>
     </SafeAreaProvider>
   );
