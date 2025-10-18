@@ -58,3 +58,5 @@ key.json
 build/
 .bak
 
+# else
+scripts/

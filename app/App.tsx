@@ -14,6 +14,12 @@ import { useSettingsStore } from './settings/settingsStore';
 import { usePlatformInfo } from './utils/platformInfo';
 import { View, StyleSheet } from 'react-native';
 
+/**
+ * @function AppContent
+ * @description アプリケーションのメインコンテンツをレンダリングするコンポーネント。
+ * テーマに基づいてステータスバーのスタイルを設定し、ルートナビゲーターを表示します。
+ * @returns {JSX.Element} アプリケーションのメインコンテンツ。
+ */
 const AppContent = () => {
   const { themeMode, colors } = useTheme();
 
@@ -35,6 +41,12 @@ const AppContent = () => {
   );
 };
 
+/**
+ * @function App
+ * @description アプリケーションのルートコンポーネント。
+ * ユーザー設定の読み込み、SafeAreaProviderとThemeProviderの提供、およびAppContentのレンダリングを行います。
+ * @returns {JSX.Element} アプリケーションのルート要素。
+ */
 export default function App() {
   const { loadSettings } = useSettingsStore();
 
