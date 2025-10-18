@@ -1,0 +1,11 @@
+{
+  "entryPoints": ["./app", "./shared"],
+  "out": "docs/api-json",
+  "json": "docs/api-json/documentation.json",
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeInternal": true,
+  "tsconfig": "./tsconfig.json",
+  "theme": "default",
+  "entryPointStrategy": "expand"
+}

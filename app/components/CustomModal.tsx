@@ -80,7 +80,7 @@ export const CustomModal: React.FC<CustomModalProps> = ({
     },
     buttonContainer: {
       flexDirection: 'row',
-      justifyContent: 'flex-end',
+      justifyContent: 'center',
       gap: spacing.md,
       width: '100%',
       marginTop: spacing.md,
@@ -89,7 +89,7 @@ export const CustomModal: React.FC<CustomModalProps> = ({
       borderRadius: responsive.getResponsiveSize(5, 8, 10),
       paddingVertical: spacing.sm,
       paddingHorizontal: spacing.md,
-      minWidth: 80,
+      flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
     },

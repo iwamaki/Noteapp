@@ -10,6 +10,7 @@
     "test": "jest",
     "type-check": "tsc --noEmit",
     "lint": "eslint \"{app,shared}/**/*.{js,jsx,ts,tsx}\"",
+    "docs": "typedoc",
     "depcruise": "node_modules/.bin/depcruise --validate .dependency-cruiser.js --output-type dot app/ > dependency-graph.dot && dot -T svg dependency-graph.dot > dependency-graph.svg"
   },
   "dependencies": {
@@ -53,6 +54,7 @@
     "jest-expo": "^54.0.12",
     "react-test-renderer": "^19.1.0",
     "ts-jest": "29.1.2",
+    "typedoc": "^0.28.14",
     "typescript": "~5.9.2"
   },
   "private": true

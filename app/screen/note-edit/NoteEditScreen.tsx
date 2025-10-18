@@ -151,12 +151,7 @@ function NoteEditScreen() {
         message="保存しますか？"
         buttons={[
           {
-            text: 'キャンセル',
-            style: 'cancel',
-            onPress: () => setConfirmModalVisible(false),
-          },
-          {
-            text: 'はい',
+            text: '保存する',
             style: 'default',
             onPress: () => {
               setConfirmModalVisible(false);
@@ -167,7 +162,7 @@ function NoteEditScreen() {
             },
           },
           {
-            text: 'いいえ',
+            text: '保存しない',
             style: 'destructive',
             onPress: () => {
               setConfirmModalVisible(false);
@@ -175,6 +170,11 @@ function NoteEditScreen() {
                 navigation.dispatch(nextAction);
               }
             },
+          },
+          {
+            text: 'キャンセル',
+            style: 'cancel',
+            onPress: () => setConfirmModalVisible(false),
           },
         ]}
         onClose={() => {
