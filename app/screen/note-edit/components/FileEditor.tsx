@@ -41,7 +41,8 @@ export const FileEditor: React.FC<FileEditorProps> = ({
   // スタイル定義
   const styles = StyleSheet.create({
     container: {
-      // flex: 1 と backgroundColor を削除。レイアウトは親に委ねる
+      flex: 1, // 親から与えられたスペースを最大限に利用
+      // backgroundColor を削除。レイアウトは親に委ねる
     },
     contentContainer: {
       // flex: 1 を削除。paddingはコンテンツの一部として維持
