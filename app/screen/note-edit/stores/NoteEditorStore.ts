@@ -40,7 +40,6 @@ export const useNoteEditorStore = create<NoteEditorStore>((set, get) => ({
   isSaving: false,
   error: null,
   viewMode: 'edit' as ViewMode,
-  wordWrap: true,
   noteId: null,
   originalNote: null,
   history: new HistoryManager(),
@@ -189,13 +188,6 @@ export const useNoteEditorStore = create<NoteEditorStore>((set, get) => ({
       });
       get().history.reset(originalNote.content);
     }
-  },
-
-  // ===== ワードラップ切り替え =====
-  toggleWordWrap: () => {
-    set((state) => ({
-      wordWrap: !state.wordWrap,
-    }));
   },
 
   // ===== ビューモード設定 =====

@@ -29,8 +29,6 @@ interface UseNoteEditHeaderProps {
   onRedo: () => void;
   canUndo: boolean;
   canRedo: boolean;
-  isWordWrapEnabled: boolean;
-  onToggleWordWrap: () => void;
   originalNoteContent: string;
   currentContent: string;
 }
@@ -49,8 +47,6 @@ export const useNoteEditHeader = ({
   onRedo,
   canUndo,
   canRedo,
-  isWordWrapEnabled,
-  onToggleWordWrap,
   originalNoteContent,
   currentContent,
 }: UseNoteEditHeaderProps) => {
@@ -94,8 +90,6 @@ export const useNoteEditHeader = ({
           onToggleViewMode={handleToggleViewMode}
           onShowVersionHistory={handleShowVersionHistory}
           onShowDiffView={handleShowDiffView}
-          onToggleWordWrap={onToggleWordWrap}
-          isWordWrapEnabled={isWordWrapEnabled}
         />
       );
     }
@@ -140,8 +134,6 @@ export const useNoteEditHeader = ({
     canRedo,
     createHeaderConfig,
     colors,
-    isWordWrapEnabled,
-    onToggleWordWrap,
     originalNoteContent,
     currentContent,
   ]);

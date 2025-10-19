@@ -56,7 +56,6 @@ export const useNoteEditor = (noteId?: string) => {
     isSaving: store.isSaving,
     error: store.error,
     viewMode: store.viewMode,
-    wordWrap: store.wordWrap,
 
     // アクション
     setContent: store.setContent,
@@ -67,7 +66,6 @@ export const useNoteEditor = (noteId?: string) => {
     canUndo: store.canUndo(),
     canRedo: store.canRedo(),
     reset: store.reset,
-    toggleWordWrap: store.toggleWordWrap,
     setViewMode: store.setViewMode,
   };
 };

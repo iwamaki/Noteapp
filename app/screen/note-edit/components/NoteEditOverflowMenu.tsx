@@ -8,16 +8,12 @@ interface NoteEditOverflowMenuProps {
   onToggleViewMode: () => void;
   onShowVersionHistory: () => void;
   onShowDiffView: () => void;
-  onToggleWordWrap: () => void;
-  isWordWrapEnabled: boolean;
 }
 
 export const NoteEditOverflowMenu: React.FC<NoteEditOverflowMenuProps> = ({
   onToggleViewMode,
   onShowVersionHistory,
   onShowDiffView,
-  onToggleWordWrap,
-  isWordWrapEnabled,
 }) => {
   const { colors, spacing } = useTheme();
   const [modalVisible, setModalVisible] = useState(false);
@@ -98,19 +94,6 @@ export const NoteEditOverflowMenu: React.FC<NoteEditOverflowMenuProps> = ({
             >
               <Ionicons name="git-compare-outline" size={24} color={colors.text} />
               <Text style={styles.menuItemText}>差分表示</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => handleMenuItemPress(onToggleWordWrap)}
-            >
-              <Ionicons
-                name={isWordWrapEnabled ? 'arrow-undo-outline' : 'arrow-redo-outline'}
-                size={24}
-                color={colors.text}
-              />
-              <Text style={styles.menuItemText}>
-                {isWordWrapEnabled ? '折り返し On' : '折り返し Off'}
-              </Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>

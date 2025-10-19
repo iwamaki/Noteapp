@@ -21,7 +21,6 @@ interface FileEditorProps {
   mode: ViewMode;
   onModeChange: (mode: ViewMode) => void;
   onContentChange?: (content: string) => void;
-  wordWrap?: boolean;
 }
 
 // ファイルエディタコンポーネント
@@ -29,7 +28,6 @@ export const FileEditor: React.FC<FileEditorProps> = ({
   initialContent,
   mode,
   onContentChange,
-  wordWrap,
 }) => {
   const { colors, typography } = useTheme();
 
@@ -68,7 +66,6 @@ export const FileEditor: React.FC<FileEditorProps> = ({
           <TextEditor
             content={initialContent}
             onContentChange={handleContentChange}
-            wordWrap={wordWrap}
           />
         );
 

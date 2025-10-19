@@ -40,8 +40,6 @@ function NoteEditScreen() {
     canUndo,
     canRedo,
     isDirty,
-    wordWrap,
-    toggleWordWrap,
     viewMode,
     setViewMode,
   } = useNoteEditor(noteId);
@@ -90,8 +88,6 @@ function NoteEditScreen() {
     onRedo: redo,
     canUndo,
     canRedo,
-    isWordWrapEnabled: wordWrap,
-    onToggleWordWrap: toggleWordWrap,
     originalNoteContent: note?.content ?? '',
     currentContent: content,
   });
@@ -122,10 +118,6 @@ function NoteEditScreen() {
       paddingBottom: chatBarOffset,
       flexGrow: 1,
     },
-    contentContainerHorizontal: {
-      flexDirection: 'row',
-      alignItems: 'flex-start',
-    },
   });
 
   return (
@@ -133,11 +125,7 @@ function NoteEditScreen() {
       <ToastMessage {...toastProps} />
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={[
-          styles.contentContainer,
-          !wordWrap && styles.contentContainerHorizontal,
-        ]}
-        horizontal={!wordWrap}
+        contentContainerStyle={styles.contentContainer}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={true}
         showsHorizontalScrollIndicator={true}
@@ -148,7 +136,6 @@ function NoteEditScreen() {
           mode={mapViewModeToFileEditor(viewMode)}
           onModeChange={handleViewModeChange}
           onContentChange={setContent}
-          wordWrap={wordWrap}
         />
       </ScrollView>
       <CustomModal
