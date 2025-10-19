@@ -27,7 +27,6 @@ export interface EditorState {
   isSaving: boolean;
   error: EditorError | null;
   viewMode: ViewMode;
-  wordWrap: boolean;
 }
 
 // ============================================
@@ -70,7 +69,6 @@ export interface EditorActions {
   undo: () => void;
   redo: () => void;
   reset: () => void;
-  toggleWordWrap: () => void;
   setViewMode: (mode: ViewMode) => void;
 }
 
