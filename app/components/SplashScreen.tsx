@@ -8,6 +8,15 @@ import React from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { useInitializationStore } from '../initialization/InitializationStore';
 
+// Color constants
+const COLORS = {
+  background: '#fff',
+  title: '#333',
+  text: '#666',
+  textLight: '#999',
+  error: '#dc3545',
+} as const;
+
 interface SplashScreenProps {
   showProgress?: boolean; // 進捗率を表示するか（オプション）
 }
@@ -74,7 +83,7 @@ function getStageLabel(stage: string): string {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.background,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -85,7 +94,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#333',
+    color: COLORS.title,
     marginBottom: 40,
   },
   spinner: {
@@ -93,24 +102,24 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 16,
-    color: '#666',
+    color: COLORS.text,
     textAlign: 'center',
   },
   progressText: {
     fontSize: 14,
-    color: '#999',
+    color: COLORS.textLight,
     marginTop: 10,
   },
   errorText: {
     fontSize: 18,
-    color: '#dc3545',
+    color: COLORS.error,
     fontWeight: '600',
     marginBottom: 10,
     textAlign: 'center',
   },
   errorDetail: {
     fontSize: 14,
-    color: '#666',
+    color: COLORS.text,
     textAlign: 'center',
     paddingHorizontal: 20,
   },

@@ -18,7 +18,7 @@ export const verifyAppReadyTask: InitializationTask = {
   name: 'アプリ準備完了確認',
   description: 'アプリケーションが正常に起動できる状態かを最終確認します',
   stage: InitializationStage.READY,
-  priority: TaskPriority.NORMAL,
+  priority: TaskPriority.CRITICAL,
   dependencies: [
     'load-settings',
     'configure-llm-service',
