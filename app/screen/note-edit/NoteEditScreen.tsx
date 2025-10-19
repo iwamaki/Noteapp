@@ -115,6 +115,8 @@ function NoteEditScreen() {
       backgroundColor: colors.secondary,
     },
     contentContainer: {
+      paddingHorizontal: 16,
+      paddingVertical: 12,
       paddingBottom: chatBarOffset,
       flexGrow: 1,
     },

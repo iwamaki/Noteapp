@@ -22,7 +22,7 @@ export const TextEditor: React.FC<TextEditorProps> = ({
 
   const styles = StyleSheet.create({
     container: {
-      // flex: 1 と padding を削除
+      flex: 1,
     },
     textEditor: {
       ...typography.body,
@@ -30,11 +30,10 @@ export const TextEditor: React.FC<TextEditorProps> = ({
       borderWidth: 1,
       borderColor: colors.border,
       borderRadius: 0,
-      paddingHorizontal: 8,
-      paddingVertical: 8,
       backgroundColor: colors.background,
       color: colors.text,
       textAlignVertical: 'top',
+      flex: 1, // Ensure TextInput fills available width
     },
   });
 
