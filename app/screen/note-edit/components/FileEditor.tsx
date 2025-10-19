@@ -5,7 +5,7 @@
  */
 
 import React, { useCallback } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useTheme } from '../../../design/theme/ThemeContext';
 
 import { MarkdownPreview } from './MarkdownPreview';
@@ -52,9 +52,12 @@ export const FileEditor: React.FC<FileEditorProps> = ({
     switch (mode) {
       case 'content':
         return (
-          <View style={styles.contentContainer}>
+          <ScrollView
+            contentContainerStyle={styles.contentContainer}
+            showsVerticalScrollIndicator
+          >
             <Text style={styles.previewText}>{initialContent}</Text>
-          </View>
+          </ScrollView>
         );
 
       case 'edit':

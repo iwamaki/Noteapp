@@ -62,7 +62,13 @@ export const TextEditor: React.FC<TextEditorProps> = ({
   return (
     <View style={styles.container}>
       {wordWrap ? (
-        <View style={styles.scrollViewContainer}>{editor}</View>
+        <ScrollView
+          contentContainerStyle={styles.scrollViewContainer}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator
+        >
+          {editor}
+        </ScrollView>
       ) : (
         <ScrollView horizontal keyboardShouldPersistTaps="handled">
           <View style={styles.scrollViewContainer}>{editor}</View>
