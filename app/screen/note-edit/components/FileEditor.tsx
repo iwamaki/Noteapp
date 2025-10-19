@@ -45,8 +45,6 @@ export const FileEditor: React.FC<FileEditorProps> = ({
     },
     contentContainer: {
       // flex: 1 を削除。paddingはコンテンツの一部として維持
-      paddingHorizontal: 16,
-      paddingVertical: 12,
     },
     previewText: { ...typography.body, color: colors.text, fontFamily: 'monospace' },
   });
