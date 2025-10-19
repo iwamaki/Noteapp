@@ -32,7 +32,7 @@ export const TextEditor: React.FC<TextEditorProps> = ({
       backgroundColor: colors.secondary,
     },
     textEditor: {
-      flex: 1,
+      ...(wordWrap ? { flex: 1 } : {}),
       ...typography.body,
       fontFamily: 'monospace',
       borderWidth: 1,
@@ -42,7 +42,6 @@ export const TextEditor: React.FC<TextEditorProps> = ({
       paddingVertical: 8,
       backgroundColor: colors.background,
       color: colors.text,
-      minWidth: wordWrap ? undefined : '1000%', // 折り返しなしの場合、非常に広い幅を確保
     },
   });
 
@@ -69,8 +68,14 @@ export const TextEditor: React.FC<TextEditorProps> = ({
           {editor}
         </ScrollView>
       ) : (
-        <ScrollView horizontal keyboardShouldPersistTaps="handled" showsHorizontalScrollIndicator={true}>
-          <View style={styles.scrollViewContainer}>{editor}</View>
+        <ScrollView horizontal keyboardShouldPersistTaps="handled" showsHorizontalScrollIndicator={true}
+          contentContainerStyle={{
+            paddingHorizontal: 16,
+            paddingVertical: 12,
+            backgroundColor: colors.secondary,
+          }}
+        >
+          {editor}
         </ScrollView>
       )}
     </View>
