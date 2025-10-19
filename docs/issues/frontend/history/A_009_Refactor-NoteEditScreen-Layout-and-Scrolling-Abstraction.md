@@ -1,7 +1,7 @@
 ---
 title: "A_009_Refactor_NoteEditScreen_Layout_and_Scrolling_Abstraction"
 id: 9
-status: new
+status: done
 priority: high
 attempt_count: 0
 tags: [architecture, UI, layout, scrolling, refactoring]

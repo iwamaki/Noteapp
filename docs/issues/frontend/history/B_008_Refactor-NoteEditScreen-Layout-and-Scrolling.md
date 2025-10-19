@@ -1,7 +1,7 @@
 ---
 title: "B_008_Refactor_NoteEditScreen_Layout_and_Scrolling"
 id: 8
-status: new
+status: done
 priority: medium
 attempt_count: 0
 tags: [UI, layout, scrolling, refactoring]

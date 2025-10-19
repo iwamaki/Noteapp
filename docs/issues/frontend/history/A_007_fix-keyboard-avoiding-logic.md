@@ -1,7 +1,7 @@
 ---
 title: "A_007_キーボード回避ロジックの修正（謎の空間バグの解消）"
 id: 7
-status: new
+status: done
 priority: high
 attempt_count: 0
 tags: [UI, keyboard, bug, chat, layout]

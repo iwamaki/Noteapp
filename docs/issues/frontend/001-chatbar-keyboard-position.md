@@ -17,7 +17,7 @@ tags: [UI, keyboard, bug]
 
 ## 実装方針 (Implementation Strategy)
 
-問題の根本原因を再調査し、より堅牢な解決策を特定する。特に、React Native のキーボード回避動作と `SafeAreaInsets` の相互作用、およびアプリのライフサイクルイベントがレイアウトに与える影響について深く掘り下げる必要がある。
+問題の根本原因を再調査し、より堅牢な解決策を特定する。
 
 ## 受け入れ条件 (Acceptance Criteria)
 
@@ -26,13 +26,7 @@ tags: [UI, keyboard, bug]
 
 ## 関連ファイル (Related Files)
 
-- `app/features/chat/layouts/useChatLayoutMetrics.ts`
-- `app/features/chat/components/ChatInputBar.tsx`
-- `app/features/chat/layouts/ChatLayout.tsx`
-- `app/App.tsx`
-- `app/navigation/RootNavigator.tsx`
-- `app/screen/note-edit/NoteEditScreen.tsx`
-- `app/screen/note-list/NoteListScreen.tsx`
+
 
 ## 制約条件 (Constraints)
 
