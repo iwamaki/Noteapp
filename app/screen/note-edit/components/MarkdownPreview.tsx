@@ -33,7 +33,7 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content }) => 
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator>
       <Markdown
         style={{
           body: { color: colors.text, ...typography.body },
