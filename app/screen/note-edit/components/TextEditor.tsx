@@ -32,7 +32,6 @@ export const TextEditor: React.FC<TextEditorProps> = ({
       backgroundColor: colors.secondary,
     },
     textEditor: {
-      ...(wordWrap ? { flex: 1 } : {}),
       ...typography.body,
       fontFamily: 'monospace',
       borderWidth: 1,
