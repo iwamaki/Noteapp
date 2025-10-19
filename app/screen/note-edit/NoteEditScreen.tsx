@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet, ScrollView } from 'react-native';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/types';

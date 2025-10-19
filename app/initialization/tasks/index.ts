@@ -10,6 +10,7 @@ import { loadSettingsTask } from './loadSettings';
 import { configureLLMServiceTask } from './configureLLMService';
 import { configureChatServiceTask } from './configureChatService';
 import { verifyAppReadyTask } from './verifyAppReady';
+import { loadIconFontsTask } from './loadIconFonts';
 import { InitializationTask } from '../types';
 
 /**
@@ -24,8 +25,8 @@ export const allInitializationTasks: InitializationTask[] = [
   loadSettingsTask,
 
   // Stage 2: CORE - コアサービス
-  // （現在、ThemeProviderとKeyboardHeightProviderは既存のProvider内で正常に動作しているため、
-  //   明示的な初期化タスクは不要）
+  loadIconFontsTask,
+
 
   // Stage 3: SERVICES - アプリケーションサービス
   configureLLMServiceTask,

@@ -152,7 +152,6 @@ export class AppInitializer {
    * タスクを実行
    */
   private async executeTasks(tasks: InitializationTask[]): Promise<void> {
-    const store = useInitializationStore.getState();
 
     // バッチサイズに分割して実行（並列実行制御）
     for (let i = 0; i < tasks.length; i += this.config.maxConcurrentTasks) {
@@ -261,12 +260,17 @@ export class AppInitializer {
     tasks.forEach((task) => {
       if (task.dependencies) {
         task.dependencies.forEach((depId) => {
-          if (!taskMap.has(depId)) {
+          // 全タスク（this.tasks）から依存関係を検証
+          if (!this.tasks.has(depId)) {
             this.log(`⚠️ Warning: Task ${task.id} depends on non-existent task ${depId}`);
             return;
           }
-          adjacencyList.get(depId)?.push(task.id);
-          inDegree.set(task.id, (inDegree.get(task.id) || 0) + 1);
+          // 依存タスクが現在のステージに含まれている場合のみグラフに追加
+          if (taskMap.has(depId)) {
+            adjacencyList.get(depId)?.push(task.id);
+            inDegree.set(task.id, (inDegree.get(task.id) || 0) + 1);
+          }
+          // 依存タスクが別のステージの場合は、そのステージが先に実行されるので問題なし
         });
       }
     });
