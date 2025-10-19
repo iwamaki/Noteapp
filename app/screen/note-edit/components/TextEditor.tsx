@@ -27,7 +27,6 @@ export const TextEditor: React.FC<TextEditorProps> = ({
       flex: 1,
     },
     scrollViewContainer: {
-      flex: 1,
       paddingHorizontal: 16,
       paddingVertical: 12,
       backgroundColor: colors.secondary,
@@ -65,12 +64,12 @@ export const TextEditor: React.FC<TextEditorProps> = ({
         <ScrollView
           contentContainerStyle={styles.scrollViewContainer}
           keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator
+          showsVerticalScrollIndicator={true}
         >
           {editor}
         </ScrollView>
       ) : (
-        <ScrollView horizontal keyboardShouldPersistTaps="handled">
+        <ScrollView horizontal keyboardShouldPersistTaps="handled" showsHorizontalScrollIndicator={true}>
           <View style={styles.scrollViewContainer}>{editor}</View>
         </ScrollView>
       )}
