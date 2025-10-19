@@ -165,8 +165,18 @@ class BaseAgentLLMProvider(BaseLLMProvider):
 
         # ユーザーメッセージを構築
         full_user_message = message
-        if context and context.attachedFileContent:
-            context_msg = f"\n\n[添付ファイル情報]\nファイル名: {context.attachedFileContent.get('filename')}\n内容:\n---\n{context.attachedFileContent.get('content')}\n---"
+        if context and context.currentFileContent:
+            file_content = context.currentFileContent.get('content')
+            # コンテンツがNoneでない場合のみ、コンテキスト情報をプロンプトに追加
+            if file_content is not None:
+                file_path = context.currentFileContent.get('filename')  # これはフルパス
+                context_msg = f"""\n\n[現在開いているファイル情報]\nファイルパス: {file_path}\n内容:\n---\n{file_content}\n---"""
+                full_user_message += context_msg
+
+        elif context and context.attachedFileContent:
+            filename = context.attachedFileContent.get('filename')
+            file_content = context.attachedFileContent.get('content')
+            context_msg = f"""\n\n[添付ファイル情報]\nファイル名: {filename}\n内容:\n---\n{file_content}\n---"""
             full_user_message += context_msg
 
         # ログ記録

@@ -11,6 +11,7 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  Switch,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSettingsStore } from './settingsStore';
@@ -199,6 +200,14 @@ function SettingsScreen() {
                 (value) => updateSettings({ llmModel: value })
               )
             )}
+
+            <ListItem.Container>
+              <ListItem.Title>ノートコンテキストをLLMに送信</ListItem.Title>
+              <Switch
+                value={settings.sendNoteContextToLLM}
+                onValueChange={(value: boolean) => updateSettings({ sendNoteContextToLLM: value })}
+              />
+            </ListItem.Container>
           </>
         )}
 

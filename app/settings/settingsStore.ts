@@ -41,6 +41,7 @@ export interface AppSettings {
   localLlmPort: string;
   aiResponseStyle: 'concise' | 'detailed' | 'custom';
   contextHistoryLength: number;
+  sendNoteContextToLLM: boolean; // Add this new setting
 
   // 4. バージョン管理/バックアップ設定
   versionSaveFrequency: 'every-change' | 'interval' | 'manual';
@@ -105,6 +106,7 @@ const defaultSettings: AppSettings = {
   localLlmPort: '8080',
   aiResponseStyle: 'concise',
   contextHistoryLength: 10,
+  sendNoteContextToLLM: true,
 
   // バージョン管理/バックアップ設定
   versionSaveFrequency: 'every-change',
