@@ -5,13 +5,16 @@
  * @responsibility その主な責任は、トップレベルのアプリケーションレイアウトとナビゲーションフローを設定し、
  * すべてのコア機能にアクセスできるようにすることです。
  */
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import RootNavigator from './navigation/RootNavigator';
 import { ThemeProvider, useTheme } from './design/theme/ThemeContext';
-import { useSettingsStore } from './settings/settingsStore';
 import { View, StyleSheet } from 'react-native';
+import { AppInitializer } from './initialization/AppInitializer';
+import { allInitializationTasks } from './initialization/tasks';
+import { useInitializationStore } from './initialization/InitializationStore';
+import { SplashScreen } from './components/SplashScreen';
 
 /**
  * @function AppContent
@@ -43,16 +46,46 @@ const AppContent = () => {
 /**
  * @function App
  * @description アプリケーションのルートコンポーネント。
- * ユーザー設定の読み込み、SafeAreaProviderとThemeProviderの提供、およびAppContentのレンダリングを行います。
+ * 初期化マネージャーを使用してアプリケーションの初期化を行い、
+ * 完了までスプラッシュ画面を表示します。
  * @returns {JSX.Element} アプリケーションのルート要素。
  */
 export default function App() {
-  const { loadSettings } = useSettingsStore();
+  const { isInitialized, hasFailed } = useInitializationStore();
+  const [initError, setInitError] = useState<Error | null>(null);
 
   useEffect(() => {
-    // ユーザー設定を読み込み
-    loadSettings();
+    // 初期化マネージャーのセットアップと実行
+    const initializeApp = async () => {
+      try {
+        const initializer = AppInitializer.getInstance({
+          enableDebugLogs: __DEV__,
+          minSplashDuration: 500, // 最低0.5秒表示
+        });
+
+        // タスクを登録
+        initializer.registerTasks(allInitializationTasks);
+
+        // 初期化を実行
+        await initializer.initialize();
+      } catch (error) {
+        console.error('[App] Initialization failed:', error);
+        setInitError(error instanceof Error ? error : new Error(String(error)));
+      }
+    };
+
+    initializeApp();
   }, []);
+
+  // 初期化が完了していない、または失敗した場合はスプラッシュ画面を表示
+  if (!isInitialized || hasFailed) {
+    return <SplashScreen showProgress={__DEV__} />;
+  }
+
+  // 初期化エラーがある場合は、エラー情報を表示（開発時のみ）
+  if (__DEV__ && initError) {
+    console.warn('[App] Init error occurred but app is marked as initialized:', initError);
+  }
 
   return (
     <SafeAreaProvider>
