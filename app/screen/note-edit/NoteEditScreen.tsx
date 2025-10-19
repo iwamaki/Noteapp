@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, ScrollView } from 'react-native';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/types';
 import { FileEditor, ViewMode as FileEditorViewMode } from './components/FileEditor';
@@ -10,6 +10,7 @@ import { CustomModal } from '../../components/CustomModal';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { MainContainer } from '../../components/MainContainer';
 import { useKeyboardHeight } from '../../contexts/KeyboardHeightContext';
+import { useTheme } from '../../design/theme/ThemeContext';
 
 import type { ViewMode } from './types';
 import { ToastMessage } from './components/ToastMessage'; // ToastMessageをインポート
@@ -17,20 +18,13 @@ import { useToastMessage } from './hooks/useToastMessage'; // useToastMessageを
 
 type NoteEditScreenRouteProp = RouteProp<RootStackParamList, 'NoteEdit'>;
 
-// 静的スタイル（コンポーネント外部で定義）
-const staticStyles = StyleSheet.create({
-  animatedContainer: {
-    flex: 1,
-  },
-});
-
 // ノート編集画面コンポーネント
 function NoteEditScreen() {
+  const { colors } = useTheme();
   const route = useRoute<NoteEditScreenRouteProp>();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { noteId } = route.params || {};
   const { keyboardHeight, chatInputBarHeight } = useKeyboardHeight();
-
 
   const {
     note,
@@ -38,7 +32,7 @@ function NoteEditScreen() {
     content,
     setContent,
     isLoading,
-    isSaving, // isSavingを取得
+    isSaving,
     save: handleSave,
     setTitle: handleTitleChange,
     undo,
@@ -54,15 +48,13 @@ function NoteEditScreen() {
 
   const [isConfirmModalVisible, setConfirmModalVisible] = useState(false);
   const [nextAction, setNextAction] = useState<any>(null);
-  const { showToast, toastProps } = useToastMessage(); // useToastMessageフックを呼び出す
+  const { showToast, toastProps } = useToastMessage();
 
   const prevIsSavingRef = useRef(isSaving);
 
-  // 保存状態に応じてトーストメッセージを表示
   useEffect(() => {
-    // isSavingがtrueからfalseに変わったときに「保存しました！」を表示
     if (prevIsSavingRef.current === true && isSaving === false) {
-      showToast('保存しました！', 2000); // 2秒後に自動的に非表示
+      showToast('保存しました！', 2000);
     }
     prevIsSavingRef.current = isSaving;
   }, [isSaving, showToast]);
@@ -84,7 +76,6 @@ function NoteEditScreen() {
     };
   }, [navigation, isDirty, isLoading]);
 
-  // ヘッダーの設定
   useNoteEditHeader({
     title,
     activeNoteId: note?.id,
@@ -105,37 +96,52 @@ function NoteEditScreen() {
     currentContent: content,
   });
 
-  // チャットコンテキストプロバイダーを登録
   useNoteEditChatContext({
     title,
     content,
     setContent,
   });
 
-  // ViewModeの変換（新アーキテクチャの型 → FileEditorの型）
   const mapViewModeToFileEditor = (mode: ViewMode): FileEditorViewMode => {
-    // 'diff'は現時点でFileEditorでサポートされていないため、'preview'にフォールバック
     if (mode === 'diff') return 'preview';
     return mode as FileEditorViewMode;
   };
 
-  // FileEditorのViewMode変更を新アーキテクチャのViewModeに変換
   const handleViewModeChange = (mode: FileEditorViewMode) => {
     setViewMode(mode as ViewMode);
   };
 
-  // キーボード + ChatInputBarの高さを計算してコンテンツが隠れないようにする
   const chatBarOffset = chatInputBarHeight + keyboardHeight;
 
-  // キーボードオフセット依存スタイル（メモ化）
-  const contentPaddingStyle = useMemo(() => ({
-    paddingBottom: chatBarOffset,
-  }), [chatBarOffset]);
+  const styles = StyleSheet.create({
+    scrollView: {
+      flex: 1,
+      backgroundColor: colors.secondary,
+    },
+    contentContainer: {
+      paddingBottom: chatBarOffset,
+      flexGrow: 1,
+    },
+    contentContainerHorizontal: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+    },
+  });
 
   return (
     <MainContainer isLoading={isLoading}>
       <ToastMessage {...toastProps} />
-      <View style={[staticStyles.animatedContainer, contentPaddingStyle]}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={[
+          styles.contentContainer,
+          !wordWrap && styles.contentContainerHorizontal,
+        ]}
+        horizontal={!wordWrap}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={true}
+        showsHorizontalScrollIndicator={true}
+      >
         <FileEditor
           filename={title}
           initialContent={content}
@@ -144,7 +150,7 @@ function NoteEditScreen() {
           onContentChange={setContent}
           wordWrap={wordWrap}
         />
-      </View>
+      </ScrollView>
       <CustomModal
         isVisible={isConfirmModalVisible}
         title="未保存の変更があります。"
@@ -155,7 +161,7 @@ function NoteEditScreen() {
             style: 'default',
             onPress: () => {
               setConfirmModalVisible(false);
-              handleSave(); // 変更を保存
+              handleSave();
               if (nextAction) {
                 navigation.dispatch(nextAction);
               }
@@ -179,7 +185,7 @@ function NoteEditScreen() {
         ]}
         onClose={() => {
           setConfirmModalVisible(false);
-          setNextAction(null); // アクションをクリア
+          setNextAction(null);
         }}
       />
     </MainContainer>

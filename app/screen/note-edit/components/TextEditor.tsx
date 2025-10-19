@@ -3,8 +3,8 @@
  * @summary テキスト編集コンポーネント
  */
 
-import React from 'react';
-import { View, TextInput, StyleSheet, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { View, TextInput, StyleSheet, useWindowDimensions } from 'react-native';
 import { useTheme } from '@design/theme/ThemeContext';
 
 interface TextEditorProps {
@@ -21,15 +21,17 @@ export const TextEditor: React.FC<TextEditorProps> = ({
   wordWrap = true,
 }) => {
   const { colors, typography } = useTheme();
+  const { width: windowWidth } = useWindowDimensions();
+
+  // NoteEditScreenのScrollViewのpaddingHorizontalが16*2=32
+  const parentHorizontalPadding = 32;
+  const minWidth = windowWidth - parentHorizontalPadding;
+
+  const [textInputWidth, setTextInputWidth] = useState(minWidth);
 
   const styles = StyleSheet.create({
     container: {
-      flex: 1,
-    },
-    scrollViewContainer: {
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      backgroundColor: colors.secondary,
+      // flex: 1 と padding を削除
     },
     textEditor: {
       ...typography.body,
@@ -41,42 +43,33 @@ export const TextEditor: React.FC<TextEditorProps> = ({
       paddingVertical: 8,
       backgroundColor: colors.background,
       color: colors.text,
+      textAlignVertical: 'top',
+      minWidth: minWidth,
     },
   });
 
-  const editor = (
-    <TextInput
-      style={styles.textEditor}
-      value={content}
-      onChangeText={onContentChange}
-      multiline
-      placeholder={placeholder}
-      placeholderTextColor={colors.textSecondary}
-      textAlignVertical="top"
-    />
-  );
+  // wordWrapがfalseの時だけ幅を動的に変更
+  const dynamicEditorStyle = !wordWrap ? { width: textInputWidth } : {};
 
   return (
     <View style={styles.container}>
-      {wordWrap ? (
-        <ScrollView
-          contentContainerStyle={styles.scrollViewContainer}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={true}
-        >
-          {editor}
-        </ScrollView>
-      ) : (
-        <ScrollView horizontal keyboardShouldPersistTaps="handled" showsHorizontalScrollIndicator={true}
-          contentContainerStyle={{
-            paddingHorizontal: 16,
-            paddingVertical: 12,
-            backgroundColor: colors.secondary,
-          }}
-        >
-          {editor}
-        </ScrollView>
-      )}
+      <TextInput
+        style={[styles.textEditor, dynamicEditorStyle]}
+        value={content}
+        onChangeText={onContentChange}
+        multiline
+        placeholder={placeholder}
+        placeholderTextColor={colors.textSecondary}
+        scrollEnabled={false} // TextInput自体のスクロールは親に委譲
+        onContentSizeChange={
+          !wordWrap
+            ? (e) => {
+                // コンテンツの幅が最小幅より大きい場合のみ更新
+                setTextInputWidth(Math.max(minWidth, e.nativeEvent.contentSize.width));
+              }
+            : undefined
+        }
+      />
     </View>
   );
 };

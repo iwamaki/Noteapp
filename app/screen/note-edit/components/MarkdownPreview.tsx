@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { ScrollView, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import Markdown from 'react-native-markdown-display';
 import { useTheme } from '@design/theme/ThemeContext';
 
@@ -17,9 +17,7 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content }) => 
 
   const styles = StyleSheet.create({
     container: {
-      flex: 1,
-      paddingHorizontal: 8,
-      paddingVertical: 8,
+      // flex, padding は親コンポーネントで管理
     },
   });
 
@@ -33,7 +31,7 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content }) => 
   };
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator>
+    <View style={styles.container}>
       <Markdown
         style={{
           body: { color: colors.text, ...typography.body },
@@ -44,6 +42,6 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content }) => 
       >
         {content}
       </Markdown>
-    </ScrollView>
+    </View>
   );
 };

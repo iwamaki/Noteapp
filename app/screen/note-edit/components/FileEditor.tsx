@@ -5,7 +5,7 @@
  */
 
 import React, { useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { useTheme } from '../../../design/theme/ThemeContext';
 
 import { MarkdownPreview } from './MarkdownPreview';
@@ -42,8 +42,14 @@ export const FileEditor: React.FC<FileEditorProps> = ({
 
   // スタイル定義
   const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.background },
-    contentContainer: { flex: 1, paddingHorizontal: 16, paddingVertical: 12 },
+    container: {
+      // flex: 1 と backgroundColor を削除。レイアウトは親に委ねる
+    },
+    contentContainer: {
+      // flex: 1 を削除。paddingはコンテンツの一部として維持
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+    },
     previewText: { ...typography.body, color: colors.text, fontFamily: 'monospace' },
   });
 
@@ -52,12 +58,9 @@ export const FileEditor: React.FC<FileEditorProps> = ({
     switch (mode) {
       case 'content':
         return (
-          <ScrollView
-            contentContainerStyle={styles.contentContainer}
-            showsVerticalScrollIndicator={true}
-          >
+          <View style={styles.contentContainer}>
             <Text style={styles.previewText}>{initialContent}</Text>
-          </ScrollView>
+          </View>
         );
 
       case 'edit':
