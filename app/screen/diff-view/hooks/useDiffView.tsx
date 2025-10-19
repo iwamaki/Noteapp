@@ -74,10 +74,10 @@ export const useDiffView = () => {
     let rightButtons: HeaderConfig['rightButtons'] = [];
 
     if (mode === 'restore') {
-      titleText = 'バージョン比較 (復元)';
+      titleText = 'バージョンの復元';
       rightButtons = [{ title: '復元', onPress: handleRestore, variant: 'primary' }];
     } else if (mode === 'readonly') {
-      titleText = 'バージョン比較';
+      titleText = '変更点の確認';
     }
 
     navigation.setOptions(
