@@ -4,11 +4,12 @@ strict digraph "dependency-cruiser output"{
     edge [arrowhead="vee" arrowsize="0.6" penwidth="2" color="#64748b" fontname="Helvetica" fontsize="9"]
 
     subgraph "cluster_app" {label="app" "app/App.tsx" [label=<App.tsx> tooltip="App.tsx" URL="app/App.tsx" fillcolor="#bbfeff"] }
-    "app/App.tsx" -> "app/components/KeyboardAvoidingWrapper.tsx"
+    "app/App.tsx" -> "app/components/SplashScreen.tsx"
     "app/App.tsx" -> "app/design/theme/ThemeContext.tsx"
+    "app/App.tsx" -> "app/initialization/AppInitializer.ts"
+    "app/App.tsx" -> "app/initialization/InitializationStore.ts"
+    "app/App.tsx" -> "app/initialization/tasks/index.ts"
     "app/App.tsx" -> "app/navigation/RootNavigator.tsx"
-    "app/App.tsx" -> "app/settings/settingsStore.ts"
-    "app/App.tsx" -> "app/utils/platformInfo.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/components" {label="components" "app/components/CustomHeader.tsx" [label=<CustomHeader.tsx> tooltip="CustomHeader.tsx" URL="app/components/CustomHeader.tsx" fillcolor="#bbfeff"] } }
     "app/components/CustomHeader.tsx" -> "app/design/theme/ThemeContext.tsx"
     "app/components/CustomHeader.tsx" -> "app/components/HeaderButton.tsx"
@@ -22,11 +23,15 @@ strict digraph "dependency-cruiser output"{
     "app/components/HeaderButton.tsx" -> "app/design/styles/commonStyles.ts"
     "app/components/HeaderButton.tsx" -> "app/design/theme/ThemeContext.tsx"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/components" {label="components" "app/components/KeyboardAvoidingWrapper.tsx" [label=<KeyboardAvoidingWrapper.tsx> tooltip="KeyboardAvoidingWrapper.tsx" URL="app/components/KeyboardAvoidingWrapper.tsx" fillcolor="#bbfeff"] } }
+    "app/components/KeyboardAvoidingWrapper.tsx" -> "app/utils/logger.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/components" {label="components" "app/components/ListItem.tsx" [label=<ListItem.tsx> tooltip="ListItem.tsx" URL="app/components/ListItem.tsx" fillcolor="#bbfeff"] } }
     "app/components/ListItem.tsx" -> "app/design/styles/commonStyles.ts"
     "app/components/ListItem.tsx" -> "app/design/theme/ThemeContext.tsx"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/components" {label="components" "app/components/MainContainer.tsx" [label=<MainContainer.tsx> tooltip="MainContainer.tsx" URL="app/components/MainContainer.tsx" fillcolor="#bbfeff"] } }
     "app/components/MainContainer.tsx" -> "app/design/theme/ThemeContext.tsx"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/components" {label="components" "app/components/SplashScreen.tsx" [label=<SplashScreen.tsx> tooltip="SplashScreen.tsx" URL="app/components/SplashScreen.tsx" fillcolor="#bbfeff"] } }
+    "app/components/SplashScreen.tsx" -> "app/initialization/InitializationStore.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/contexts" {label="contexts" "app/contexts/KeyboardHeightContext.tsx" [label=<KeyboardHeightContext.tsx> tooltip="KeyboardHeightContext.tsx" URL="app/contexts/KeyboardHeightContext.tsx" fillcolor="#bbfeff"] } }
     subgraph "cluster_app" {label="app" subgraph "cluster_app/data" {label="data" "app/data/asyncStorageUtils.ts" [label=<asyncStorageUtils.ts> tooltip="asyncStorageUtils.ts" URL="app/data/asyncStorageUtils.ts" fillcolor="#ddfeff"] } }
     subgraph "cluster_app" {label="app" subgraph "cluster_app/design" {label="design" subgraph "cluster_app/design/styles" {label="styles" "app/design/styles/commonStyles.ts" [label=<commonStyles.ts> tooltip="commonStyles.ts" URL="app/design/styles/commonStyles.ts" fillcolor="#ddfeff"] } } }
     subgraph "cluster_app" {label="app" subgraph "cluster_app/design" {label="design" subgraph "cluster_app/design/theme" {label="theme" "app/design/theme/ThemeContext.tsx" [label=<ThemeContext.tsx> tooltip="ThemeContext.tsx" URL="app/design/theme/ThemeContext.tsx" fillcolor="#bbfeff"] } } }
@@ -36,10 +41,10 @@ strict digraph "dependency-cruiser output"{
     "app/features/chat/components/ChatHistory.tsx" -> "app/services/llmService/index.ts"
     "app/features/chat/components/ChatHistory.tsx" -> "app/features/chat/components/MessageItem.tsx"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/components" {label="components" "app/features/chat/components/ChatInputBar.tsx" [label=<ChatInputBar.tsx> tooltip="ChatInputBar.tsx" URL="app/features/chat/components/ChatInputBar.tsx" fillcolor="#bbfeff"] } } } }
+    "app/features/chat/components/ChatInputBar.tsx" -> "app/contexts/KeyboardHeightContext.tsx"
     "app/features/chat/components/ChatInputBar.tsx" -> "app/design/theme/ThemeContext.tsx"
     "app/features/chat/components/ChatInputBar.tsx" -> "app/features/chat/components/ChatHistory.tsx"
     "app/features/chat/components/ChatInputBar.tsx" -> "app/features/chat/hooks/useChat.ts"
-    "app/features/chat/components/ChatInputBar.tsx" -> "app/features/chat/layouts/useChatLayoutMetrics.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/components" {label="components" "app/features/chat/components/MessageItem.tsx" [label=<MessageItem.tsx> tooltip="MessageItem.tsx" URL="app/features/chat/components/MessageItem.tsx" fillcolor="#bbfeff"] } } } }
     "app/features/chat/components/MessageItem.tsx" -> "app/design/theme/ThemeContext.tsx"
     "app/features/chat/components/MessageItem.tsx" -> "app/services/llmService/index.ts"
@@ -74,7 +79,41 @@ strict digraph "dependency-cruiser output"{
     "app/features/chat/types.ts" -> "app/services/llmService/types/types.ts"
     subgraph "cluster_app" {label="app" "app/index.ts" [label=<index.ts> tooltip="index.ts" URL="app/index.ts" fillcolor="#ddfeff"] }
     "app/index.ts" -> "app/App.tsx"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/initialization" {label="initialization" "app/initialization/AppInitializer.ts" [label=<AppInitializer.ts> tooltip="AppInitializer.ts" URL="app/initialization/AppInitializer.ts" fillcolor="#ddfeff"] } }
+    "app/initialization/AppInitializer.ts" -> "app/initialization/InitializationStore.ts"
+    "app/initialization/AppInitializer.ts" -> "app/initialization/types.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/initialization" {label="initialization" "app/initialization/InitializationStore.ts" [label=<InitializationStore.ts> tooltip="InitializationStore.ts" URL="app/initialization/InitializationStore.ts" fillcolor="#ddfeff"] } }
+    "app/initialization/InitializationStore.ts" -> "app/initialization/types.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/initialization" {label="initialization" subgraph "cluster_app/initialization/tasks" {label="tasks" "app/initialization/tasks/configureChatService.ts" [label=<configureChatService.ts> tooltip="configureChatService.ts" URL="app/initialization/tasks/configureChatService.ts" fillcolor="#ddfeff"] } } }
+    "app/initialization/tasks/configureChatService.ts" -> "app/features/chat/index.ts"
+    "app/initialization/tasks/configureChatService.ts" -> "app/settings/settingsStore.ts"
+    "app/initialization/tasks/configureChatService.ts" -> "app/initialization/types.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/initialization" {label="initialization" subgraph "cluster_app/initialization/tasks" {label="tasks" "app/initialization/tasks/configureLLMService.ts" [label=<configureLLMService.ts> tooltip="configureLLMService.ts" URL="app/initialization/tasks/configureLLMService.ts" fillcolor="#ddfeff"] } } }
+    "app/initialization/tasks/configureLLMService.ts" -> "app/services/llmService/api.ts"
+    "app/initialization/tasks/configureLLMService.ts" -> "app/settings/settingsStore.ts"
+    "app/initialization/tasks/configureLLMService.ts" -> "app/initialization/types.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/initialization" {label="initialization" subgraph "cluster_app/initialization/tasks" {label="tasks" "app/initialization/tasks/index.ts" [label=<index.ts> tooltip="index.ts" URL="app/initialization/tasks/index.ts" fillcolor="#ddfeff"] } } }
+    "app/initialization/tasks/index.ts" -> "app/initialization/types.ts"
+    "app/initialization/tasks/index.ts" -> "app/initialization/tasks/configureChatService.ts"
+    "app/initialization/tasks/index.ts" -> "app/initialization/tasks/configureLLMService.ts"
+    "app/initialization/tasks/index.ts" -> "app/initialization/tasks/loadIconFonts.ts"
+    "app/initialization/tasks/index.ts" -> "app/initialization/tasks/loadSettings.ts"
+    "app/initialization/tasks/index.ts" -> "app/initialization/tasks/verifyAppReady.ts"
+    "app/initialization/tasks/index.ts" -> "app/initialization/tasks/verifyAsyncStorage.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/initialization" {label="initialization" subgraph "cluster_app/initialization/tasks" {label="tasks" "app/initialization/tasks/loadIconFonts.ts" [label=<loadIconFonts.ts> tooltip="loadIconFonts.ts" URL="app/initialization/tasks/loadIconFonts.ts" fillcolor="#ddfeff"] } } }
+    "app/initialization/tasks/loadIconFonts.ts" -> "app/initialization/types.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/initialization" {label="initialization" subgraph "cluster_app/initialization/tasks" {label="tasks" "app/initialization/tasks/loadSettings.ts" [label=<loadSettings.ts> tooltip="loadSettings.ts" URL="app/initialization/tasks/loadSettings.ts" fillcolor="#ddfeff"] } } }
+    "app/initialization/tasks/loadSettings.ts" -> "app/settings/settingsStore.ts"
+    "app/initialization/tasks/loadSettings.ts" -> "app/initialization/types.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/initialization" {label="initialization" subgraph "cluster_app/initialization/tasks" {label="tasks" "app/initialization/tasks/verifyAppReady.ts" [label=<verifyAppReady.ts> tooltip="verifyAppReady.ts" URL="app/initialization/tasks/verifyAppReady.ts" fillcolor="#ddfeff"] } } }
+    "app/initialization/tasks/verifyAppReady.ts" -> "app/settings/settingsStore.ts"
+    "app/initialization/tasks/verifyAppReady.ts" -> "app/initialization/types.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/initialization" {label="initialization" subgraph "cluster_app/initialization/tasks" {label="tasks" "app/initialization/tasks/verifyAsyncStorage.ts" [label=<verifyAsyncStorage.ts> tooltip="verifyAsyncStorage.ts" URL="app/initialization/tasks/verifyAsyncStorage.ts" fillcolor="#ddfeff"] } } }
+    "app/initialization/tasks/verifyAsyncStorage.ts" -> "app/initialization/types.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/initialization" {label="initialization" "app/initialization/types.ts" [label=<types.ts> tooltip="types.ts" URL="app/initialization/types.ts" fillcolor="#ddfeff"] } }
     subgraph "cluster_app" {label="app" subgraph "cluster_app/navigation" {label="navigation" "app/navigation/RootNavigator.tsx" [label=<RootNavigator.tsx> tooltip="RootNavigator.tsx" URL="app/navigation/RootNavigator.tsx" fillcolor="#bbfeff"] } }
+    "app/navigation/RootNavigator.tsx" -> "app/contexts/KeyboardHeightContext.tsx"
+    "app/navigation/RootNavigator.tsx" -> "app/design/theme/ThemeContext.tsx"
     "app/navigation/RootNavigator.tsx" -> "app/features/chat/layouts/ChatLayout.tsx"
     "app/navigation/RootNavigator.tsx" -> "app/screen/diff-view/DiffViewScreen.tsx"
     "app/navigation/RootNavigator.tsx" -> "app/screen/note-edit/NoteEditScreen.tsx"
@@ -96,10 +135,17 @@ strict digraph "dependency-cruiser output"{
     "app/screen/diff-view/hooks/useDiffView.tsx" -> "app/navigation/types.ts"
     "app/screen/diff-view/hooks/useDiffView.tsx" -> "app/screen/note-edit/repositories/noteStorage.ts"
     "app/screen/diff-view/hooks/useDiffView.tsx" -> "app/screen/diff-view/services/diffService.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/diff-view" {label="diff-view" subgraph "cluster_app/screen/diff-view/services" {label="services" "app/screen/diff-view/services/diffService.line-based.backup.ts" [label=<diffService.line-based.backup.ts> tooltip="no-orphans" URL="app/screen/diff-view/services/diffService.line-based.backup.ts" fillcolor="#ccffcc" fontcolor="orange" color="orange"] } } } }
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/diff-view" {label="diff-view" subgraph "cluster_app/screen/diff-view/services" {label="services" "app/screen/diff-view/services/diffService.test.ts" [label=<diffService.test.ts> tooltip="diffService.test.ts" URL="app/screen/diff-view/services/diffService.test.ts" fillcolor="#ddfeff"] } } } }
+    "app/screen/diff-view/services/diffService.test.ts" -> "app/screen/diff-view/services/diffService.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/diff-view" {label="diff-view" subgraph "cluster_app/screen/diff-view/services" {label="services" "app/screen/diff-view/services/diffService.ts" [label=<diffService.ts> tooltip="diffService.ts" URL="app/screen/diff-view/services/diffService.ts" fillcolor="#ddfeff"] } } } }
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/diff-view" {label="diff-view" subgraph "cluster_app/screen/diff-view/services" {label="services" "app/screen/diff-view/services/testHybridDiff.ts" [label=<testHybridDiff.ts> tooltip="testHybridDiff.ts" URL="app/screen/diff-view/services/testHybridDiff.ts" fillcolor="#ddfeff"] } } } }
+    "app/screen/diff-view/services/testHybridDiff.ts" -> "app/screen/diff-view/services/diffService.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-edit" {label="note-edit" "app/screen/note-edit/NoteEditScreen.tsx" [label=<NoteEditScreen.tsx> tooltip="NoteEditScreen.tsx" URL="app/screen/note-edit/NoteEditScreen.tsx" fillcolor="#bbfeff"] } } }
     "app/screen/note-edit/NoteEditScreen.tsx" -> "app/components/CustomModal.tsx"
     "app/screen/note-edit/NoteEditScreen.tsx" -> "app/components/MainContainer.tsx"
+    "app/screen/note-edit/NoteEditScreen.tsx" -> "app/contexts/KeyboardHeightContext.tsx"
+    "app/screen/note-edit/NoteEditScreen.tsx" -> "app/design/theme/ThemeContext.tsx"
     "app/screen/note-edit/NoteEditScreen.tsx" -> "app/features/chat/hooks/useNoteEditChatContext.ts"
     "app/screen/note-edit/NoteEditScreen.tsx" -> "app/navigation/types.ts"
     "app/screen/note-edit/NoteEditScreen.tsx" -> "app/screen/note-edit/components/FileEditor.tsx"
@@ -173,6 +219,7 @@ strict digraph "dependency-cruiser output"{
     "app/screen/note-edit/types/index.ts" -> "shared/types/note.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-list" {label="note-list" "app/screen/note-list/NoteListScreen.tsx" [label=<NoteListScreen.tsx> tooltip="NoteListScreen.tsx" URL="app/screen/note-list/NoteListScreen.tsx" fillcolor="#bbfeff"] } } }
     "app/screen/note-list/NoteListScreen.tsx" -> "app/components/MainContainer.tsx"
+    "app/screen/note-list/NoteListScreen.tsx" -> "app/contexts/KeyboardHeightContext.tsx"
     "app/screen/note-list/NoteListScreen.tsx" -> "app/design/theme/ThemeContext.tsx"
     "app/screen/note-list/NoteListScreen.tsx" -> "app/features/chat/hooks/useNoteListChatContext.ts"
     "app/screen/note-list/NoteListScreen.tsx" -> "app/screen/note-list/components/CreateItemModal.tsx"
@@ -314,7 +361,6 @@ strict digraph "dependency-cruiser output"{
     "app/utils/debugUtils.ts" -> "app/screen/note-list/utils/treeUtils.ts"
     "app/utils/debugUtils.ts" -> "app/utils/logger.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/utils" {label="utils" "app/utils/logger.ts" [label=<logger.ts> tooltip="logger.ts" URL="app/utils/logger.ts" fillcolor="#ddfeff"] } }
-    subgraph "cluster_app" {label="app" subgraph "cluster_app/utils" {label="utils" "app/utils/loggerConfig.ts" [label=<loggerConfig.ts> tooltip="no-orphans" URL="app/utils/loggerConfig.ts" fillcolor="#ccffcc" fontcolor="orange" color="orange"] } }
     subgraph "cluster_app" {label="app" subgraph "cluster_app/utils" {label="utils" "app/utils/platformInfo.ts" [label=<platformInfo.ts> tooltip="platformInfo.ts" URL="app/utils/platformInfo.ts" fillcolor="#ddfeff"] } }
     "app/utils/platformInfo.ts" -> "app/utils/logger.ts"
     subgraph "cluster_shared" {label="shared" subgraph "cluster_shared/types" {label="types" "shared/types/note.ts" [label=<note.ts> tooltip="note.ts" URL="shared/types/note.ts" fillcolor="#ddfeff"] } }

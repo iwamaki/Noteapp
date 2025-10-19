@@ -17,9 +17,10 @@ import NoteEditScreen from '../screen/note-edit/NoteEditScreen';
 import DiffViewScreen from '../screen/diff-view/DiffViewScreen';
 import VersionHistoryScreen from '../screen/version-history/VersionHistoryScreen';
 import SettingsScreen from '../settings/SettingsScreen';
-import { ChatLayout } from '../features/chat/layouts/ChatLayout';
+
 import { useTheme } from '../design/theme/ThemeContext';
 import { KeyboardHeightProvider, useKeyboardHeight } from '../contexts/KeyboardHeightContext';
+import { ChatInputBar } from '../features/chat/components/ChatInputBar';
 
 
 // スタックナビゲーターの作成
@@ -58,9 +59,11 @@ function RootNavigatorContent() {
           <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
         </Stack.Navigator>
       </NavigationContainer>
-      <View style={[styles.chatLayoutContainer, { marginBottom: keyboardHeight }]}>
-        <ChatLayout visible={shouldShowChat} />
-      </View>
+      {shouldShowChat && (
+        <View style={[styles.chatLayoutContainer, { marginBottom: keyboardHeight }]}>
+          <ChatInputBar />
+        </View>
+      )}
     </>
   );
 }

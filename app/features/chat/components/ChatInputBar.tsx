@@ -21,7 +21,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useKeyboardHeight } from '../../../contexts/KeyboardHeightContext';
 
 // チャット入力バーコンポーネント（プロパティ不要）
-export const ChatInputBar: React.FC = () => {
+interface ChatInputBarProps {
+}
+
+export const ChatInputBar: React.FC<ChatInputBarProps> = () => {
   const { colors, typography } = useTheme();
   const insets = useSafeAreaInsets();
   const { setChatInputBarHeight } = useKeyboardHeight();
