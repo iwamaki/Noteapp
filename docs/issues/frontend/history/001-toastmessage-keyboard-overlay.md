@@ -1,7 +1,7 @@
 ---
 title: "[B:high]_001_ToastMessageがキーボードに隠れる問題の解決と最前面表示の検討"
 id: 001
-status: new
+status: done
 priority: high
 attempt_count: 0
 tags: [UI, keyboard, bug, discussion]

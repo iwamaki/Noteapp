@@ -1,7 +1,7 @@
 ---
 title: "[B]_006_note-editリファクタリング後のコードベースへの段階的移行"
 id: 006
-status: new
+status: done
 priority: medium
 attempt_count: 0
 tags: [refactoring, note-edit, migration, architecture]
