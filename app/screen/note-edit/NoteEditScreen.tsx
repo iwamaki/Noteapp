@@ -130,7 +130,7 @@ function NoteEditScreen() {
         contentContainerStyle={styles.contentContainer}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={true}
-        showsHorizontalScrollIndicator={true}
+        showsHorizontalScrollIndicator={false}
       >
         <FileEditor
           filename={title}
