@@ -54,7 +54,7 @@ export const FileEditor: React.FC<FileEditorProps> = ({
         return (
           <ScrollView
             contentContainerStyle={styles.contentContainer}
-            showsVerticalScrollIndicator
+            showsVerticalScrollIndicator={true}
           >
             <Text style={styles.previewText}>{initialContent}</Text>
           </ScrollView>
