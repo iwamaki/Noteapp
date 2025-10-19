@@ -4,18 +4,31 @@
  * @responsibility ノート編集画面のコンテキストをChatServiceに提供し、
  *                 edit_file、read_fileなどのコマンドハンドラを登録する
  */
-
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { ActiveScreenContextProvider, ActiveScreenContext } from '../types';
 import { LLMCommand } from '../../../services/llmService/types/types';
 import ChatService from '../index';
 import { logger } from '../../../utils/logger';
+import { useSettingsStore } from '../../../settings/settingsStore';
 
 interface UseNoteEditChatContextParams {
   title: string;
   content: string;
+  path: string;
   setContent: (content: string) => void;
 }
+
+// パスとタイトルを結合してフルパスを作成するヘルパー関数
+const buildFullPath = (path: string, title: string): string => {
+  if (!path || path === '/') {
+    return `/${title}`;
+  }
+  // パスの末尾にスラッシュがあるか確認
+  if (path.endsWith('/')) {
+    return `${path}${title}`;
+  }
+  return `${path}/${title}`;
+};
 
 /**
  * ノート編集画面用のチャットコンテキストプロバイダーフック
@@ -26,33 +39,42 @@ interface UseNoteEditChatContextParams {
 export const useNoteEditChatContext = ({
   title,
   content,
+  path,
   setContent,
 }: UseNoteEditChatContextParams): void => {
-  // 最新のtitleとcontentを参照するためのref
-  const titleRef = useRef(title);
-  const contentRef = useRef(content);
-  const setContentRef = useRef(setContent);
-
-  // refを更新
-  useEffect(() => {
-    titleRef.current = title;
-    contentRef.current = content;
-    setContentRef.current = setContent;
-  }, [title, content, setContent]);
+  const { settings } = useSettingsStore();
 
   useEffect(() => {
+    const fullPath = buildFullPath(path, title);
+
     // ActiveScreenContextProviderの実装
     const contextProvider: ActiveScreenContextProvider = {
       getScreenContext: async (): Promise<ActiveScreenContext> => {
         logger.debug('chatService', '[useNoteEditChatContext] Getting screen context', {
-          title: titleRef.current,
-          contentLength: contentRef.current.length,
+          fullPath,
+          contentLength: content.length,
+          sendNoteContextToLLM: settings.sendNoteContextToLLM,
         });
 
-        return {
-          currentNoteTitle: titleRef.current,
-          currentNoteContent: contentRef.current,
-        };
+        if (settings.sendNoteContextToLLM) {
+          // 設定がONの場合、フルパスと内容を送信
+          return {
+            currentFileContent: {
+              filename: fullPath, // フルパスをfilenameとして使用
+              content: content,
+            },
+            currentPath: path, // 既存のcurrentPathも念のため維持
+          };
+        } else {
+          // 設定がOFFの場合、フルパスは送信するが内容はnullで送信
+          return {
+            currentFileContent: {
+              filename: fullPath, // フルパスをfilenameとして使用
+              content: null,
+            },
+            currentPath: path,
+          };
+        }
       },
     };
 
@@ -61,18 +83,17 @@ export const useNoteEditChatContext = ({
       edit_file: (command: LLMCommand) => {
         logger.debug('chatService', '[useNoteEditChatContext] Handling edit_file command');
         if (typeof command.content === 'string') {
-          const newContent = command.content.replace(/^---\s*/, '').replace(/\s*---$/, '');
-          setContentRef.current(newContent);
+          // LLMからのコンテキストには時々コードブロックのマークダウンが含まれるため、削除する
+          const newContent = command.content.replace(/^```[a-zA-Z]*\n/, '').replace(/\n```$/, '');
+          setContent(newContent);
         }
       },
       read_file: (command: LLMCommand) => {
         logger.debug('chatService', '[useNoteEditChatContext] Handling read_file command', {
           path: command.path,
         });
-        // read_fileコマンドはバックエンドで自動的に処理されるため、
-        // フロントエンドでは特に何もする必要はありません
-        console.log(`[read_file] ファイル読み込みコマンドを受信: ${command.path}`);
-        console.log(`[read_file] このコマンドはバックエンドのAgentで既に処理済みです`);
+        // read_fileはバックエンドで処理されるため、フロントエンドでは何もしない
+        console.log(`[read_file] Received command to read file: ${command.path}. This is handled by the backend agent.`);
       },
     };
 
@@ -86,5 +107,5 @@ export const useNoteEditChatContext = ({
       logger.debug('chatService', '[useNoteEditChatContext] Unregistering context provider');
       ChatService.unregisterActiveContextProvider();
     };
-  }, []); // 空の依存配列で、マウント/アンマウント時のみ実行
+  }, [title, content, path, setContent, settings.sendNoteContextToLLM]);
 };

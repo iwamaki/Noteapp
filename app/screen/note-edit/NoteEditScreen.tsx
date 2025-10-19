@@ -95,6 +95,7 @@ function NoteEditScreen() {
   useNoteEditChatContext({
     title,
     content,
+    path: note?.path || '', // Pass note.path
     setContent,
   });
 
