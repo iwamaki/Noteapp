@@ -20,14 +20,10 @@ import { ChatHistory } from '../components/ChatHistory';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useKeyboardHeight } from '../../../contexts/KeyboardHeightContext';
 
-// チャット入力バーコンポーネント（プロパティ不要）
-interface ChatInputBarProps {
-}
-
-export const ChatInputBar: React.FC<ChatInputBarProps> = () => {
+export const ChatInputBar: React.FC = () => {
   const { colors, typography } = useTheme();
   const insets = useSafeAreaInsets();
-  const { setChatInputBarHeight } = useKeyboardHeight();
+  const { keyboardHeight, setChatInputBarHeight } = useKeyboardHeight();
   const {
     messages,
     isLoading,
@@ -60,6 +56,10 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = () => {
 
   const styles = StyleSheet.create({
     container: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      zIndex: 1,
       backgroundColor: colors.secondary,
       borderTopWidth: 1,
       borderTopColor: colors.border,
@@ -115,7 +115,7 @@ export const ChatInputBar: React.FC<ChatInputBarProps> = () => {
   });
 
   return (
-    <View style={styles.container} onLayout={handleLayout}>
+    <View style={[styles.container, { bottom: keyboardHeight }]} onLayout={handleLayout}>
         {/* メッセージ履歴エリア（展開可能） */}
         {isExpanded && (
           <ChatHistory
