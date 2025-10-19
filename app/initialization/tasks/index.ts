@@ -7,6 +7,9 @@
 
 import { verifyAsyncStorageTask } from './verifyAsyncStorage';
 import { loadSettingsTask } from './loadSettings';
+import { configureLLMServiceTask } from './configureLLMService';
+import { configureChatServiceTask } from './configureChatService';
+import { verifyAppReadyTask } from './verifyAppReady';
 import { InitializationTask } from '../types';
 
 /**
@@ -16,19 +19,27 @@ import { InitializationTask } from '../types';
  * アプリケーションの初期化フローを定義します。
  */
 export const allInitializationTasks: InitializationTask[] = [
-  // Stage 1: CRITICAL
+  // Stage 1: CRITICAL - 必須リソース
   verifyAsyncStorageTask,
   loadSettingsTask,
 
-  // Stage 2: CORE
-  // TODO: テーマ初期化タスクを追加
+  // Stage 2: CORE - コアサービス
+  // （現在、ThemeProviderとKeyboardHeightProviderは既存のProvider内で正常に動作しているため、
+  //   明示的な初期化タスクは不要）
 
-  // Stage 3: SERVICES
-  // TODO: LLMサービス初期化タスクを追加
+  // Stage 3: SERVICES - アプリケーションサービス
+  configureLLMServiceTask,
+  configureChatServiceTask,
 
-  // Stage 4: READY
-  // TODO: 準備完了タスクを追加
+  // Stage 4: READY - UI表示準備完了
+  verifyAppReadyTask,
 ];
 
 // 個別エクスポート（オプション）
-export { verifyAsyncStorageTask, loadSettingsTask };
+export {
+  verifyAsyncStorageTask,
+  loadSettingsTask,
+  configureLLMServiceTask,
+  configureChatServiceTask,
+  verifyAppReadyTask,
+};
