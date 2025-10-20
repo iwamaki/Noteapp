@@ -18,6 +18,7 @@ export const useNoteList = () => {
   const {
     treeNodes,
     loading,
+    items, // Pass items through
     toggleFolderExpand,
     refreshTree,
   } = useNoteTree(currentPath);
@@ -84,6 +85,7 @@ export const useNoteList = () => {
     // Data and loading state
     treeNodes,
     loading,
+    items,
 
     // Folder navigation (simplified - only exposing currentPath)
     currentPath,

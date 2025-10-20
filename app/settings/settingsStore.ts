@@ -42,6 +42,7 @@ export interface AppSettings {
   aiResponseStyle: 'concise' | 'detailed' | 'custom';
   contextHistoryLength: number;
   sendNoteContextToLLM: boolean; // Add this new setting
+  llmContextMaxDepth: number; // LLMに渡すファイルリストの最大階層
 
   // 4. バージョン管理/バックアップ設定
   versionSaveFrequency: 'every-change' | 'interval' | 'manual';
@@ -107,6 +108,7 @@ const defaultSettings: AppSettings = {
   aiResponseStyle: 'concise',
   contextHistoryLength: 10,
   sendNoteContextToLLM: true,
+  llmContextMaxDepth: 3,
 
   // バージョン管理/バックアップ設定
   versionSaveFrequency: 'every-change',

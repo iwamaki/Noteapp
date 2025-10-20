@@ -1,4 +1,4 @@
-import { FileSystemItem, Note } from '@shared/types/note';
+import { FileSystemItem, Note, Folder } from '@shared/types/note';
 import { PathUtils } from '../utils/pathUtils';
 import { getAllNotesRaw, saveAllNotes, getAllFoldersRaw, StorageError } from './storage';
 import * as NoteFns from './note';
@@ -16,6 +16,42 @@ const getItemsByPath = async (path: string): Promise<FileSystemItem[]> => {
   const items: FileSystemItem[] = [
     ...folders.map(folder => ({ type: 'folder' as const, item: folder })),
     ...notes.map(note => ({ type: 'note' as const, item: note })),
+  ];
+
+  return items;
+};
+
+const getItemsRecursively = async (
+  rootPath: string,
+  maxDepth: number
+): Promise<FileSystemItem[]> => {
+  // maxDepthが1の場合は、既存の単一階層取得関数を利用
+  if (maxDepth === 1) {
+    return getItemsByPath(rootPath);
+  }
+
+  const allNotes = await getAllNotesRaw();
+  const allFolders = await getAllFoldersRaw();
+
+  const normalizedRootPath = PathUtils.normalizePath(rootPath);
+  const rootDepth = normalizedRootPath === '/' ? 0 : normalizedRootPath.split('/').length - 1;
+
+  const filterByDepth = (item: Note | Folder) => {
+    const itemPath = PathUtils.normalizePath(item.path);
+    if (!itemPath.startsWith(normalizedRootPath)) return false;
+    if (maxDepth === -1) return true; // -1は無限階層を示す
+
+    const itemDepth = itemPath === '/' ? 0 : itemPath.split('/').length - 1;
+    // 指定された階層内のアイテムをフィルタリング
+    return itemDepth - rootDepth < maxDepth;
+  };
+
+  const filteredNotes = allNotes.filter(filterByDepth);
+  const filteredFolders = allFolders.filter(filterByDepth);
+
+  const items: FileSystemItem[] = [
+    ...filteredFolders.map((folder) => ({ type: 'folder' as const, item: folder })),
+    ...filteredNotes.map((note) => ({ type: 'note' as const, item: note })),
   ];
 
   return items;
@@ -88,6 +124,7 @@ export const NoteListStorage = {
   ...FolderFns,
   // Composite functions
   getItemsByPath,
+  getItemsRecursively,
   migrateExistingNotes,
   createNoteWithPath,
   ensureFoldersExist,
