@@ -83,10 +83,10 @@ const ensureFoldersExist = async (folderNames: string[], basePath: string = '/')
   let currentPath = PathUtils.normalizePath(basePath);
 
   for (const folderName of folderNames) {
-    const fullPath = PathUtils.getFullPath(currentPath, folderName);
+    const fullPath = PathUtils.getFullPath(currentPath, folderName, 'folder');
 
     const existingFolder = folders.find(
-      f => PathUtils.getFullPath(f.path, f.name) === fullPath
+      f => PathUtils.getFullPath(f.path, f.name, 'folder') === fullPath
     );
 
     if (!existingFolder) {

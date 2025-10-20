@@ -54,11 +54,11 @@ export const updateFolder = async (data: UpdateFolderData): Promise<Folder> => {
   }
 
   const folderToUpdate = allFolders[folderIndex];
-  const oldFullPath = PathUtils.getFullPath(folderToUpdate.path, folderToUpdate.name);
+  const oldFullPath = PathUtils.getFullPath(folderToUpdate.path, folderToUpdate.name, 'folder');
 
   const newName = data.name ?? folderToUpdate.name;
   const newPath = data.path ? PathUtils.normalizePath(data.path) : folderToUpdate.path;
-  const newFullPath = PathUtils.getFullPath(newPath, newName);
+  const newFullPath = PathUtils.getFullPath(newPath, newName, 'folder');
 
   if (oldFullPath === newFullPath && folderToUpdate.name === newName && folderToUpdate.path === newPath) {
     return folderToUpdate;
@@ -124,7 +124,7 @@ export const deleteFolder = async (folderId: string, deleteContents: boolean = f
   }
 
   const folderToDelete = allFolders[folderIndex];
-  const folderPath = PathUtils.getFullPath(folderToDelete.path, folderToDelete.name);
+  const folderPath = PathUtils.getFullPath(folderToDelete.path, folderToDelete.name, 'folder');
 
   if (deleteContents) {
     let allNotes = await getAllNotesRaw();
@@ -135,7 +135,7 @@ export const deleteFolder = async (folderId: string, deleteContents: boolean = f
     // Filter folders: keep those whose full path does not start with the folder path.
     // This will also remove the folder itself.
     const finalFolders = allFolders.filter(folder => {
-        const fullPath = PathUtils.getFullPath(folder.path, folder.name);
+        const fullPath = PathUtils.getFullPath(folder.path, folder.name, 'folder');
         return !fullPath.startsWith(folderPath);
     });
 

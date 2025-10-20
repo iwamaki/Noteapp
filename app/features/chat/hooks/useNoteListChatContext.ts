@@ -50,7 +50,7 @@ export const useNoteListChatContext = ({
           const path = item.item.path;
           const name = item.type === 'folder' ? item.item.name : item.item.title;
           const type = item.type === 'folder' ? 'directory' : 'file'; // Map 'note' to 'file'
-          const filePath = PathUtils.getFullPath(path, name);
+          const filePath = PathUtils.getFullPath(path, name, item.type);
           return {
             filePath,
             name, // Include name

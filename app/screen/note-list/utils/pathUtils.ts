@@ -9,9 +9,19 @@ export class PathUtils {
   }
 
   // フルパスを取得（親パス + 名前）
-  static getFullPath(parentPath: string, name: string): string {
-    const normalized = this.normalizePath(parentPath);
-    return normalized === '/' ? `/${name}/` : `${normalized}${name}/`;
+  static getFullPath(parentPath: string, name: string, type: 'note' | 'folder'): string {
+    const normalizedParent = this.normalizePath(parentPath); // Ensures parent ends with /
+    const combined = normalizedParent === '/' ? `/${name}` : `${normalizedParent}${name}`;
+
+    if (type === 'folder') {
+      // If it's a folder, ensure it ends with a slash
+      return combined.endsWith('/') ? combined : `${combined}/`;
+    }
+    // If it's a note, ensure it does NOT end with a slash (unless it's just "/")
+    if (combined.endsWith('/') && combined.length > 1) {
+      return combined.slice(0, -1);
+    }
+    return combined;
   }
 
   // 親パスを取得
