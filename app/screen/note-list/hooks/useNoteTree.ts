@@ -3,9 +3,11 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useIsFocused } from '@react-navigation/native';
 import { NoteListStorage } from '../noteStorage';
 import { buildTree } from '../utils/treeUtils';
-import { FileSystemItem } from '@shared/types/note';
+import { PathUtils } from '../utils/pathUtils';
+import { FileSystemItem, Note, Folder } from '@shared/types/note';
 import { checkTreeConsistency } from '../../../utils/debugUtils';
 import { logger } from '../../../utils/logger';
+import { useSettingsStore } from '../../../settings/settingsStore';
 
 export const useNoteTree = (currentPath: string) => {
   const [folders, setFolders] = useState<any[]>([]);
@@ -22,18 +24,41 @@ export const useNoteTree = (currentPath: string) => {
     return buildTree(folders, notes, expandedFolderIds);
   }, [folders, notes, expandedFolderIds]);
 
+  const { settings } = useSettingsStore();
+  const maxDepth = settings.llmContextMaxDepth;
+
   // 後方互換性のためitemsを維持（徐々に削除予定）
   const items = useMemo(() => {
-    const folderItems: FileSystemItem[] = folders
-      .filter(f => f.path === currentPath)
-      .map(f => ({ type: 'folder' as const, item: f }));
+    if (maxDepth === 1) {
+        const folderItems: FileSystemItem[] = folders
+            .filter(f => f.path === currentPath)
+            .map(f => ({ type: 'folder' as const, item: f }));
+        const noteItems: FileSystemItem[] = notes
+            .filter(n => n.path === currentPath)
+            .map(n => ({ type: 'note' as const, item: n }));
+        return [...folderItems, ...noteItems];
+    }
 
-    const noteItems: FileSystemItem[] = notes
-      .filter(n => n.path === currentPath)
-      .map(n => ({ type: 'note' as const, item: n }));
+    const normalizedRootPath = PathUtils.normalizePath(currentPath);
+    const rootDepth = normalizedRootPath === '/' ? 0 : normalizedRootPath.split('/').length - 1;
+
+    const filterByDepth = (item: Note | Folder) => {
+        const itemPath = PathUtils.normalizePath(item.path);
+        if (!itemPath.startsWith(normalizedRootPath)) return false;
+        if (maxDepth === -1) return true; // -1 means infinite depth
+
+        const itemDepth = itemPath === '/' ? 0 : itemPath.split('/').length - 1;
+        return (itemDepth - rootDepth) < maxDepth;
+    };
+
+    const filteredFolders = folders.filter(filterByDepth);
+    const filteredNotes = notes.filter(filterByDepth);
+
+    const folderItems: FileSystemItem[] = filteredFolders.map(f => ({ type: 'folder' as const, item: f }));
+    const noteItems: FileSystemItem[] = filteredNotes.map(n => ({ type: 'note' as const, item: n }));
 
     return [...folderItems, ...noteItems];
-  }, [folders, notes, currentPath]);
+  }, [folders, notes, currentPath, maxDepth]);
 
   const fetchItemsAndBuildTree = useCallback(async () => {
     setLoading(true);

@@ -28,6 +28,7 @@ function NoteListScreen() {
   const {
     treeNodes,
     loading,
+    items,
     currentPath,
     selection,
     handleSelectItem,
@@ -104,7 +105,7 @@ function NoteListScreen() {
   });
 
   useNoteListChatContext({
-    items: isSearchActive ? filteredNodes : treeNodes,
+    items: items,
     currentPath: currentPath,
   });
 
