@@ -1,5 +1,5 @@
 ---
-title: "[priority]_[id]_[issueのタイトル]"
+filename:  01_example_issue # "[id]_[issueのタイトル]"
 id: 0 # issueのユニークID
 status: new # new | in-progress | blocked | pending-review | done
 priority: medium # A:high | B:medium | C:low
