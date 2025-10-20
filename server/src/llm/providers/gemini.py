@@ -35,7 +35,8 @@ class GeminiProvider(BaseAgentLLMProvider):
             model=model if model.startswith("gemini") else "gemini-1.5-flash",
             google_api_key=SecretStr(api_key),
             temperature=0.7,
-            convert_system_message_to_human=True,  # Gemini固有の設定
+            # Note: convert_system_message_to_humanは非推奨のため削除
+            # システムメッセージは base.py で適切に処理される
             client_options=None,
             transport=None,
             additional_headers=None,

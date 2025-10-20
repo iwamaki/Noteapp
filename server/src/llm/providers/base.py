@@ -4,7 +4,7 @@
 # @responsibility すべてのLLMプロバイダーが実装すべき共通のインターフェース（メソッド、プロパティ）を定義します。
 from abc import ABC, abstractmethod
 from typing import Optional, List
-from langchain.schema import HumanMessage, AIMessage, BaseMessage
+from langchain.schema import HumanMessage, AIMessage, BaseMessage, SystemMessage
 from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from src.llm.models import ChatResponse, ChatContext, LLMCommand, NotelistScreenContext, EditScreenContext
@@ -124,7 +124,7 @@ class BaseAgentLLMProvider(BaseLLMProvider):
         set_directory_context(None)
         set_all_files_context(None)
         chat_history: List[BaseMessage] = []
-        full_user_message = message
+        context_msg: Optional[str] = None
         has_file_context = False
         history_count = 0
 
@@ -137,22 +137,21 @@ class BaseAgentLLMProvider(BaseLLMProvider):
                     file_path = active_screen.filePath
                     file_content = active_screen.fileContent
                     
-                    # ファイルコンテキスト
+                    # ツール用のファイルコンテキスト
                     set_file_context({'filename': file_path, 'content': file_content})
                     has_file_context = True
                     logger.info(f"File context set from EditScreen: {file_path}")
 
-                    # ディレクトリコンテキスト
+                    # ツール用のディレクトリコンテキスト
                     current_path = '/'.join(file_path.split('/')[:-1]) if '/' in file_path else '/'
                     if not current_path:
                         current_path = '/'
                     set_directory_context({'currentPath': current_path, 'fileList': []})
                     logger.info(f"Directory context set from EditScreen: {current_path}")
 
-                    # プロンプトへの情報追加
+                    # LLMに渡すプロンプト用のコンテキストメッセージ
                     if file_content is not None:
                         context_msg = f"\n\n[現在開いているファイル情報]\nファイルパス: {file_path}\n内容:\n---\n{file_content}\n---"
-                        full_user_message += context_msg
 
                 elif isinstance(active_screen, NotelistScreenContext):
                     # --- NoteListScreenコンテキスト ---
@@ -169,29 +168,30 @@ class BaseAgentLLMProvider(BaseLLMProvider):
                     set_file_context(context.currentFileContent)
                     has_file_context = True
                     logger.info(f"File context set from currentFileContent")
-                    # プロンプトへの情報追加
                     fallback_content = context.currentFileContent.get('content')
-                    if fallback_content is not None:
+                    if fallback_content:
                         fallback_path = context.currentFileContent.get('filename', 'unknown_file')
                         context_msg = f"\n\n[現在開いているファイル情報]\nファイルパス: {fallback_path}\n内容:\n---\n{fallback_content}\n---"
-                        full_user_message += context_msg
                 elif context.attachedFileContent:
                     set_file_context(context.attachedFileContent)
                     has_file_context = True
                     logger.info(f"File context set from attachedFileContent")
-                    # プロンプトへの情報追加
-                    attached_filename = context.attachedFileContent.get('filename', 'unknown_file')
                     attached_content = context.attachedFileContent.get('content')
                     if attached_content:
+                        attached_filename = context.attachedFileContent.get('filename', 'unknown_file')
                         context_msg = f"\n\n[添付ファイル情報]\nファイル名: {attached_filename}\n内容:\n---\n{attached_content}\n---"
-                        full_user_message += context_msg
 
             # 3. 全ファイルリストのコンテキスト
             if context.allFiles:
                 set_all_files_context(context.allFiles)
                 logger.info(f"All files context set: {len(context.allFiles)} files")
 
-            # 4. 会話履歴
+            # 4. コンテキストメッセージを履歴の先頭に追加
+            # Note: SystemMessageではなくHumanMessageとして追加（Gemini APIの制約のため）
+            if context_msg:
+                chat_history.append(HumanMessage(content=context_msg))
+
+            # 5. 会話履歴
             if context.conversationHistory:
                 history_count = len(context.conversationHistory)
                 for msg in context.conversationHistory:
@@ -202,16 +202,22 @@ class BaseAgentLLMProvider(BaseLLMProvider):
 
         # ログ記録
         log_llm_raw(provider_name, "agent_request", {
-            "message": full_user_message,
+            "message": message,
             "model": self.model,
             "history_count": history_count,
-            "has_file_context": bool(context and (context.currentFileContent or context.attachedFileContent))
+            "has_file_context": bool(
+                context and (
+                    (context.activeScreen and isinstance(context.activeScreen, EditScreenContext)) or
+                    context.currentFileContent or
+                    context.attachedFileContent
+                )
+            )
         }, {})
 
         # AgentExecutorを実行
         try:
             result = await self.agent_executor.ainvoke({
-                "input": full_user_message,
+                "input": message,
                 "chat_history": chat_history
             })
 
