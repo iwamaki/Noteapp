@@ -17,8 +17,8 @@ import { useNavigation } from '@react-navigation/native';
 import { useSettingsStore } from './settingsStore';
 import { useTheme } from '../design/theme/ThemeContext';
 import { useCustomHeader } from '../components/CustomHeader';
-import APIService from '../services/llmService/api';
-import { LLMProvider } from '../services/llmService/types/types';
+import APIService from '../features/chat/llmService/api';
+import { LLMProvider } from '../features/chat/llmService/types/types';
 import { Ionicons } from '@expo/vector-icons';
 import { ListItem } from '../components/ListItem';
 

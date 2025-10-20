@@ -4,7 +4,7 @@
  * @responsibility 各コンポーネントを統合し、LLMサービスの公開APIを提供
  */
 
-import { logger } from '../../utils/logger';
+import { logger } from '../../../utils/logger';
 import type {
   ChatContext,
   LLMProvider,

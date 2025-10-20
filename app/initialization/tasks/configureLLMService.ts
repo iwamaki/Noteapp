@@ -6,7 +6,7 @@
 
 import { InitializationTask, InitializationStage, TaskPriority } from '../types';
 import { useSettingsStore } from '../../settings/settingsStore';
-import APIService from '../../services/llmService/api';
+import APIService from '../../features/chat/llmService/api';
 
 /**
  * LLMサービス設定タスク

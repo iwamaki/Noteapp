@@ -6,7 +6,7 @@
  */
 import { useEffect } from 'react';
 import { ActiveScreenContextProvider, ActiveScreenContext } from '../types';
-import { LLMCommand } from '../../../services/llmService/types/types';
+import { LLMCommand } from '../llmService/types/types';
 import ChatService from '../index';
 import { logger } from '../../../utils/logger';
 import { useSettingsStore } from '../../../settings/settingsStore';
