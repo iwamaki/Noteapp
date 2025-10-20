@@ -1,0 +1,40 @@
+# @file config.py
+# @summary LLMプロバイダーの設定と定数を定義します。
+# @responsibility すべてのLLMプロバイダーで共通利用される設定値、定数を一元管理します。
+
+from typing import Final
+
+# Agent設定
+MAX_AGENT_ITERATIONS: Final[int] = 5
+"""エージェントがツールを呼び出せる最大回数"""
+
+AGENT_VERBOSE: Final[bool] = True
+"""エージェント実行時の詳細ログ出力フラグ"""
+
+HANDLE_PARSING_ERRORS: Final[bool] = True
+"""パースエラーを自動処理するかどうか"""
+
+RETURN_INTERMEDIATE_STEPS: Final[bool] = True
+"""中間ステップを返すかどうか（コマンド抽出に必要）"""
+
+# パス設定
+DEFAULT_ROOT_PATH: Final[str] = '/'
+"""デフォルトのルートパス"""
+
+# プロンプト設定
+DEFAULT_SYSTEM_PROMPT: Final[str] = (
+    "あなたは親切で有能なAIアシスタントです。ユーザーのノート作成と編集をサポートします。\n"
+    "利用可能なツールを使って、ユーザーの要求に応えてください。\n"
+    "もしユーザーの指定したファイル名が曖昧な場合は、まず `search_files` ツールを使って正確なファイルパスを特定してから、他のツール（`read_file`など）を使用してください。"
+)
+"""デフォルトのシステムプロンプト"""
+
+# コンテキストメッセージテンプレート
+CONTEXT_MSG_EDIT_SCREEN: Final[str] = "\n\n[現在開いているファイル情報]\nファイルパス: {file_path}\n内容:\n---\n{content}\n---"
+"""編集画面用のコンテキストメッセージテンプレート"""
+
+CONTEXT_MSG_NOTELIST_SCREEN: Final[str] = "\n\n[現在表示中のファイルリスト]\nカレントパス: {current_path}\nファイル一覧:\n{file_list}"
+"""ノートリスト画面用のコンテキストメッセージテンプレート"""
+
+CONTEXT_MSG_ATTACHED_FILE: Final[str] = "\n\n[添付ファイル情報]\nファイル名: {filename}\n内容:\n---\n{content}\n---"
+"""添付ファイル用のコンテキストメッセージテンプレート"""
