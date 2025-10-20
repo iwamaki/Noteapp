@@ -7,7 +7,7 @@ from typing import Optional, List
 from langchain.schema import HumanMessage, AIMessage, BaseMessage
 from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
-from src.llm.models import ChatResponse, ChatContext, LLMCommand
+from src.llm.models import ChatResponse, ChatContext, LLMCommand, NotelistScreenContext, EditScreenContext
 from src.llm.tools.file_tools import AVAILABLE_TOOLS, set_file_context, set_directory_context, set_all_files_context
 from src.core.logger import logger, log_llm_raw
 
@@ -119,65 +119,86 @@ class BaseAgentLLMProvider(BaseLLMProvider):
         """
         provider_name = self._get_provider_name()
 
-        # ファイルコンテキストを設定
-        if context and context.currentFileContent:
-            set_file_context(context.currentFileContent)
-            logger.info(f"File context set: {context.currentFileContent.get('filename')}")
-        elif context and context.attachedFileContent:
-            set_file_context(context.attachedFileContent)
-            logger.info(f"File context set from attached: {context.attachedFileContent.get('filename')}")
-        else:
-            set_file_context(None)
-
-        # ディレクトリコンテキストを設定（NoteListScreenからの情報）
-        if context and hasattr(context, 'activeScreen'):
-            active_screen = context.activeScreen
-            if active_screen:
-                set_directory_context({
-                    'currentPath': active_screen.get('currentPath', '/'),
-                    'fileList': active_screen.get('fileList', [])
-                })
-                logger.info(f"Directory context set: {active_screen.get('currentPath')}")
-        else:
-            set_directory_context(None)
-
-        # 全ファイル情報を設定（階層構造の完全な情報）
-        if context and hasattr(context, 'allFiles'):
-            all_files = context.allFiles
-            if all_files:
-                set_all_files_context(all_files)
-                logger.info(f"All files context set: {len(all_files)} files")
-        else:
-            set_all_files_context(None)
-
-        # 会話履歴を構築
+        # コンテキストの初期化と設定
+        set_file_context(None)
+        set_directory_context(None)
+        set_all_files_context(None)
         chat_history: List[BaseMessage] = []
-        history_count = 0
-        if context and context.conversationHistory:
-            history_count = len(context.conversationHistory)
-            for history_message in context.conversationHistory:
-                role = history_message.get('role')
-                content = history_message.get('content', '')
-                if role == 'user':
-                    chat_history.append(HumanMessage(content=content))
-                elif role == 'ai':
-                    chat_history.append(AIMessage(content=content))
-
-        # ユーザーメッセージを構築
         full_user_message = message
-        if context and context.currentFileContent:
-            file_content = context.currentFileContent.get('content')
-            # コンテンツがNoneでない場合のみ、コンテキスト情報をプロンプトに追加
-            if file_content is not None:
-                file_path = context.currentFileContent.get('filename')  # これはフルパス
-                context_msg = f"""\n\n[現在開いているファイル情報]\nファイルパス: {file_path}\n内容:\n---\n{file_content}\n---"""
-                full_user_message += context_msg
+        has_file_context = False
+        history_count = 0
 
-        elif context and context.attachedFileContent:
-            filename = context.attachedFileContent.get('filename')
-            file_content = context.attachedFileContent.get('content')
-            context_msg = f"""\n\n[添付ファイル情報]\nファイル名: {filename}\n内容:\n---\n{file_content}\n---"""
-            full_user_message += context_msg
+        if context:
+            # 1. activeScreenからコンテキストを設定
+            if context.activeScreen:
+                active_screen = context.activeScreen
+                if isinstance(active_screen, EditScreenContext):
+                    # --- EditScreenコンテキスト ---
+                    file_path = active_screen.filePath
+                    file_content = active_screen.fileContent
+                    
+                    # ファイルコンテキスト
+                    set_file_context({'filename': file_path, 'content': file_content})
+                    has_file_context = True
+                    logger.info(f"File context set from EditScreen: {file_path}")
+
+                    # ディレクトリコンテキスト
+                    current_path = '/'.join(file_path.split('/')[:-1]) if '/' in file_path else '/'
+                    if not current_path:
+                        current_path = '/'
+                    set_directory_context({'currentPath': current_path, 'fileList': []})
+                    logger.info(f"Directory context set from EditScreen: {current_path}")
+
+                    # プロンプトへの情報追加
+                    if file_content is not None:
+                        context_msg = f"\n\n[現在開いているファイル情報]\nファイルパス: {file_path}\n内容:\n---\n{file_content}\n---"
+                        full_user_message += context_msg
+
+                elif isinstance(active_screen, NotelistScreenContext):
+                    # --- NoteListScreenコンテキスト ---
+                    file_list = [{'name': item.filePath.split('/')[-1] if item.filePath else '', 'type': 'file'} for item in active_screen.visibleFileList]
+                    set_directory_context({
+                        'currentPath': active_screen.currentPath,
+                        'fileList': file_list
+                    })
+                    logger.info(f"Directory context set from NotelistScreen: {active_screen.currentPath}")
+
+            # 2. (フォールバック) 古い形式のファイルコンテキスト
+            if not has_file_context:
+                if context.currentFileContent:
+                    set_file_context(context.currentFileContent)
+                    has_file_context = True
+                    logger.info(f"File context set from currentFileContent")
+                    # プロンプトへの情報追加
+                    fallback_content = context.currentFileContent.get('content')
+                    if fallback_content is not None:
+                        fallback_path = context.currentFileContent.get('filename', 'unknown_file')
+                        context_msg = f"\n\n[現在開いているファイル情報]\nファイルパス: {fallback_path}\n内容:\n---\n{fallback_content}\n---"
+                        full_user_message += context_msg
+                elif context.attachedFileContent:
+                    set_file_context(context.attachedFileContent)
+                    has_file_context = True
+                    logger.info(f"File context set from attachedFileContent")
+                    # プロンプトへの情報追加
+                    attached_filename = context.attachedFileContent.get('filename', 'unknown_file')
+                    attached_content = context.attachedFileContent.get('content')
+                    if attached_content:
+                        context_msg = f"\n\n[添付ファイル情報]\nファイル名: {attached_filename}\n内容:\n---\n{attached_content}\n---"
+                        full_user_message += context_msg
+
+            # 3. 全ファイルリストのコンテキスト
+            if context.allFiles:
+                set_all_files_context(context.allFiles)
+                logger.info(f"All files context set: {len(context.allFiles)} files")
+
+            # 4. 会話履歴
+            if context.conversationHistory:
+                history_count = len(context.conversationHistory)
+                for msg in context.conversationHistory:
+                    if msg.get('role') == 'user':
+                        chat_history.append(HumanMessage(content=msg.get('content', '')))
+                    elif msg.get('role') == 'ai':
+                        chat_history.append(AIMessage(content=msg.get('content', '')))
 
         # ログ記録
         log_llm_raw(provider_name, "agent_request", {

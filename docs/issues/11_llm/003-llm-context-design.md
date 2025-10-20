@@ -18,6 +18,14 @@ LLMがチャットを通じてコマンドを効率的に生成できるよう�
 ## 実装方針 (Implementation Strategy)
 
 1.  各画面（ノート一覧、ノート編集）がLLMに提供すべきコンテキスト情報の要素を洗い出す。
+    - ノート編集画面 (`EditScreenContext`):
+        - `name: 'edit'`
+        - `filePath: string` (現在のファイルのフルパス)
+        - `fileContent: string` (現在のファイルの内容)
+    - ノート一覧画面 (`NotelistScreenContext`):
+        - `name: 'notelist'`
+        - `visibleFileList: Array<{ filePath: string; tags?: string[]; }>` (現在表示されているファイルのリスト)
+        - `selectedFileList?: Array<{ filePath: string; tags?: string[]; }>` (現在選択されているファイルのリスト)
 2.  洗い出した要素に基づき、バックエンドの `models.py` に定義された `NotelistScreenContext` および `EditScreenContext` のPydanticモデルを具体化する。
 3.  フロントエンドの `app/features/chat/types.ts` に対応するTypeScriptインターフェースを定義する。
 4.  `ChatService` および各画面のカスタムフック（例: `useNoteEditChatContext.ts`）を修正し、定義されたデータ構造に従ってコンテキストを構築・送信するようにする。
@@ -25,9 +33,11 @@ LLMがチャットを通じてコマンドを効率的に生成できるよう�
 ## 受け入れ条件 (Acceptance Criteria)
 
 - [x] ユーザーと議論し、各画面（ノート一覧、ノート編集）がチャット時にバックエンドに送るべきコンテキスト情報のデータ構造が決定されていること。
+    - ノート編集画面 (`EditScreenContext`): `name: 'edit'`, `filePath: string`, `fileContent: string`
+    - ノート一覧画面 (`NotelistScreenContext`): `name: 'notelist'`, `visibleFileList: Array<{ filePath: string; tags?: string[]; }>`, `selectedFileList?: Array<{ filePath: string; tags?: string[]; }>`
 - [ ] バックエンドの `server/src/llm/models.py` に、決定されたデータ構造を反映した `NotelistScreenContext` および `EditScreenContext` が定義されていること。
 - [ ] フロントエンドの `app/features/chat/types.ts` に、決定されたデータ構造を反映したTypeScriptインターフェースが定義されていること。
-- [ ] `ChatService` および関連するフロントエンドのカスタムフックが、新しいデータ構造に従ってコンテキストを正しく構築・送信していること。
+- [ ] `ChatService` および関連するフロントエンドのカスタムフックが、新しいデータ構造に従ってコンテキストを構築・送信していること。
 
 ## 関連ファイル (Related Files)
 
@@ -37,6 +47,9 @@ LLMがチャットを通じてコマンドを効率的に生成できるよう�
 - `app/features/chat/index.ts`
 - `app/features/chat/hooks/useNoteEditChatContext.ts`
 - `app/features/chat/hooks/useChat.ts`
+
+### llm動作に関連する全ファイル
+- `docs/issues/11_llm/llm_implementation_overview.md`
 
 ## 制約条件 (Constraints)
 
