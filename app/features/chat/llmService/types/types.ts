@@ -1,5 +1,5 @@
 // LLMサービス関連の型定義
-import { EditScreenContext, NotelistScreenContext } from '../../../features/chat/types';
+import { EditScreenContext, NotelistScreenContext } from '../../types';
 export interface ChatMessage {
   role: 'user' | 'ai' | 'system';
   content: string;

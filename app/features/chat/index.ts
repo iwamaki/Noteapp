@@ -5,8 +5,8 @@
  *                 画面とチャット機能を疎結合にするためのサービス層を提供します
  */
 
-import APIService, { ChatContext } from '../../services/llmService/api';
-import { ChatMessage, LLMCommand } from '../../services/llmService/types/types';
+import APIService, { ChatContext } from './llmService/api';
+import { ChatMessage, LLMCommand } from './llmService/types/types';
 import { logger } from '../../utils/logger';
 import { ActiveScreenContextProvider, ActiveScreenContext, ChatServiceListener } from './types';
 

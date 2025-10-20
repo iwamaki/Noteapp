@@ -6,7 +6,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Animated, PanResponder } from 'react-native';
-import { ChatMessage } from '../../../services/llmService/index';
+import { ChatMessage } from '../llmService/index';
 import { logger } from '../../../utils/logger';
 import { useSettingsStore } from '../../../settings/settingsStore';
 import ChatService from '../index';
