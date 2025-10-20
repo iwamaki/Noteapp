@@ -4,11 +4,12 @@
 # @responsibility すべてのLLMプロバイダーが実装すべき共通のインターフェース（メソッド、プロパティ）を定義します。
 from abc import ABC, abstractmethod
 from typing import Optional, List
-from langchain.schema import HumanMessage, AIMessage, BaseMessage, SystemMessage
+from langchain.schema import HumanMessage, AIMessage, BaseMessage
 from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from src.llm.models import ChatResponse, ChatContext, LLMCommand, NotelistScreenContext, EditScreenContext
-from src.llm.tools.file_tools import AVAILABLE_TOOLS, set_file_context, set_directory_context, set_all_files_context
+from src.llm.tools import AVAILABLE_TOOLS
+from src.llm.tools.context_manager import set_file_context, set_directory_context, set_all_files_context
 from src.core.logger import logger, log_llm_raw
 
 class BaseLLMProvider(ABC):
@@ -180,7 +181,7 @@ class BaseAgentLLMProvider(BaseLLMProvider):
                 if context.currentFileContent:
                     set_file_context(context.currentFileContent)
                     has_file_context = True
-                    logger.info(f"File context set from currentFileContent")
+                    logger.info("File context set from currentFileContent")
                     fallback_content = context.currentFileContent.get('content')
                     if fallback_content:
                         fallback_path = context.currentFileContent.get('filename', 'unknown_file')
@@ -188,7 +189,7 @@ class BaseAgentLLMProvider(BaseLLMProvider):
                 elif context.attachedFileContent:
                     set_file_context(context.attachedFileContent)
                     has_file_context = True
-                    logger.info(f"File context set from attachedFileContent")
+                    logger.info("File context set from attachedFileContent")
                     attached_content = context.attachedFileContent.get('content')
                     if attached_content:
                         attached_filename = context.attachedFileContent.get('filename', 'unknown_file')
