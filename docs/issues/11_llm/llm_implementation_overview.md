@@ -34,11 +34,11 @@
     *   ノート編集画面の情報を `ActiveScreenContextProvider` として `ChatService` に登録します。
     *   `edit_file` や `read_file` など、LLMからの特定のコマンドを処理するハンドラを `ChatService` に登録します。
 
-*   **`app/services/llmService/api.ts`**
+*   **`app/features/chat/llmService/api.ts`**
     *   **責任:** バックエンドのLLM関連APIエンドポイントとの通信を抽象化するサービス層。
     *   `ChatContext` を含むチャットメッセージをバックエンドに送信し、`ChatResponse` を受け取ります。
 
-*   **`app/services/llmService/types/types.ts`**
+*   **`app/features/chat/llmService/types/types.ts`**
     *   **責任:** フロントエンドで使用されるLLM関連の共通型定義（`ChatMessage`, `LLMCommand`, `LLMResponse` など）を提供します。バックエンドのPydanticモデルと整合性を保つ必要があります。
 
 #### 2.2. バックエンド関連ファイル

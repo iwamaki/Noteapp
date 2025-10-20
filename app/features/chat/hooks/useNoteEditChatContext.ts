@@ -2,14 +2,15 @@
  * @file useNoteEditChatContext.ts
  * @summary NoteEditScreen用のチャットコンテキストプロバイダーフック
  * @responsibility ノート編集画面のコンテキストをChatServiceに提供し、
- *                 edit_file、read_fileなどのコマンドハンドラを登録する
+ *                 コンテキスト依存のコマンドハンドラを登録する
  */
 import { useEffect } from 'react';
 import { ActiveScreenContextProvider, ActiveScreenContext } from '../types';
-import { LLMCommand } from '../llmService/types/types';
 import ChatService from '../index';
 import { logger } from '../../../utils/logger';
 import { useSettingsStore } from '../../../settings/settingsStore';
+import { editFileHandler } from '../handlers/editFileHandler';
+import { CommandHandlerContext } from '../handlers/types';
 
 interface UseNoteEditChatContextParams {
   title: string;
@@ -64,23 +65,15 @@ export const useNoteEditChatContext = ({
       },
     };
 
-    // コマンドハンドラの定義
-    const commandHandlers: Record<string, (command: LLMCommand) => void | Promise<void>> = {
-      edit_file: (command: LLMCommand) => {
-        logger.debug('chatService', '[useNoteEditChatContext] Handling edit_file command');
-        if (typeof command.content === 'string') {
-          // LLMからのコンテキストには時々コードブロックのマークダウンが含まれるため、削除する
-          const newContent = command.content.replace(/^```[a-zA-Z]*\n/, '').replace(/\n```$/, '');
-          setContent(newContent);
-        }
-      },
-      read_file: (command: LLMCommand) => {
-        logger.debug('chatService', '[useNoteEditChatContext] Handling read_file command', {
-          path: command.path,
-        });
-        // read_fileはバックエンドで処理されるため、フロントエンドでは何もしない
-        console.log(`[read_file] Received command to read file: ${command.path}. This is handled by the backend agent.`);
-      },
+    // ハンドラのコンテキストを作成
+    const handlerContext: CommandHandlerContext = {
+      setContent,
+    };
+
+    // コマンドハンドラの定義（新しいハンドラ構造を使用）
+    const commandHandlers = {
+      edit_file: (command: any) => editFileHandler(command, handlerContext),
+      // read_fileはサーバーサイドで処理されるため、フロントエンドハンドラは不要
     };
 
     // ChatServiceにプロバイダーとハンドラを登録

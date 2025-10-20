@@ -11,6 +11,7 @@ import { configureLLMServiceTask } from './configureLLMService';
 import { configureChatServiceTask } from './configureChatService';
 import { verifyAppReadyTask } from './verifyAppReady';
 import { loadIconFontsTask } from './loadIconFonts';
+import { loadToolDefinitionsTask } from './loadToolDefinitions';
 import { InitializationTask } from '../types';
 
 /**
@@ -31,6 +32,7 @@ export const allInitializationTasks: InitializationTask[] = [
   // Stage 3: SERVICES - アプリケーションサービス
   configureLLMServiceTask,
   configureChatServiceTask,
+  loadToolDefinitionsTask,
 
   // Stage 4: READY - UI表示準備完了
   verifyAppReadyTask,
@@ -42,5 +44,6 @@ export {
   loadSettingsTask,
   configureLLMServiceTask,
   configureChatServiceTask,
+  loadToolDefinitionsTask,
   verifyAppReadyTask,
 };
