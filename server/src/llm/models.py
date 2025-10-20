@@ -4,13 +4,25 @@
 # @responsibility アプリケーション内外でやり取りされるデータの整合性と構造を保証し、
 # APIリクエストとレスポンスのバリデーションおよびシリアライゼーションをPydanticによって自動化します。
 from pydantic import BaseModel
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Union
 
 
 class ChatMessage(BaseModel):
     role: str
     content: str
     timestamp: Optional[str] = None
+
+
+class NotelistScreenContext(BaseModel):
+    name: str = "notelist"
+    currentPath: str
+    fileList: Optional[List[Dict[str, Any]]] = None
+
+
+class EditScreenContext(BaseModel):
+    name: str = "edit"
+    editingFileId: str
+    cursorPosition: Optional[int] = None
 
 
 class ChatContext(BaseModel):
@@ -20,7 +32,7 @@ class ChatContext(BaseModel):
     currentFileContent: Optional[Dict[str, Optional[str]]] = None  # 現在開いているファイルの内容 {"filename": "...", "content": "..."}
     attachedFileContent: Optional[Dict[str, str]] = None
     conversationHistory: Optional[List[Dict[str, Any]]] = None
-    activeScreen: Optional[Dict[str, Any]] = None
+    activeScreen: Optional[Union[NotelistScreenContext, EditScreenContext]] = None
     allFiles: Optional[List[Dict[str, Any]]] = None
 
 
