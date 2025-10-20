@@ -49,9 +49,12 @@ export const useNoteListChatContext = ({
         const visibleFileList = itemsRef.current.map(item => {
           const path = item.item.path;
           const name = item.type === 'folder' ? item.item.name : item.item.title;
+          const type = item.type === 'folder' ? 'directory' : 'file'; // Map 'note' to 'file'
           const filePath = PathUtils.getFullPath(path, name);
           return {
             filePath,
+            name, // Include name
+            type, // Include type
             tags: item.type === 'note' ? item.item.tags : undefined,
           };
         });
@@ -123,5 +126,5 @@ export const useNoteListChatContext = ({
       logger.debug('chatService', '[useNoteListChatContext] Unregistering context provider');
       ChatService.unregisterActiveContextProvider();
     };
-  }, []); // 空の依存配列で、マウント/アンマウント時のみ実行
+  }, [items, currentPath]);
 };

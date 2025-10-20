@@ -104,7 +104,7 @@ function NoteListScreen() {
   });
 
   useNoteListChatContext({
-    items: [],
+    items: isSearchActive ? filteredNodes : treeNodes,
     currentPath: currentPath,
   });
 

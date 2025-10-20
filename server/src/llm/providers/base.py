@@ -155,12 +155,25 @@ class BaseAgentLLMProvider(BaseLLMProvider):
 
                 elif isinstance(active_screen, NotelistScreenContext):
                     # --- NoteListScreenコンテキスト ---
-                    file_list = [{'name': item.filePath.split('/')[-1] if item.filePath else '', 'type': 'file'} for item in active_screen.visibleFileList]
+                    processed_file_list = []
+                    for item in active_screen.visibleFileList:
+                        # Directly use name and type from the frontend
+                        if hasattr(item, 'name') and hasattr(item, 'type') and item.name and item.type:
+                            processed_file_list.append({
+                                'name': item.name,
+                                'type': item.type
+                            })
+
                     set_directory_context({
                         'currentPath': active_screen.currentPath,
-                        'fileList': file_list
+                        'fileList': processed_file_list
                     })
-                    logger.info(f"Directory context set from NotelistScreen: {active_screen.currentPath}")
+                    logger.info(f"Directory context set from NotelistScreen: {active_screen.currentPath} with {len(processed_file_list)} items")
+
+                    # LLMに渡すプロンプト用のコンテキストメッセージを追加
+                    if active_screen.visibleFileList:
+                        file_list_str = "\n".join([f"- {item.filePath}" for item in active_screen.visibleFileList])
+                        context_msg = f"\n\n[現在表示中のファイルリスト]\nカレントパス: {active_screen.currentPath}\nファイル一覧:\n{file_list_str}"
 
             # 2. (フォールバック) 古い形式のファイルコンテキスト
             if not has_file_context:
