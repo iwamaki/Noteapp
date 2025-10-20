@@ -77,7 +77,7 @@ function buildTreeNode(
 ): TreeNode {
   if (item.type === 'folder') {
     const folder = item.item;
-    const folderPath = PathUtils.getFullPath(folder.path, folder.name);
+    const folderPath = PathUtils.getFullPath(folder.path, folder.name, 'folder');
     const isExpanded = expandedFolderIds.has(folder.id);
 
 

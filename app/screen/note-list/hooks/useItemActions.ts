@@ -88,7 +88,8 @@ export const useItemActions = ({
   const handleMoveItems = useCallback(async (destinationFolder: Folder) => {
     const destinationPath = PathUtils.getFullPath(
       destinationFolder.path,
-      destinationFolder.name
+      destinationFolder.name,
+      'folder'
     );
 
     const result = await wrapAsync('移動', async () => {

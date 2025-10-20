@@ -57,7 +57,7 @@ export class NoteService {
         return { valid: false, error: `フォルダ ${folderId} が見つかりません` };
       }
 
-      const sourcePath = PathUtils.getFullPath(folderToMove.path, folderToMove.name);
+      const sourcePath = PathUtils.getFullPath(folderToMove.path, folderToMove.name, 'folder');
 
       // フォルダを自分自身やその子孫に移動させない
       if (destinationPath.startsWith(sourcePath)) {

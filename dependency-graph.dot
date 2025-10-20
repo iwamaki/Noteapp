@@ -55,6 +55,7 @@ strict digraph "dependency-cruiser output"{
     "app/features/chat/hooks/useChat.ts" -> "app/features/chat/index.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/hooks" {label="hooks" "app/features/chat/hooks/useNoteEditChatContext.ts" [label=<useNoteEditChatContext.ts> tooltip="useNoteEditChatContext.ts" URL="app/features/chat/hooks/useNoteEditChatContext.ts" fillcolor="#ddfeff"] } } } }
     "app/features/chat/hooks/useNoteEditChatContext.ts" -> "app/services/llmService/types/types.ts"
+    "app/features/chat/hooks/useNoteEditChatContext.ts" -> "app/settings/settingsStore.ts"
     "app/features/chat/hooks/useNoteEditChatContext.ts" -> "app/utils/logger.ts"
     "app/features/chat/hooks/useNoteEditChatContext.ts" -> "app/features/chat/index.ts"
     "app/features/chat/hooks/useNoteEditChatContext.ts" -> "app/features/chat/types.ts"
@@ -70,13 +71,8 @@ strict digraph "dependency-cruiser output"{
     "app/features/chat/index.ts" -> "app/services/llmService/types/types.ts"
     "app/features/chat/index.ts" -> "app/utils/logger.ts"
     "app/features/chat/index.ts" -> "app/features/chat/types.ts"
-    subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/layouts" {label="layouts" "app/features/chat/layouts/ChatLayout.tsx" [label=<ChatLayout.tsx> tooltip="ChatLayout.tsx" URL="app/features/chat/layouts/ChatLayout.tsx" fillcolor="#bbfeff"] } } } }
-    "app/features/chat/layouts/ChatLayout.tsx" -> "app/features/chat/components/ChatInputBar.tsx"
-    subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/layouts" {label="layouts" "app/features/chat/layouts/useChatLayoutMetrics.ts" [label=<useChatLayoutMetrics.ts> tooltip="useChatLayoutMetrics.ts" URL="app/features/chat/layouts/useChatLayoutMetrics.ts" fillcolor="#ddfeff"] } } } }
-    "app/features/chat/layouts/useChatLayoutMetrics.ts" -> "app/utils/logger.ts"
-    "app/features/chat/layouts/useChatLayoutMetrics.ts" -> "app/utils/platformInfo.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" "app/features/chat/types.ts" [label=<types.ts> tooltip="types.ts" URL="app/features/chat/types.ts" fillcolor="#ddfeff"] } } }
-    "app/features/chat/types.ts" -> "app/services/llmService/types/types.ts"
+    "app/features/chat/types.ts" -> "app/services/llmService/types/types.ts" [xlabel="no-circular" tooltip="no-circular" arrowhead="normalnoneodot" fontcolor="orange" color="orange"]
     subgraph "cluster_app" {label="app" "app/index.ts" [label=<index.ts> tooltip="index.ts" URL="app/index.ts" fillcolor="#ddfeff"] }
     "app/index.ts" -> "app/App.tsx"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/initialization" {label="initialization" "app/initialization/AppInitializer.ts" [label=<AppInitializer.ts> tooltip="AppInitializer.ts" URL="app/initialization/AppInitializer.ts" fillcolor="#ddfeff"] } }
@@ -114,7 +110,7 @@ strict digraph "dependency-cruiser output"{
     subgraph "cluster_app" {label="app" subgraph "cluster_app/navigation" {label="navigation" "app/navigation/RootNavigator.tsx" [label=<RootNavigator.tsx> tooltip="RootNavigator.tsx" URL="app/navigation/RootNavigator.tsx" fillcolor="#bbfeff"] } }
     "app/navigation/RootNavigator.tsx" -> "app/contexts/KeyboardHeightContext.tsx"
     "app/navigation/RootNavigator.tsx" -> "app/design/theme/ThemeContext.tsx"
-    "app/navigation/RootNavigator.tsx" -> "app/features/chat/layouts/ChatLayout.tsx"
+    "app/navigation/RootNavigator.tsx" -> "app/features/chat/components/ChatInputBar.tsx"
     "app/navigation/RootNavigator.tsx" -> "app/screen/diff-view/DiffViewScreen.tsx"
     "app/navigation/RootNavigator.tsx" -> "app/screen/note-edit/NoteEditScreen.tsx"
     "app/navigation/RootNavigator.tsx" -> "app/screen/note-list/NoteListScreen.tsx"
@@ -275,9 +271,11 @@ strict digraph "dependency-cruiser output"{
     "app/screen/note-list/hooks/useNoteListHeader.tsx" -> "app/design/theme/ThemeContext.tsx"
     "app/screen/note-list/hooks/useNoteListHeader.tsx" -> "app/navigation/types.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-list" {label="note-list" subgraph "cluster_app/screen/note-list/hooks" {label="hooks" "app/screen/note-list/hooks/useNoteTree.ts" [label=<useNoteTree.ts> tooltip="useNoteTree.ts" URL="app/screen/note-list/hooks/useNoteTree.ts" fillcolor="#ddfeff"] } } } }
+    "app/screen/note-list/hooks/useNoteTree.ts" -> "app/settings/settingsStore.ts"
     "app/screen/note-list/hooks/useNoteTree.ts" -> "app/utils/debugUtils.ts"
     "app/screen/note-list/hooks/useNoteTree.ts" -> "app/utils/logger.ts"
     "app/screen/note-list/hooks/useNoteTree.ts" -> "app/screen/note-list/noteStorage/index.ts"
+    "app/screen/note-list/hooks/useNoteTree.ts" -> "app/screen/note-list/utils/pathUtils.ts"
     "app/screen/note-list/hooks/useNoteTree.ts" -> "app/screen/note-list/utils/treeUtils.ts"
     "app/screen/note-list/hooks/useNoteTree.ts" -> "shared/types/note.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-list" {label="note-list" subgraph "cluster_app/screen/note-list/hooks" {label="hooks" "app/screen/note-list/hooks/useSearch.ts" [label=<useSearch.ts> tooltip="useSearch.ts" URL="app/screen/note-list/hooks/useSearch.ts" fillcolor="#ddfeff"] } } } }
@@ -341,6 +339,7 @@ strict digraph "dependency-cruiser output"{
     "app/services/llmService/index.ts" -> "app/services/llmService/utils/HttpClient.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/services" {label="services" subgraph "cluster_app/services/llmService" {label="llmService" subgraph "cluster_app/services/llmService/types" {label="types" "app/services/llmService/types/LLMError.ts" [label=<LLMError.ts> tooltip="LLMError.ts" URL="app/services/llmService/types/LLMError.ts" fillcolor="#ddfeff"] } } } }
     subgraph "cluster_app" {label="app" subgraph "cluster_app/services" {label="services" subgraph "cluster_app/services/llmService" {label="llmService" subgraph "cluster_app/services/llmService/types" {label="types" "app/services/llmService/types/types.ts" [label=<types.ts> tooltip="types.ts" URL="app/services/llmService/types/types.ts" fillcolor="#ddfeff"] } } } }
+    "app/services/llmService/types/types.ts" -> "app/features/chat/types.ts" [xlabel="no-circular" tooltip="no-circular" arrowhead="normalnoneodot" fontcolor="orange" color="orange"]
     subgraph "cluster_app" {label="app" subgraph "cluster_app/services" {label="services" subgraph "cluster_app/services/llmService" {label="llmService" subgraph "cluster_app/services/llmService/utils" {label="utils" "app/services/llmService/utils/CommandValidator.ts" [label=<CommandValidator.ts> tooltip="CommandValidator.ts" URL="app/services/llmService/utils/CommandValidator.ts" fillcolor="#ddfeff"] } } } }
     "app/services/llmService/utils/CommandValidator.ts" -> "app/services/llmService/types/LLMError.ts"
     "app/services/llmService/utils/CommandValidator.ts" -> "app/services/llmService/types/types.ts"
