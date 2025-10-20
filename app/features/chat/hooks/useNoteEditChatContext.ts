@@ -56,25 +56,11 @@ export const useNoteEditChatContext = ({
           sendNoteContextToLLM: settings.sendNoteContextToLLM,
         });
 
-        if (settings.sendNoteContextToLLM) {
-          // 設定がONの場合、フルパスと内容を送信
-          return {
-            currentFileContent: {
-              filename: fullPath, // フルパスをfilenameとして使用
-              content: content,
-            },
-            currentPath: path, // 既存のcurrentPathも念のため維持
-          };
-        } else {
-          // 設定がOFFの場合、フルパスは送信するが内容はnullで送信
-          return {
-            currentFileContent: {
-              filename: fullPath, // フルパスをfilenameとして使用
-              content: null,
-            },
-            currentPath: path,
-          };
-        }
+        return {
+          name: 'edit',
+          filePath: fullPath,
+          fileContent: settings.sendNoteContextToLLM ? content : '',
+        };
       },
     };
 

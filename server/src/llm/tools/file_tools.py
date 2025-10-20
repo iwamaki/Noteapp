@@ -3,22 +3,22 @@
 # @responsibility LLMが特定の操作（例: ファイル編集、ファイル読み込み）を実行する際に呼び出すことができる関数を提供し、
 # そのツールの引数と戻り値を定義することで、LLMとシステム間のインタラクションを仲介します。
 from langchain.tools import tool, BaseTool
-from typing import Optional, Dict, List, Any
+from typing import Optional, Dict, List, Any, Union
 from difflib import get_close_matches
 
 # グローバル変数でコンテキストを保持（Agentから設定される）
-_current_file_context: Optional[Dict[str, str]] = None
+_current_file_context: Optional[Dict[str, Optional[str]]] = None
 _current_directory_context: Optional[Dict[str, Any]] = None
 _all_files_context: Optional[List[Dict[str, str]]] = None
 
 
-def set_file_context(context: Optional[Dict[str, str]]):
+def set_file_context(context: Optional[Union[Dict[str, Optional[str]], Dict[str, str]]]):
     """現在のファイルコンテキストを設定する"""
     global _current_file_context
-    _current_file_context = context
+    _current_file_context = context  # type: ignore[assignment]
 
 
-def get_file_context() -> Optional[Dict[str, str]]:
+def get_file_context() -> Optional[Dict[str, Optional[str]]]:
     """現在のファイルコンテキストを取得する"""
     return _current_file_context
 
@@ -81,8 +81,8 @@ def read_file(filename: str) -> str:
     # まず、現在開いているファイルかチェック
     current_file_context = get_file_context()
     if current_file_context:
-        current_filename = current_file_context.get('filename', '')
-        current_content = current_file_context.get('content', '')
+        current_filename = current_file_context.get('filename') or ''
+        current_content = current_file_context.get('content') or ''
 
         # ファイル名の比較（拡張子なしでも一致するように）
         filename_without_ext = filename.replace('.txt', '').replace('.md', '').strip('/')

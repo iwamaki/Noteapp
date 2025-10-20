@@ -1,4 +1,5 @@
 // LLMサービス関連の型定義
+import { EditScreenContext, NotelistScreenContext } from '../../../features/chat/types';
 export interface ChatMessage {
   role: 'user' | 'ai' | 'system';
   content: string;
@@ -38,13 +39,7 @@ export interface ChatContext {
     createdAt: Date;
   };
   conversationHistory?: ChatMessage[];
-  activeScreen?: {
-    currentPath: string;
-    fileList: Array<{
-      name: string;
-      type: string;
-    }>;
-  };
+  activeScreen?: NotelistScreenContext | EditScreenContext;
   allFiles?: Array<{
     path: string;
     title: string;

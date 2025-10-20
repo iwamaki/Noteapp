@@ -46,44 +46,20 @@ export const useNoteListChatContext = ({
           currentPath: currentPathRef.current,
         });
 
-        // 全ノートとフォルダを取得して、LLMに提供
-        let allFiles: Array<{ path: string; title: string; type: 'file' | 'directory' }> = [];
-        try {
-          const [allNotes, allFolders] = await Promise.all([
-            NoteListStorage.getAllNotes(),
-            NoteListStorage.getAllFolders(),
-          ]);
-
-          // フォルダをallFilesに追加
-          allFiles = allFolders.map(folder => ({
-            path: PathUtils.getFullPath(folder.path, folder.name),
-            title: folder.name,
-            type: 'directory' as const,
-          }));
-
-          // ノートをallFilesに追加
-          allFiles.push(
-            ...allNotes.map(note => ({
-              path: PathUtils.getFullPath(note.path, note.title),
-              title: note.title,
-              type: 'file' as const,
-            }))
-          );
-
-          logger.debug('chatService', '[useNoteListChatContext] All files collected', {
-            totalFiles: allFiles.length,
-          });
-        } catch (error) {
-          logger.error('chatService', '[useNoteListChatContext] Error collecting all files', error);
-        }
+        const visibleFileList = itemsRef.current.map(item => {
+          const path = item.item.path;
+          const name = item.type === 'folder' ? item.item.name : item.item.title;
+          const filePath = PathUtils.getFullPath(path, name);
+          return {
+            filePath,
+            tags: item.type === 'note' ? item.item.tags : undefined,
+          };
+        });
 
         return {
+          name: 'notelist',
           currentPath: currentPathRef.current,
-          fileList: itemsRef.current.map(item => ({
-            name: item.type === 'folder' ? item.item.name : item.item.title,
-            type: item.type === 'folder' ? 'directory' : 'file',
-          })),
-          allFiles,
+          visibleFileList,
         };
       },
     };

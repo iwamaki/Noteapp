@@ -11,20 +11,25 @@ import { LLMCommand } from '../../services/llmService/types/types';
  * アクティブな画面のコンテキスト情報
  * LLMに共有したい画面固有の情報を保持します
  */
-export interface ActiveScreenContext {
-  /** 現在のノートのタイトル */
-  currentNoteTitle?: string;
-  /** 現在のノートの内容 */
-  currentNoteContent?: string;
-  /** ファイルリスト（ノート一覧画面など） */
-  fileList?: { name: string; type: 'file' | 'directory' }[];
-  /** 現在のパス */
-  currentPath?: string;
-  /** 全ファイル・フォルダのリスト（階層構造の完全な情報） */
-  allFiles?: Array<{ path: string; title: string; type: 'file' | 'directory' }>;
-  /** その他の画面固有の情報を追加可能 */
-  [key: string]: any;
+export interface FileListItem {
+  filePath: string;
+  tags?: string[];
 }
+
+export interface NotelistScreenContext {
+  name: 'notelist';
+  currentPath: string;
+  visibleFileList: FileListItem[];
+  selectedFileList?: FileListItem[];
+}
+
+export interface EditScreenContext {
+  name: 'edit';
+  filePath: string;
+  fileContent: string;
+}
+
+export type ActiveScreenContext = NotelistScreenContext | EditScreenContext;
 
 /**
  * アクティブな画面のコンテキストプロバイダー

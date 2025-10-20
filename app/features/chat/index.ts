@@ -110,7 +110,7 @@ class ChatService {
 
     try {
       // 現在のコンテキストプロバイダーから画面コンテキストを取得
-      let screenContext: ActiveScreenContext = {};
+      let screenContext: ActiveScreenContext | null = null;
       if (this.currentProvider) {
         screenContext = await this.currentProvider.getScreenContext();
         logger.debug('chatService', 'Screen context retrieved:', screenContext);
@@ -221,38 +221,10 @@ class ChatService {
   /**
    * 画面コンテキストからChatContextを構築
    */
-  private buildChatContext(screenContext: ActiveScreenContext): ChatContext {
-    const chatContext: ChatContext = {};
-
-    if (screenContext.currentNoteTitle || screenContext.currentNoteContent) {
-      chatContext.currentFile = screenContext.currentNoteTitle;
-      chatContext.currentFileContent = {
-        filename: screenContext.currentNoteTitle || '',
-        content: screenContext.currentNoteContent || '',
-      };
-    }
-
-    if (screenContext.fileList) {
-      chatContext.fileList = screenContext.fileList;
-    }
-
-    if (screenContext.currentPath) {
-      chatContext.currentPath = screenContext.currentPath;
-    }
-
-    // activeScreen フィールドを追加（バックエンドのディレクトリコンテキスト用）
-    if (screenContext.currentPath || screenContext.fileList) {
-      chatContext.activeScreen = {
-        currentPath: screenContext.currentPath || '/',
-        fileList: screenContext.fileList || [],
-      };
-    }
-
-    // 全ファイル情報を追加（階層構造の完全な情報）
-    if (screenContext.allFiles) {
-      chatContext.allFiles = screenContext.allFiles;
-    }
-
+  private buildChatContext(screenContext: ActiveScreenContext | null): ChatContext {
+    const chatContext: ChatContext = {
+      activeScreen: screenContext ?? undefined,
+    };
     return chatContext;
   }
 
