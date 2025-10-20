@@ -21,8 +21,11 @@ class ChatService {
   // 現在アクティブなコンテキストプロバイダー
   private currentProvider: ActiveScreenContextProvider | null = null;
 
-  // コマンドハンドラのマップ
-  private commandHandlers: Record<string, (command: LLMCommand) => void | Promise<void>> = {};
+  // グローバルハンドラのマップ（画面に依存しない、起動時に一度だけ登録）
+  private globalHandlers: Record<string, (command: LLMCommand) => void | Promise<void>> = {};
+
+  // コンテキストハンドラのマップ（画面依存、画面遷移時に更新）
+  private contextHandlers: Record<string, (command: LLMCommand) => void | Promise<void>> = {};
 
   // チャットメッセージの履歴
   private messages: ChatMessage[] = [];
@@ -58,8 +61,8 @@ class ChatService {
   public registerActiveContextProvider(provider: ActiveScreenContextProvider): void {
     logger.debug('chatService', 'Registering active context provider');
     this.currentProvider = provider;
-    // コマンドハンドラをクリア
-    this.commandHandlers = {};
+    // コンテキストハンドラのみをクリア（グローバルハンドラは維持）
+    this.contextHandlers = {};
   }
 
   /**
@@ -68,16 +71,26 @@ class ChatService {
   public unregisterActiveContextProvider(): void {
     logger.debug('chatService', 'Unregistering active context provider');
     this.currentProvider = null;
-    this.commandHandlers = {};
+    this.contextHandlers = {};
   }
 
   /**
-   * コマンドハンドラを登録
+   * グローバルコマンドハンドラを登録（画面に依存しない）
+   * 起動時に一度だけ呼び出されることを想定
+   * @param handlers コマンド名をキーとしたハンドラのマップ
+   */
+  public registerGlobalHandlers(handlers: Record<string, (command: LLMCommand) => void | Promise<void>>): void {
+    logger.debug('chatService', 'Registering global command handlers:', Object.keys(handlers));
+    this.globalHandlers = { ...this.globalHandlers, ...handlers };
+  }
+
+  /**
+   * コンテキスト依存のコマンドハンドラを登録（画面遷移時に更新）
    * @param handlers コマンド名をキーとしたハンドラのマップ
    */
   public registerCommandHandlers(handlers: Record<string, (command: LLMCommand) => void | Promise<void>>): void {
-    logger.debug('chatService', 'Registering command handlers:', Object.keys(handlers));
-    this.commandHandlers = { ...this.commandHandlers, ...handlers };
+    logger.debug('chatService', 'Registering context command handlers:', Object.keys(handlers));
+    this.contextHandlers = { ...this.contextHandlers, ...handlers };
   }
 
   /**
@@ -230,10 +243,13 @@ class ChatService {
 
   /**
    * コマンドをディスパッチ
+   * グローバルハンドラとコンテキストハンドラの両方をチェック
    */
   private async dispatchCommands(commands: LLMCommand[]): Promise<void> {
     for (const command of commands) {
-      const handler = this.commandHandlers[command.action];
+      // コンテキストハンドラを優先、なければグローバルハンドラを使用
+      const handler = this.contextHandlers[command.action] || this.globalHandlers[command.action];
+
       if (handler) {
         try {
           await handler(command);

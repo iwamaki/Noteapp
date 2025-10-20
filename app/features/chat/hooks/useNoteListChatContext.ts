@@ -1,7 +1,8 @@
 /**
  * @file useNoteListChatContext.ts
  * @summary NoteListScreen用のチャットコンテキストプロバイダーフック
- * @responsibility ノート一覧画面のコンテキストをChatServiceに提供する
+ * @responsibility ノート一覧画面のコンテキストをChatServiceに提供し、
+ *                 コンテキスト依存のコマンドハンドラを登録する
  */
 
 import { useEffect, useRef } from 'react';
@@ -11,6 +12,10 @@ import { logger } from '../../../utils/logger';
 import { FileSystemItem } from '@shared/types/note';
 import { NoteListStorage } from '../../../screen/note-list/noteStorage';
 import { PathUtils } from '../../../screen/note-list/utils/pathUtils';
+import { createDirectoryHandler } from '../handlers/createDirectoryHandler';
+import { deleteItemHandler } from '../handlers/deleteItemHandler';
+import { moveItemHandler } from '../handlers/moveItemHandler';
+import { CommandHandlerContext } from '../handlers/types';
 
 interface UseNoteListChatContextParams {
   items: FileSystemItem[];
@@ -69,53 +74,16 @@ export const useNoteListChatContext = ({
       },
     };
 
-    // コマンドハンドラの定義
+    // ハンドラのコンテキストを作成
+    const handlerContext: CommandHandlerContext = {
+      noteListStorage: NoteListStorage,
+    };
+
+    // コマンドハンドラの定義（新しいハンドラ構造を使用）
     const commandHandlers = {
-      create_directory: async (command: any) => {
-        logger.debug('chatService', '[useNoteListChatContext] Handling create_directory command', {
-          path: command.path,
-          name: command.content,
-        });
-
-        try {
-          await NoteListStorage.createFolder({
-            name: command.content,
-            path: command.path || '/',
-          });
-          logger.debug('chatService', `[useNoteListChatContext] Folder created: ${command.content}`);
-        } catch (error) {
-          logger.error('chatService', '[useNoteListChatContext] Error creating folder', error);
-        }
-      },
-
-      move_item: async (command: any) => {
-        logger.debug('chatService', '[useNoteListChatContext] Handling move_item command', {
-          source: command.source,
-          destination: command.destination,
-        });
-
-        try {
-          // パスから対象を特定して移動
-          // ここでは簡易実装（実際のUIでの移動ロジックと統合が必要）
-          logger.debug('chatService', `[useNoteListChatContext] Move not fully implemented: ${command.source} -> ${command.destination}`);
-        } catch (error) {
-          logger.error('chatService', '[useNoteListChatContext] Error moving item', error);
-        }
-      },
-
-      delete_item: async (command: any) => {
-        logger.debug('chatService', '[useNoteListChatContext] Handling delete_item command', {
-          path: command.path,
-        });
-
-        try {
-          // パスから対象を特定して削除
-          // ここでは簡易実装（実際のUIでの削除ロジックと統合が必要）
-          logger.debug('chatService', `[useNoteListChatContext] Delete not fully implemented: ${command.path}`);
-        } catch (error) {
-          logger.error('chatService', '[useNoteListChatContext] Error deleting item', error);
-        }
-      },
+      create_directory: (command: any) => createDirectoryHandler(command, handlerContext),
+      move_item: (command: any) => moveItemHandler(command, handlerContext),
+      delete_item: (command: any) => deleteItemHandler(command, handlerContext),
     };
 
     // ChatServiceにプロバイダーとハンドラを登録
