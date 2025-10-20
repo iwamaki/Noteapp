@@ -46,18 +46,20 @@ export const useNoteListChatContext = ({
           currentPath: currentPathRef.current,
         });
 
-        const visibleFileList = itemsRef.current.map(item => {
-          const path = item.item.path;
-          const name = item.type === 'folder' ? item.item.name : item.item.title;
-          const type = item.type === 'folder' ? 'directory' : 'file'; // Map 'note' to 'file'
-          const filePath = PathUtils.getFullPath(path, name, item.type);
-          return {
-            filePath,
-            name, // Include name
-            type, // Include type
-            tags: item.type === 'note' ? item.item.tags : undefined,
-          };
-        });
+        const visibleFileList = itemsRef.current
+          .filter(item => item.type === 'note') // ファイルのみに限定
+          .map(item => {
+            const path = item.item.path;
+            const name = item.item.title;
+            const type = 'file';
+            const filePath = PathUtils.getFullPath(path, name, item.type);
+            return {
+              filePath,
+              name, // Include name
+              type, // Include type
+              tags: item.item.tags,
+            };
+          });
 
         return {
           name: 'notelist',
