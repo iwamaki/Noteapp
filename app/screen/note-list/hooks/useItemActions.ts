@@ -1,6 +1,6 @@
 // app/screen/note-list/hooks/useItemActions.ts (改善版)
 import { useCallback, useState } from 'react';
-import { PathUtils } from '../utils/pathUtils';
+import { PathService } from '../../../services/PathService';
 import { FileSystemItem, Folder } from '@shared/types/note';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../../navigation/types';
@@ -86,7 +86,7 @@ export const useItemActions = ({
   }, []);
 
   const handleMoveItems = useCallback(async (destinationFolder: Folder) => {
-    const destinationPath = PathUtils.getFullPath(
+    const destinationPath = PathService.getFullPath(
       destinationFolder.path,
       destinationFolder.name,
       'folder'
