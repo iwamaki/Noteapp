@@ -7,31 +7,79 @@
 import { LLMCommand } from '../llmService/types/types';
 import { CommandHandler } from './types';
 import { logger } from '../../../utils/logger';
+import { NoteListStorage, StorageError } from '../../../screen/note-list/noteStorage';
+import { findItemByPath } from './itemResolver';
 
 /**
  * delete_itemコマンドのハンドラ
  *
  * LLMから受け取ったアイテム削除リクエストを処理します。
- * 現在は簡易実装で、実際のUIでの削除ロジックと統合が必要です。
+ * パスからアイテムを特定し、ノートまたはフォルダを削除します。
  *
- * @param command delete_itemコマンド
+ * @param command delete_itemコマンド（command.path: 削除対象のパス）
  * @param context コンテキスト（オプション）
  */
 export const deleteItemHandler: CommandHandler = async (command: LLMCommand, context?) => {
-  logger.debug('toolService', 'Handling delete_item command', {
+  logger.info('deleteItemHandler', 'Handling delete_item command', {
     path: command.path,
   });
 
-  try {
-    // TODO: 実際の削除ロジックを実装
-    // パスから対象を特定して削除
-    logger.debug('toolService', `Delete not fully implemented: ${command.path}`);
+  // パスの検証
+  if (!command.path || typeof command.path !== 'string') {
+    logger.error('deleteItemHandler', 'Invalid path parameter', { path: command.path });
+    throw new Error('削除するアイテムのパスが指定されていません');
+  }
 
-    // 将来的には以下のような実装が必要:
-    // const storage = context?.noteListStorage || NoteListStorage;
-    // await storage.deleteItem(command.path);
+  try {
+    // パスからアイテムを検索
+    const resolvedItem = await findItemByPath(command.path);
+
+    if (!resolvedItem) {
+      const errorMsg = `アイテムが見つかりません: ${command.path}`;
+      logger.error('deleteItemHandler', errorMsg);
+      throw new Error(errorMsg);
+    }
+
+    // NoteListStorageを取得（コンテキストから、またはデフォルト）
+    const storage = context?.noteListStorage || NoteListStorage;
+
+    // アイテムの種類に応じて削除
+    if (resolvedItem.type === 'note') {
+      logger.debug('deleteItemHandler', 'Deleting note', {
+        noteId: resolvedItem.id,
+        noteTitle: (resolvedItem.item as any).title,
+      });
+      await storage.deleteNotes([resolvedItem.id]);
+      logger.info('deleteItemHandler', 'Note deleted successfully', {
+        noteId: resolvedItem.id,
+      });
+    } else if (resolvedItem.type === 'folder') {
+      logger.debug('deleteItemHandler', 'Deleting folder and its contents', {
+        folderId: resolvedItem.id,
+        folderName: (resolvedItem.item as any).name,
+      });
+      // deleteContents = true で中身ごと削除
+      await storage.deleteFolder(resolvedItem.id, true);
+      logger.info('deleteItemHandler', 'Folder deleted successfully', {
+        folderId: resolvedItem.id,
+      });
+    } else {
+      throw new Error(`未知のアイテムタイプ: ${resolvedItem.type}`);
+    }
   } catch (error) {
-    logger.error('toolService', 'Error deleting item', error);
+    if (error instanceof StorageError) {
+      logger.error('deleteItemHandler', 'Storage error during deletion', {
+        path: command.path,
+        errorCode: error.code,
+        errorMessage: error.message,
+      });
+      throw new Error(`削除に失敗しました: ${error.message}`);
+    }
+
+    logger.error('deleteItemHandler', 'Unexpected error during deletion', {
+      path: command.path,
+      error,
+    });
     throw error;
   }
 };
