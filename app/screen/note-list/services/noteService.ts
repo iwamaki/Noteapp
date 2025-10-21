@@ -427,8 +427,10 @@ export class NoteService {
     });
 
     // 一度に保存（トランザクション的に処理）
-    await saveAllNotes(updatedNotes);
-    await saveAllFolders(updatedFolders);
+    await Promise.all([
+      saveAllNotes(updatedNotes),
+      saveAllFolders(updatedFolders),
+    ]);
 
     return updatedFolders.find(f => f.id === data.id)!;
   }
