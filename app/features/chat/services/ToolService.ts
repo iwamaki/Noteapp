@@ -78,7 +78,11 @@ class ToolService {
     try {
       logger.debug('toolService', 'Fetching tool definitions from server...');
 
-      const response = await fetch('http://localhost:8000/api/tools');
+      const baseUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
+      if (!baseUrl) {
+        throw new Error('EXPO_PUBLIC_API_BASE_URL is not set in .env file');
+      }
+      const response = await fetch(`${baseUrl}/api/tools`);
 
       if (!response.ok) {
         throw new Error(`Failed to fetch tools: ${response.status} ${response.statusText}`);

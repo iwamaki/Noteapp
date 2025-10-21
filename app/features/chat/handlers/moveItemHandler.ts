@@ -18,7 +18,7 @@ import { logger } from '../../../utils/logger';
  * @param context コンテキスト（オプション）
  */
 export const moveItemHandler: CommandHandler = async (command: LLMCommand, context?) => {
-  logger.debug('moveItemHandler', 'Handling move_item command', {
+  logger.debug('toolService', 'Handling move_item command', {
     source: command.source,
     destination: command.destination,
   });
@@ -27,7 +27,7 @@ export const moveItemHandler: CommandHandler = async (command: LLMCommand, conte
     // TODO: 実際の移動ロジックを実装
     // パスから対象を特定して移動
     logger.debug(
-      'moveItemHandler',
+      'toolService',
       `Move not fully implemented: ${command.source} -> ${command.destination}`
     );
 
@@ -35,7 +35,7 @@ export const moveItemHandler: CommandHandler = async (command: LLMCommand, conte
     // const storage = context?.noteListStorage || NoteListStorage;
     // await storage.moveItem(command.source, command.destination);
   } catch (error) {
-    logger.error('moveItemHandler', 'Error moving item', error);
+    logger.error('toolService', 'Error moving item', error);
     throw error;
   }
 };

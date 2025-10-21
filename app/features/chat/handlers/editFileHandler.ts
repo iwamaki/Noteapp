@@ -18,12 +18,12 @@ import { logger } from '../../../utils/logger';
  * @param context setContent関数を含むコンテキスト
  */
 export const editFileHandler: CommandHandler = (command: LLMCommand, context?) => {
-  logger.debug('editFileHandler', 'Handling edit_file command', {
+  logger.debug('toolService', 'Handling edit_file command', {
     hasContent: !!command.content,
   });
 
   if (!context?.setContent) {
-    logger.error('editFileHandler', 'setContent function not provided in context');
+    logger.error('toolService', 'setContent function not provided in context');
     return;
   }
 
@@ -34,8 +34,8 @@ export const editFileHandler: CommandHandler = (command: LLMCommand, context?) =
       .replace(/\n```$/, '');
 
     context.setContent(newContent);
-    logger.debug('editFileHandler', 'File content updated successfully');
+    logger.debug('toolService', 'File content updated successfully');
   } else {
-    logger.warn('editFileHandler', 'Invalid content type', typeof command.content);
+    logger.warn('toolService', 'Invalid content type', typeof command.content);
   }
 };
