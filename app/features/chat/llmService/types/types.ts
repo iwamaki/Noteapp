@@ -63,6 +63,8 @@ export interface LLMCommand {
   description?: string;
   source?: string;
   destination?: string;
+  source_path?: string;
+  dest_path?: string;
   paths?: string[];
   sources?: string[];
 }

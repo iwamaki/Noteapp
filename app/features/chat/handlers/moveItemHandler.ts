@@ -7,35 +7,117 @@
 import { LLMCommand } from '../llmService/types/types';
 import { CommandHandler } from './types';
 import { logger } from '../../../utils/logger';
+import { NoteListStorage, StorageError } from '../../../screen/note-list/noteStorage';
+import { PathUtils } from '../../../screen/note-list/utils/pathUtils';
+import { findItemByPath, isValidDirectoryPath } from './itemResolver';
 
 /**
  * move_itemコマンドのハンドラ
  *
  * LLMから受け取ったアイテム移動リクエストを処理します。
- * 現在は簡易実装で、実際のUIでの移動ロジックと統合が必要です。
+ * パスからアイテムを特定し、指定された移動先ディレクトリに移動します。
  *
- * @param command move_itemコマンド
+ * @param command move_itemコマンド（command.source_path: 移動元, command.dest_path: 移動先）
  * @param context コンテキスト（オプション）
  */
 export const moveItemHandler: CommandHandler = async (command: LLMCommand, context?) => {
-  logger.debug('toolService', 'Handling move_item command', {
-    source: command.source,
-    destination: command.destination,
+  logger.info('moveItemHandler', 'Handling move_item command', {
+    source: command.source_path,
+    destination: command.dest_path,
   });
 
-  try {
-    // TODO: 実際の移動ロジックを実装
-    // パスから対象を特定して移動
-    logger.debug(
-      'toolService',
-      `Move not fully implemented: ${command.source} -> ${command.destination}`
-    );
+  // パラメータの検証
+  if (!command.source_path || typeof command.source_path !== 'string') {
+    logger.error('moveItemHandler', 'Invalid source_path parameter', {
+      source_path: command.source_path,
+    });
+    throw new Error('移動元のパスが指定されていません');
+  }
 
-    // 将来的には以下のような実装が必要:
-    // const storage = context?.noteListStorage || NoteListStorage;
-    // await storage.moveItem(command.source, command.destination);
+  if (!command.dest_path || typeof command.dest_path !== 'string') {
+    logger.error('moveItemHandler', 'Invalid dest_path parameter', {
+      dest_path: command.dest_path,
+    });
+    throw new Error('移動先のパスが指定されていません');
+  }
+
+  try {
+    // 移動元のアイテムを検索
+    const resolvedItem = await findItemByPath(command.source_path);
+
+    if (!resolvedItem) {
+      const errorMsg = `移動元のアイテムが見つかりません: ${command.source_path}`;
+      logger.error('moveItemHandler', errorMsg);
+      throw new Error(errorMsg);
+    }
+
+    // 移動先のディレクトリパスを正規化
+    const destPath = PathUtils.normalizePath(command.dest_path);
+
+    // 移動先のディレクトリが存在するか確認
+    const isValidDest = await isValidDirectoryPath(destPath);
+    if (!isValidDest) {
+      const errorMsg = `移動先のディレクトリが存在しません: ${command.dest_path}`;
+      logger.error('moveItemHandler', errorMsg);
+      throw new Error(errorMsg);
+    }
+
+    // NoteListStorageを取得（コンテキストから、またはデフォルト）
+    const storage = context?.noteListStorage || NoteListStorage;
+
+    // アイテムの種類に応じて移動
+    if (resolvedItem.type === 'note') {
+      logger.debug('moveItemHandler', 'Moving note', {
+        noteId: resolvedItem.id,
+        noteTitle: (resolvedItem.item as any).title,
+        sourcePath: command.source_path,
+        destPath,
+      });
+
+      await storage.moveNote(resolvedItem.id, destPath);
+
+      logger.info('moveItemHandler', 'Note moved successfully', {
+        noteId: resolvedItem.id,
+        destPath,
+      });
+    } else if (resolvedItem.type === 'folder') {
+      logger.debug('moveItemHandler', 'Moving folder', {
+        folderId: resolvedItem.id,
+        folderName: (resolvedItem.item as any).name,
+        sourcePath: command.source_path,
+        destPath,
+      });
+
+      // フォルダの移動はupdateFolderで実現
+      // パスを更新すると、子要素も自動的に更新される
+      await storage.updateFolder({
+        id: resolvedItem.id,
+        path: destPath,
+      });
+
+      logger.info('moveItemHandler', 'Folder moved successfully', {
+        folderId: resolvedItem.id,
+        destPath,
+      });
+    } else {
+      throw new Error(`未知のアイテムタイプ: ${resolvedItem.type}`);
+    }
   } catch (error) {
-    logger.error('toolService', 'Error moving item', error);
+    if (error instanceof StorageError) {
+      logger.error('moveItemHandler', 'Storage error during move', {
+        source: command.source_path,
+        destination: command.dest_path,
+        errorCode: error.code,
+        errorMessage: error.message,
+      });
+      throw new Error(`移動に失敗しました: ${error.message}`);
+    }
+
+    logger.error('moveItemHandler', 'Unexpected error during move', {
+      source: command.source_path,
+      destination: command.dest_path,
+      error,
+    });
     throw error;
   }
 };
