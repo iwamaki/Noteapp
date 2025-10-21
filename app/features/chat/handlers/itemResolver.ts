@@ -6,7 +6,7 @@
 
 import { Note, Folder } from '@shared/types/note';
 import { NoteListStorage } from '../../../screen/note-list/noteStorage';
-import { PathUtils } from '../../../screen/note-list/utils/pathUtils';
+import { PathService } from '../../../services/PathService';
 import { logger } from '../../../utils/logger';
 
 /**
@@ -42,10 +42,10 @@ export async function findItemByPath(path: string): Promise<ResolvedItem | null>
     if (isFolder) {
       // フォルダを検索
       const folders = await NoteListStorage.getAllFolders();
-      const normalizedPath = PathUtils.normalizePath(trimmedPath);
+      const normalizedPath = PathService.normalizePath(trimmedPath);
 
       for (const folder of folders) {
-        const fullPath = PathUtils.getFullPath(folder.path, folder.name, 'folder');
+        const fullPath = PathService.getFullPath(folder.path, folder.name, 'folder');
         if (fullPath === normalizedPath) {
           logger.debug('itemResolver', 'Found folder by path', {
             path: trimmedPath,
@@ -70,9 +70,9 @@ export async function findItemByPath(path: string): Promise<ResolvedItem | null>
       const parentPath = parts.length > 1 ? `/${parts.slice(0, -1).join('/')}/` : '/';
 
       for (const note of notes) {
-        const fullPath = PathUtils.getFullPath(note.path, note.title, 'note');
-        const normalizedNotePath = PathUtils.normalizePath(note.path);
-        const normalizedParentPath = PathUtils.normalizePath(parentPath);
+        const fullPath = PathService.getFullPath(note.path, note.title, 'note');
+        const normalizedNotePath = PathService.normalizePath(note.path);
+        const normalizedParentPath = PathService.normalizePath(parentPath);
 
         // パスとタイトルの両方が一致するかチェック
         if (
@@ -110,7 +110,7 @@ export async function findItemByPath(path: string): Promise<ResolvedItem | null>
  */
 export async function isValidDirectoryPath(path: string): Promise<boolean> {
   try {
-    const normalizedPath = PathUtils.normalizePath(path);
+    const normalizedPath = PathService.normalizePath(path);
 
     // ルートパスは常に有効
     if (normalizedPath === '/') {
@@ -120,7 +120,7 @@ export async function isValidDirectoryPath(path: string): Promise<boolean> {
     // フォルダを検索
     const folders = await NoteListStorage.getAllFolders();
     return folders.some(folder => {
-      const fullPath = PathUtils.getFullPath(folder.path, folder.name, 'folder');
+      const fullPath = PathService.getFullPath(folder.path, folder.name, 'folder');
       return fullPath === normalizedPath;
     });
   } catch (error) {
