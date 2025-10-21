@@ -393,13 +393,44 @@ export class NoteService {
       );
     }
 
-    // フォルダを更新
-    const updatedFolder = await NoteListStorage.updateFolder(data);
+    // 親フォルダと子要素を一度に更新（データの不一致を防ぐため）
+    const allNotes = await NoteListStorage.getAllNotes();
 
-    // 子要素のパスを更新
-    await this.updateChildrenPaths(oldFullPath, newFullPath);
+    // 子ノートのパスを更新
+    const updatedNotes = allNotes.map(note => {
+      if (note.path === oldFullPath) {
+        return { ...note, path: newFullPath };
+      } else if (note.path.startsWith(oldFullPath)) {
+        return { ...note, path: newFullPath + note.path.substring(oldFullPath.length) };
+      }
+      return note;
+    });
 
-    return updatedFolder;
+    // 子フォルダのパスを更新 + 親フォルダ自身を更新
+    const updatedFolders = allFolders.map(folder => {
+      // 親フォルダ自身を更新
+      if (folder.id === data.id) {
+        return {
+          ...folder,
+          name: newName,
+          path: newPath,
+          updatedAt: new Date(),
+        };
+      }
+      // 子フォルダのパスを更新
+      if (folder.path === oldFullPath) {
+        return { ...folder, path: newFullPath };
+      } else if (folder.path.startsWith(oldFullPath)) {
+        return { ...folder, path: newFullPath + folder.path.substring(oldFullPath.length) };
+      }
+      return folder;
+    });
+
+    // 一度に保存（トランザクション的に処理）
+    await saveAllNotes(updatedNotes);
+    await saveAllFolders(updatedFolders);
+
+    return updatedFolders.find(f => f.id === data.id)!;
   }
 
   /**
