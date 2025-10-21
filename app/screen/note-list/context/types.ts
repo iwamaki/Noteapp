@@ -1,0 +1,105 @@
+/**
+ * @file types.ts
+ * @summary NoteListContext用の型定義
+ */
+
+import { Note, Folder, FileSystemItem } from '@shared/types/note';
+import { TreeNode } from '../utils/treeUtils';
+
+/**
+ * 検索ターゲット
+ */
+export type SearchTarget = 'all' | 'notes' | 'folders';
+
+/**
+ * 検索フィールド
+ */
+export type SearchField = 'title' | 'content' | 'all';
+
+/**
+ * 検索オプション
+ */
+export interface SearchOptions {
+  target: SearchTarget;
+  field: SearchField;
+  caseSensitive: boolean;
+}
+
+/**
+ * NoteList画面の全体状態
+ */
+export interface NoteListState {
+  // データ
+  folders: Folder[];
+  notes: Note[];
+  treeNodes: TreeNode[];
+
+  // UI状態
+  expandedFolderIds: Set<string>;
+  loading: boolean;
+
+  // 選択状態
+  isSelectionMode: boolean;
+  selectedNoteIds: Set<string>;
+  selectedFolderIds: Set<string>;
+
+  // モーダル状態
+  modals: {
+    create: { visible: boolean };
+    rename: { visible: boolean; item: FileSystemItem | null };
+  };
+
+  // 検索状態
+  search: {
+    isActive: boolean;
+    query: string;
+    options: SearchOptions;
+  };
+
+  // 移動モード
+  isMoveMode: boolean;
+}
+
+/**
+ * NoteListアクション型
+ */
+export type NoteListAction =
+  // データ更新
+  | { type: 'SET_DATA'; payload: { folders: Folder[]; notes: Note[] } }
+  | { type: 'SET_LOADING'; payload: boolean }
+
+  // ツリー操作
+  | { type: 'TOGGLE_FOLDER'; payload: string }
+  | { type: 'EXPAND_FOLDER'; payload: string }
+  | { type: 'COLLAPSE_FOLDER'; payload: string }
+  | { type: 'COLLAPSE_ALL_FOLDERS' }
+
+  // 選択操作
+  | { type: 'ENTER_SELECTION_MODE' }
+  | { type: 'EXIT_SELECTION_MODE' }
+  | { type: 'TOGGLE_SELECT_NOTE'; payload: string }
+  | { type: 'TOGGLE_SELECT_FOLDER'; payload: string }
+  | { type: 'SELECT_ALL_VISIBLE' }
+  | { type: 'CLEAR_SELECTION' }
+
+  // モーダル操作
+  | { type: 'OPEN_CREATE_MODAL' }
+  | { type: 'CLOSE_CREATE_MODAL' }
+  | { type: 'OPEN_RENAME_MODAL'; payload: FileSystemItem }
+  | { type: 'CLOSE_RENAME_MODAL' }
+
+  // 検索操作
+  | {
+      type: 'START_SEARCH';
+      payload: { query: string; options: SearchOptions };
+    }
+  | { type: 'UPDATE_SEARCH_QUERY'; payload: string }
+  | { type: 'UPDATE_SEARCH_OPTIONS'; payload: Partial<SearchOptions> }
+  | { type: 'END_SEARCH' }
+
+  // 移動モード
+  | { type: 'ENTER_MOVE_MODE' }
+  | { type: 'EXIT_MOVE_MODE' }
+
+  // 複合操作
+  | { type: 'REFRESH_COMPLETE'; payload: { folders: Folder[]; notes: Note[] } };
