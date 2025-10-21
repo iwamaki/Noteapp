@@ -10,36 +10,23 @@ export const getAllFolders = async (): Promise<Folder[]> => {
 
 export const getFoldersByPath = async (path: string): Promise<Folder[]> => {
   const folders = await getAllFoldersRaw();
-  const normalizedPath = PathService.normalizePath(path);
-  return folders.filter(folder => PathService.normalizePath(folder.path) === normalizedPath);
+  // パスは正規化済みと仮定して、単純な文字列比較を行う
+  return folders.filter(folder => folder.path === path);
 };
 
 export const createFolder = async (data: CreateFolderData): Promise<Folder> => {
   const now = new Date();
-  const normalizedPath = PathService.normalizePath(data.path);
-
-  const folders = await getAllFoldersRaw();
-
-  // Check for duplicate folder name in the same path
-  const duplicateExists = folders.some(
-    folder => PathService.normalizePath(folder.path) === normalizedPath && folder.name === data.name
-  );
-
-  if (duplicateExists) {
-    throw new StorageError(
-      `A folder with name "${data.name}" already exists in path "${normalizedPath}"`,
-      'DUPLICATE_ITEM'
-    );
-  }
+  // パスは呼び出し側で正規化済みと仮定
 
   const newFolder: Folder = {
     id: uuidv4(),
     name: data.name,
-    path: normalizedPath,
+    path: data.path,
     createdAt: now,
     updatedAt: now,
   };
 
+  const folders = await getAllFoldersRaw();
   folders.push(newFolder);
   await saveAllFolders(folders);
   return newFolder;
@@ -54,62 +41,16 @@ export const updateFolder = async (data: UpdateFolderData): Promise<Folder> => {
   }
 
   const folderToUpdate = allFolders[folderIndex];
-  const oldFullPath = PathService.getFullPath(folderToUpdate.path, folderToUpdate.name, 'folder');
 
-  const newName = data.name ?? folderToUpdate.name;
-  const newPath = data.path ? PathService.normalizePath(data.path) : folderToUpdate.path;
-  const newFullPath = PathService.getFullPath(newPath, newName, 'folder');
-
-  if (oldFullPath === newFullPath && folderToUpdate.name === newName && folderToUpdate.path === newPath) {
-    return folderToUpdate;
+  // 単純にフォルダ自身のデータのみを更新
+  // 重複チェックと子要素のパス更新は呼び出し側（NoteService）が行う
+  if (data.name !== undefined) {
+    folderToUpdate.name = data.name;
   }
-
-  // Check for duplicate folder name in the same path (excluding the current folder)
-  const duplicateExists = allFolders.some(
-    folder =>
-      folder.id !== data.id &&
-      PathService.normalizePath(folder.path) === newPath &&
-      folder.name === newName
-  );
-
-  if (duplicateExists) {
-    throw new StorageError(
-      `A folder with name "${newName}" already exists in path "${newPath}"`,
-      'DUPLICATE_ITEM'
-    );
+  if (data.path !== undefined) {
+    folderToUpdate.path = data.path;
   }
-  
-  folderToUpdate.name = newName;
-  folderToUpdate.path = newPath;
   folderToUpdate.updatedAt = new Date();
-
-  if (oldFullPath !== newFullPath) {
-    const allNotes = await getAllNotesRaw();
-
-    // Update all notes whose path starts with oldFullPath
-    allNotes.forEach(note => {
-      if (note.path === oldFullPath) {
-        note.path = newFullPath;
-      } else if (note.path.startsWith(oldFullPath)) {
-        // Since oldFullPath already ends with '/', we don't need to add another '/'
-        note.path = newFullPath + note.path.substring(oldFullPath.length);
-      }
-    });
-
-    // Update all child folders whose path starts with oldFullPath
-    allFolders.forEach(folder => {
-      if (folder.id === data.id) return;
-
-      if (folder.path === oldFullPath) {
-        folder.path = newFullPath;
-      } else if (folder.path.startsWith(oldFullPath)) {
-        // Since oldFullPath already ends with '/', we don't need to add another '/'
-        folder.path = newFullPath + folder.path.substring(oldFullPath.length);
-      }
-    });
-
-    await saveAllNotes(allNotes);
-  }
 
   await saveAllFolders(allFolders);
   return folderToUpdate;
