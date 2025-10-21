@@ -95,7 +95,7 @@ export const useNoteTree = (currentPath: string) => {
     } finally {
       setLoading(false);
     }
-  }, [expandedFolderIds]);
+  }, []);
 
   useEffect(() => {
     if (isFocused) {
