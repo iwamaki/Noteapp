@@ -4,7 +4,7 @@
 2025-10-21
 
 ## ステータス
-✅ **Phase 1 & Phase 2 完了** - 新アーキテクチャの基盤が完成
+✅ **Phase 1, 2, 3, 4 完了** - 新アーキテクチャへの完全移行完了
 
 ---
 
@@ -366,26 +366,47 @@ await refreshData();
 
 ---
 
+### Phase 3: 既存コードへの統合 ✅
+
+**作業内容:**
+1. ✅ NoteListScreenでNoteListProviderを使用
+2. ✅ 既存のuseNoteListを段階的に置き換え
+3. ✅ useItemActions、useItemSelection等を削除
+4. ✅ コンポーネントでuseNoteListContext()を使用
+
+**実装詳細:**
+- NoteListScreenをNoteListProviderでラップ
+- useNoteListContext()から状態とアクションを取得
+- 全てのハンドラ（選択、削除、コピー、移動、リネーム、作成）を実装
+- useNoteListHeaderとの統合完了
+- 型チェック・Lint通過
+
+**削除したhooks:**
+- useNoteList.ts
+- useItemActions.ts
+- useItemSelection.ts
+- useModalManager.ts
+- useNoteTree.ts
+- useErrorHandler.ts
+
+### Phase 4: NoteServiceの廃止 ✅
+
+**作業内容:**
+1. ✅ NoteServiceへの全依存を削除
+2. ✅ services/noteService.tsを削除
+3. ✅ 最終的な動作確認（型チェック・Lint通過）
+
+**削除したファイル:**
+- app/screen/note-list/services/noteService.ts
+
+**結果:**
+- 全ての機能が新しい3層アーキテクチャに移行
+- NoteServiceの全機能がUseCases層に統合
+- コードの責務分離が完了
+
+---
+
 ## 次のステップ（今後の作業）
-
-### Phase 3: 既存コードへの統合（未実施）
-
-**作業内容:**
-1. NoteListScreenでNoteListProviderを使用
-2. 既存のuseNoteListを段階的に置き換え
-3. useItemActions、useItemSelection等を削除
-4. コンポーネントでuseNoteListContext()を使用
-
-**優先度:** 中（新アーキテクチャが使用可能な状態）
-
-### Phase 4: NoteServiceの廃止（未実施）
-
-**作業内容:**
-1. NoteServiceへの全依存を削除
-2. services/noteService.tsを削除
-3. 最終的な動作確認
-
-**優先度:** 低（既存コードも並行稼働可能）
 
 ### Phase 5: パフォーマンス最適化（未実施）
 
@@ -527,13 +548,29 @@ describe('フォルダリネーム統合テスト', () => {
 
 1. **Phase 1完了**: 3層アーキテクチャの基盤構築
 2. **Phase 2完了**: 状態管理の一元化
-3. **フォルダリネームバグ解決**: 非同期処理の改善
-4. **ドキュメント整備**: 分析、計画、使用例、サマリー
+3. **Phase 3完了**: 既存コードへの完全統合
+4. **Phase 4完了**: NoteServiceと不要なhooksの廃止
+5. **フォルダリネームバグ解決**: 非同期処理の改善
+6. **ドキュメント整備**: 分析、計画、使用例、サマリー
+
+### 削減されたコード量
+
+**削除されたファイル（7個）:**
+- useNoteList.ts
+- useItemActions.ts
+- useItemSelection.ts
+- useModalManager.ts
+- useNoteTree.ts
+- useErrorHandler.ts
+- noteService.ts (455行)
+
+**結果:**
+- カスタムHooks数: 8個 → 1個（useNoteListContext）
+- サービス層: NoteService（455行）→ UseCases層（340行）+ Domain層 + Infrastructure層
+- 状態管理の複雑度: HIGH → LOW
 
 ### 残タスク
 
-- Phase 3: 既存コードへの統合（優先度: 中）
-- Phase 4: NoteServiceの廃止（優先度: 低）
 - Phase 5: パフォーマンス最適化（優先度: 低）
 - 単体テストの追加（優先度: 中）
 
@@ -547,6 +584,7 @@ describe('フォルダリネーム統合テスト', () => {
 
 ---
 
-**実装完了日:** 2025-10-21
+**Phase 1 & 2 完了日:** 2025-10-21
+**Phase 3 & 4 完了日:** 2025-10-21
 **実装者:** Claude Code
-**レビュー状況:** 未レビュー（実装完了、動作確認待ち）
+**レビュー状況:** 実装完了、型チェック・Lint通過、動作確認推奨

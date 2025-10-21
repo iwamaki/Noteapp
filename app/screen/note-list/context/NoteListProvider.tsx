@@ -12,6 +12,7 @@ import { noteListReducer, createInitialState } from './noteListReducer';
 import { NoteRepository } from '../infrastructure/NoteRepository';
 import { FolderRepository } from '../infrastructure/FolderRepository';
 import { NoteListUseCases } from '../application/NoteListUseCases';
+import { FileSystemItem } from '@shared/types/note';
 
 interface NoteListProviderProps {
   children: React.ReactNode;
@@ -126,6 +127,18 @@ export const NoteListProvider: React.FC<NoteListProviderProps> = ({ children }) 
   );
 
   /**
+   * 選択されたノートをコピー
+   */
+  const copySelectedNotes = useCallback(
+    async (noteIds: string[]) => {
+      const copiedNotes = await NoteListUseCases.copyNotes(noteIds);
+      await refreshData();
+      return copiedNotes;
+    },
+    [refreshData]
+  );
+
+  /**
    * アクションヘルパーをメモ化
    */
   const actions: NoteListActions = useMemo(
@@ -137,6 +150,7 @@ export const NoteListProvider: React.FC<NoteListProviderProps> = ({ children }) 
       moveSelectedItems,
       createFolder,
       createNoteWithPath,
+      copySelectedNotes,
     }),
     [
       refreshData,
@@ -146,8 +160,24 @@ export const NoteListProvider: React.FC<NoteListProviderProps> = ({ children }) 
       moveSelectedItems,
       createFolder,
       createNoteWithPath,
+      copySelectedNotes,
     ]
   );
+
+  /**
+   * folders + notesの統合リスト（派生値）
+   */
+  const items: FileSystemItem[] = useMemo(() => {
+    const folderItems: FileSystemItem[] = state.folders.map(folder => ({
+      type: 'folder' as const,
+      item: folder,
+    }));
+    const noteItems: FileSystemItem[] = state.notes.map(note => ({
+      type: 'note' as const,
+      item: note,
+    }));
+    return [...folderItems, ...noteItems];
+  }, [state.folders, state.notes]);
 
   /**
    * Contextの値をメモ化
@@ -157,8 +187,9 @@ export const NoteListProvider: React.FC<NoteListProviderProps> = ({ children }) 
       state,
       dispatch,
       actions,
+      items,
     }),
-    [state, actions]
+    [state, actions, items]
   );
 
   return <NoteListContext.Provider value={value}>{children}</NoteListContext.Provider>;
