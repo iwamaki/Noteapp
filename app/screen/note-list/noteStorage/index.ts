@@ -1,11 +1,13 @@
 import { FileSystemItem, Note, Folder } from '@shared/types/note';
-import { PathService } from '../../../services/PathService';
-import { getAllNotesRaw, saveAllNotes, getAllFoldersRaw, StorageError } from './storage';
+import { getAllNotesRaw, saveAllNotes, getAllFoldersRaw, saveAllFolders, StorageError } from './storage';
 import * as NoteFns from './note';
 import * as FolderFns from './folder';
 
 // Re-export error class
 export { StorageError };
+
+// Re-export storage raw functions for NoteService
+export { saveAllNotes, saveAllFolders };
 
 // --- Composite & Helper Methods ---
 
@@ -33,15 +35,14 @@ const getItemsRecursively = async (
   const allNotes = await getAllNotesRaw();
   const allFolders = await getAllFoldersRaw();
 
-  const normalizedRootPath = PathService.normalizePath(rootPath);
-  const rootDepth = normalizedRootPath === '/' ? 0 : normalizedRootPath.split('/').length - 1;
+  // パスは正規化済みと仮定
+  const rootDepth = rootPath === '/' ? 0 : rootPath.split('/').length - 1;
 
   const filterByDepth = (item: Note | Folder) => {
-    const itemPath = PathService.normalizePath(item.path);
-    if (!itemPath.startsWith(normalizedRootPath)) return false;
+    if (!item.path.startsWith(rootPath)) return false;
     if (maxDepth === -1) return true; // -1は無限階層を示す
 
-    const itemDepth = itemPath === '/' ? 0 : itemPath.split('/').length - 1;
+    const itemDepth = item.path === '/' ? 0 : item.path.split('/').length - 1;
     // 指定された階層内のアイテムをフィルタリング
     return itemDepth - rootDepth < maxDepth;
   };
@@ -74,47 +75,6 @@ const migrateExistingNotes = async (): Promise<void> => {
   }
 };
 
-const ensureFoldersExist = async (folderNames: string[], basePath: string = '/'): Promise<string> => {
-  if (folderNames.length === 0) {
-    return PathService.normalizePath(basePath);
-  }
-
-  const folders = await getAllFoldersRaw();
-  let currentPath = PathService.normalizePath(basePath);
-
-  for (const folderName of folderNames) {
-    const fullPath = PathService.getFullPath(currentPath, folderName, 'folder');
-
-    const existingFolder = folders.find(
-      f => PathService.getFullPath(f.path, f.name, 'folder') === fullPath
-    );
-
-    if (!existingFolder) {
-      const newFolder = await FolderFns.createFolder({
-        name: folderName,
-        path: currentPath,
-      });
-      folders.push(newFolder);
-    }
-
-    currentPath = fullPath;
-  }
-
-  return currentPath;
-};
-
-const createNoteWithPath = async (inputPath: string, basePath: string = '/'): Promise<Note> => {
-  const { folders, fileName } = PathService.parseInputPath(inputPath);
-  const targetPath = await ensureFoldersExist(folders, basePath);
-
-  return await NoteFns.createNote({
-    title: fileName,
-    content: '',
-    path: targetPath,
-  });
-};
-
-
 // --- Main Export ---
 
 export const NoteListStorage = {
@@ -126,6 +86,4 @@ export const NoteListStorage = {
   getItemsByPath,
   getItemsRecursively,
   migrateExistingNotes,
-  createNoteWithPath,
-  ensureFoldersExist,
 };
