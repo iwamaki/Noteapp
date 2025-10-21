@@ -18,20 +18,20 @@ import { logger } from '../../../utils/logger';
  * @param context コンテキスト（オプション）
  */
 export const deleteItemHandler: CommandHandler = async (command: LLMCommand, context?) => {
-  logger.debug('deleteItemHandler', 'Handling delete_item command', {
+  logger.debug('toolService', 'Handling delete_item command', {
     path: command.path,
   });
 
   try {
     // TODO: 実際の削除ロジックを実装
     // パスから対象を特定して削除
-    logger.debug('deleteItemHandler', `Delete not fully implemented: ${command.path}`);
+    logger.debug('toolService', `Delete not fully implemented: ${command.path}`);
 
     // 将来的には以下のような実装が必要:
     // const storage = context?.noteListStorage || NoteListStorage;
     // await storage.deleteItem(command.path);
   } catch (error) {
-    logger.error('deleteItemHandler', 'Error deleting item', error);
+    logger.error('toolService', 'Error deleting item', error);
     throw error;
   }
 };
