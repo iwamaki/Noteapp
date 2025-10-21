@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { Note, CreateNoteData } from '@shared/types/note';
-import { PathUtils } from '../utils/pathUtils';
+import { PathService } from '../../../services/PathService';
 import { getAllNotesRaw, saveAllNotes, StorageError } from './storage';
 
 export interface UpdateNoteData {
@@ -18,9 +18,9 @@ export const getAllNotes = async (): Promise<Note[]> => {
 
 export const getNotesByPath = async (path: string): Promise<Note[]> => {
   const notes = await getAllNotesRaw();
-  const normalizedPath = PathUtils.normalizePath(path);
+  const normalizedPath = PathService.normalizePath(path);
   return notes
-    .filter(note => PathUtils.normalizePath(note.path) === normalizedPath)
+    .filter(note => PathService.normalizePath(note.path) === normalizedPath)
     .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
 };
 
@@ -41,12 +41,12 @@ export const copyNotes = async (sourceIds: string[]): Promise<Note[]> => {
       // Find a unique title for the copied note
       let newTitle = `Copy of ${noteToCopy.title}`;
       let counter = 1;
-      const normalizedPath = PathUtils.normalizePath(noteToCopy.path);
+      const normalizedPath = PathService.normalizePath(noteToCopy.path);
 
       // Check if the title already exists, and if so, add a number
       while (
-        notes.some(n => PathUtils.normalizePath(n.path) === normalizedPath && n.title === newTitle) ||
-        copiedNotes.some(n => PathUtils.normalizePath(n.path) === normalizedPath && n.title === newTitle)
+        notes.some(n => PathService.normalizePath(n.path) === normalizedPath && n.title === newTitle) ||
+        copiedNotes.some(n => PathService.normalizePath(n.path) === normalizedPath && n.title === newTitle)
       ) {
         newTitle = `Copy of ${noteToCopy.title} (${counter})`;
         counter++;
@@ -72,13 +72,13 @@ export const copyNotes = async (sourceIds: string[]): Promise<Note[]> => {
 
 export const createNote = async (data: CreateNoteData): Promise<Note> => {
   const now = new Date();
-  const normalizedPath = PathUtils.normalizePath(data.path || '/');
+  const normalizedPath = PathService.normalizePath(data.path || '/');
 
   const notes = await getAllNotesRaw();
 
   // Check for duplicate note title in the same path
   const duplicateExists = notes.some(
-    note => PathUtils.normalizePath(note.path) === normalizedPath && note.title === data.title
+    note => PathService.normalizePath(note.path) === normalizedPath && note.title === data.title
   );
 
   if (duplicateExists) {
@@ -114,13 +114,13 @@ export const updateNote = async (data: UpdateNoteData): Promise<Note> => {
 
   const existingNote = notes[noteIndex];
   const newTitle = data.title ?? existingNote.title;
-  const newPath = data.path ? PathUtils.normalizePath(data.path) : existingNote.path;
+  const newPath = data.path ? PathService.normalizePath(data.path) : existingNote.path;
 
   // Check for duplicate note title in the same path (excluding the current note)
   const duplicateExists = notes.some(
     note =>
       note.id !== data.id &&
-      PathUtils.normalizePath(note.path) === newPath &&
+      PathService.normalizePath(note.path) === newPath &&
       note.title === newTitle
   );
 
@@ -149,14 +149,14 @@ export const moveNote = async (noteId: string, newPath: string): Promise<Note> =
     throw new StorageError(`Note with id ${noteId} not found`, 'NOT_FOUND');
   }
 
-  const normalizedNewPath = PathUtils.normalizePath(newPath);
+  const normalizedNewPath = PathService.normalizePath(newPath);
   const noteTitle = notes[noteIndex].title;
 
   // Check for duplicate note title in the destination path
   const duplicateExists = notes.some(
     note =>
       note.id !== noteId &&
-      PathUtils.normalizePath(note.path) === normalizedNewPath &&
+      PathService.normalizePath(note.path) === normalizedNewPath &&
       note.title === noteTitle
   );
 

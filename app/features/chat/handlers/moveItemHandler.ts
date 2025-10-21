@@ -8,7 +8,7 @@ import { LLMCommand } from '../llmService/types/types';
 import { CommandHandler } from './types';
 import { logger } from '../../../utils/logger';
 import { NoteListStorage, StorageError } from '../../../screen/note-list/noteStorage';
-import { PathUtils } from '../../../screen/note-list/utils/pathUtils';
+import { PathService } from '../../../services/PathService';
 import { findItemByPath, isValidDirectoryPath } from './itemResolver';
 
 /**
@@ -52,7 +52,7 @@ export const moveItemHandler: CommandHandler = async (command: LLMCommand, conte
     }
 
     // 移動先のディレクトリパスを正規化
-    const destPath = PathUtils.normalizePath(command.dest_path);
+    const destPath = PathService.normalizePath(command.dest_path);
 
     // 移動先のディレクトリが存在するか確認
     const isValidDest = await isValidDirectoryPath(destPath);

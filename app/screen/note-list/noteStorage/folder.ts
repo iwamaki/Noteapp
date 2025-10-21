@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { Folder, CreateFolderData, UpdateFolderData } from '@shared/types/note';
-import { PathUtils } from '../utils/pathUtils';
+import { PathService } from '../../../services/PathService';
 import { getAllFoldersRaw, saveAllFolders, getAllNotesRaw, saveAllNotes, StorageError } from './storage';
 import { getNotesByPath } from './note';
 
@@ -10,19 +10,19 @@ export const getAllFolders = async (): Promise<Folder[]> => {
 
 export const getFoldersByPath = async (path: string): Promise<Folder[]> => {
   const folders = await getAllFoldersRaw();
-  const normalizedPath = PathUtils.normalizePath(path);
-  return folders.filter(folder => PathUtils.normalizePath(folder.path) === normalizedPath);
+  const normalizedPath = PathService.normalizePath(path);
+  return folders.filter(folder => PathService.normalizePath(folder.path) === normalizedPath);
 };
 
 export const createFolder = async (data: CreateFolderData): Promise<Folder> => {
   const now = new Date();
-  const normalizedPath = PathUtils.normalizePath(data.path);
+  const normalizedPath = PathService.normalizePath(data.path);
 
   const folders = await getAllFoldersRaw();
 
   // Check for duplicate folder name in the same path
   const duplicateExists = folders.some(
-    folder => PathUtils.normalizePath(folder.path) === normalizedPath && folder.name === data.name
+    folder => PathService.normalizePath(folder.path) === normalizedPath && folder.name === data.name
   );
 
   if (duplicateExists) {
@@ -54,11 +54,11 @@ export const updateFolder = async (data: UpdateFolderData): Promise<Folder> => {
   }
 
   const folderToUpdate = allFolders[folderIndex];
-  const oldFullPath = PathUtils.getFullPath(folderToUpdate.path, folderToUpdate.name, 'folder');
+  const oldFullPath = PathService.getFullPath(folderToUpdate.path, folderToUpdate.name, 'folder');
 
   const newName = data.name ?? folderToUpdate.name;
-  const newPath = data.path ? PathUtils.normalizePath(data.path) : folderToUpdate.path;
-  const newFullPath = PathUtils.getFullPath(newPath, newName, 'folder');
+  const newPath = data.path ? PathService.normalizePath(data.path) : folderToUpdate.path;
+  const newFullPath = PathService.getFullPath(newPath, newName, 'folder');
 
   if (oldFullPath === newFullPath && folderToUpdate.name === newName && folderToUpdate.path === newPath) {
     return folderToUpdate;
@@ -68,7 +68,7 @@ export const updateFolder = async (data: UpdateFolderData): Promise<Folder> => {
   const duplicateExists = allFolders.some(
     folder =>
       folder.id !== data.id &&
-      PathUtils.normalizePath(folder.path) === newPath &&
+      PathService.normalizePath(folder.path) === newPath &&
       folder.name === newName
   );
 
@@ -124,7 +124,7 @@ export const deleteFolder = async (folderId: string, deleteContents: boolean = f
   }
 
   const folderToDelete = allFolders[folderIndex];
-  const folderPath = PathUtils.getFullPath(folderToDelete.path, folderToDelete.name, 'folder');
+  const folderPath = PathService.getFullPath(folderToDelete.path, folderToDelete.name, 'folder');
 
   if (deleteContents) {
     let allNotes = await getAllNotesRaw();
@@ -135,7 +135,7 @@ export const deleteFolder = async (folderId: string, deleteContents: boolean = f
     // Filter folders: keep those whose full path does not start with the folder path.
     // This will also remove the folder itself.
     const finalFolders = allFolders.filter(folder => {
-        const fullPath = PathUtils.getFullPath(folder.path, folder.name, 'folder');
+        const fullPath = PathService.getFullPath(folder.path, folder.name, 'folder');
         return !fullPath.startsWith(folderPath);
     });
 

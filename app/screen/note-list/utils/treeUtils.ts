@@ -4,7 +4,7 @@
  * @responsibility フラットなFileSystemItemをツリー構造（TreeNode）に変換
  */
 import { FileSystemItem, Folder, Note } from '../../../../shared/types/note';
-import { PathUtils } from './pathUtils';
+import { PathService } from '../../../services/PathService';
 import { logger } from '../../../utils/logger';
 
 export interface TreeNode {
@@ -55,11 +55,11 @@ export function buildTree(
  */
 function getRootItems(allFolders: Folder[], allNotes: Note[]): FileSystemItem[] {
   const rootFolders = allFolders
-    .filter(f => PathUtils.normalizePath(f.path) === '/')
+    .filter(f => PathService.normalizePath(f.path) === '/')
     .map(f => ({ type: 'folder' as const, item: f }));
 
   const rootNotes = allNotes
-    .filter(n => PathUtils.normalizePath(n.path) === '/')
+    .filter(n => PathService.normalizePath(n.path) === '/')
     .map(n => ({ type: 'note' as const, item: n }));
 
   return [...rootFolders, ...rootNotes];
@@ -77,16 +77,16 @@ function buildTreeNode(
 ): TreeNode {
   if (item.type === 'folder') {
     const folder = item.item;
-    const folderPath = PathUtils.getFullPath(folder.path, folder.name, 'folder');
+    const folderPath = PathService.getFullPath(folder.path, folder.name, 'folder');
     const isExpanded = expandedFolderIds.has(folder.id);
 
 
     const childFolders = allFolders
-      .filter(f => PathUtils.normalizePath(f.path) === folderPath)
+      .filter(f => PathService.normalizePath(f.path) === folderPath)
       .map(f => ({ type: 'folder' as const, item: f }));
 
     const childNotes = allNotes
-      .filter(n => PathUtils.normalizePath(n.path) === folderPath)
+      .filter(n => PathService.normalizePath(n.path) === folderPath)
       .map(n => ({ type: 'note' as const, item: n }));
 
     const childItems = [...childFolders, ...childNotes];

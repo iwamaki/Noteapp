@@ -3,7 +3,7 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useIsFocused } from '@react-navigation/native';
 import { NoteListStorage } from '../noteStorage';
 import { buildTree } from '../utils/treeUtils';
-import { PathUtils } from '../utils/pathUtils';
+import { PathService } from '../../../services/PathService';
 import { FileSystemItem, Note, Folder } from '@shared/types/note';
 import { checkTreeConsistency } from '../../../utils/debugUtils';
 import { logger } from '../../../utils/logger';
@@ -39,11 +39,11 @@ export const useNoteTree = (currentPath: string) => {
         return [...folderItems, ...noteItems];
     }
 
-    const normalizedRootPath = PathUtils.normalizePath(currentPath);
+    const normalizedRootPath = PathService.normalizePath(currentPath);
     const rootDepth = normalizedRootPath === '/' ? 0 : normalizedRootPath.split('/').length - 1;
 
     const filterByDepth = (item: Note | Folder) => {
-        const itemPath = PathUtils.normalizePath(item.path);
+        const itemPath = PathService.normalizePath(item.path);
         if (!itemPath.startsWith(normalizedRootPath)) return false;
         if (maxDepth === -1) return true; // -1 means infinite depth
 

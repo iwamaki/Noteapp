@@ -1,6 +1,6 @@
 // app/screen/note-list/services/noteService.ts
 import { NoteListStorage } from '../noteStorage';
-import { PathUtils } from '../utils/pathUtils';
+import { PathService } from '../../../services/PathService';
 import { Note, Folder } from '@shared/types/note';
 
 export interface MoveOperation {
@@ -57,7 +57,7 @@ export class NoteService {
         return { valid: false, error: `フォルダ ${folderId} が見つかりません` };
       }
 
-      const sourcePath = PathUtils.getFullPath(folderToMove.path, folderToMove.name, 'folder');
+      const sourcePath = PathService.getFullPath(folderToMove.path, folderToMove.name, 'folder');
 
       // フォルダを自分自身やその子孫に移動させない
       if (destinationPath.startsWith(sourcePath)) {
@@ -69,7 +69,7 @@ export class NoteService {
 
       // 移動先に同名のフォルダが存在しないかチェック
       const destinationFolders = allFolders.filter(
-        f => PathUtils.normalizePath(f.path) === destinationPath
+        f => PathService.normalizePath(f.path) === destinationPath
       );
       
       if (destinationFolders.some(f => f.name === folderToMove.name)) {

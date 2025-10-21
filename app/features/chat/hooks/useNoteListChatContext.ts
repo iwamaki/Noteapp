@@ -11,7 +11,7 @@ import ChatService from '../index';
 import { logger } from '../../../utils/logger';
 import { FileSystemItem } from '@shared/types/note';
 import { NoteListStorage } from '../../../screen/note-list/noteStorage';
-import { PathUtils } from '../../../screen/note-list/utils/pathUtils';
+import { PathService } from '../../../services/PathService';
 import { createDirectoryHandler } from '../handlers/createDirectoryHandler';
 import { deleteItemHandler } from '../handlers/deleteItemHandler';
 import { moveItemHandler } from '../handlers/moveItemHandler';
@@ -57,7 +57,7 @@ export const useNoteListChatContext = ({
             const path = item.item.path;
             const name = item.item.title;
             const type = 'file';
-            const filePath = PathUtils.getFullPath(path, name, item.type);
+            const filePath = PathService.getFullPath(path, name, item.type);
             return {
               filePath,
               name, // Include name
