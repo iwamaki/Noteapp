@@ -10,7 +10,7 @@ import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/nativ
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
 import { NoteEditStorage } from '../note-edit/repositories/noteStorage';
-import { NoteVersion, Note } from '../../../shared/types/note';
+import { FileVersion, File } from '../../../shared/types/file';
 import { format } from 'date-fns';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { useCustomHeader } from '../../components/CustomHeader';
@@ -28,10 +28,10 @@ function VersionHistoryScreen() {
   const { colors, typography, spacing } = useTheme();
   const { createHeaderConfig } = useCustomHeader();
 
-  const [versions, setVersions] = useState<NoteVersion[]>([]);
+  const [versions, setVersions] = useState<FileVersion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentNote, setCurrentNote] = useState<Note | null>(null);
+  const [currentNote, setCurrentNote] = useState<File | null>(null);
 
   useLayoutEffect(() => {
     navigation.setOptions(

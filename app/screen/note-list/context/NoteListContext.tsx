@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { NoteListState, NoteListAction } from './types';
-import { Note, Folder, FileSystemItem } from '@shared/types/note';
+import { File, Folder, FileSystemItem } from '@shared/types/file';
 
 /**
  * 非同期アクションヘルパーの型定義
@@ -52,12 +52,12 @@ export interface NoteListActions {
     inputPath: string,
     content?: string,
     tags?: string[]
-  ) => Promise<Note>;
+  ) => Promise<File>;
 
   /**
    * 選択されたノートをコピー
    */
-  copySelectedNotes: (noteIds: string[]) => Promise<Note[]>;
+  copySelectedNotes: (noteIds: string[]) => Promise<File[]>;
 }
 
 /**

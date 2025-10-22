@@ -8,8 +8,8 @@ import { NoteRepository } from '../repositories/NoteRepository';
 import { AsyncStorageNoteRepository } from '../repositories/AsyncStorageNoteRepository';
 import { ValidationService } from './ValidationService';
 import { ErrorService } from './ErrorService';
-import { Note, ErrorCode, EditorError } from '../types';
-import { CreateNoteData, UpdateNoteData } from '@shared/types/note';
+import { File, ErrorCode, EditorError } from '../types';
+import { CreateFileData, UpdateFileData } from '@shared/types/file';
 
 /**
  * ノートサービス

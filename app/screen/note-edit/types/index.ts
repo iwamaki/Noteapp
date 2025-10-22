@@ -4,7 +4,7 @@
  * @description エディタの状態、エラー、アクションなどの型を一元管理
  */
 
-import { Note, NoteVersion } from '@shared/types/note';
+import { File, FileVersion } from '@shared/types/file';
 
 // ============================================
 // エディタの状態型
@@ -19,7 +19,7 @@ export type ViewMode = 'edit' | 'preview' | 'diff';
  * エディタの状態を表す型
  */
 export interface EditorState {
-  note: Note | null;
+  note: File | null;
   content: string;
   title: string;
   isDirty: boolean;
@@ -138,4 +138,4 @@ export interface DiffChange {
 // Re-export shared types
 // ============================================
 
-export type { Note, NoteVersion };
+export type { File, FileVersion };
