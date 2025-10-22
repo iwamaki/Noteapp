@@ -166,8 +166,8 @@ function FileListScreenContent() {
    */
   const handleOpenRenameModal = useCallback((id: string, type: 'file' | 'folder') => {
     const item: FileSystemItem | null = type === 'folder'
-      ? { type: 'folder', item: state.folders.find(f => n.id === id)! }
-      : { type: 'file', item: state.files.find(n => n.id === id)! };
+      ? { type: 'folder', item: state.folders.find(f => f.id === id)! }
+      : { type: 'file', item: state.files.find(f => f.id === id)! };
 
     if (item && item.item) {
       dispatch({ type: 'OPEN_RENAME_MODAL', payload: item });

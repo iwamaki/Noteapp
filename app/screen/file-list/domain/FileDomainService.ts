@@ -107,9 +107,9 @@ export class FileDomainService {
     const errors: string[] = [];
 
     for (const fileId of fileIds) {
-      const file = allFiles.find(n => n.id === fileId);
-      if (!note) {
-        errors.push(`ノート ${fileId} が見つかりません`);
+      const file = allFiles.find(f => f.id === fileId);
+      if (!file) {
+        errors.push(`ファイル ${fileId} が見つかりません`);
         continue;
       }
 
@@ -146,9 +146,9 @@ export class FileDomainService {
     const errors: string[] = [];
 
     for (const fileId of fileIds) {
-      const file = allFiles.find(n => n.id === fileId);
-      if (!note) {
-        errors.push(`ノート ${fileId} が見つかりません`);
+      const file = allFiles.find(f => f.id === fileId);
+      if (!file) {
+        errors.push(`ファイル ${fileId} が見つかりません`);
       }
     }
 
@@ -189,6 +189,6 @@ export class FileDomainService {
    * @returns パス内の全ファイル
    */
   static getFilesInPath(folderPath: string, allFiles: File[]): File[] {
-    return allFiles.filter(note => file.path.startsWith(folderPath));
+    return allFiles.filter(file => file.path.startsWith(folderPath));
   }
 }

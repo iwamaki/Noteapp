@@ -174,7 +174,7 @@ export class FolderDomainService {
       files.push(...this.getChildNotes(folderFullPath, allFiles));
     }
 
-    return notes;
+    return files;
   }
 
   /**
@@ -206,7 +206,7 @@ export class FolderDomainService {
     targetParentPath: string,
     allFolders: Folder[]
   ): Promise<ValidationResult> {
-    const folder = allFolders.find(f => n.id === folderId);
+    const folder = allFolders.find(f => f.id === folderId);
     if (!folder) {
       return { valid: false, error: 'フォルダが見つかりません' };
     }

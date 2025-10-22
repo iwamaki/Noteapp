@@ -64,16 +64,16 @@ export class FileRepository {
    * @param file 更新するファイル
    * @returns 更新されたノート
    */
-  static async update(note: File): Promise<File> {
+  static async update(file: File): Promise<File> {
     const allFiles = await getAllFilesRaw();
-    const fileIndex = allFiles.findIndex(n => n.id === file.id);
+    const fileIndex = allFiles.findIndex(f => f.id === file.id);
 
     if (fileIndex === -1) {
       throw new Error(`File with id ${file.id} not found`);
     }
 
     const updatedFile = {
-      ...note,
+      ...file,
       updatedAt: new Date(),
     };
 

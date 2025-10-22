@@ -34,7 +34,7 @@ export const createFolder = async (data: CreateFolderData): Promise<Folder> => {
 
 export const updateFolder = async (data: UpdateFolderData): Promise<Folder> => {
   const allFolders = await getAllFoldersRaw();
-  const folderIndex = allFolders.findIndex(f => n.id === data.id);
+  const folderIndex = allFolders.findIndex(f => f.id === data.id);
 
   if (folderIndex === -1) {
     throw new StorageError(`Folder with id ${data.id} not found`, 'NOT_FOUND');
@@ -58,7 +58,7 @@ export const updateFolder = async (data: UpdateFolderData): Promise<Folder> => {
 
 export const deleteFolder = async (folderId: string, deleteContents: boolean = false): Promise<void> => {
   let allFolders = await getAllFoldersRaw();
-  const folderIndex = allFolders.findIndex(f => n.id === folderId);
+  const folderIndex = allFolders.findIndex(f => f.id === folderId);
 
   if (folderIndex === -1) {
     throw new StorageError(`Folder with id ${folderId} not found`, 'NOT_FOUND');
@@ -71,7 +71,7 @@ export const deleteFolder = async (folderId: string, deleteContents: boolean = f
     let allFiles = await getAllFilesRaw();
 
     // Filter files: keep those that are not in the folder path or any sub-path.
-    const finalFiles = allFiles.filter(note => !file.path.startsWith(folderPath));
+    const finalFiles = allFiles.filter(file => !file.path.startsWith(folderPath));
 
     // Filter folders: keep those whose full path does not start with the folder path.
     // This will also remove the folder itself.
