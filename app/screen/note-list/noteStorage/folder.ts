@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { Folder, CreateFolderData, UpdateFolderData } from '@shared/types/note';
+import { Folder, CreateFolderData, UpdateFolderData } from '@shared/types/file';
 import { PathService } from '../../../services/PathService';
 import { getAllFoldersRaw, saveAllFolders, getAllNotesRaw, saveAllNotes, StorageError } from './storage';
 import { getNotesByPath } from './note';

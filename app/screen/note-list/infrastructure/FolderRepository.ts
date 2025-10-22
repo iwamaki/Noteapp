@@ -6,7 +6,7 @@
  * ビジネスロジックは含まず、純粋にデータの永続化のみを担当します。
  */
 
-import { Folder, CreateFolderData } from '@shared/types/note';
+import { Folder, CreateFolderData } from '@shared/types/file';
 import { getAllFoldersRaw, saveAllFolders } from '../noteStorage/storage';
 import * as FolderFns from '../noteStorage/folder';
 

@@ -1,4 +1,4 @@
-import { FileSystemItem, Note, Folder } from '@shared/types/note';
+import { FileSystemItem, File, Folder } from '@shared/types/file';
 import { getAllNotesRaw, saveAllNotes, getAllFoldersRaw, saveAllFolders, StorageError } from './storage';
 import * as NoteFns from './note';
 import * as FolderFns from './folder';
@@ -17,7 +17,7 @@ const getItemsByPath = async (path: string): Promise<FileSystemItem[]> => {
 
   const items: FileSystemItem[] = [
     ...folders.map(folder => ({ type: 'folder' as const, item: folder })),
-    ...notes.map(note => ({ type: 'note' as const, item: note })),
+    ...notes.map(note => ({ type: 'file' as const, item: note })),
   ];
 
   return items;
@@ -38,7 +38,7 @@ const getItemsRecursively = async (
   // パスは正規化済みと仮定
   const rootDepth = rootPath === '/' ? 0 : rootPath.split('/').length - 1;
 
-  const filterByDepth = (item: Note | Folder) => {
+  const filterByDepth = (item: File | Folder) => {
     if (!item.path.startsWith(rootPath)) return false;
     if (maxDepth === -1) return true; // -1は無限階層を示す
 
@@ -52,7 +52,7 @@ const getItemsRecursively = async (
 
   const items: FileSystemItem[] = [
     ...filteredFolders.map((folder) => ({ type: 'folder' as const, item: folder })),
-    ...filteredNotes.map((note) => ({ type: 'note' as const, item: note })),
+    ...filteredNotes.map((note) => ({ type: 'file' as const, item: note })),
   ];
 
   return items;

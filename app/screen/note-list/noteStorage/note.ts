@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { Note, CreateNoteData } from '@shared/types/note';
+import { File, CreateFileData } from '@shared/types/file';
 import { getAllNotesRaw, saveAllNotes, StorageError } from './storage';
 
 export interface UpdateNoteData {
@@ -10,12 +10,12 @@ export interface UpdateNoteData {
   path?: string;
 }
 
-export const getAllNotes = async (): Promise<Note[]> => {
+export const getAllNotes = async (): Promise<File[]> => {
   const notes = await getAllNotesRaw();
   return notes.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
 };
 
-export const getNotesByPath = async (path: string): Promise<Note[]> => {
+export const getNotesByPath = async (path: string): Promise<File[]> => {
   const notes = await getAllNotesRaw();
   // パスは正規化済みと仮定して、単純な文字列比較を行う
   return notes
@@ -29,9 +29,9 @@ export const deleteNotes = async (noteIds: string[]): Promise<void> => {
   await saveAllNotes(notes);
 };
 
-export const copyNotes = async (sourceIds: string[]): Promise<Note[]> => {
+export const copyNotes = async (sourceIds: string[]): Promise<File[]> => {
   const notes = await getAllNotesRaw();
-  const copiedNotes: Note[] = [];
+  const copiedNotes: File[] = [];
   const now = new Date();
 
   for (const id of sourceIds) {
@@ -51,7 +51,7 @@ export const copyNotes = async (sourceIds: string[]): Promise<Note[]> => {
         counter++;
       }
 
-      const newNote: Note = {
+      const newNote: File = {
         ...noteToCopy,
         id: uuidv4(),
         createdAt: now,
@@ -69,12 +69,12 @@ export const copyNotes = async (sourceIds: string[]): Promise<Note[]> => {
   return copiedNotes;
 };
 
-export const createNote = async (data: CreateNoteData): Promise<Note> => {
+export const createNote = async (data: CreateFileData): Promise<File> => {
   const now = new Date();
   // パスは呼び出し側で正規化済みと仮定
   // 重複チェックは呼び出し側（NoteService）が行う
 
-  const newNote: Note = {
+  const newNote: File = {
     id: uuidv4(),
     title: data.title,
     content: data.content,
@@ -91,7 +91,7 @@ export const createNote = async (data: CreateNoteData): Promise<Note> => {
   return newNote;
 };
 
-export const updateNote = async (data: UpdateNoteData): Promise<Note> => {
+export const updateNote = async (data: UpdateNoteData): Promise<File> => {
   const notes = await getAllNotesRaw();
   const noteIndex = notes.findIndex(n => n.id === data.id);
 
@@ -112,7 +112,7 @@ export const updateNote = async (data: UpdateNoteData): Promise<Note> => {
   return updatedNote;
 };
 
-export const moveNote = async (noteId: string, newPath: string): Promise<Note> => {
+export const moveNote = async (noteId: string, newPath: string): Promise<File> => {
   const notes = await getAllNotesRaw();
   const noteIndex = notes.findIndex(n => n.id === noteId);
 
