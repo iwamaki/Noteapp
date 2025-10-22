@@ -40,12 +40,12 @@ export const deleteItemHandler: CommandHandler = async (command: LLMCommand, con
       throw new Error(errorMsg);
     }
 
-    // NoteListStorageを取得（コンテキストから、またはデフォルト）
+    // FileListStorageを取得（コンテキストから、またはデフォルト）
     const storage = context?.fileListStorage || FileListStorage;
 
     // アイテムの種類に応じて削除
     if (resolvedItem.type === 'file') {
-      logger.debug('deleteItemHandler', 'Deleting note', {
+      logger.debug('deleteItemHandler', 'Deleting file', {
         noteId: resolvedItem.id,
         noteTitle: (resolvedItem.item as any).title,
       });

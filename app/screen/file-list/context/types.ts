@@ -1,6 +1,6 @@
 /**
  * @file types.ts
- * @summary NoteListContext用の型定義
+ * @summary FileListContext用の型定義
  */
 
 import { File, Folder, FileSystemItem } from '@shared/types/file';
@@ -26,7 +26,7 @@ export interface SearchOptions {
 }
 
 /**
- * NoteList画面の全体状態
+ * FileList画面の全体状態
  */
 export interface FileListState {
   // データ
@@ -61,7 +61,7 @@ export interface FileListState {
 }
 
 /**
- * NoteListアクション型
+ * FileListアクション型
  */
 export type FileListAction =
   // データ更新

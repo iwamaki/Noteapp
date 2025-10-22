@@ -1,7 +1,7 @@
 /**
  * @file CreateItemModal.tsx
  * @summary ノート/フォルダ作成モーダル - パス指定に対応
- * @responsibility "aaa/bbb/note.txt" のような入力からフォルダ構造を自動作成
+ * @responsibility "aaa/bbb/file.txt" のような入力からフォルダ構造を自動作成
  */
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet } from 'react-native';

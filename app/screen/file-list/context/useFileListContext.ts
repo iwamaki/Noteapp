@@ -1,13 +1,13 @@
 /**
- * @file useNoteListContext.ts
- * @summary NoteListContextを使用するためのカスタムフック
+ * @file useFileListContext.ts
+ * @summary FileListContextを使用するためのカスタムフック
  */
 
 import { useContext } from 'react';
 import { FileListContext, FileListContextValue } from './FileListContext';
 
 /**
- * NoteListContextを使用するカスタムフック
+ * FileListContextを使用するカスタムフック
  * @returns Contextの値
  * @throws Context外で使用された場合にエラー
  */

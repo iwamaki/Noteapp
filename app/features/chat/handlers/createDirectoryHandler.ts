@@ -13,7 +13,7 @@ import { FileListStorage } from '../../../screen/file-list/fileStorage';
  * create_directoryコマンドのハンドラ
  *
  * LLMから受け取ったディレクトリ作成リクエストを処理します。
- * NoteListStorageを使用してフォルダを作成します。
+ * FileListStorageを使用してフォルダを作成します。
  *
  * @param command create_directoryコマンド
  * @param context noteListStorageを含むコンテキスト（オプション）
@@ -25,7 +25,7 @@ export const createDirectoryHandler: CommandHandler = async (command: LLMCommand
   });
 
   try {
-    // コンテキストからNoteListStorageを取得、なければデフォルトを使用
+    // コンテキストからFileListStorageを取得、なければデフォルトを使用
     const storage = context?.fileListStorage || FileListStorage;
 
     await storage.createFolder({

@@ -1,6 +1,6 @@
 /**
- * @file noteListReducer.ts
- * @summary NoteList画面の状態管理Reducer
+ * @file fileListReducer.ts
+ * @summary FileList画面の状態管理Reducer
  * @description
  * すべての状態遷移を一元管理し、予測可能な状態更新を保証します。
  */

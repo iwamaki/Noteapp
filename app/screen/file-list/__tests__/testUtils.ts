@@ -1,4 +1,4 @@
-// app/screen/note-list/__tests__/testUtils.ts
+// app/screen/file-list/__tests__/testUtils.ts
 import { File, Folder } from '@shared/types/file';
 
 /**
@@ -36,7 +36,7 @@ export const createMockNotes = (count: number, basePath: string = '/'): File[] =
   return Array.from({ length: count }, (_, i) =>
     createMockNote({
       title: `Note ${i + 1}`,
-      content: `Content for note ${i + 1}`,
+      content: `Content for file ${i + 1}`,
       path: basePath,
     })
   );
@@ -99,7 +99,7 @@ export const createStorageMock = () => {
 };
 
 /**
- * NoteServiceのテスト例
+ * FileServiceのテスト例
  */
 export const noteServiceTestSuite = {
   'should delete notes and folders': async () => {

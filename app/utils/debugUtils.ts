@@ -74,7 +74,7 @@ export const checkTreeConsistency = async (treeNodes: TreeNode[]): Promise<void>
         const missingNote = allNotes.find(n => n.id === id);
         throw new Error(
           `Data Inconsistency: Note with ID '${id}' exists in storage but not in UI.\n` +
-          `Missing note: ${JSON.stringify(missingNote, null, 2)}`
+          `Missing file: ${JSON.stringify(missingNote, null, 2)}`
         );
       }
     }
