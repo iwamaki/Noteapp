@@ -14,6 +14,7 @@ import { FileListProvider, useFileListContext } from './context';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/types';
 import { FileSystemItem, Folder } from '@shared/types/file';
+import { logger } from '../../utils/logger';
 
 import { Ionicons } from '@expo/vector-icons';
 import { useSearch } from './hooks/useSearch';
@@ -34,6 +35,7 @@ function FileListScreenContent() {
 
   // データ初期読み込み
   useEffect(() => {
+    logger.info('file', 'FileListScreen: Initial data refresh triggered.');
     actions.refreshData();
   }, [actions]);
 
@@ -55,19 +57,24 @@ function FileListScreenContent() {
    * アイテム選択ハンドラ
    */
   const handleSelectItem = useCallback((item: FileSystemItem) => {
+    logger.debug('file', `handleSelectItem called for item: ${item.item.id}, type: ${item.type}`);
+
     // 移動モード中
     if (state.isMoveMode) {
+      logger.info('file', `Move mode active. Attempting to move item to folder: ${item.item.id}`);
       if (item.type === 'folder') {
         const folder = item.item as Folder;
-        const targetPath = `${folder.path}/${folder.name}`;
+        const targetPath = `${folder.path.endsWith('/') ? folder.path.slice(0, -1) : folder.path}/${folder.name}`;
         actions.moveSelectedItems(
           Array.from(state.selectedFileIds),
           Array.from(state.selectedFolderIds),
           targetPath
         ).then(() => {
+          logger.info('file', `Successfully moved selected items to ${targetPath}`);
           dispatch({ type: 'EXIT_MOVE_MODE' });
           Alert.alert('成功', 'アイテムを移動しました');
         }).catch(error => {
+          logger.error('file', `Failed to move selected items to ${targetPath}: ${error.message}`, error);
           Alert.alert('エラー', error.message);
         });
       }
@@ -76,6 +83,7 @@ function FileListScreenContent() {
 
     // 選択モード中
     if (state.isSelectionMode) {
+      logger.debug('file', `Selection mode active. Toggling item: ${item.item.id}`);
       if (item.type === 'folder') {
         dispatch({ type: 'TOGGLE_SELECT_FOLDER', payload: item.item.id });
       } else {
@@ -83,9 +91,11 @@ function FileListScreenContent() {
       }
     } else {
       // 通常モード
+      logger.debug('file', `Normal mode. Handling item: ${item.item.id}`);
       if (item.type === 'folder') {
         dispatch({ type: 'TOGGLE_FOLDER', payload: item.item.id });
       } else {
+        logger.info('file', `Navigating to FileEdit for file: ${item.item.id}`);
         navigation.navigate('FileEdit', { fileId: item.item.id });
       }
     }
@@ -103,6 +113,7 @@ function FileListScreenContent() {
    * 長押しハンドラ（選択モード開始）
    */
   const handleLongPressItem = useCallback((item: FileSystemItem) => {
+    logger.info('file', `Long press on item: ${item.item.id}. Entering selection mode.`);
     dispatch({ type: 'ENTER_SELECTION_MODE' });
     if (item.type === 'folder') {
       dispatch({ type: 'TOGGLE_SELECT_FOLDER', payload: item.item.id });
@@ -115,6 +126,7 @@ function FileListScreenContent() {
    * 選択解除ハンドラ
    */
   const handleCancelSelection = useCallback(() => {
+    logger.info('file', 'Cancelling selection mode.');
     dispatch({ type: 'EXIT_SELECTION_MODE' });
   }, [dispatch]);
 
@@ -122,13 +134,16 @@ function FileListScreenContent() {
    * 削除ハンドラ
    */
   const handleDeleteSelected = useCallback(async () => {
+    logger.info('file', `Attempting to delete selected items. Files: ${Array.from(state.selectedFileIds).join(', ')}, Folders: ${Array.from(state.selectedFolderIds).join(', ')}`);
     try {
       await actions.deleteSelectedItems(
         Array.from(state.selectedFileIds),
         Array.from(state.selectedFolderIds)
       );
+      logger.info('file', 'Successfully deleted selected items.');
       Alert.alert('成功', 'アイテムを削除しました');
     } catch (error: any) {
+      logger.error('file', `Failed to delete selected items: ${error.message}`, error);
       Alert.alert('エラー', error.message);
     }
   }, [actions, state.selectedFileIds, state.selectedFolderIds]);
@@ -137,10 +152,13 @@ function FileListScreenContent() {
    * コピーハンドラ
    */
   const handleCopySelected = useCallback(async () => {
+    logger.info('file', `Attempting to copy selected files: ${Array.from(state.selectedFileIds).join(', ')}`);
     try {
       await actions.copySelectedFiles(Array.from(state.selectedFileIds));
+      logger.info('file', 'Successfully copied selected files.');
       Alert.alert('成功', 'ファイルをコピーしました');
     } catch (error: any) {
+      logger.error('file', `Failed to copy selected files: ${error.message}`, error);
       Alert.alert('エラー', error.message);
     }
   }, [actions, state.selectedFileIds]);
@@ -150,7 +168,10 @@ function FileListScreenContent() {
    */
   const startMoveMode = useCallback(() => {
     if (state.selectedFileIds.size > 0 || state.selectedFolderIds.size > 0) {
+      logger.info('file', 'Entering move mode.');
       dispatch({ type: 'ENTER_MOVE_MODE' });
+    } else {
+      logger.debug('file', 'Cannot enter move mode: no items selected.');
     }
   }, [state.selectedFileIds, state.selectedFolderIds, dispatch]);
 
@@ -158,6 +179,7 @@ function FileListScreenContent() {
    * 移動モードキャンセル
    */
   const cancelMoveMode = useCallback(() => {
+    logger.info('file', 'Cancelling move mode.');
     dispatch({ type: 'EXIT_MOVE_MODE' });
   }, [dispatch]);
 
@@ -165,12 +187,15 @@ function FileListScreenContent() {
    * リネームモーダルを開く
    */
   const handleOpenRenameModal = useCallback((id: string, type: 'file' | 'folder') => {
+    logger.info('file', `Opening rename modal for ${type} with ID: ${id}`);
     const item: FileSystemItem | null = type === 'folder'
       ? { type: 'folder', item: state.folders.find(f => f.id === id)! }
       : { type: 'file', item: state.files.find(f => f.id === id)! };
 
     if (item && item.item) {
       dispatch({ type: 'OPEN_RENAME_MODAL', payload: item });
+    } else {
+      logger.warn('file', `Item not found for rename modal: ID ${id}, type ${type}`);
     }
   }, [state.folders, state.files, dispatch]);
 
@@ -179,16 +204,19 @@ function FileListScreenContent() {
    */
   const handleRename = useCallback(async (newName: string) => {
     if (state.modals.rename.item) {
+      const item = state.modals.rename.item;
+      logger.info('file', `Attempting to rename ${item.type} from ${item.type === 'folder' ? item.item.name : item.item.title} to ${newName}`);
       try {
-        const item = state.modals.rename.item;
         if (item.type === 'folder') {
           await actions.renameFolder(item.item.id, newName);
         } else {
           await actions.renameFile(item.item.id, newName);
         }
+        logger.info('file', `Successfully renamed ${item.type} to ${newName}`);
         dispatch({ type: 'CLOSE_RENAME_MODAL' });
         Alert.alert('成功', '名前を変更しました');
       } catch (error: any) {
+        logger.error('file', `Failed to rename ${item.type} to ${newName}: ${error.message}`, error);
         Alert.alert('エラー', error.message);
       }
     }
@@ -198,11 +226,14 @@ function FileListScreenContent() {
    * 作成実行
    */
   const handleCreate = useCallback(async (inputPath: string) => {
+    logger.info('file', `Attempting to create new file at path: ${inputPath}`);
     try {
       const file = await actions.createFileWithPath(inputPath);
+      logger.info('file', `Successfully created file: ${file.id} at ${inputPath}`);
       dispatch({ type: 'CLOSE_CREATE_MODAL' });
       navigation.navigate('FileEdit', { fileId: file.id });
     } catch (error: any) {
+      logger.error('file', `Failed to create file at ${inputPath}: ${error.message}`, error);
       Alert.alert('エラー', error.message);
     }
   }, [actions, dispatch, navigation]);
@@ -285,15 +316,18 @@ function FileListScreenContent() {
         onLongPress={() => handleLongPressItem(fileSystemItem)}
         isMoveMode={state.isMoveMode}
         onSelectDestinationFolder={(folder: Folder) => {
-          const targetPath = `${folder.path}/${folder.name}`;
+          const targetPath = `${folder.path.endsWith('/') ? folder.path.slice(0, -1) : folder.path}/${folder.name}`;
+          logger.info('file', `TreeListItem: Attempting to move selected items to destination folder: ${targetPath}`);
           actions.moveSelectedItems(
             Array.from(state.selectedFileIds),
             Array.from(state.selectedFolderIds),
             targetPath
           ).then(() => {
+            logger.info('file', `TreeListItem: Successfully moved selected items to ${targetPath}`);
             dispatch({ type: 'EXIT_MOVE_MODE' });
             Alert.alert('成功', 'アイテムを移動しました');
           }).catch(error => {
+            logger.error('file', `TreeListItem: Failed to move selected items to ${targetPath}: ${error.message}`, error);
             Alert.alert('エラー', error.message);
           });
         }}
