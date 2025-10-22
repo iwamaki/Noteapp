@@ -22,7 +22,7 @@ export interface AppSettings {
   showMarkdownSymbols: boolean;
 
   // 2. 編集設定
-  startupScreen: 'note-list' | 'last-note' | 'new-note';
+  startupScreen: 'file-list' | 'last-file' | 'new-file';
   autoSaveEnabled: boolean;
   autoSaveInterval: number; // 秒
   defaultEditorMode: 'edit' | 'preview' | 'split';
@@ -88,7 +88,7 @@ const defaultSettings: AppSettings = {
   showMarkdownSymbols: true,
 
   // 編集設定
-  startupScreen: 'note-list',
+  startupScreen: 'file-list',
   autoSaveEnabled: true,
   autoSaveInterval: 30,
   defaultEditorMode: 'edit',
@@ -167,6 +167,21 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
           delete parsedSettings.sendNoteContextToLLM;
           // マイグレーション後の設定を保存
           await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ ...defaultSettings, ...parsedSettings }));
+        }
+
+        // マイグレーション: startupScreen の旧値を新値に変換
+        if (parsedSettings.startupScreen) {
+          const startupScreenMigrations: Record<string, 'file-list' | 'last-file' | 'new-file'> = {
+            'note-list': 'file-list',
+            'last-note': 'last-file',
+            'new-note': 'new-file',
+          };
+          const oldValue = parsedSettings.startupScreen;
+          if (oldValue in startupScreenMigrations) {
+            parsedSettings.startupScreen = startupScreenMigrations[oldValue];
+            // マイグレーション後の設定を保存
+            await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ ...defaultSettings, ...parsedSettings }));
+          }
         }
 
         set({ settings: { ...defaultSettings, ...parsedSettings } });

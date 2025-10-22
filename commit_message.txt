@@ -1,6 +1,0 @@
-feat: Implement hybrid diffing with inline change detection
-
-This commit introduces a hybrid diffing algorithm that combines line-level and character-level difference detection.
-- `diffService.ts`: Implements `calculateLineDiff` for line-based LCS and `convertToInlineChanges` for character-level inline changes. The `generateDiff` function now uses these to provide detailed inline change information for modified lines.
-- `DiffViewer.tsx`: Updated to display inline changes with distinct styling for insertions, deletions, and common parts within a line.
-- Added new test files for diffService.

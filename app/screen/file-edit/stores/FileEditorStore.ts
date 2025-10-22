@@ -32,7 +32,7 @@ interface FileEditorStore extends EditorState, EditorActions {
  */
 export const useFileEditorStore = create<FileEditorStore>((set, get) => ({
   // ===== 初期状態 =====
-  note: null,
+  file: null,
   content: '',
   title: '',
   isDirty: false,
@@ -40,7 +40,7 @@ export const useFileEditorStore = create<FileEditorStore>((set, get) => ({
   isSaving: false,
   error: null,
   viewMode: 'edit' as ViewMode,
-  fileId: null, 
+  fileId: null,
   originalFile: null,
   history: new HistoryManager(),
 
@@ -57,7 +57,7 @@ export const useFileEditorStore = create<FileEditorStore>((set, get) => ({
         // 既存ノートを読み込む
         const file = await fileService.loadFile(fileId);
         set({
-          note: file,
+          file: file,
           originalFile: file,
           content: file.content,
           title: file.title,
@@ -68,7 +68,7 @@ export const useFileEditorStore = create<FileEditorStore>((set, get) => ({
       } else {
         // 新規ノートの作成
         set({
-          note: null,
+          file: null,
           originalFile: null,
 	  content: '',
           title: '',
@@ -132,7 +132,7 @@ export const useFileEditorStore = create<FileEditorStore>((set, get) => ({
       set({
         isSaving: false,
         isDirty: false,
-        note: savedNote,
+        file: savedNote,
         originalFile: savedNote,
         fileId: savedNote.id,
       });
@@ -202,7 +202,7 @@ export const useFileEditorStore = create<FileEditorStore>((set, get) => ({
     get().history.clear();
 
     set({
-      note: null,
+      file: null,
       content: '',
       title: '',
       isDirty: false,
