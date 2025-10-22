@@ -1,6 +1,6 @@
 /**
- * @file NoteListContext.tsx
- * @summary NoteList画面の状態管理Context
+ * @file FileListContext.tsx
+ * @summary FileList画面の状態管理Context
  */
 
 import React from 'react';
@@ -74,7 +74,7 @@ export interface FileListContextValue {
 }
 
 /**
- * NoteListContext
+ * FileListContext
  */
 export const FileListContext = React.createContext<FileListContextValue | undefined>(
   undefined

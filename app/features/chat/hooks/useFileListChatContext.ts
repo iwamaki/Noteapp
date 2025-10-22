@@ -1,6 +1,6 @@
 /**
  * @file useNoteListChatContext.ts
- * @summary NoteListScreen用のチャットコンテキストプロバイダーフック
+ * @summary FileListScreen用のチャットコンテキストプロバイダーフック
  * @responsibility ノート一覧画面のコンテキストをChatServiceに提供し、
  *                 コンテキスト依存のコマンドハンドラを登録する
  */

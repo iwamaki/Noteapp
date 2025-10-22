@@ -1,5 +1,5 @@
 /**
- * @file NoteRepository.ts
+ * @file FileRepository.ts
  * @summary ノートデータアクセス層
  * @description
  * AsyncStorageへのアクセスを抽象化し、データアクセスの詳細を隠蔽します。
@@ -61,7 +61,7 @@ export class FileRepository {
 
   /**
    * ノートを更新
-   * @param note 更新するノート
+   * @param file 更新するファイル
    * @returns 更新されたノート
    */
   static async update(note: File): Promise<File> {
@@ -84,7 +84,7 @@ export class FileRepository {
 
   /**
    * 単一ノートを削除
-   * @param noteId ノートID
+   * @param fileId ファイルID
    */
   static async delete(fileId: string): Promise<void> {
     await FileFns.deleteFiles([fileId]);
@@ -92,7 +92,7 @@ export class FileRepository {
 
   /**
    * 複数ノートを一括削除
-   * @param noteIds ノートIDの配列
+   * @param fileIds ファイルIDの配列
    */
   static async batchDelete(fileIds: string[]): Promise<void> {
     await FileFns.deleteFiles(fileIds);
@@ -100,7 +100,7 @@ export class FileRepository {
 
   /**
    * 複数ノートを一括更新
-   * @param notes 更新するノートの配列
+   * @param notes 更新するファイルの配列
    * @description
    * 既存のノートをIDでマッチングして更新します。
    * 見つからないIDは無視されます。
@@ -126,7 +126,7 @@ export class FileRepository {
 
   /**
    * ノートをコピー
-   * @param sourceIds コピー元ノートIDの配列
+   * @param sourceIds コピー元ファイルIDの配列
    * @returns コピーされたノートの配列
    */
   static async copy(sourceIds: string[]): Promise<File[]> {
@@ -135,7 +135,7 @@ export class FileRepository {
 
   /**
    * ノートを移動（パス変更）
-   * @param noteId ノートID
+   * @param fileId ファイルID
    * @param newPath 新しいフォルダパス
    * @returns 更新されたノート
    */

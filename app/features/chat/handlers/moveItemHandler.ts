@@ -62,12 +62,12 @@ export const moveItemHandler: CommandHandler = async (command: LLMCommand, conte
       throw new Error(errorMsg);
     }
 
-    // NoteListStorageを取得（コンテキストから、またはデフォルト）
+    // FileListStorageを取得（コンテキストから、またはデフォルト）
     const storage = context?.fileListStorage || FileListStorage;
 
     // アイテムの種類に応じて移動
     if (resolvedItem.type === 'file') {
-      logger.debug('moveItemHandler', 'Moving note', {
+      logger.debug('moveItemHandler', 'Moving file', {
         noteId: resolvedItem.id,
         noteTitle: (resolvedItem.item as any).title,
         sourcePath: command.source_path,

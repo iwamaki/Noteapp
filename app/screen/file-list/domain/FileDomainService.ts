@@ -71,7 +71,7 @@ export class FileDomainService {
    * ノートの重複チェック
    * @param title ノートタイトル
    * @param folderPath フォルダパス
-   * @param excludeId 除外するノートID（更新時に使用）
+   * @param excludeId 除外するファイルID（更新時に使用）
    * @returns 重複チェック結果
    */
   static async checkDuplicate(
@@ -95,7 +95,7 @@ export class FileDomainService {
 
   /**
    * ノートの移動操作をバリデーション
-   * @param noteIds 移動するノートIDの配列
+   * @param fileIds 移動するファイルIDの配列
    * @param targetFolderPath 移動先フォルダパス
    * @returns バリデーション結果
    */
@@ -138,7 +138,7 @@ export class FileDomainService {
 
   /**
    * ノートのコピー操作をバリデーション
-   * @param noteIds コピーするノートIDの配列
+   * @param fileIds コピーするファイルIDの配列
    * @returns バリデーション結果
    */
   static async validateCopyOperation(noteIds: string[]): Promise<MoveValidationResult> {

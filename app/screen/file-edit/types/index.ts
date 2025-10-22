@@ -1,6 +1,6 @@
 /**
  * @file types/index.ts
- * @summary ノート編集機能の統一された型定義
+ * @summary ファイル編集機能の統一された型定義
  * @description エディタの状態、エラー、アクションなどの型を一元管理
  */
 

@@ -22,7 +22,7 @@ export interface ResolvedItem {
 /**
  * パスからアイテム（ノートまたはフォルダ）を検索します
  *
- * @param path - 検索対象のフルパス（例: "/folder1/note.txt" または "/folder1/subfolder/"）
+ * @param path - 検索対象のフルパス（例: "/folder1/file.txt" または "/folder1/subfolder/"）
  * @returns 見つかったアイテム情報、見つからない場合はnull
  */
 export async function findItemByPath(path: string): Promise<ResolvedItem | null> {
@@ -79,7 +79,7 @@ export async function findItemByPath(path: string): Promise<ResolvedItem | null>
           (fullPath === trimmedPath || fullPath === `/${trimmedPath}`) ||
           (normalizedNotePath === normalizedParentPath && note.title === fileName)
         ) {
-          logger.debug('itemResolver', 'Found note by path', {
+          logger.debug('itemResolver', 'Found file by path', {
             path: trimmedPath,
             noteId: note.id,
             noteTitle: note.title,

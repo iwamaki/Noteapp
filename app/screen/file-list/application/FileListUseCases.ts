@@ -1,5 +1,5 @@
 /**
- * @file NoteListUseCases.ts
+ * @file FileListUseCases.ts
  * @summary ノートリスト画面のユースケース層
  * @description
  * Domain層とInfrastructure層を組み合わせて、
@@ -20,7 +20,7 @@ import { PathService } from '../../../services/PathService';
 export class FileListUseCases {
   /**
    * 選択されたアイテムを削除
-   * @param noteIds 削除するノートIDの配列
+   * @param fileIds 削除するファイルIDの配列
    * @param folderIds 削除するフォルダIDの配列
    * @description
    * フォルダを削除する場合、その子孫フォルダと含まれる全ノートも削除します。
@@ -295,7 +295,7 @@ export class FileListUseCases {
 
   /**
    * パス指定でファイルを作成
-   * @param inputPath パス文字列（例: "folder1/folder2/note title"）
+   * @param inputPath パス文字列（例: "folder1/folder2/file title"）
    * @param content ノート内容
    * @param tags タグ
    * @returns 作成されたノート

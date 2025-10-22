@@ -52,10 +52,10 @@ export const useDiffView = () => {
               } else if (mode !== 'restore') {
                 throw new Error('復元モードではありません。');
               } else {
-                throw new Error('ノートIDまたはバージョンIDが見つかりません。');
+                throw new Error('ファイルIDまたはバージョンIDが見つかりません。');
               }
             } catch (error: unknown) {
-              console.error('Failed to restore note version:', error);
+              console.error('Failed to restore file version:', error);
               if (error instanceof StorageError) {
                 Alert.alert('復元エラー', `ノートの復元に失敗しました: ${error.message}`);
               } else {

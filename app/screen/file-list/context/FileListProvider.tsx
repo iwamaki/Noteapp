@@ -1,6 +1,6 @@
 /**
- * @file NoteListProvider.tsx
- * @summary NoteList画面の状態管理Provider
+ * @file FileListProvider.tsx
+ * @summary FileList画面の状態管理Provider
  * @description
  * useReducerとContextを組み合わせて、状態管理を一元化します。
  * AsyncStorageとの非同期処理を確実に管理します。
@@ -19,7 +19,7 @@ interface FileListProviderProps {
 }
 
 /**
- * NoteListProvider
+ * FileListProvider
  * 状態管理とビジネスロジックを提供
  */
 export const FileListProvider: React.FC<FileListProviderProps> = ({ children }) => {

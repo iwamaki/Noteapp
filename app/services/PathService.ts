@@ -41,7 +41,7 @@ export class PathService {
     return parts[parts.length - 1] || '/';
   }
 
-  // 入力パスをパース（例: "aaa/bbb/note.txt" → {folders: ["aaa", "bbb"], fileName: "note.txt"}）
+  // 入力パスをパース（例: "aaa/bbb/file.txt" → {folders: ["aaa", "bbb"], fileName: "note.txt"}）
   static parseInputPath(input: string): { folders: string[]; fileName: string } {
     const trimmed = input.trim();
     const parts = trimmed.split('/').filter(Boolean);
