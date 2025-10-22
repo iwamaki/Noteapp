@@ -7,7 +7,7 @@
 import { LLMCommand } from '../llmService/types/types';
 import { CommandHandler } from './types';
 import { logger } from '../../../utils/logger';
-import { NoteListStorage } from '../../../screen/file-list/fileStorage';
+import { FileListStorage } from '../../../screen/file-list/fileStorage';
 
 /**
  * create_directoryコマンドのハンドラ
@@ -26,7 +26,7 @@ export const createDirectoryHandler: CommandHandler = async (command: LLMCommand
 
   try {
     // コンテキストからNoteListStorageを取得、なければデフォルトを使用
-    const storage = context?.noteListStorage || NoteListStorage;
+    const storage = context?.fileListStorage || FileListStorage;
 
     await storage.createFolder({
       name: command.content || '',

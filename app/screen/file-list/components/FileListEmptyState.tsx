@@ -8,7 +8,7 @@ interface NoteListEmptyStateProps {
   message?: string;
 }
 
-export const NoteListEmptyState: React.FC<NoteListEmptyStateProps> = ({
+export const FileListEmptyState: React.FC<NoteListEmptyStateProps> = ({
   containerStyle,
   messageStyle,
   message,

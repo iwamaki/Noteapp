@@ -6,12 +6,12 @@
 
 export type RootStackParamList = {
   NoteList: undefined;
-  NoteEdit: { noteId?: string; filename?: string; content?: string; saved?: boolean };
-  VersionHistory: { noteId: string };
+  FileEdit: { fileId?: string; filename?: string; content?: string; saved?: boolean };
+  VersionHistory: { fileId: string };
   DiffView:
     | {
         mode: 'restore';
-        noteId: string;
+        fileId: string;
         versionId: string;
         originalContent: string;
         newContent: string;

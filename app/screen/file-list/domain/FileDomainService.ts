@@ -7,7 +7,7 @@
  */
 
 import { File } from '@shared/types/file';
-import { NoteRepository } from '../infrastructure/NoteRepository';
+import { FileRepository } from '../infrastructure/FileRepository';
 
 /**
  * バリデーション結果の型
@@ -37,13 +37,13 @@ export interface MoveValidationResult {
  * ノートドメインサービス
  * ノートに関するビジネスロジックを集約
  */
-export class NoteDomainService {
+export class FileDomainService {
   /**
    * ノート名のバリデーション
    * @param name ノート名
    * @returns バリデーション結果
    */
-  static validateNoteName(name: string): ValidationResult {
+  static validateFileName(name: string): ValidationResult {
     if (!name || !name.trim()) {
       return { valid: false, error: 'ノート名を入力してください' };
     }
@@ -79,7 +79,7 @@ export class NoteDomainService {
     folderPath: string,
     excludeId?: string
   ): Promise<DuplicateCheckResult> {
-    const allNotes = await NoteRepository.getAll();
+    const allNotes = await FileRepository.getAll();
     const existing = allNotes.find(
       note =>
         note.title === title &&
@@ -103,7 +103,7 @@ export class NoteDomainService {
     noteIds: string[],
     targetFolderPath: string
   ): Promise<MoveValidationResult> {
-    const allNotes = await NoteRepository.getAll();
+    const allNotes = await FileRepository.getAll();
     const errors: string[] = [];
 
     for (const noteId of noteIds) {
@@ -142,7 +142,7 @@ export class NoteDomainService {
    * @returns バリデーション結果
    */
   static async validateCopyOperation(noteIds: string[]): Promise<MoveValidationResult> {
-    const allNotes = await NoteRepository.getAll();
+    const allNotes = await FileRepository.getAll();
     const errors: string[] = [];
 
     for (const noteId of noteIds) {
@@ -165,7 +165,7 @@ export class NoteDomainService {
    * @returns バリデーション結果
    */
   static validateNoteContent(title: string, content: string): ValidationResult {
-    const titleValidation = this.validateNoteName(title);
+    const titleValidation = this.validateFileName(title);
     if (!titleValidation.valid) {
       return titleValidation;
     }
@@ -188,7 +188,7 @@ export class NoteDomainService {
    * @param allNotes 全ノートの配列
    * @returns パス内の全ノート
    */
-  static getNotesInPath(folderPath: string, allNotes: File[]): File[] {
+  static getFilesInPath(folderPath: string, allNotes: File[]): File[] {
     return allNotes.filter(note => note.path.startsWith(folderPath));
   }
 }

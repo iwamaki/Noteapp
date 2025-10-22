@@ -11,8 +11,8 @@ import {
 } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { RootStackParamList } from './types';
-import NoteListScreen from '../screen/file-list/NoteListScreen';
-import NoteEditScreen from '../screen/file-edit/NoteEditScreen';
+import FileListScreen from '../screen/file-list/FileListScreen';
+import FileEditScreen from '../screen/file-edit/FileEditScreen';
 import DiffViewScreen from '../screen/diff-view/DiffViewScreen';
 import VersionHistoryScreen from '../screen/version-history/VersionHistoryScreen';
 import SettingsScreen from '../settings/SettingsScreen';
@@ -32,7 +32,7 @@ function RootNavigatorContent() {
   const { colors } = useTheme();
 
 
-  const shouldShowChat = currentRouteName === 'NoteList' || currentRouteName === 'NoteEdit';
+  const shouldShowChat = currentRouteName === 'NoteList' || currentRouteName === 'FileEdit';
 
   return (
     <>
@@ -51,8 +51,8 @@ function RootNavigatorContent() {
             headerTintColor: colors.text,
           }}
         >
-          <Stack.Screen name="NoteList" component={NoteListScreen} options={{ title: 'Notes' }} />
-          <Stack.Screen name="NoteEdit" component={NoteEditScreen} options={{ title: 'Edit Note' }} />
+          <Stack.Screen name="NoteList" component={FileListScreen} options={{ title: 'Notes' }} />
+          <Stack.Screen name="FileEdit" component={FileEditScreen} options={{ title: 'Edit Note' }} />
           <Stack.Screen name="DiffView" component={DiffViewScreen} options={{ title: 'View Diff' }} />
           <Stack.Screen name="VersionHistory" component={VersionHistoryScreen} options={{ title: 'Version History' }} />
           <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />

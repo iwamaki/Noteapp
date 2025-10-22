@@ -8,19 +8,19 @@
 
 import { File, CreateFileData } from '@shared/types/file';
 import { getAllNotesRaw, saveAllNotes } from '../fileStorage/storage';
-import * as NoteFns from '../fileStorage/note';
+import * as FileFns from '../fileStorage/file';
 
 /**
  * ノートリポジトリ
  * データアクセスの単一窓口として機能
  */
-export class NoteRepository {
+export class FileRepository {
   /**
    * 全ノートを取得
    * @returns 全ノートの配列（更新日時降順）
    */
   static async getAll(): Promise<File[]> {
-    return await NoteFns.getAllNotes();
+    return await FileFns.getAllFiles();
   }
 
   /**
@@ -29,27 +29,25 @@ export class NoteRepository {
    * @returns パス内のノートの配列
    */
   static async getByPath(path: string): Promise<File[]> {
-    return await NoteFns.getNotesByPath(path);
+    return await FileFns.getFilesByPath(path);
   }
 
   /**
-   * IDでノートを取得
-   * @param noteId ノートID
+   * @param fileId ファイルID
    * @returns ノート、見つからない場合はundefined
    */
-  static async getById(noteId: string): Promise<File | undefined> {
+  static async getById(fileId: string): Promise<File | undefined> {
     const allNotes = await getAllNotesRaw();
-    return allNotes.find(note => note.id === noteId);
+    return allNotes.find(file => file.id === fileId);
   }
 
   /**
-   * 複数のノートをIDで取得
-   * @param noteIds ノートIDの配列
+   * @param fileIds ファイルIDの配列
    * @returns 見つかったノートの配列
    */
-  static async getByIds(noteIds: string[]): Promise<File[]> {
+  static async getByIds(fileIds: string[]): Promise<File[]> {
     const allNotes = await getAllNotesRaw();
-    return allNotes.filter(note => noteIds.includes(note.id));
+    return allNotes.filter(file => fileIds.includes(file.id));
   }
 
   /**
@@ -58,7 +56,7 @@ export class NoteRepository {
    * @returns 作成されたノート
    */
   static async create(data: CreateFileData): Promise<File> {
-    return await NoteFns.createNote(data);
+    return await FileFns.createFile(data);
   }
 
   /**
@@ -71,7 +69,7 @@ export class NoteRepository {
     const noteIndex = allNotes.findIndex(n => n.id === note.id);
 
     if (noteIndex === -1) {
-      throw new Error(`Note with id ${note.id} not found`);
+      throw new Error(`File with id ${note.id} not found`);
     }
 
     const updatedNote = {
@@ -88,16 +86,16 @@ export class NoteRepository {
    * 単一ノートを削除
    * @param noteId ノートID
    */
-  static async delete(noteId: string): Promise<void> {
-    await NoteFns.deleteNotes([noteId]);
+  static async delete(fileId: string): Promise<void> {
+    await FileFns.deleteFiles([fileId]);
   }
 
   /**
    * 複数ノートを一括削除
    * @param noteIds ノートIDの配列
    */
-  static async batchDelete(noteIds: string[]): Promise<void> {
-    await NoteFns.deleteNotes(noteIds);
+  static async batchDelete(fileIds: string[]): Promise<void> {
+    await FileFns.deleteFiles(fileIds);
   }
 
   /**
@@ -132,7 +130,7 @@ export class NoteRepository {
    * @returns コピーされたノートの配列
    */
   static async copy(sourceIds: string[]): Promise<File[]> {
-    return await NoteFns.copyNotes(sourceIds);
+    return await FileFns.copyFiles(sourceIds);
   }
 
   /**
@@ -141,8 +139,8 @@ export class NoteRepository {
    * @param newPath 新しいフォルダパス
    * @returns 更新されたノート
    */
-  static async move(noteId: string, newPath: string): Promise<File> {
-    return await NoteFns.moveNote(noteId, newPath);
+  static async move(fileId: string, newPath: string): Promise<File> {
+    return await FileFns.moveFile(fileId, newPath);
   }
 
   /**

@@ -1,5 +1,5 @@
 import { TreeNode } from '../screen/file-list/utils/treeUtils';
-import { NoteListStorage } from '../screen/file-list/fileStorage';
+import { FileListStorage } from '../screen/file-list/fileStorage';
 import { logger } from './logger';
 
 /**
@@ -25,9 +25,10 @@ const collectAllNodes = (nodes: TreeNode[]): TreeNode[] => {
 
 export const checkTreeConsistency = async (treeNodes: TreeNode[]): Promise<void> => {
   try {
+
     // 1. Get the source of truth from storage
-    const allNotes = await NoteListStorage.getAllNotes();
-    const allFolders = await NoteListStorage.getAllFolders();
+    const allNotes = await FileListStorage.getAllFiles();      
+    const allFolders = await FileListStorage.getAllFolders();
 
     // 2. Get the UI data - collect ALL nodes including those in collapsed folders
     const allUiNodes = collectAllNodes(treeNodes);
@@ -105,8 +106,8 @@ export const checkTreeConsistency = async (treeNodes: TreeNode[]): Promise<void>
  */
 export const logStorageState = async (): Promise<void> => {
   try {
-    const allNotes = await NoteListStorage.getAllNotes();
-    const allFolders = await NoteListStorage.getAllFolders();
+    const allNotes = await FileListStorage.getAllFiles();
+    const allFolders = await FileListStorage.getAllFolders();
 
     console.log('📦 Current Storage State:');
     console.log(`  Notes: ${allNotes.length}`);

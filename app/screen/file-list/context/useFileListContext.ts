@@ -4,19 +4,19 @@
  */
 
 import { useContext } from 'react';
-import { NoteListContext, NoteListContextValue } from './NoteListContext';
+import { FileListContext, FileListContextValue } from './FileListContext';
 
 /**
  * NoteListContextを使用するカスタムフック
  * @returns Contextの値
  * @throws Context外で使用された場合にエラー
  */
-export function useNoteListContext(): NoteListContextValue {
-  const context = useContext(NoteListContext);
+export function useFileListContext(): FileListContextValue {
+  const context = useContext(FileListContext);
 
   if (context === undefined) {
     throw new Error(
-      'useNoteListContext must be used within a NoteListProvider'
+      'useFileListContext must be used within a FileListProvider'
     );
   }
 

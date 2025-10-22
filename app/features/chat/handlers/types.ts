@@ -5,7 +5,7 @@
  */
 
 import { LLMCommand } from '../llmService/types/types';
-import { NoteListStorage } from '../../../screen/file-list/fileStorage';
+import { FileListStorage } from '../../../screen/file-list/fileStorage';
 
 /**
  * コマンドハンドラのコンテキスト
@@ -16,7 +16,7 @@ export interface CommandHandlerContext {
   setContent?: (content: string) => void;
 
   // ノートリスト画面用のコンテキスト
-  noteListStorage?: typeof NoteListStorage;
+  fileListStorage?: typeof FileListStorage;
 
   // 将来的な拡張のための予約フィールド
   [key: string]: any;

@@ -3,8 +3,8 @@ import { StyleSheet, ScrollView } from 'react-native';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/types';
 import { FileEditor, ViewMode as FileEditorViewMode } from './components/FileEditor';
-import { useNoteEditor } from './hooks/useNoteEditor';
-import { useNoteEditHeader } from './hooks/useNoteEditHeader';
+import { useFileEditor } from './hooks/useFileEditor';
+import { useFileEditHeader } from './hooks/useFileEditHeader';
 import { useNoteEditChatContext } from '../../features/chat/hooks/useNoteEditChatContext';
 import { CustomModal } from '../../components/CustomModal';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -16,14 +16,14 @@ import type { ViewMode } from './types';
 import { ToastMessage } from './components/ToastMessage'; // ToastMessageをインポート
 import { useToastMessage } from './hooks/useToastMessage'; // useToastMessageをインポート
 
-type NoteEditScreenRouteProp = RouteProp<RootStackParamList, 'NoteEdit'>;
+type FileEditScreenRouteProp = RouteProp<RootStackParamList, 'FileEdit'>;
 
 // ノート編集画面コンポーネント
 function NoteEditScreen() {
   const { colors } = useTheme();
-  const route = useRoute<NoteEditScreenRouteProp>();
+  const route = useRoute<FileEditScreenRouteProp>();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
-  const { noteId } = route.params || {};
+  const { fileId } = route.params || {};
   const { keyboardHeight, chatInputBarHeight } = useKeyboardHeight();
 
   const {
@@ -42,7 +42,7 @@ function NoteEditScreen() {
     isDirty,
     viewMode,
     setViewMode,
-  } = useNoteEditor(noteId);
+  } = useFileEditor(fileId);
 
   const [isConfirmModalVisible, setConfirmModalVisible] = useState(false);
   const [nextAction, setNextAction] = useState<any>(null);
@@ -74,7 +74,7 @@ function NoteEditScreen() {
     };
   }, [navigation, isDirty, isLoading]);
 
-  useNoteEditHeader({
+  useFileEditHeader({
     title,
     activeNoteId: note?.id,
     viewMode,

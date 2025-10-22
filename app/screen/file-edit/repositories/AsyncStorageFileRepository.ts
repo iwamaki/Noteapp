@@ -4,18 +4,18 @@
  * @description NoteEditStorageをリポジトリインターフェースに適合させたラッパー
  */
 
-import { NoteRepository } from './NoteRepository';
+import { FileRepository } from './FileRepository';
 import { File, FileVersion } from '../types';
 import { CreateFileData, UpdateFileData } from '@shared/types/file';
-import { NoteEditStorage } from './noteStorage';
+import { FileEditStorage } from './fileStorage';
 
 /**
  * AsyncStorageを使用したリポジトリ実装
  * 既存のNoteEditStorageをラップして、リポジトリインターフェースに適合
  */
-export class AsyncStorageNoteRepository implements NoteRepository {
+export class AsyncStorageFileRepository implements FileRepository {
   async findById(id: string): Promise<File | null> {
-    return await NoteEditStorage.getNoteById(id);
+    return await FileEditStorage.getFileById(id);
   }
 
   async findAll(): Promise<File[]> {
@@ -25,11 +25,11 @@ export class AsyncStorageNoteRepository implements NoteRepository {
   }
 
   async create(data: CreateFileData): Promise<File> {
-    return await NoteEditStorage.createNote(data);
+    return await FileEditStorage.createFile(data);
   }
 
   async update(id: string, data: Partial<UpdateFileData>): Promise<File> {
-    return await NoteEditStorage.updateNote({
+    return await FileEditStorage.updateFile({
       id,
       ...data,
     } as UpdateFileData);
@@ -42,10 +42,10 @@ export class AsyncStorageNoteRepository implements NoteRepository {
   }
 
   async getVersions(noteId: string): Promise<FileVersion[]> {
-    return await NoteEditStorage.getNoteVersions(noteId);
+    return await FileEditStorage.getFileVersions(noteId);
   }
 
   async restoreVersion(noteId: string, versionId: string): Promise<File> {
-    return await NoteEditStorage.restoreNoteVersion(noteId, versionId);
+    return await FileEditStorage.restoreFileVersion(noteId, versionId);
   }
 }

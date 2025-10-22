@@ -157,6 +157,24 @@ Issue #002では、型定義レベル（`Note` → `File`、`NoteVersion` → `F
 - **メモ:** このIssueドキュメントを作成し、段階的なリファクタリング計画を策定
 
 ---
+### 試行 #2
+- **試みたこと:** Phase 1 (ディレクトリ構造の変更) の完了と、Phase 2 (ファイル名の変更) の完了。
+- **結果:**
+    - Phase 1: ディレクトリ名の変更と関連するimportパスの修正、型チェックの成功、コミットが完了。
+    - Phase 2: 23個のファイル名の変更を `git mv` で実行し、コミットが完了。
+    - 現在、ファイル名変更に伴うimportパスの修正と型定義の修正に着手。
+- **メモ:** 誤ってインポートパス以外の修正も試みたが、ユーザーの指示により修正を元に戻し、インポートパスと型定義の修正に集中する方針に転換。
+
+---
+### 試行 #3
+
+- **試みたこと:** Phase 3 (クラス名・インターフェース名の変更) と Phase 4 (関数名・変数名の変更) の主要部分の完了。
+- **結果:**
+    - `NoteRepository` → `FileRepository`、`NoteDomainService` → `FileDomainService`、`NoteListUseCases` → `FileListUseCases`、`NoteListContext` → `FileListContext`、`NoteListProvider` → `FileListProvider`、`NoteListStorage` → `FileListStorage` などのクラス名・インターフェース名の変更を完了。
+    - `createNote` → `createFile`、`updateNote` → `updateFile`、`deleteNote` → `deleteFile`、`getAllNotes` → `getAllFiles`、`getNotesByPath` → `getFilesByPath`、`moveNote` → `moveFile` などの関数名の変更を完了。
+    - これらの変更に伴う参照箇所の修正も完了し、`npm run type-check` で型エラーが解消されたことを確認。
+    - `app/screen/file-list/context`、`app/screen/file-list/fileStorage`、`app/screen/file-list/infrastructure/FileRepository.ts`、`app/features/chat/handlers`、`app/features/chat/hooks/useFileListChatContext.ts`、`app/utils/debugUtils.ts` などのファイルが影響を受け、修正された。
+- **メモ:** Phase 4の「`noteId` → `fileId` (すべてのファイルで)」のような、より広範囲にわたる変数名の変更は、まだ残っている可能性がある。
 
 ## AIへの申し送り事項 (Handover to AI)
 

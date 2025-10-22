@@ -4,13 +4,13 @@
  */
 
 import React from 'react';
-import { NoteListState, NoteListAction } from './types';
+import { FileListState, FileListAction } from './types';
 import { File, Folder, FileSystemItem } from '@shared/types/file';
 
 /**
  * 非同期アクションヘルパーの型定義
  */
-export interface NoteListActions {
+export interface FileListActions {
   /**
    * データを再取得してリフレッシュ
    */
@@ -22,20 +22,20 @@ export interface NoteListActions {
   renameFolder: (folderId: string, newName: string) => Promise<void>;
 
   /**
-   * ノートをリネーム
+   * ファイルをリネーム
    */
-  renameNote: (noteId: string, newTitle: string) => Promise<void>;
+  renameFile: (fileId: string, newTitle: string) => Promise<void>;
 
   /**
    * 選択されたアイテムを削除
    */
-  deleteSelectedItems: (noteIds: string[], folderIds: string[]) => Promise<void>;
+  deleteSelectedItems: (fileIds: string[], folderIds: string[]) => Promise<void>;
 
   /**
    * 選択されたアイテムを移動
    */
   moveSelectedItems: (
-    noteIds: string[],
+    fileIds: string[],
     folderIds: string[],
     targetPath: string
   ) => Promise<void>;
@@ -48,25 +48,25 @@ export interface NoteListActions {
   /**
    * ノートをパス指定で作成
    */
-  createNoteWithPath: (
+  createFileWithPath: (
     inputPath: string,
     content?: string,
     tags?: string[]
   ) => Promise<File>;
 
   /**
-   * 選択されたノートをコピー
+   * 選択されたファイルをコピー
    */
-  copySelectedNotes: (noteIds: string[]) => Promise<File[]>;
+  copySelectedFiles: (fileIds: string[]) => Promise<File[]>;
 }
 
 /**
  * Contextの値の型
  */
-export interface NoteListContextValue {
-  state: NoteListState;
-  dispatch: React.Dispatch<NoteListAction>;
-  actions: NoteListActions;
+export interface FileListContextValue {
+  state: FileListState;
+  dispatch: React.Dispatch<FileListAction>;
+  actions: FileListActions;
   /**
    * folders + notesの統合リスト（派生値）
    */
@@ -76,6 +76,6 @@ export interface NoteListContextValue {
 /**
  * NoteListContext
  */
-export const NoteListContext = React.createContext<NoteListContextValue | undefined>(
+export const FileListContext = React.createContext<FileListContextValue | undefined>(
   undefined
 );

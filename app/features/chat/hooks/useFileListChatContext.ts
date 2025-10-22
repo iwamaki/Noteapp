@@ -10,7 +10,7 @@ import { ActiveScreenContextProvider, ActiveScreenContext } from '../types';
 import ChatService from '../index';
 import { logger } from '../../../utils/logger';
 import { FileSystemItem } from '@shared/types/file';
-import { NoteListStorage } from '../../../screen/file-list/fileStorage';
+import { FileListStorage } from '../../../screen/file-list/fileStorage';
 import { PathService } from '../../../services/PathService';
 import { createDirectoryHandler } from '../handlers/createDirectoryHandler';
 import { deleteItemHandler } from '../handlers/deleteItemHandler';
@@ -28,7 +28,7 @@ interface UseNoteListChatContextParams {
  * このフックは、ノート一覧画面のコンテキストをChatServiceに登録します。
  * LLMには、現在表示されているノートとフォルダのリストを提供します。
  */
-export const useNoteListChatContext = ({
+export const useFileListChatContext = ({
   items,
   currentPath,
 }: UseNoteListChatContextParams): void => {
@@ -76,7 +76,7 @@ export const useNoteListChatContext = ({
 
     // ハンドラのコンテキストを作成
     const handlerContext: CommandHandlerContext = {
-      noteListStorage: NoteListStorage,
+      fileListStorage: FileListStorage,
     };
 
     // コマンドハンドラの定義（新しいハンドラ構造を使用）

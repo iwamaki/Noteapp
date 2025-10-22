@@ -12,8 +12,8 @@ import { useCustomHeader } from '../../../components/CustomHeader';
 import type { ViewMode } from '../types';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../design/theme/ThemeContext';
-import { NoteEditHeader } from '../components/NoteEditHeader';
-import { NoteEditOverflowMenu } from '../components/NoteEditOverflowMenu';
+import { FileEditHeader } from '../components/FileEditHeader';
+import { FileEditOverflowMenu } from '../components/FileEditOverflowMenu';
 
 interface UseNoteEditHeaderProps {
   title: string;
@@ -33,7 +33,7 @@ interface UseNoteEditHeaderProps {
   currentContent: string;
 }
 
-export const useNoteEditHeader = ({
+export const useFileEditHeader = ({
   title,
   activeNoteId,
   viewMode,
@@ -60,7 +60,7 @@ export const useNoteEditHeader = ({
     };
 
     const handleShowVersionHistory = () => {
-            navigation.navigate('VersionHistory', { noteId: activeNoteId || '' });
+            navigation.navigate('VersionHistory', { fileId: activeNoteId || '' });
     };
 
     const handleShowDiffView = () => {
@@ -86,7 +86,7 @@ export const useNoteEditHeader = ({
       );
 
       rightButtons.push(
-        <NoteEditOverflowMenu
+        <FileEditOverflowMenu
           onToggleViewMode={handleToggleViewMode}
           onShowVersionHistory={handleShowVersionHistory}
           onShowDiffView={handleShowDiffView}
@@ -97,7 +97,7 @@ export const useNoteEditHeader = ({
     navigation.setOptions(
       createHeaderConfig({
         title: (
-          <NoteEditHeader
+          <FileEditHeader
             title={title}
             onTitleChange={onTitleChange}
             editable={isEditable}

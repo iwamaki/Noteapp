@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Folder, CreateFolderData, UpdateFolderData } from '@shared/types/file';
 import { PathService } from '../../../services/PathService';
 import { getAllFoldersRaw, saveAllFolders, getAllNotesRaw, saveAllNotes, StorageError } from './storage';
-import { getNotesByPath } from './note';
+import { getFilesByPath } from './file';
 
 export const getAllFolders = async (): Promise<Folder[]> => {
   return await getAllFoldersRaw();
@@ -85,7 +85,7 @@ export const deleteFolder = async (folderId: string, deleteContents: boolean = f
 
   } else {
     // Folder must be empty
-    const notesInFolder = await getNotesByPath(folderPath);
+    const notesInFolder = await getFilesByPath(folderPath);
     const foldersInFolder = await getFoldersByPath(folderPath);
     if (notesInFolder.length > 0 || foldersInFolder.length > 0) {
       throw new StorageError('Folder is not empty', 'FOLDER_NOT_EMPTY');

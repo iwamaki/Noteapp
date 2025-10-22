@@ -7,11 +7,11 @@
  */
 
 import React, { useReducer, useCallback, useMemo } from 'react';
-import { NoteListContext, NoteListActions } from './NoteListContext';
-import { noteListReducer, createInitialState } from './noteListReducer';
-import { NoteRepository } from '../infrastructure/NoteRepository';
+import { FileListContext, FileListActions } from './FileListContext';
+import { fileListReducer, createInitialState } from './fileListReducer';
+import { FileRepository } from '../infrastructure/FileRepository';
 import { FolderRepository } from '../infrastructure/FolderRepository';
-import { NoteListUseCases } from '../application/NoteListUseCases';
+import { FileListUseCases } from '../application/FileListUseCases';
 import { FileSystemItem } from '@shared/types/file';
 
 interface NoteListProviderProps {
@@ -22,8 +22,8 @@ interface NoteListProviderProps {
  * NoteListProvider
  * 状態管理とビジネスロジックを提供
  */
-export const NoteListProvider: React.FC<NoteListProviderProps> = ({ children }) => {
-  const [state, dispatch] = useReducer(noteListReducer, undefined, createInitialState);
+export const FileListProvider: React.FC<NoteListProviderProps> = ({ children }) => {
+  const [state, dispatch] = useReducer(fileListReducer, undefined, createInitialState);
 
   /**
    * データを再取得してリフレッシュ
@@ -37,7 +37,7 @@ export const NoteListProvider: React.FC<NoteListProviderProps> = ({ children }) 
       // 確実に最新データが取得できる
       const [folders, notes] = await Promise.all([
         FolderRepository.getAll(),
-        NoteRepository.getAll(),
+        FileRepository.getAll(),
       ]);
 
       // データ更新と状態リセットを一括実行
@@ -55,7 +55,7 @@ export const NoteListProvider: React.FC<NoteListProviderProps> = ({ children }) 
   const renameFolder = useCallback(
     async (folderId: string, newName: string) => {
       // 1. UseCaseを実行（AsyncStorage書き込みが完了するまで待機）
-      await NoteListUseCases.renameFolder(folderId, newName);
+      await FileListUseCases.renameFolder(folderId, newName);
 
       // 2. refreshData() でデータを再取得
       // この時点で AsyncStorage の書き込みは完了しているため、
@@ -68,9 +68,9 @@ export const NoteListProvider: React.FC<NoteListProviderProps> = ({ children }) 
   /**
    * ノートをリネーム
    */
-  const renameNote = useCallback(
-    async (noteId: string, newTitle: string) => {
-      await NoteListUseCases.renameNote(noteId, newTitle);
+  const renameFile = useCallback(
+    async (fileId: string, newTitle: string) => {
+      await FileListUseCases.renameFile(fileId, newTitle);
       await refreshData();
     },
     [refreshData]
@@ -80,8 +80,8 @@ export const NoteListProvider: React.FC<NoteListProviderProps> = ({ children }) 
    * 選択されたアイテムを削除
    */
   const deleteSelectedItems = useCallback(
-    async (noteIds: string[], folderIds: string[]) => {
-      await NoteListUseCases.deleteSelectedItems(noteIds, folderIds);
+    async (fileIds: string[], folderIds: string[]) => {
+      await FileListUseCases.deleteSelectedItems(fileIds, folderIds);
       await refreshData();
     },
     [refreshData]
@@ -91,8 +91,8 @@ export const NoteListProvider: React.FC<NoteListProviderProps> = ({ children }) 
    * 選択されたアイテムを移動
    */
   const moveSelectedItems = useCallback(
-    async (noteIds: string[], folderIds: string[], targetPath: string) => {
-      await NoteListUseCases.moveSelectedItems(noteIds, folderIds, targetPath);
+    async (fileIds: string[], folderIds: string[], targetPath: string) => {
+      await FileListUseCases.moveSelectedItems(fileIds, folderIds, targetPath);
       await refreshData();
     },
     [refreshData]
@@ -103,7 +103,7 @@ export const NoteListProvider: React.FC<NoteListProviderProps> = ({ children }) 
    */
   const createFolder = useCallback(
     async (name: string, parentPath: string) => {
-      const folder = await NoteListUseCases.createFolder(name, parentPath);
+      const folder = await FileListUseCases.createFolder(name, parentPath);
       await refreshData();
       return folder;
     },
@@ -113,15 +113,15 @@ export const NoteListProvider: React.FC<NoteListProviderProps> = ({ children }) 
   /**
    * ノートをパス指定で作成
    */
-  const createNoteWithPath = useCallback(
+  const createFileWithPath = useCallback(
     async (inputPath: string, content?: string, tags?: string[]) => {
-      const note = await NoteListUseCases.createNoteWithPath(
+      const file = await FileListUseCases.createFileWithPath(
         inputPath,
         content,
         tags
       );
       await refreshData();
-      return note;
+      return file;
     },
     [refreshData]
   );
@@ -129,11 +129,11 @@ export const NoteListProvider: React.FC<NoteListProviderProps> = ({ children }) 
   /**
    * 選択されたノートをコピー
    */
-  const copySelectedNotes = useCallback(
-    async (noteIds: string[]) => {
-      const copiedNotes = await NoteListUseCases.copyNotes(noteIds);
+  const copySelectedFiles = useCallback(
+    async (fileIds: string[]) => {
+      const copiedFiles = await FileListUseCases.copyFiles(fileIds);
       await refreshData();
-      return copiedNotes;
+      return copiedFiles;
     },
     [refreshData]
   );
@@ -141,26 +141,25 @@ export const NoteListProvider: React.FC<NoteListProviderProps> = ({ children }) 
   /**
    * アクションヘルパーをメモ化
    */
-  const actions: NoteListActions = useMemo(
+  const actions: FileListActions = useMemo(
     () => ({
       refreshData,
       renameFolder,
-      renameNote,
+      renameFile,
       deleteSelectedItems,
       moveSelectedItems,
       createFolder,
-      createNoteWithPath,
-      copySelectedNotes,
+      createFileWithPath,
+      copySelectedFiles,
     }),
     [
       refreshData,
       renameFolder,
-      renameNote,
       deleteSelectedItems,
       moveSelectedItems,
       createFolder,
-      createNoteWithPath,
-      copySelectedNotes,
+      createFileWithPath,
+      copySelectedFiles,
     ]
   );
 
@@ -172,11 +171,11 @@ export const NoteListProvider: React.FC<NoteListProviderProps> = ({ children }) 
       type: 'folder' as const,
       item: folder,
     }));
-    const noteItems: FileSystemItem[] = state.notes.map(note => ({
+    const fileItems: FileSystemItem[] = state.notes.map(note => ({
       type: 'file' as const,
       item: note,
     }));
-    return [...folderItems, ...noteItems];
+    return [...folderItems, ...fileItems];
   }, [state.folders, state.notes]);
 
   /**
@@ -192,5 +191,5 @@ export const NoteListProvider: React.FC<NoteListProviderProps> = ({ children }) 
     [state, actions, items]
   );
 
-  return <NoteListContext.Provider value={value}>{children}</NoteListContext.Provider>;
+  return <FileListContext.Provider value={value}>{children}</FileListContext.Provider>;
 };

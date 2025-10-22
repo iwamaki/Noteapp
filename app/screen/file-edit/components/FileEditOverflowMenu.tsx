@@ -10,7 +10,7 @@ interface NoteEditOverflowMenuProps {
   onShowDiffView: () => void;
 }
 
-export const NoteEditOverflowMenu: React.FC<NoteEditOverflowMenuProps> = ({
+export const FileEditOverflowMenu: React.FC<NoteEditOverflowMenuProps> = ({
   onToggleViewMode,
   onShowVersionHistory,
   onShowDiffView,

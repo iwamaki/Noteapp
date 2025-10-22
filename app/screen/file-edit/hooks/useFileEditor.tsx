@@ -5,7 +5,7 @@
  */
 
 import { useEffect } from 'react';
-import { useNoteEditorStore } from '../stores/NoteEditorStore';
+import { useFileEditorStore } from '../stores/FileEditorStore';
 // import { useAutoSave } from './useAutoSave';
 import { useKeyboardShortcuts } from './useKeyboardShortcuts';
 import { useUnsavedChangesWarning } from './useUnsavedChangesWarning';
@@ -14,9 +14,9 @@ import { useUnsavedChangesWarning } from './useUnsavedChangesWarning';
  * リファクタリング後のノートエディタフック
  * すべての機能を統合したシンプルなインターフェース
  */
-export const useNoteEditor = (noteId?: string) => {
+export const useFileEditor = (noteId?: string) => {
   // Zustandストアから状態とアクションを取得
-  const store = useNoteEditorStore();
+  const store = useFileEditorStore();
 
   // 初期化
   useEffect(() => {

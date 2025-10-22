@@ -28,7 +28,7 @@ export interface SearchOptions {
 /**
  * NoteList画面の全体状態
  */
-export interface NoteListState {
+export interface FileListState {
   // データ
   folders: Folder[];
   notes: File[];
@@ -40,7 +40,7 @@ export interface NoteListState {
 
   // 選択状態
   isSelectionMode: boolean;
-  selectedNoteIds: Set<string>;
+  selectedFileIds: Set<string>;
   selectedFolderIds: Set<string>;
 
   // モーダル状態
@@ -63,7 +63,7 @@ export interface NoteListState {
 /**
  * NoteListアクション型
  */
-export type NoteListAction =
+export type FileListAction =
   // データ更新
   | { type: 'SET_DATA'; payload: { folders: Folder[]; notes: File[] } }
   | { type: 'SET_LOADING'; payload: boolean }
@@ -77,7 +77,7 @@ export type NoteListAction =
   // 選択操作
   | { type: 'ENTER_SELECTION_MODE' }
   | { type: 'EXIT_SELECTION_MODE' }
-  | { type: 'TOGGLE_SELECT_NOTE'; payload: string }
+  | { type: 'TOGGLE_SELECT_FILE'; payload: string }
   | { type: 'TOGGLE_SELECT_FOLDER'; payload: string }
   | { type: 'SELECT_ALL_VISIBLE' }
   | { type: 'CLEAR_SELECTION' }

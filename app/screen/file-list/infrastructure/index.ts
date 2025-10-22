@@ -3,5 +3,5 @@
  * @summary Repository層のエクスポート
  */
 
-export { NoteRepository } from './NoteRepository';
+export { FileRepository } from './FileRepository';
 export { FolderRepository } from './FolderRepository';

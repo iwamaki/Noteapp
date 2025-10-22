@@ -7,7 +7,7 @@
 import { LLMCommand } from '../llmService/types/types';
 import { CommandHandler } from './types';
 import { logger } from '../../../utils/logger';
-import { NoteListStorage, StorageError } from '../../../screen/file-list/fileStorage';
+import { FileListStorage, StorageError } from '../../../screen/file-list/fileStorage';
 import { findItemByPath } from './itemResolver';
 
 /**
@@ -41,7 +41,7 @@ export const deleteItemHandler: CommandHandler = async (command: LLMCommand, con
     }
 
     // NoteListStorageを取得（コンテキストから、またはデフォルト）
-    const storage = context?.noteListStorage || NoteListStorage;
+    const storage = context?.fileListStorage || FileListStorage;
 
     // アイテムの種類に応じて削除
     if (resolvedItem.type === 'file') {
@@ -49,7 +49,7 @@ export const deleteItemHandler: CommandHandler = async (command: LLMCommand, con
         noteId: resolvedItem.id,
         noteTitle: (resolvedItem.item as any).title,
       });
-      await storage.deleteNotes([resolvedItem.id]);
+      await storage.deleteFiles([resolvedItem.id]);
       logger.info('deleteItemHandler', 'Note deleted successfully', {
         noteId: resolvedItem.id,
       });
