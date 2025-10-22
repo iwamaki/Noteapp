@@ -36,11 +36,11 @@ export const useSearch = (treeNodes: TreeNode[]) => {
 
     return flattenedTree.filter(node => {
       // ターゲットフィルタ
-      if (searchOptions.target === 'notes' && node.type !== 'note') return false;
+      if (searchOptions.target === 'notes' && node.type !== 'file') return false;
       if (searchOptions.target === 'folders' && node.type !== 'folder') return false;
 
-      if (node.type === 'note') {
-        const note = node.item as Note;
+      if (node.type === 'file') {
+        const note = node.item as File;
         const title = searchOptions.caseSensitive ? note.title : note.title.toLowerCase();
         const content = searchOptions.caseSensitive ? note.content : note.content.toLowerCase();
 

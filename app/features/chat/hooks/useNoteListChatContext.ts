@@ -52,7 +52,7 @@ export const useNoteListChatContext = ({
         });
 
         const visibleFileList = itemsRef.current
-          .filter(item => item.type === 'note') // ファイルのみに限定
+          .filter(item => item.type === 'file') // ファイルのみに限定
           .map(item => {
             const path = item.item.path;
             const name = item.item.title;

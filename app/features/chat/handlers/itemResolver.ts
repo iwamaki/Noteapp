@@ -70,7 +70,7 @@ export async function findItemByPath(path: string): Promise<ResolvedItem | null>
       const parentPath = parts.length > 1 ? `/${parts.slice(0, -1).join('/')}/` : '/';
 
       for (const note of notes) {
-        const fullPath = PathService.getFullPath(note.path, note.title, 'note');
+        const fullPath = PathService.getFullPath(note.path, note.title, 'file');
         const normalizedNotePath = PathService.normalizePath(note.path);
         const normalizedParentPath = PathService.normalizePath(parentPath);
 
@@ -85,7 +85,7 @@ export async function findItemByPath(path: string): Promise<ResolvedItem | null>
             noteTitle: note.title,
           });
           return {
-            type: 'note',
+            type: 'file',
             id: note.id,
             item: note,
             fullPath,

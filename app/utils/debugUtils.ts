@@ -31,7 +31,7 @@ export const checkTreeConsistency = async (treeNodes: TreeNode[]): Promise<void>
 
     // 2. Get the UI data - collect ALL nodes including those in collapsed folders
     const allUiNodes = collectAllNodes(treeNodes);
-    const uiNotes = allUiNodes.filter(node => node.type === 'note');
+    const uiNotes = allUiNodes.filter(node => node.type === 'file');
     const uiFolders = allUiNodes.filter(node => node.type === 'folder');
 
     // 3. Compare counts

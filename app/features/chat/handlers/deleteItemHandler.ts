@@ -44,7 +44,7 @@ export const deleteItemHandler: CommandHandler = async (command: LLMCommand, con
     const storage = context?.noteListStorage || NoteListStorage;
 
     // アイテムの種類に応じて削除
-    if (resolvedItem.type === 'note') {
+    if (resolvedItem.type === 'file') {
       logger.debug('deleteItemHandler', 'Deleting note', {
         noteId: resolvedItem.id,
         noteTitle: (resolvedItem.item as any).title,

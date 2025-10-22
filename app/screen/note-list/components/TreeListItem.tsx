@@ -65,7 +65,7 @@ export const TreeListItem: React.FC<TreeListItemProps> = ({
           color={colors.textSecondary}
         />
       );
-    } else if (node.type === 'note') {
+    } else if (node.type === 'file') {
       return (
         <MaterialCommunityIcons
           name="file-document"
@@ -82,13 +82,13 @@ export const TreeListItem: React.FC<TreeListItemProps> = ({
       const folder = node.item as Folder;
       return folder.name;
     }
-    const note = node.item as Note;
+    const note = node.item as File;
     return note.title || '無題のノート';
   };
 
   const renderSubtitle = () => {
-    if (node.type === 'note') {
-      const note = node.item as Note;
+    if (node.type === 'file') {
+      const note = node.item as File;
       return note.content ? (
         <ListItem.Description numberOfLines={1}>
           {note.content}

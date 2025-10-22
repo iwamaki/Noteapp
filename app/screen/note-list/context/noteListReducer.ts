@@ -169,7 +169,7 @@ export function noteListReducer(
 
       const collectVisible = (nodes: typeof state.treeNodes) => {
         nodes.forEach(node => {
-          if (node.type === 'note') {
+          if (node.type === 'file') {
             visibleNotes.add(node.id);
           } else {
             visibleFolders.add(node.id);

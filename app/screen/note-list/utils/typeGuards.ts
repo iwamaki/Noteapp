@@ -10,16 +10,16 @@ export function isFolder(item: FileSystemItem): item is { type: 'folder'; item: 
   return item.type === 'folder';
 }
 
-export function isNote(item: FileSystemItem): item is { type: 'note'; item: Note } {
-  return item.type === 'note';
+export function isNote(item: FileSystemItem): item is { type: 'file'; item: File } {
+  return item.type === 'file';
 }
 
 export function isFolderNode(node: TreeNode): node is TreeNode & { type: 'folder'; item: Folder } {
   return node.type === 'folder';
 }
 
-export function isNoteNode(node: TreeNode): node is TreeNode & { type: 'note'; item: Note } {
-  return node.type === 'note';
+export function isNoteNode(node: TreeNode): node is TreeNode & { type: 'file'; item: File } {
+  return node.type === 'file';
 }
 
 /**
@@ -32,7 +32,7 @@ export function getFolder(item: FileSystemItem): Folder | null {
 /**
  * FileSystemItemからNoteを安全に取得
  */
-export function getNote(item: FileSystemItem): Note | null {
+export function getNote(item: FileSystemItem): File | null {
   return isNote(item) ? item.item : null;
 }
 
@@ -46,7 +46,7 @@ export function getFolderFromNode(node: TreeNode): Folder | null {
 /**
  * TreeNodeからNoteを安全に取得
  */
-export function getNoteFromNode(node: TreeNode): Note | null {
+export function getNoteFromNode(node: TreeNode): File | null {
   return isNoteNode(node) ? node.item : null;
 }
 
@@ -57,6 +57,6 @@ export function extractFolders(items: FileSystemItem[]): Folder[] {
   return items.filter(isFolder).map(item => item.item);
 }
 
-export function extractNotes(items: FileSystemItem[]): Note[] {
+export function extractNotes(items: FileSystemItem[]): File[] {
   return items.filter(isNote).map(item => item.item);
 }

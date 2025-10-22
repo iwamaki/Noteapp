@@ -66,7 +66,7 @@ export const moveItemHandler: CommandHandler = async (command: LLMCommand, conte
     const storage = context?.noteListStorage || NoteListStorage;
 
     // アイテムの種類に応じて移動
-    if (resolvedItem.type === 'note') {
+    if (resolvedItem.type === 'file') {
       logger.debug('moveItemHandler', 'Moving note', {
         noteId: resolvedItem.id,
         noteTitle: (resolvedItem.item as any).title,

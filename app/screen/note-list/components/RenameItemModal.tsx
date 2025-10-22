@@ -10,7 +10,7 @@ import { CustomModal } from '../../../components/CustomModal';
 interface RenameItemModalProps {
   visible: boolean;
   initialName: string;
-  itemType: 'note' | 'folder';
+  itemType: 'file' | 'folder';
   onClose: () => void;
   onRename: (newName: string) => void;
 }

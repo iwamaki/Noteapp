@@ -58,9 +58,9 @@ function VersionHistoryScreen() {
 
         // Also add the current version to the list for context, but designate it
         if (fetchedCurrentNote) {
-          const currentVersion = {
+          const currentVersion: FileVersion = {
             id: 'current',
-            noteId: fetchedCurrentNote.id,
+            fileId: fetchedCurrentNote.id,
             content: fetchedCurrentNote.content,
             version: fetchedCurrentNote.version,
             createdAt: fetchedCurrentNote.updatedAt,
@@ -89,7 +89,7 @@ function VersionHistoryScreen() {
     }, [fetchVersions])
   );
 
-  const handleSelectVersion = (selectedVersion: NoteVersion) => {
+  const handleSelectVersion = (selectedVersion: FileVersion) => {
     if (!currentNote || selectedVersion.id === 'current') {
       // Cannot compare the current version with itself
       return;
@@ -123,7 +123,7 @@ function VersionHistoryScreen() {
     },
   });
 
-  const renderItem = ({ item }: { item: NoteVersion }) => {
+  const renderItem = ({ item }: { item: FileVersion }) => {
     const versionLabel = `Version ${item.version}${item.id === 'current' ? ' (Current)' : ''}`;
     return (
       <ListItem.Container

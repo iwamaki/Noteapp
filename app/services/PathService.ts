@@ -9,7 +9,7 @@ export class PathService {
   }
 
   // フルパスを取得（親パス + 名前）
-  static getFullPath(parentPath: string, name: string, type: 'note' | 'folder'): string {
+  static getFullPath(parentPath: string, name: string, type: 'file' | 'folder'): string {
     const normalizedParent = this.normalizePath(parentPath); // Ensures parent ends with /
     const combined = normalizedParent === '/' ? `/${name}` : `${normalizedParent}${name}`;
 
@@ -17,7 +17,7 @@ export class PathService {
       // If it's a folder, ensure it ends with a slash
       return combined.endsWith('/') ? combined : `${combined}/`;
     }
-    // If it's a note, ensure it does NOT end with a slash (unless it's just "/")
+    // If it's a file, ensure it does NOT end with a slash (unless it's just "/")
     if (combined.endsWith('/') && combined.length > 1) {
       return combined.slice(0, -1);
     }
