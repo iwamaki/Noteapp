@@ -32,19 +32,19 @@ export const checkTreeConsistency = async (treeNodes: TreeNode[]): Promise<void>
 
     // 2. Get the UI data - collect ALL nodes including those in collapsed folders
     const allUiNodes = collectAllNodes(treeNodes);
-    const uiNotes = allUiNodes.filter(node => node.type === 'file');
+    const uiFiles = allUiNodes.filter(node => node.type === 'file');
     const uiFolders = allUiNodes.filter(node => node.type === 'folder');
 
     // 3. Compare counts
-    if (allFiles.length !== uiNotes.length) {
-      const storageNoteIds = allFiles.map(n => n.id);
-      const uiNoteIds = uiNotes.map(n => n.id);
-      const missingInUi = storageNoteIds.filter(id => !uiNoteIds.includes(id));
-      const extraInUi = uiNoteIds.filter(id => !storageNoteIds.includes(id));
+    if (allFiles.length !== uiFiles.length) {
+      const storageFileIds = allFiles.map(n => n.id);
+      const uiFileIds = uiFiles.map(n => n.id);
+      const missingInUi = storageFileIds.filter(id => !uiFileIds.includes(id));
+      const extraInUi = uiFileIds.filter(id => !storageFileIds.includes(id));
 
       throw new Error(
         `Data Inconsistency: File count mismatch.\n` +
-        `Storage: ${allFiles.length} notes, UI: ${uiNotes.length} notes.\n` +
+        `Storage: ${allFiles.length} files, UI: ${uiFiles.length} files.\n` +
         `Missing in UI: ${JSON.stringify(missingInUi)}\n` +
         `Extra in UI: ${JSON.stringify(extraInUi)}\n` +
         `Storage files:\n${JSON.stringify(allFiles.map(n => ({ id: n.id, title: n.title, path: n.path })), null, 2)}`
@@ -67,14 +67,14 @@ export const checkTreeConsistency = async (treeNodes: TreeNode[]): Promise<void>
     }
 
     // 4. Compare content (IDs)
-    const storageNoteIds = new Set(allFiles.map(n => n.id));
-    const uiNoteIds = new Set(uiNotes.map(n => n.id));
-    for (const id of storageNoteIds) {
-      if (!uiNoteIds.has(id)) {
-        const missingNote = allFiles.find(n => n.id === id);
+    const storageFileIds = new Set(allFiles.map(n => n.id));
+    const uiFileIds = new Set(uiFiles.map(n => n.id));
+    for (const id of storageFileIds) {
+      if (!uiFileIds.has(id)) {
+        const missingFile = allFiles.find(n => n.id === id);
         throw new Error(
-          `Data Inconsistency: Note with ID '${id}' exists in storage but not in UI.\n` +
-          `Missing file: ${JSON.stringify(missingNote, null, 2)}`
+          `Data Inconsistency: File with ID '${id}' exists in storage but not in UI.\n` +
+          `Missing file: ${JSON.stringify(missingFile, null, 2)}`
         );
       }
     }
@@ -110,7 +110,7 @@ export const logStorageState = async (): Promise<void> => {
     const allFolders = await FileListStorage.getAllFolders();
 
     console.log('📦 Current Storage State:');
-    console.log(`  Notes: ${allFiles.length}`);
+    console.log(`  Files: ${allFiles.length}`);
     console.log(`  Folders: ${allFolders.length}`);
 
     if (allFolders.length > 0) {

@@ -1,6 +1,6 @@
 /**
- * @file hooks/useNoteEditorV2.tsx
- * @summary リファクタリング後の統一されたノートエディタフック
+ * @file hooks/useFileEditor.tsx
+ * @summary リファクタリング後の統一されたファイルエディタフック
  * @description Zustandストアと各種フックを組み合わせたファサード
  */
 

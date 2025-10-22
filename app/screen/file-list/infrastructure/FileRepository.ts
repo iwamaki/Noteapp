@@ -100,7 +100,7 @@ export class FileRepository {
 
   /**
    * 複数ファイルを一括更新
-   * @param notes 更新するファイルの配列
+   * @param files 更新するファイルの配列
    * @description
    * 既存のファイルをIDでマッチングして更新します。
    * 見つからないIDは無視されます。
@@ -109,7 +109,7 @@ export class FileRepository {
     const allFiles = await getAllFilesRaw();
     const fileMap = new Map(files.map(n => [n.id, n]));
 
-    // 既存ファイルを更新されたノートで置き換え
+    // 既存ファイルを更新されたファイルで置き換え
     const updated = allFiles.map(n => {
       const updatedFile = fileMap.get(n.id);
       if (updatedFile) {
@@ -137,7 +137,7 @@ export class FileRepository {
    * ファイルを移動（パス変更）
    * @param fileId ファイルID
    * @param newPath 新しいフォルダパス
-   * @returns 更新されたノート
+   * @returns 更新されたファイル
    */
   static async move(fileId: string, newPath: string): Promise<File> {
     return await FileFns.moveFile(fileId, newPath);
@@ -145,7 +145,7 @@ export class FileRepository {
 
   /**
    * 全ファイルを保存（内部用）
-   * @param notes 保存するファイルの配列
+   * @param files 保存するファイルの配列
    * @description
    * 既存の全データを上書きします。使用には注意が必要です。
    * 通常はbatchUpdate()を使用してください。

@@ -1,5 +1,5 @@
 /**
- * @file NoteDomainService.ts
+ * @file FileDomainService.ts
  * @summary ノートに関するビジネスロジック層
  * @description
  * ファイルのバリデーション、重複チェック、ビジネスルールの実装を担当します。
@@ -164,7 +164,7 @@ export class FileDomainService {
    * @param content 内容
    * @returns バリデーション結果
    */
-  static validateNoteContent(title: string, content: string): ValidationResult {
+  static validateFileContent(title: string, content: string): ValidationResult {
     const titleValidation = this.validateFileName(title);
     if (!titleValidation.valid) {
       return titleValidation;

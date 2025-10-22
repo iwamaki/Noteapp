@@ -16,8 +16,8 @@ export interface FileListItem {
   tags?: string[];
 }
 
-export interface NotelistScreenContext {
-  name: 'notelist';
+export interface FilelistScreenContext {
+  name: 'filelist';
   currentPath: string;
   visibleFileList: FileListItem[];
   selectedFileList?: FileListItem[];
@@ -29,7 +29,7 @@ export interface EditScreenContext {
   fileContent: string;
 }
 
-export type ActiveScreenContext = NotelistScreenContext | EditScreenContext;
+export type ActiveScreenContext = FilelistScreenContext | EditScreenContext;
 
 /**
  * アクティブな画面のコンテキストプロバイダー

@@ -33,8 +33,8 @@ DEFAULT_SYSTEM_PROMPT: Final[str] = (
 CONTEXT_MSG_EDIT_SCREEN: Final[str] = "\n\n[現在開いているファイル情報]\nファイルパス: {file_path}\n内容:\n---\n{content}\n---"
 """編集画面用のコンテキストメッセージテンプレート"""
 
-CONTEXT_MSG_NOTELIST_SCREEN: Final[str] = "\n\n[現在表示中のファイルリスト]\nカレントパス: {current_path}\nファイル一覧:\n{file_list}"
-"""ノートリスト画面用のコンテキストメッセージテンプレート"""
+CONTEXT_MSG_FILELIST_SCREEN: Final[str] = "\n\n[現在表示中のファイルリスト]\nカレントパス: {current_path}\nファイル一覧:\n{file_list}"
+"""ファイルリスト画面用のコンテキストメッセージテンプレート"""
 
 CONTEXT_MSG_ATTACHED_FILE: Final[str] = "\n\n[添付ファイル情報]\nファイル名: {filename}\n内容:\n---\n{content}\n---"
 """添付ファイル用のコンテキストメッセージテンプレート"""

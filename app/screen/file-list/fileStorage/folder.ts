@@ -43,7 +43,7 @@ export const updateFolder = async (data: UpdateFolderData): Promise<Folder> => {
   const folderToUpdate = allFolders[folderIndex];
 
   // 単純にフォルダ自身のデータのみを更新
-  // 重複チェックと子要素のパス更新は呼び出し側（NoteService）が行う
+  // 重複チェックと子要素のパス更新は呼び出し側（FileService）が行う
   if (data.name !== undefined) {
     folderToUpdate.name = data.name;
   }
@@ -85,9 +85,9 @@ export const deleteFolder = async (folderId: string, deleteContents: boolean = f
 
   } else {
     // Folder must be empty
-    const notesInFolder = await getFilesByPath(folderPath);
+    const filesInFolder = await getFilesByPath(folderPath);
     const foldersInFolder = await getFoldersByPath(folderPath);
-    if (notesInFolder.length > 0 || foldersInFolder.length > 0) {
+    if (filesInFolder.length > 0 || foldersInFolder.length > 0) {
       throw new StorageError('Folder is not empty', 'FOLDER_NOT_EMPTY');
     }
     // Just delete the folder

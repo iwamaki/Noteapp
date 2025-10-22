@@ -26,9 +26,9 @@ export const useUnsavedChangesWarning = (
     // React Navigationの画面離脱を防ぐ
     const unsubscribe = navigation.addListener('beforeRemove', () => {
       // 未保存の変更がある場合、離脱を防ぐ
-      // NoteEditScreen.tsxで独自のモーダルを表示しているので、
+      // FileEditScreen.tsxで独自のモーダルを表示しているので、
       // ここでは離脱を防ぐだけにする
-      // 実際のモーダル表示はNoteEditScreen.tsxで行われる
+      // 実際のモーダル表示はFileEditScreen.tsxで行われる
     });
 
     return unsubscribe;

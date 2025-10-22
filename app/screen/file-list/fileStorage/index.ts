@@ -6,7 +6,7 @@ import * as FolderFns from './folder';
 // Re-export error class
 export { StorageError };
 
-// Re-export storage raw functions for NoteService
+// Re-export storage raw functions for FileService
 export { saveAllFiles, saveAllFolders };
 
 // --- Composite & Helper Methods ---
@@ -17,7 +17,7 @@ const getItemsByPath = async (path: string): Promise<FileSystemItem[]> => {
 
   const items: FileSystemItem[] = [
     ...folders.map(folder => ({ type: 'folder' as const, item: folder })),
-    ...files.map(note => ({ type: 'file' as const, item: note })),
+    ...files.map(file => ({ type: 'file' as const, item: file })),
   ];
 
   return items;
@@ -58,7 +58,7 @@ const getItemsRecursively = async (
   return items;
 };
 
-const migrateExistingNotes = async (): Promise<void> => {
+const migrateExistingFiles = async (): Promise<void> => {
   const files = await getAllFilesRaw();
   let migrated = false;
 
@@ -71,7 +71,7 @@ const migrateExistingNotes = async (): Promise<void> => {
 
   if (migrated) {
     await saveAllFiles(files);
-    console.log('Migrated existing notes to new path structure');
+    console.log('Migrated existing files to new path structure');
   }
 };
 
@@ -85,5 +85,5 @@ export const FileListStorage = {
   // Composite functions
   getItemsByPath,
   getItemsRecursively,
-  migrateExistingNotes,
+  migrateExistingFiles,
 };

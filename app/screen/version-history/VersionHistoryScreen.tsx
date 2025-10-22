@@ -31,7 +31,7 @@ function VersionHistoryScreen() {
   const [versions, setVersions] = useState<FileVersion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentNote, setCurrentNote] = useState<File | null>(null);
+  const [currentFile, setCurrentFile] = useState<File | null>(null);
 
   useLayoutEffect(() => {
     navigation.setOptions(
@@ -53,17 +53,17 @@ function VersionHistoryScreen() {
       setError(null);
       if (fileId) {
         const fetchedVersions = await FileEditStorage.getFileVersions(fileId);
-        const fetchedCurrentNote = await FileEditStorage.getFileById(fileId);
-        setCurrentNote(fetchedCurrentNote);
+        const fetchedCurrentFile = await FileEditStorage.getFileById(fileId);
+        setCurrentFile(fetchedCurrentFile);
 
         // Also add the current version to the list for context, but designate it
-        if (fetchedCurrentNote) {
+        if (fetchedCurrentFile) {
           const currentVersion: FileVersion = {
             id: 'current',
-            fileId: fetchedCurrentNote.id,
-            content: fetchedCurrentNote.content,
-            version: fetchedCurrentNote.version,
-            createdAt: fetchedCurrentNote.updatedAt,
+            fileId: fetchedCurrentFile.id,
+            content: fetchedCurrentFile.content,
+            version: fetchedCurrentFile.version,
+            createdAt: fetchedCurrentFile.updatedAt,
           };
           // Sort historical versions by createdAt in descending order (newest first)
           const sortedFetchedVersions = fetchedVersions.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -90,15 +90,15 @@ function VersionHistoryScreen() {
   );
 
   const handleSelectVersion = (selectedVersion: FileVersion) => {
-    if (!currentNote || selectedVersion.id === 'current') {
+    if (!currentFile || selectedVersion.id === 'current') {
       // Cannot compare the current version with itself
       return;
     }
-    
+
     navigation.navigate('DiffView', {
-      fileId: currentNote.id,
+      fileId: currentFile.id,
       versionId: selectedVersion.id,
-      originalContent: currentNote.content, // 現在のファイルのコンテンツ
+      originalContent: currentFile.content, // 現在のファイルのコンテンツ
       newContent: selectedVersion.content,          // 選択された過去のバージョンのコンテンツ
       mode: 'restore'
     });

@@ -2,8 +2,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { v4 as uuidv4 } from 'uuid';
 import { File, FileVersion, CreateFileData, UpdateFileData } from '../../../../shared/types/file';
 
-const NOTES_STORAGE_KEY = '@notes';
-const NOTE_VERSIONS_STORAGE_KEY = '@note_versions';
+const FILES_STORAGE_KEY = '@files';
+const FILE_VERSIONS_STORAGE_KEY = '@file_versions';
 
 import StorageUtils from '@data/asyncStorageUtils';
 
@@ -15,12 +15,12 @@ export class StorageError extends Error {
   }
 }
 
-// ノートストレージサービス (note-edit feature specific)
+// ファイルストレージサービス (file-edit feature specific)
 export class FileEditStorage {
   // --- Private Raw File Methods ---
   private static async getAllFilesRaw(): Promise<File[]> {
     try {
-      const jsonValue = await AsyncStorage.getItem(NOTES_STORAGE_KEY);
+      const jsonValue = await AsyncStorage.getItem(FILES_STORAGE_KEY);
       const files = await StorageUtils.safeJsonParse<any[]>(jsonValue);
       if (!files) return [];
       return files.map(file => StorageUtils.convertDates(file) as File);
@@ -32,7 +32,7 @@ export class FileEditStorage {
 
   private static async saveAllFiles(files: File[]): Promise<void> {
     try {
-      await AsyncStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(files));
+      await AsyncStorage.setItem(FILES_STORAGE_KEY, JSON.stringify(files));
     } catch (error) {
       console.error('Failed to save files to AsyncStorage:', error);
       throw new StorageError('Failed to save files', 'SAVE_ERROR');
@@ -42,7 +42,7 @@ export class FileEditStorage {
   // --- Private Raw Version Methods ---
   private static async getAllVersionsRaw(): Promise<FileVersion[]> {
     try {
-      const jsonValue = await AsyncStorage.getItem(NOTE_VERSIONS_STORAGE_KEY);
+      const jsonValue = await AsyncStorage.getItem(FILE_VERSIONS_STORAGE_KEY);
       const versions = await StorageUtils.safeJsonParse<any[]>(jsonValue);
       if (!versions) return [];
       return versions.map(version => StorageUtils.convertDates(version) as FileVersion);
@@ -54,14 +54,14 @@ export class FileEditStorage {
 
   private static async saveAllVersions(versions: FileVersion[]): Promise<void> {
     try {
-      await AsyncStorage.setItem(NOTE_VERSIONS_STORAGE_KEY, JSON.stringify(versions));
+      await AsyncStorage.setItem(FILE_VERSIONS_STORAGE_KEY, JSON.stringify(versions));
     } catch (error) {
       console.error('Failed to save file versions to AsyncStorage:', error);
       throw new StorageError('Failed to save file versions', 'SAVE_VERSIONS_ERROR');
     }
   }
 
-  // --- Public File Methods for note-edit ---
+  // --- Public File Methods for file-edit ---
   static async getFileById(id: string): Promise<File | null> {
     const files = await this.getAllFilesRaw();
     return files.find(file => file.id === id) || null;
@@ -134,7 +134,7 @@ export class FileEditStorage {
     return updatedFile;
   }
 
-  // --- Public Version Methods for note-edit ---
+  // --- Public Version Methods for file-edit ---
   static async getFileVersions(fileId: string): Promise<FileVersion[]> {
     const allVersions = await this.getAllVersionsRaw();
     return allVersions.filter(version => version.fileId === fileId);
@@ -148,7 +148,7 @@ export class FileEditStorage {
   static async restoreFileVersion(fileId: string, versionId: string): Promise<File> {
     const versionToRestore = await this.getFileVersion(versionId);
     if (!versionToRestore || versionToRestore.fileId !== fileId) {
-      throw new StorageError(`Version with id ${versionId} for note ${fileId} not found`, 'VERSION_NOT_FOUND');
+      throw new StorageError(`Version with id ${versionId} for file ${fileId} not found`, 'VERSION_NOT_FOUND');
     }
 
     const file = await this.getFileById(fileId);
@@ -156,7 +156,7 @@ export class FileEditStorage {
       throw new StorageError(`File with id ${fileId} not found`, 'NOT_FOUND');
     }
 
-    // Update the note with the content from the version to restore
+    // Update the file with the content from the version to restore
     // This will automatically create a new version of the state *before* restoration
     return this.updateFile({
       id: fileId,

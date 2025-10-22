@@ -1,4 +1,4 @@
-# LLM Note App - Backend API
+# LLM File App - Backend API
 
 FastAPIとLangChainを使用したバックエンドAPI
 

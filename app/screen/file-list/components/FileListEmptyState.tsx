@@ -2,13 +2,13 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useTheme } from '../../../design/theme/ThemeContext';
 
-interface NoteListEmptyStateProps {
+interface FileListEmptyStateProps {
   containerStyle: object;
   messageStyle: object;
   message?: string;
 }
 
-export const FileListEmptyState: React.FC<NoteListEmptyStateProps> = ({
+export const FileListEmptyState: React.FC<FileListEmptyStateProps> = ({
   containerStyle,
   messageStyle,
   message,

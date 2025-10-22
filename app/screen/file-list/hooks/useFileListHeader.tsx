@@ -6,7 +6,7 @@ import { useCustomHeader, HeaderConfig } from '../../../components/CustomHeader'
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 
-interface UseNoteListHeaderProps {
+interface UseFileListHeaderProps {
   isSelectionMode: boolean;
   selectedFileIds: Set<string>;
   selectedFolderIds: Set<string>;
@@ -36,7 +36,7 @@ export const useFileListHeader = ({
   rightButtons,
   leftButtons,
   title,
-}: UseNoteListHeaderProps) => {
+}: UseFileListHeaderProps) => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const { createHeaderConfig } = useCustomHeader();
   const { colors, typography } = useTheme();

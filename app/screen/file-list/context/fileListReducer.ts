@@ -48,7 +48,7 @@ export const createInitialState = (): FileListState => ({
 });
 
 /**
- * NoteListReducer
+ * FileListReducer
  * すべての状態遷移を処理
  */
 export function fileListReducer(

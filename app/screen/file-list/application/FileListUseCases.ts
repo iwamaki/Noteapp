@@ -56,8 +56,8 @@ export class FileListUseCases {
       if (!folder) continue;
 
       const folderFullPath = FolderDomainService.getFullPath(folder);
-      const childNotes = FolderDomainService.getChildNotes(folderFullPath, allFiles);
-      childNotes.forEach(n => filesToDelete.add(n.id));
+      const childFiles = FolderDomainService.getChildFiles(folderFullPath, allFiles);
+      childFiles.forEach(n => filesToDelete.add(n.id));
     }
 
     // 3. 一括削除（トランザクション的に実行）
@@ -105,7 +105,7 @@ export class FileListUseCases {
     const descendants = FolderDomainService.getAllDescendantFolders(oldFullPath, allFolders);
 
     const allFiles = await FileRepository.getAll();
-    const allChildFiles = FolderDomainService.getAllDescendantNotes(
+    const allChildFiles = FolderDomainService.getAllDescendantFiles(
       oldFullPath,
       allFiles,
       allFolders
@@ -271,14 +271,14 @@ export class FileListUseCases {
         })
       );
 
-      // フォルダ内のノートも移動
-      const childNotes = FolderDomainService.getAllDescendantNotes(
+      // フォルダ内のファイルも移動
+      const childFiles = FolderDomainService.getAllDescendantFiles(
         oldFullPath,
         allFiles,
         allFolders
       );
       filesInFolders.push(
-        ...childNotes.map(n => ({
+        ...childFiles.map(n => ({
           ...n,
           path: n.path.replace(oldFullPath, newFullPath),
           updatedAt: new Date(),

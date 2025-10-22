@@ -76,7 +76,7 @@ function FileEditScreen() {
 
   useFileEditHeader({
     title,
-    activeNoteId: file?.id,
+    activeFileId: file?.id,
     viewMode,
     isLoading,
     isEditable: viewMode === 'edit' && !isLoading,
@@ -88,7 +88,7 @@ function FileEditScreen() {
     onRedo: redo,
     canUndo,
     canRedo,
-    originalNoteContent: file?.content ?? '',
+    originalFileContent: file?.content ?? '',
     currentContent: content,
   });
 

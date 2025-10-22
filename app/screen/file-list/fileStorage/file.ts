@@ -72,7 +72,7 @@ export const copyFiles = async (sourceIds: string[]): Promise<File[]> => {
 export const createFile = async (data: CreateFileData): Promise<File> => {
   const now = new Date();
   // パスは呼び出し側で正規化済みと仮定
-  // 重複チェックは呼び出し側（NoteService）が行う
+  // 重複チェックは呼び出し側（FileService）が行う
 
   const newFile: File = {
     id: uuidv4(),

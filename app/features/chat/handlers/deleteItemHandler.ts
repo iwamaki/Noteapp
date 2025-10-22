@@ -14,7 +14,7 @@ import { findItemByPath } from './itemResolver';
  * delete_itemコマンドのハンドラ
  *
  * LLMから受け取ったアイテム削除リクエストを処理します。
- * パスからアイテムを特定し、ノートまたはフォルダを削除します。
+ * パスからアイテムを特定し、ファイルまたはフォルダを削除します。
  *
  * @param command delete_itemコマンド（command.path: 削除対象のパス）
  * @param context コンテキスト（オプション）
@@ -47,7 +47,7 @@ export const deleteItemHandler: CommandHandler = async (command: LLMCommand, con
     if (resolvedItem.type === 'file') {
       logger.debug('deleteItemHandler', 'Deleting file', {
         fileId: resolvedItem.id,
-        noteTitle: (resolvedItem.item as any).title,
+        fileTitle: (resolvedItem.item as any).title,
       });
       await storage.deleteFiles([resolvedItem.id]);
       logger.info('deleteItemHandler', 'File deleted successfully', {

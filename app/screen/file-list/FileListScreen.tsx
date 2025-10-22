@@ -319,7 +319,7 @@ function FileListScreenContent() {
         <FileListEmptyState
           containerStyle={staticStyles.centered}
           messageStyle={dynamicStyles.emptyMessage}
-          message={searchQuery ? `No results for "${searchQuery}"` : 'This folder is empty. Tap the + icon to create a new note or folder.'}
+          message={searchQuery ? `No results for "${searchQuery}"` : 'This folder is empty. Tap the + icon to create a new file or folder.'}
         />
       ) : (
         <FlatList
