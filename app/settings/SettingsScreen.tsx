@@ -204,12 +204,12 @@ function SettingsScreen() {
             <ListItem.Container>
               <ListItem.Title><Text style={{...typography.body, color: colors.text}}>ノートコンテキストをLLMに送信</Text></ListItem.Title>
               <Switch
-                value={settings.sendNoteContextToLLM}
-                onValueChange={(value: boolean) => updateSettings({ sendNoteContextToLLM: value })}
+                value={settings.sendFileContextToLLM}
+                onValueChange={(value: boolean) => updateSettings({ sendFileContextToLLM: value })}
               />
             </ListItem.Container>
 
-            {settings.sendNoteContextToLLM && renderPicker(
+            {settings.sendFileContextToLLM && renderPicker(
               'コンテキスト階層の深さ',
               String(settings.llmContextMaxDepth),
               [

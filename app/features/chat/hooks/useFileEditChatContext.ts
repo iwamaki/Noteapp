@@ -1,7 +1,7 @@
 /**
- * @file useNoteEditChatContext.ts
- * @summary NoteEditScreen用のチャットコンテキストプロバイダーフック
- * @responsibility ノート編集画面のコンテキストをChatServiceに提供し、
+ * @file useFileEditChatContext.ts
+ * @summary FileEditScreen用のチャットコンテキストプロバイダーフック
+ * @responsibility ファイル編集画面のコンテキストをChatServiceに提供し、
  *                 コンテキスト依存のコマンドハンドラを登録する
  */
 import { useEffect } from 'react';
@@ -12,7 +12,7 @@ import { useSettingsStore } from '../../../settings/settingsStore';
 import { editFileHandler } from '../handlers/editFileHandler';
 import { CommandHandlerContext } from '../handlers/types';
 
-interface UseNoteEditChatContextParams {
+interface UseFileEditChatContextParams {
   title: string;
   content: string;
   path: string;
@@ -32,17 +32,17 @@ const buildFullPath = (path: string, title: string): string => {
 };
 
 /**
- * ノート編集画面用のチャットコンテキストプロバイダーフック
+ * ファイル編集画面用のチャットコンテキストプロバイダーフック
  *
- * このフックは、ノート編集画面のコンテキストをChatServiceに登録し、
+ * このフックは、ファイル編集画面のコンテキストをChatServiceに登録し、
  * LLMからのコマンドを処理するハンドラを提供します。
  */
-export const useNoteEditChatContext = ({
+export const useFileEditChatContext = ({
   title,
   content,
   path,
   setContent,
-}: UseNoteEditChatContextParams): void => {
+}: UseFileEditChatContextParams): void => {
   const { settings } = useSettingsStore();
 
   useEffect(() => {
@@ -51,16 +51,16 @@ export const useNoteEditChatContext = ({
     // ActiveScreenContextProviderの実装
     const contextProvider: ActiveScreenContextProvider = {
       getScreenContext: async (): Promise<ActiveScreenContext> => {
-        logger.debug('chatService', '[useNoteEditChatContext] Getting screen context', {
+        logger.debug('chatService', '[useFileEditChatContext] Getting screen context', {
           fullPath,
           contentLength: content.length,
-          sendNoteContextToLLM: settings.sendNoteContextToLLM,
+          sendFileContextToLLM: settings.sendFileContextToLLM,
         });
 
         return {
           name: 'edit',
           filePath: fullPath,
-          fileContent: settings.sendNoteContextToLLM ? content : '',
+          fileContent: settings.sendFileContextToLLM ? content : '',
         };
       },
     };
@@ -77,14 +77,14 @@ export const useNoteEditChatContext = ({
     };
 
     // ChatServiceにプロバイダーとハンドラを登録
-    logger.debug('chatService', '[useNoteEditChatContext] Registering context provider and handlers');
+    logger.debug('chatService', '[useFileEditChatContext] Registering context provider and handlers');
     ChatService.registerActiveContextProvider(contextProvider);
     ChatService.registerCommandHandlers(commandHandlers);
 
     // クリーンアップ: アンマウント時にプロバイダーを解除
     return () => {
-      logger.debug('chatService', '[useNoteEditChatContext] Unregistering context provider');
+      logger.debug('chatService', '[useFileEditChatContext] Unregistering context provider');
       ChatService.unregisterActiveContextProvider();
     };
-  }, [title, content, path, setContent, settings.sendNoteContextToLLM]);
+  }, [title, content, path, setContent, settings.sendFileContextToLLM]);
 };
