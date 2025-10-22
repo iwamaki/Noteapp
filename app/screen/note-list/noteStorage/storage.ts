@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Note, Folder } from '@shared/types/note';
+import { File, Folder } from '@shared/types/file';
 import StorageUtils from '@data/asyncStorageUtils';
 
 const NOTES_STORAGE_KEY = '@notes';
@@ -14,18 +14,18 @@ export class StorageError extends Error {
 }
 
 // --- Raw Note Methods ---
-export const getAllNotesRaw = async (): Promise<Note[]> => {
+export const getAllNotesRaw = async (): Promise<File[]> => {
   try {
     const jsonValue = await AsyncStorage.getItem(NOTES_STORAGE_KEY);
     const notes = await StorageUtils.safeJsonParse<any[]>(jsonValue);
     if (!notes) return [];
-    return notes.map(note => StorageUtils.convertDates(note) as Note);
+    return notes.map(note => StorageUtils.convertDates(note) as File);
   } catch (e) {
     throw new StorageError('Failed to retrieve notes', 'FETCH_ERROR', e);
   }
 };
 
-export const saveAllNotes = async (notes: Note[]): Promise<void> => {
+export const saveAllNotes = async (notes: File[]): Promise<void> => {
   try {
     await AsyncStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(notes));
   } catch (e) {

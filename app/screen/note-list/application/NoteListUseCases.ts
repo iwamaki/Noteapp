@@ -6,7 +6,7 @@
  * 実際のビジネスユースケースを実装します。
  */
 
-import { Note, Folder, CreateNoteData, CreateFolderData } from '@shared/types/note';
+import { File, Folder, CreateFileData, CreateFolderData } from '@shared/types/file';
 import { NoteRepository } from '../infrastructure/NoteRepository';
 import { FolderRepository } from '../infrastructure/FolderRepository';
 import { NoteDomainService } from '../domain/NoteDomainService';
@@ -179,7 +179,7 @@ export class NoteListUseCases {
     }
 
     // 4. 更新
-    const updatedNote: Note = {
+    const updatedNote: File = {
       ...note,
       title: newTitle,
       updatedAt: new Date(),
@@ -223,12 +223,12 @@ export class NoteListUseCases {
           updatedAt: new Date(),
         };
       })
-      .filter((n): n is Note => n !== null);
+      .filter((n): n is File => n !== null);
 
     // 3. フォルダを移動
     const allFolders = await FolderRepository.getAll();
     const foldersToUpdate: Folder[] = [];
-    const notesInFolders: Note[] = [];
+    const notesInFolders: File[] = [];
 
     for (const folderId of folderIds) {
       const folder = allFolders.find(f => f.id === folderId);
@@ -305,7 +305,7 @@ export class NoteListUseCases {
     inputPath: string,
     content: string = '',
     tags: string[] = []
-  ): Promise<Note> {
+  ): Promise<File> {
     // 1. パスをパース
     const { folders, fileName } = PathService.parseInputPath(inputPath);
 
@@ -354,7 +354,7 @@ export class NoteListUseCases {
     }
 
     // 5. ノートを作成
-    const noteData: CreateNoteData = {
+    const noteData: CreateFileData = {
       title: fileName,
       content,
       tags,
@@ -398,7 +398,7 @@ export class NoteListUseCases {
    * @param noteIds コピーするノートIDの配列
    * @returns コピーされたノートの配列
    */
-  static async copyNotes(noteIds: string[]): Promise<Note[]> {
+  static async copyNotes(noteIds: string[]): Promise<File[]> {
     // バリデーション
     const validation = await NoteDomainService.validateCopyOperation(noteIds);
     if (!validation.valid) {

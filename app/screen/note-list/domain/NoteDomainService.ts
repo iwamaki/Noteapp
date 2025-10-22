@@ -6,7 +6,7 @@
  * データアクセスはRepositoryを通じて行います。
  */
 
-import { Note } from '@shared/types/note';
+import { File } from '@shared/types/file';
 import { NoteRepository } from '../infrastructure/NoteRepository';
 
 /**
@@ -22,7 +22,7 @@ export interface ValidationResult {
  */
 export interface DuplicateCheckResult {
   isDuplicate: boolean;
-  existing?: Note;
+  existing?: File;
 }
 
 /**
@@ -188,7 +188,7 @@ export class NoteDomainService {
    * @param allNotes 全ノートの配列
    * @returns パス内の全ノート
    */
-  static getNotesInPath(folderPath: string, allNotes: Note[]): Note[] {
+  static getNotesInPath(folderPath: string, allNotes: File[]): File[] {
     return allNotes.filter(note => note.path.startsWith(folderPath));
   }
 }

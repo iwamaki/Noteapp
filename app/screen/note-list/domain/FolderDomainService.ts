@@ -6,7 +6,7 @@
  * データアクセスはRepositoryを通じて行います。
  */
 
-import { Folder, Note } from '@shared/types/note';
+import { Folder, File } from '@shared/types/file';
 import { FolderRepository } from '../infrastructure/FolderRepository';
 import { PathService } from '../../../services/PathService';
 
@@ -112,7 +112,7 @@ export class FolderDomainService {
    * @param allNotes 全ノートの配列
    * @returns 子ノートの配列
    */
-  static getChildNotes(folderPath: string, allNotes: Note[]): Note[] {
+  static getChildNotes(folderPath: string, allNotes: File[]): File[] {
     const normalizedFolderPath = PathService.normalizePath(folderPath);
     return allNotes.filter(
       note => PathService.normalizePath(note.path) === normalizedFolderPath
@@ -158,11 +158,11 @@ export class FolderDomainService {
    */
   static getAllDescendantNotes(
     folderPath: string,
-    allNotes: Note[],
+    allNotes: File[],
     allFolders: Folder[]
-  ): Note[] {
+  ): File[] {
     const normalizedPath = PathService.normalizePath(folderPath);
-    const notes: Note[] = [];
+    const notes: File[] = [];
 
     // 直接の子ノート
     notes.push(...this.getChildNotes(normalizedPath, allNotes));
@@ -186,7 +186,7 @@ export class FolderDomainService {
    */
   static isFolderEmpty(
     folderPath: string,
-    allNotes: Note[],
+    allNotes: File[],
     allFolders: Folder[]
   ): boolean {
     const childNotes = this.getChildNotes(folderPath, allNotes);

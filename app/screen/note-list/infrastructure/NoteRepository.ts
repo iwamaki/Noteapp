@@ -6,7 +6,7 @@
  * ビジネスロジックは含まず、純粋にデータの永続化のみを担当します。
  */
 
-import { Note, CreateNoteData } from '@shared/types/note';
+import { File, CreateFileData } from '@shared/types/file';
 import { getAllNotesRaw, saveAllNotes } from '../noteStorage/storage';
 import * as NoteFns from '../noteStorage/note';
 
@@ -19,7 +19,7 @@ export class NoteRepository {
    * 全ノートを取得
    * @returns 全ノートの配列（更新日時降順）
    */
-  static async getAll(): Promise<Note[]> {
+  static async getAll(): Promise<File[]> {
     return await NoteFns.getAllNotes();
   }
 
@@ -28,7 +28,7 @@ export class NoteRepository {
    * @param path フォルダパス
    * @returns パス内のノートの配列
    */
-  static async getByPath(path: string): Promise<Note[]> {
+  static async getByPath(path: string): Promise<File[]> {
     return await NoteFns.getNotesByPath(path);
   }
 
@@ -37,7 +37,7 @@ export class NoteRepository {
    * @param noteId ノートID
    * @returns ノート、見つからない場合はundefined
    */
-  static async getById(noteId: string): Promise<Note | undefined> {
+  static async getById(noteId: string): Promise<File | undefined> {
     const allNotes = await getAllNotesRaw();
     return allNotes.find(note => note.id === noteId);
   }
@@ -47,7 +47,7 @@ export class NoteRepository {
    * @param noteIds ノートIDの配列
    * @returns 見つかったノートの配列
    */
-  static async getByIds(noteIds: string[]): Promise<Note[]> {
+  static async getByIds(noteIds: string[]): Promise<File[]> {
     const allNotes = await getAllNotesRaw();
     return allNotes.filter(note => noteIds.includes(note.id));
   }
@@ -57,7 +57,7 @@ export class NoteRepository {
    * @param data ノート作成データ
    * @returns 作成されたノート
    */
-  static async create(data: CreateNoteData): Promise<Note> {
+  static async create(data: CreateFileData): Promise<File> {
     return await NoteFns.createNote(data);
   }
 
@@ -66,7 +66,7 @@ export class NoteRepository {
    * @param note 更新するノート
    * @returns 更新されたノート
    */
-  static async update(note: Note): Promise<Note> {
+  static async update(note: File): Promise<File> {
     const allNotes = await getAllNotesRaw();
     const noteIndex = allNotes.findIndex(n => n.id === note.id);
 
@@ -107,7 +107,7 @@ export class NoteRepository {
    * 既存のノートをIDでマッチングして更新します。
    * 見つからないIDは無視されます。
    */
-  static async batchUpdate(notes: Note[]): Promise<void> {
+  static async batchUpdate(notes: File[]): Promise<void> {
     const allNotes = await getAllNotesRaw();
     const noteMap = new Map(notes.map(n => [n.id, n]));
 
@@ -131,7 +131,7 @@ export class NoteRepository {
    * @param sourceIds コピー元ノートIDの配列
    * @returns コピーされたノートの配列
    */
-  static async copy(sourceIds: string[]): Promise<Note[]> {
+  static async copy(sourceIds: string[]): Promise<File[]> {
     return await NoteFns.copyNotes(sourceIds);
   }
 
@@ -141,7 +141,7 @@ export class NoteRepository {
    * @param newPath 新しいフォルダパス
    * @returns 更新されたノート
    */
-  static async move(noteId: string, newPath: string): Promise<Note> {
+  static async move(noteId: string, newPath: string): Promise<File> {
     return await NoteFns.moveNote(noteId, newPath);
   }
 
@@ -153,7 +153,7 @@ export class NoteRepository {
    * 通常はbatchUpdate()を使用してください。
    * @internal
    */
-  static async saveAll(notes: Note[]): Promise<void> {
+  static async saveAll(notes: File[]): Promise<void> {
     await saveAllNotes(notes);
   }
 }
