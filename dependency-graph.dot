@@ -73,7 +73,7 @@ strict digraph "dependency-cruiser output"{
     "app/features/chat/handlers/itemResolver.ts" -> "app/screen/note-list/noteStorage/index.ts"
     "app/features/chat/handlers/itemResolver.ts" -> "app/services/PathService.ts"
     "app/features/chat/handlers/itemResolver.ts" -> "app/utils/logger.ts"
-    "app/features/chat/handlers/itemResolver.ts" -> "shared/types/note.ts"
+    "app/features/chat/handlers/itemResolver.ts" -> "shared/types/file.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/handlers" {label="handlers" "app/features/chat/handlers/moveItemHandler.ts" [label=<moveItemHandler.ts> tooltip="moveItemHandler.ts" URL="app/features/chat/handlers/moveItemHandler.ts" fillcolor="#ddfeff"] } } } }
     "app/features/chat/handlers/moveItemHandler.ts" -> "app/screen/note-list/noteStorage/index.ts"
     "app/features/chat/handlers/moveItemHandler.ts" -> "app/services/PathService.ts"
@@ -106,7 +106,7 @@ strict digraph "dependency-cruiser output"{
     "app/features/chat/hooks/useNoteListChatContext.ts" -> "app/features/chat/handlers/types.ts"
     "app/features/chat/hooks/useNoteListChatContext.ts" -> "app/features/chat/index.ts"
     "app/features/chat/hooks/useNoteListChatContext.ts" -> "app/features/chat/types.ts"
-    "app/features/chat/hooks/useNoteListChatContext.ts" -> "shared/types/note.ts"
+    "app/features/chat/hooks/useNoteListChatContext.ts" -> "shared/types/file.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" "app/features/chat/index.ts" [label=<index.ts> tooltip="index.ts" URL="app/features/chat/index.ts" fillcolor="#ddfeff"] } } }
     "app/features/chat/index.ts" -> "app/utils/logger.ts"
     "app/features/chat/index.ts" -> "app/features/chat/llmService/api.ts"
@@ -262,12 +262,12 @@ strict digraph "dependency-cruiser output"{
     "app/screen/note-edit/repositories/AsyncStorageNoteRepository.ts" -> "app/screen/note-edit/types/index.ts"
     "app/screen/note-edit/repositories/AsyncStorageNoteRepository.ts" -> "app/screen/note-edit/repositories/NoteRepository.ts"
     "app/screen/note-edit/repositories/AsyncStorageNoteRepository.ts" -> "app/screen/note-edit/repositories/noteStorage.ts"
-    "app/screen/note-edit/repositories/AsyncStorageNoteRepository.ts" -> "shared/types/note.ts"
+    "app/screen/note-edit/repositories/AsyncStorageNoteRepository.ts" -> "shared/types/file.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-edit" {label="note-edit" subgraph "cluster_app/screen/note-edit/repositories" {label="repositories" "app/screen/note-edit/repositories/NoteRepository.ts" [label=<NoteRepository.ts> tooltip="NoteRepository.ts" URL="app/screen/note-edit/repositories/NoteRepository.ts" fillcolor="#ddfeff"] } } } }
     "app/screen/note-edit/repositories/NoteRepository.ts" -> "app/screen/note-edit/types/index.ts"
-    "app/screen/note-edit/repositories/NoteRepository.ts" -> "shared/types/note.ts"
+    "app/screen/note-edit/repositories/NoteRepository.ts" -> "shared/types/file.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-edit" {label="note-edit" subgraph "cluster_app/screen/note-edit/repositories" {label="repositories" "app/screen/note-edit/repositories/noteStorage.ts" [label=<noteStorage.ts> tooltip="noteStorage.ts" URL="app/screen/note-edit/repositories/noteStorage.ts" fillcolor="#ddfeff"] } } } }
-    "app/screen/note-edit/repositories/noteStorage.ts" -> "shared/types/note.ts"
+    "app/screen/note-edit/repositories/noteStorage.ts" -> "shared/types/file.ts"
     "app/screen/note-edit/repositories/noteStorage.ts" -> "app/data/asyncStorageUtils.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-edit" {label="note-edit" subgraph "cluster_app/screen/note-edit/services" {label="services" "app/screen/note-edit/services/ErrorService.ts" [label=<ErrorService.ts> tooltip="ErrorService.ts" URL="app/screen/note-edit/services/ErrorService.ts" fillcolor="#ddfeff"] } } } }
     "app/screen/note-edit/services/ErrorService.ts" -> "app/screen/note-edit/types/index.ts"
@@ -277,39 +277,41 @@ strict digraph "dependency-cruiser output"{
     "app/screen/note-edit/services/NoteService.ts" -> "app/screen/note-edit/types/index.ts"
     "app/screen/note-edit/services/NoteService.ts" -> "app/screen/note-edit/services/ErrorService.ts"
     "app/screen/note-edit/services/NoteService.ts" -> "app/screen/note-edit/services/ValidationService.ts"
-    "app/screen/note-edit/services/NoteService.ts" -> "shared/types/note.ts"
+    "app/screen/note-edit/services/NoteService.ts" -> "shared/types/file.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-edit" {label="note-edit" subgraph "cluster_app/screen/note-edit/services" {label="services" "app/screen/note-edit/services/ValidationService.ts" [label=<ValidationService.ts> tooltip="ValidationService.ts" URL="app/screen/note-edit/services/ValidationService.ts" fillcolor="#ddfeff"] } } } }
     "app/screen/note-edit/services/ValidationService.ts" -> "app/screen/note-edit/types/index.ts"
-    "app/screen/note-edit/services/ValidationService.ts" -> "shared/types/note.ts"
+    "app/screen/note-edit/services/ValidationService.ts" -> "shared/types/file.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-edit" {label="note-edit" subgraph "cluster_app/screen/note-edit/stores" {label="stores" "app/screen/note-edit/stores/HistoryManager.ts" [label=<HistoryManager.ts> tooltip="HistoryManager.ts" URL="app/screen/note-edit/stores/HistoryManager.ts" fillcolor="#ddfeff"] } } } }
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-edit" {label="note-edit" subgraph "cluster_app/screen/note-edit/stores" {label="stores" "app/screen/note-edit/stores/NoteEditorStore.ts" [label=<NoteEditorStore.ts> tooltip="NoteEditorStore.ts" URL="app/screen/note-edit/stores/NoteEditorStore.ts" fillcolor="#ddfeff"] } } } }
     "app/screen/note-edit/stores/NoteEditorStore.ts" -> "app/screen/note-edit/services/NoteService.ts"
     "app/screen/note-edit/stores/NoteEditorStore.ts" -> "app/screen/note-edit/types/index.ts"
     "app/screen/note-edit/stores/NoteEditorStore.ts" -> "app/screen/note-edit/stores/HistoryManager.ts"
-    "app/screen/note-edit/stores/NoteEditorStore.ts" -> "shared/types/note.ts"
+    "app/screen/note-edit/stores/NoteEditorStore.ts" -> "shared/types/file.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-edit" {label="note-edit" subgraph "cluster_app/screen/note-edit/types" {label="types" "app/screen/note-edit/types/index.ts" [label=<index.ts> tooltip="index.ts" URL="app/screen/note-edit/types/index.ts" fillcolor="#ddfeff"] } } } }
-    "app/screen/note-edit/types/index.ts" -> "shared/types/note.ts"
+    "app/screen/note-edit/types/index.ts" -> "shared/types/file.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-list" {label="note-list" "app/screen/note-list/NoteListScreen.tsx" [label=<NoteListScreen.tsx> tooltip="NoteListScreen.tsx" URL="app/screen/note-list/NoteListScreen.tsx" fillcolor="#bbfeff"] } } }
     "app/screen/note-list/NoteListScreen.tsx" -> "app/components/MainContainer.tsx"
     "app/screen/note-list/NoteListScreen.tsx" -> "app/contexts/KeyboardHeightContext.tsx"
     "app/screen/note-list/NoteListScreen.tsx" -> "app/design/theme/ThemeContext.tsx"
     "app/screen/note-list/NoteListScreen.tsx" -> "app/features/chat/hooks/useNoteListChatContext.ts"
+    "app/screen/note-list/NoteListScreen.tsx" -> "app/navigation/types.ts"
     "app/screen/note-list/NoteListScreen.tsx" -> "app/screen/note-list/components/CreateItemModal.tsx"
     "app/screen/note-list/NoteListScreen.tsx" -> "app/screen/note-list/components/NoteListEmptyState.tsx"
     "app/screen/note-list/NoteListScreen.tsx" -> "app/screen/note-list/components/NoteListSearchBar.tsx"
     "app/screen/note-list/NoteListScreen.tsx" -> "app/screen/note-list/components/OverflowMenu.tsx"
     "app/screen/note-list/NoteListScreen.tsx" -> "app/screen/note-list/components/RenameItemModal.tsx"
     "app/screen/note-list/NoteListScreen.tsx" -> "app/screen/note-list/components/TreeListItem.tsx"
-    "app/screen/note-list/NoteListScreen.tsx" -> "app/screen/note-list/hooks/useNoteList.ts"
+    "app/screen/note-list/NoteListScreen.tsx" -> "app/screen/note-list/context/index.ts"
     "app/screen/note-list/NoteListScreen.tsx" -> "app/screen/note-list/hooks/useNoteListHeader.tsx"
     "app/screen/note-list/NoteListScreen.tsx" -> "app/screen/note-list/hooks/useSearch.ts"
+    "app/screen/note-list/NoteListScreen.tsx" -> "shared/types/file.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-list" {label="note-list" subgraph "cluster_app/screen/note-list/application" {label="application" "app/screen/note-list/application/NoteListUseCases.ts" [label=<NoteListUseCases.ts> tooltip="NoteListUseCases.ts" URL="app/screen/note-list/application/NoteListUseCases.ts" fillcolor="#ddfeff"] } } } }
     "app/screen/note-list/application/NoteListUseCases.ts" -> "app/services/PathService.ts"
     "app/screen/note-list/application/NoteListUseCases.ts" -> "app/screen/note-list/domain/FolderDomainService.ts"
     "app/screen/note-list/application/NoteListUseCases.ts" -> "app/screen/note-list/domain/NoteDomainService.ts"
     "app/screen/note-list/application/NoteListUseCases.ts" -> "app/screen/note-list/infrastructure/FolderRepository.ts"
     "app/screen/note-list/application/NoteListUseCases.ts" -> "app/screen/note-list/infrastructure/NoteRepository.ts"
-    "app/screen/note-list/application/NoteListUseCases.ts" -> "shared/types/note.ts"
+    "app/screen/note-list/application/NoteListUseCases.ts" -> "shared/types/file.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-list" {label="note-list" subgraph "cluster_app/screen/note-list/application" {label="application" "app/screen/note-list/application/index.ts" [label=<index.ts> tooltip="index.ts" URL="app/screen/note-list/application/index.ts" fillcolor="#ddfeff"] } } } }
     "app/screen/note-list/application/index.ts" -> "app/screen/note-list/application/NoteListUseCases.ts" [arrowhead="inv"]
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-list" {label="note-list" subgraph "cluster_app/screen/note-list/components" {label="components" "app/screen/note-list/components/CreateItemModal.tsx" [label=<CreateItemModal.tsx> tooltip="CreateItemModal.tsx" URL="app/screen/note-list/components/CreateItemModal.tsx" fillcolor="#bbfeff"] } } } }
@@ -330,16 +332,17 @@ strict digraph "dependency-cruiser output"{
     "app/screen/note-list/components/TreeListItem.tsx" -> "app/components/ListItem.tsx"
     "app/screen/note-list/components/TreeListItem.tsx" -> "app/design/theme/ThemeContext.tsx"
     "app/screen/note-list/components/TreeListItem.tsx" -> "app/screen/note-list/utils/treeUtils.ts"
-    "app/screen/note-list/components/TreeListItem.tsx" -> "shared/types/note.ts"
+    "app/screen/note-list/components/TreeListItem.tsx" -> "shared/types/file.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-list" {label="note-list" subgraph "cluster_app/screen/note-list/context" {label="context" "app/screen/note-list/context/NoteListContext.tsx" [label=<NoteListContext.tsx> tooltip="NoteListContext.tsx" URL="app/screen/note-list/context/NoteListContext.tsx" fillcolor="#bbfeff"] } } } }
     "app/screen/note-list/context/NoteListContext.tsx" -> "app/screen/note-list/context/types.ts"
-    "app/screen/note-list/context/NoteListContext.tsx" -> "shared/types/note.ts"
+    "app/screen/note-list/context/NoteListContext.tsx" -> "shared/types/file.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-list" {label="note-list" subgraph "cluster_app/screen/note-list/context" {label="context" "app/screen/note-list/context/NoteListProvider.tsx" [label=<NoteListProvider.tsx> tooltip="NoteListProvider.tsx" URL="app/screen/note-list/context/NoteListProvider.tsx" fillcolor="#bbfeff"] } } } }
     "app/screen/note-list/context/NoteListProvider.tsx" -> "app/screen/note-list/application/NoteListUseCases.ts"
     "app/screen/note-list/context/NoteListProvider.tsx" -> "app/screen/note-list/infrastructure/FolderRepository.ts"
     "app/screen/note-list/context/NoteListProvider.tsx" -> "app/screen/note-list/infrastructure/NoteRepository.ts"
     "app/screen/note-list/context/NoteListProvider.tsx" -> "app/screen/note-list/context/NoteListContext.tsx"
     "app/screen/note-list/context/NoteListProvider.tsx" -> "app/screen/note-list/context/noteListReducer.ts"
+    "app/screen/note-list/context/NoteListProvider.tsx" -> "shared/types/file.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-list" {label="note-list" subgraph "cluster_app/screen/note-list/context" {label="context" "app/screen/note-list/context/index.ts" [label=<index.ts> tooltip="index.ts" URL="app/screen/note-list/context/index.ts" fillcolor="#ddfeff"] } } } }
     "app/screen/note-list/context/index.ts" -> "app/screen/note-list/context/NoteListContext.tsx" [arrowhead="inv"]
     "app/screen/note-list/context/index.ts" -> "app/screen/note-list/context/NoteListProvider.tsx" [arrowhead="inv"]
@@ -351,62 +354,34 @@ strict digraph "dependency-cruiser output"{
     "app/screen/note-list/context/noteListReducer.ts" -> "app/screen/note-list/context/types.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-list" {label="note-list" subgraph "cluster_app/screen/note-list/context" {label="context" "app/screen/note-list/context/types.ts" [label=<types.ts> tooltip="types.ts" URL="app/screen/note-list/context/types.ts" fillcolor="#ddfeff"] } } } }
     "app/screen/note-list/context/types.ts" -> "app/screen/note-list/utils/treeUtils.ts"
-    "app/screen/note-list/context/types.ts" -> "shared/types/note.ts"
+    "app/screen/note-list/context/types.ts" -> "shared/types/file.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-list" {label="note-list" subgraph "cluster_app/screen/note-list/context" {label="context" "app/screen/note-list/context/useNoteListContext.ts" [label=<useNoteListContext.ts> tooltip="useNoteListContext.ts" URL="app/screen/note-list/context/useNoteListContext.ts" fillcolor="#ddfeff"] } } } }
     "app/screen/note-list/context/useNoteListContext.ts" -> "app/screen/note-list/context/NoteListContext.tsx"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-list" {label="note-list" subgraph "cluster_app/screen/note-list/domain" {label="domain" "app/screen/note-list/domain/FolderDomainService.ts" [label=<FolderDomainService.ts> tooltip="FolderDomainService.ts" URL="app/screen/note-list/domain/FolderDomainService.ts" fillcolor="#ddfeff"] } } } }
     "app/screen/note-list/domain/FolderDomainService.ts" -> "app/services/PathService.ts"
     "app/screen/note-list/domain/FolderDomainService.ts" -> "app/screen/note-list/infrastructure/FolderRepository.ts"
-    "app/screen/note-list/domain/FolderDomainService.ts" -> "shared/types/note.ts"
+    "app/screen/note-list/domain/FolderDomainService.ts" -> "shared/types/file.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-list" {label="note-list" subgraph "cluster_app/screen/note-list/domain" {label="domain" "app/screen/note-list/domain/NoteDomainService.ts" [label=<NoteDomainService.ts> tooltip="NoteDomainService.ts" URL="app/screen/note-list/domain/NoteDomainService.ts" fillcolor="#ddfeff"] } } } }
     "app/screen/note-list/domain/NoteDomainService.ts" -> "app/screen/note-list/infrastructure/NoteRepository.ts"
-    "app/screen/note-list/domain/NoteDomainService.ts" -> "shared/types/note.ts"
+    "app/screen/note-list/domain/NoteDomainService.ts" -> "shared/types/file.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-list" {label="note-list" subgraph "cluster_app/screen/note-list/domain" {label="domain" "app/screen/note-list/domain/index.ts" [label=<index.ts> tooltip="index.ts" URL="app/screen/note-list/domain/index.ts" fillcolor="#ddfeff"] } } } }
     "app/screen/note-list/domain/index.ts" -> "app/screen/note-list/domain/FolderDomainService.ts" [arrowhead="inv"]
     "app/screen/note-list/domain/index.ts" -> "app/screen/note-list/domain/NoteDomainService.ts" [arrowhead="inv"]
-    subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-list" {label="note-list" subgraph "cluster_app/screen/note-list/hooks" {label="hooks" "app/screen/note-list/hooks/useErrorHandler.ts" [label=<useErrorHandler.ts> tooltip="useErrorHandler.ts" URL="app/screen/note-list/hooks/useErrorHandler.ts" fillcolor="#ddfeff"] } } } }
-    "app/screen/note-list/hooks/useErrorHandler.ts" -> "app/screen/note-list/noteStorage/storage.ts"
-    subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-list" {label="note-list" subgraph "cluster_app/screen/note-list/hooks" {label="hooks" "app/screen/note-list/hooks/useItemActions.ts" [label=<useItemActions.ts> tooltip="useItemActions.ts" URL="app/screen/note-list/hooks/useItemActions.ts" fillcolor="#ddfeff"] } } } }
-    "app/screen/note-list/hooks/useItemActions.ts" -> "app/navigation/types.ts"
-    "app/screen/note-list/hooks/useItemActions.ts" -> "app/services/PathService.ts"
-    "app/screen/note-list/hooks/useItemActions.ts" -> "app/screen/note-list/services/noteService.ts"
-    "app/screen/note-list/hooks/useItemActions.ts" -> "app/screen/note-list/hooks/useErrorHandler.ts"
-    "app/screen/note-list/hooks/useItemActions.ts" -> "shared/types/note.ts"
-    subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-list" {label="note-list" subgraph "cluster_app/screen/note-list/hooks" {label="hooks" "app/screen/note-list/hooks/useItemSelection.ts" [label=<useItemSelection.ts> tooltip="useItemSelection.ts" URL="app/screen/note-list/hooks/useItemSelection.ts" fillcolor="#ddfeff"] } } } }
-    "app/screen/note-list/hooks/useItemSelection.ts" -> "shared/types/note.ts"
-    subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-list" {label="note-list" subgraph "cluster_app/screen/note-list/hooks" {label="hooks" "app/screen/note-list/hooks/useModalManager.ts" [label=<useModalManager.ts> tooltip="useModalManager.ts" URL="app/screen/note-list/hooks/useModalManager.ts" fillcolor="#ddfeff"] } } } }
-    "app/screen/note-list/hooks/useModalManager.ts" -> "app/screen/note-list/utils/treeUtils.ts"
-    "app/screen/note-list/hooks/useModalManager.ts" -> "shared/types/note.ts"
-    subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-list" {label="note-list" subgraph "cluster_app/screen/note-list/hooks" {label="hooks" "app/screen/note-list/hooks/useNoteList.ts" [label=<useNoteList.ts> tooltip="useNoteList.ts" URL="app/screen/note-list/hooks/useNoteList.ts" fillcolor="#ddfeff"] } } } }
-    "app/screen/note-list/hooks/useNoteList.ts" -> "app/navigation/types.ts"
-    "app/screen/note-list/hooks/useNoteList.ts" -> "app/screen/note-list/hooks/useItemActions.ts"
-    "app/screen/note-list/hooks/useNoteList.ts" -> "app/screen/note-list/hooks/useItemSelection.ts"
-    "app/screen/note-list/hooks/useNoteList.ts" -> "app/screen/note-list/hooks/useModalManager.ts"
-    "app/screen/note-list/hooks/useNoteList.ts" -> "app/screen/note-list/hooks/useNoteTree.ts"
-    "app/screen/note-list/hooks/useNoteList.ts" -> "shared/types/note.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-list" {label="note-list" subgraph "cluster_app/screen/note-list/hooks" {label="hooks" "app/screen/note-list/hooks/useNoteListHeader.tsx" [label=<useNoteListHeader.tsx> tooltip="useNoteListHeader.tsx" URL="app/screen/note-list/hooks/useNoteListHeader.tsx" fillcolor="#bbfeff"] } } } }
     "app/screen/note-list/hooks/useNoteListHeader.tsx" -> "app/components/CustomHeader.tsx"
     "app/screen/note-list/hooks/useNoteListHeader.tsx" -> "app/design/theme/ThemeContext.tsx"
     "app/screen/note-list/hooks/useNoteListHeader.tsx" -> "app/navigation/types.ts"
-    subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-list" {label="note-list" subgraph "cluster_app/screen/note-list/hooks" {label="hooks" "app/screen/note-list/hooks/useNoteTree.ts" [label=<useNoteTree.ts> tooltip="useNoteTree.ts" URL="app/screen/note-list/hooks/useNoteTree.ts" fillcolor="#ddfeff"] } } } }
-    "app/screen/note-list/hooks/useNoteTree.ts" -> "app/services/PathService.ts"
-    "app/screen/note-list/hooks/useNoteTree.ts" -> "app/settings/settingsStore.ts"
-    "app/screen/note-list/hooks/useNoteTree.ts" -> "app/utils/debugUtils.ts"
-    "app/screen/note-list/hooks/useNoteTree.ts" -> "app/utils/logger.ts"
-    "app/screen/note-list/hooks/useNoteTree.ts" -> "app/screen/note-list/noteStorage/index.ts"
-    "app/screen/note-list/hooks/useNoteTree.ts" -> "app/screen/note-list/utils/treeUtils.ts"
-    "app/screen/note-list/hooks/useNoteTree.ts" -> "shared/types/note.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-list" {label="note-list" subgraph "cluster_app/screen/note-list/hooks" {label="hooks" "app/screen/note-list/hooks/useSearch.ts" [label=<useSearch.ts> tooltip="useSearch.ts" URL="app/screen/note-list/hooks/useSearch.ts" fillcolor="#ddfeff"] } } } }
-    "app/screen/note-list/hooks/useSearch.ts" -> "shared/types/note.ts"
+    "app/screen/note-list/hooks/useSearch.ts" -> "shared/types/file.ts"
     "app/screen/note-list/hooks/useSearch.ts" -> "app/screen/note-list/utils/treeUtils.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-list" {label="note-list" subgraph "cluster_app/screen/note-list/infrastructure" {label="infrastructure" "app/screen/note-list/infrastructure/FolderRepository.ts" [label=<FolderRepository.ts> tooltip="FolderRepository.ts" URL="app/screen/note-list/infrastructure/FolderRepository.ts" fillcolor="#ddfeff"] } } } }
     "app/screen/note-list/infrastructure/FolderRepository.ts" -> "app/screen/note-list/noteStorage/folder.ts"
     "app/screen/note-list/infrastructure/FolderRepository.ts" -> "app/screen/note-list/noteStorage/storage.ts"
-    "app/screen/note-list/infrastructure/FolderRepository.ts" -> "shared/types/note.ts"
+    "app/screen/note-list/infrastructure/FolderRepository.ts" -> "shared/types/file.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-list" {label="note-list" subgraph "cluster_app/screen/note-list/infrastructure" {label="infrastructure" "app/screen/note-list/infrastructure/NoteRepository.ts" [label=<NoteRepository.ts> tooltip="NoteRepository.ts" URL="app/screen/note-list/infrastructure/NoteRepository.ts" fillcolor="#ddfeff"] } } } }
     "app/screen/note-list/infrastructure/NoteRepository.ts" -> "app/screen/note-list/noteStorage/note.ts"
     "app/screen/note-list/infrastructure/NoteRepository.ts" -> "app/screen/note-list/noteStorage/storage.ts"
-    "app/screen/note-list/infrastructure/NoteRepository.ts" -> "shared/types/note.ts"
+    "app/screen/note-list/infrastructure/NoteRepository.ts" -> "shared/types/file.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-list" {label="note-list" subgraph "cluster_app/screen/note-list/infrastructure" {label="infrastructure" "app/screen/note-list/infrastructure/index.ts" [label=<index.ts> tooltip="index.ts" URL="app/screen/note-list/infrastructure/index.ts" fillcolor="#ddfeff"] } } } }
     "app/screen/note-list/infrastructure/index.ts" -> "app/screen/note-list/infrastructure/FolderRepository.ts" [arrowhead="inv"]
     "app/screen/note-list/infrastructure/index.ts" -> "app/screen/note-list/infrastructure/NoteRepository.ts" [arrowhead="inv"]
@@ -414,32 +389,27 @@ strict digraph "dependency-cruiser output"{
     "app/screen/note-list/noteStorage/folder.ts" -> "app/services/PathService.ts"
     "app/screen/note-list/noteStorage/folder.ts" -> "app/screen/note-list/noteStorage/note.ts"
     "app/screen/note-list/noteStorage/folder.ts" -> "app/screen/note-list/noteStorage/storage.ts"
-    "app/screen/note-list/noteStorage/folder.ts" -> "shared/types/note.ts"
+    "app/screen/note-list/noteStorage/folder.ts" -> "shared/types/file.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-list" {label="note-list" subgraph "cluster_app/screen/note-list/noteStorage" {label="noteStorage" "app/screen/note-list/noteStorage/index.ts" [label=<index.ts> tooltip="index.ts" URL="app/screen/note-list/noteStorage/index.ts" fillcolor="#ddfeff"] } } } }
     "app/screen/note-list/noteStorage/index.ts" -> "app/screen/note-list/noteStorage/folder.ts"
     "app/screen/note-list/noteStorage/index.ts" -> "app/screen/note-list/noteStorage/note.ts"
     "app/screen/note-list/noteStorage/index.ts" -> "app/screen/note-list/noteStorage/storage.ts"
-    "app/screen/note-list/noteStorage/index.ts" -> "shared/types/note.ts"
+    "app/screen/note-list/noteStorage/index.ts" -> "shared/types/file.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-list" {label="note-list" subgraph "cluster_app/screen/note-list/noteStorage" {label="noteStorage" "app/screen/note-list/noteStorage/note.ts" [label=<note.ts> tooltip="note.ts" URL="app/screen/note-list/noteStorage/note.ts" fillcolor="#ddfeff"] } } } }
     "app/screen/note-list/noteStorage/note.ts" -> "app/screen/note-list/noteStorage/storage.ts"
-    "app/screen/note-list/noteStorage/note.ts" -> "shared/types/note.ts"
+    "app/screen/note-list/noteStorage/note.ts" -> "shared/types/file.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-list" {label="note-list" subgraph "cluster_app/screen/note-list/noteStorage" {label="noteStorage" "app/screen/note-list/noteStorage/storage.ts" [label=<storage.ts> tooltip="storage.ts" URL="app/screen/note-list/noteStorage/storage.ts" fillcolor="#ddfeff"] } } } }
     "app/screen/note-list/noteStorage/storage.ts" -> "app/data/asyncStorageUtils.ts"
-    "app/screen/note-list/noteStorage/storage.ts" -> "shared/types/note.ts"
-    subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-list" {label="note-list" subgraph "cluster_app/screen/note-list/services" {label="services" "app/screen/note-list/services/noteService.ts" [label=<noteService.ts> tooltip="noteService.ts" URL="app/screen/note-list/services/noteService.ts" fillcolor="#ddfeff"] } } } }
-    "app/screen/note-list/services/noteService.ts" -> "app/services/PathService.ts"
-    "app/screen/note-list/services/noteService.ts" -> "app/screen/note-list/noteStorage/index.ts"
-    "app/screen/note-list/services/noteService.ts" -> "app/screen/note-list/noteStorage/storage.ts"
-    "app/screen/note-list/services/noteService.ts" -> "shared/types/note.ts"
+    "app/screen/note-list/noteStorage/storage.ts" -> "shared/types/file.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-list" {label="note-list" subgraph "cluster_app/screen/note-list/utils" {label="utils" "app/screen/note-list/utils/treeUtils.ts" [label=<treeUtils.ts> tooltip="treeUtils.ts" URL="app/screen/note-list/utils/treeUtils.ts" fillcolor="#ddfeff"] } } } }
-    "app/screen/note-list/utils/treeUtils.ts" -> "shared/types/note.ts"
+    "app/screen/note-list/utils/treeUtils.ts" -> "shared/types/file.ts"
     "app/screen/note-list/utils/treeUtils.ts" -> "app/services/PathService.ts"
     "app/screen/note-list/utils/treeUtils.ts" -> "app/utils/logger.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/note-list" {label="note-list" subgraph "cluster_app/screen/note-list/utils" {label="utils" "app/screen/note-list/utils/typeGuards.ts" [label=<typeGuards.ts> tooltip="typeGuards.ts" URL="app/screen/note-list/utils/typeGuards.ts" fillcolor="#ddfeff"] } } } }
     "app/screen/note-list/utils/typeGuards.ts" -> "app/screen/note-list/utils/treeUtils.ts"
-    "app/screen/note-list/utils/typeGuards.ts" -> "shared/types/note.ts"
+    "app/screen/note-list/utils/typeGuards.ts" -> "shared/types/file.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/version-history" {label="version-history" "app/screen/version-history/VersionHistoryScreen.tsx" [label=<VersionHistoryScreen.tsx> tooltip="VersionHistoryScreen.tsx" URL="app/screen/version-history/VersionHistoryScreen.tsx" fillcolor="#bbfeff"] } } }
-    "app/screen/version-history/VersionHistoryScreen.tsx" -> "shared/types/note.ts"
+    "app/screen/version-history/VersionHistoryScreen.tsx" -> "shared/types/file.ts"
     "app/screen/version-history/VersionHistoryScreen.tsx" -> "app/components/CustomHeader.tsx"
     "app/screen/version-history/VersionHistoryScreen.tsx" -> "app/components/ListItem.tsx"
     "app/screen/version-history/VersionHistoryScreen.tsx" -> "app/components/MainContainer.tsx"
@@ -462,5 +432,5 @@ strict digraph "dependency-cruiser output"{
     subgraph "cluster_app" {label="app" subgraph "cluster_app/utils" {label="utils" "app/utils/logger.ts" [label=<logger.ts> tooltip="logger.ts" URL="app/utils/logger.ts" fillcolor="#ddfeff"] } }
     subgraph "cluster_app" {label="app" subgraph "cluster_app/utils" {label="utils" "app/utils/platformInfo.ts" [label=<platformInfo.ts> tooltip="platformInfo.ts" URL="app/utils/platformInfo.ts" fillcolor="#ddfeff"] } }
     "app/utils/platformInfo.ts" -> "app/utils/logger.ts"
-    subgraph "cluster_shared" {label="shared" subgraph "cluster_shared/types" {label="types" "shared/types/note.ts" [label=<note.ts> tooltip="note.ts" URL="shared/types/note.ts" fillcolor="#ddfeff"] } }
+    subgraph "cluster_shared" {label="shared" subgraph "cluster_shared/types" {label="types" "shared/types/file.ts" [label=<file.ts> tooltip="file.ts" URL="shared/types/file.ts" fillcolor="#ddfeff"] } }
 }
