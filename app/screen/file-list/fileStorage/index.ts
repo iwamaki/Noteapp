@@ -52,7 +52,7 @@ const getItemsRecursively = async (
 
   const items: FileSystemItem[] = [
     ...filteredFolders.map((folder) => ({ type: 'folder' as const, item: folder })),
-    ...filteredFiles.map((file) => ({ type: 'file' as const, item: note })),
+    ...filteredFiles.map((file) => ({ type: 'file' as const, item: file })),
   ];
 
   return items;
@@ -62,7 +62,7 @@ const migrateExistingNotes = async (): Promise<void> => {
   const files = await getAllFilesRaw();
   let migrated = false;
 
-  files.forEach(note => {
+  files.forEach(file => {
     if (!file.path) {
       file.path = '/';
       migrated = true;

@@ -37,7 +37,7 @@ export class FileListUseCases {
 
     // 各フォルダの子孫フォルダをすべて追加
     for (const folderId of folderIds) {
-      const folder = allFolders.find(f => n.id === folderId);
+      const folder = allFolders.find(f => f.id === folderId);
       if (!folder) continue;
 
       const folderFullPath = FolderDomainService.getFullPath(folder);
@@ -52,7 +52,7 @@ export class FileListUseCases {
     const filesToDelete = new Set<string>(fileIds);
 
     for (const folderId of foldersToDelete) {
-      const folder = allFolders.find(f => n.id === folderId);
+      const folder = allFolders.find(f => f.id === folderId);
       if (!folder) continue;
 
       const folderFullPath = FolderDomainService.getFullPath(folder);
@@ -82,7 +82,7 @@ export class FileListUseCases {
 
     // 2. フォルダを取得
     const allFolders = await FolderRepository.getAll();
-    const folder = allFolders.find(f => n.id === folderId);
+    const folder = allFolders.find(f => f.id === folderId);
     if (!folder) {
       throw new Error('フォルダが見つかりません');
     }
@@ -132,8 +132,8 @@ export class FileListUseCases {
     });
 
     // 8. 子孫ファイルのパスを更新
-    const updatedFiles = allChildFiles.map(note => ({
-      ...note,
+    const updatedFiles = allChildFiles.map(file => ({
+      ...file,
       path: file.path.replace(oldFullPath, newFullPath),
       updatedAt: new Date(),
     }));
@@ -232,7 +232,7 @@ export class FileListUseCases {
     const filesInFolders: File[] = [];
 
     for (const folderId of folderIds) {
-      const folder = allFolders.find(f => n.id === folderId);
+      const folder = allFolders.find(f => f.id === folderId);
       if (!folder) continue;
 
       // 移動先バリデーション
@@ -430,7 +430,7 @@ export class FileListUseCases {
     }
 
     for (const folderId of folderIds) {
-      if (!allFolders.find(f => n.id === folderId)) {
+      if (!allFolders.find(f => f.id === folderId)) {
         errors.push(`フォルダ ${folderId} が見つかりません`);
       }
     }
