@@ -5,7 +5,7 @@
  */
 
 import { LLMCommand } from '../llmService/types/types';
-import { NoteListStorage } from '../../../screen/note-list/noteStorage';
+import { NoteListStorage } from '../../../screen/file-list/fileStorage';
 
 /**
  * コマンドハンドラのコンテキスト

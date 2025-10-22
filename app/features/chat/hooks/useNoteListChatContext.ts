@@ -10,7 +10,7 @@ import { ActiveScreenContextProvider, ActiveScreenContext } from '../types';
 import ChatService from '../index';
 import { logger } from '../../../utils/logger';
 import { FileSystemItem } from '@shared/types/file';
-import { NoteListStorage } from '../../../screen/note-list/noteStorage';
+import { NoteListStorage } from '../../../screen/file-list/fileStorage';
 import { PathService } from '../../../services/PathService';
 import { createDirectoryHandler } from '../handlers/createDirectoryHandler';
 import { deleteItemHandler } from '../handlers/deleteItemHandler';

@@ -7,8 +7,8 @@
  */
 
 import { Folder, CreateFolderData } from '@shared/types/file';
-import { getAllFoldersRaw, saveAllFolders } from '../noteStorage/storage';
-import * as FolderFns from '../noteStorage/folder';
+import { getAllFoldersRaw, saveAllFolders } from '../fileStorage/storage';
+import * as FolderFns from '../fileStorage/folder';
 
 /**
  * フォルダリポジトリ

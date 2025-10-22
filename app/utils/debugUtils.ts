@@ -1,5 +1,5 @@
-import { TreeNode } from '../screen/note-list/utils/treeUtils';
-import { NoteListStorage } from '../screen/note-list/noteStorage';
+import { TreeNode } from '../screen/file-list/utils/treeUtils';
+import { NoteListStorage } from '../screen/file-list/fileStorage';
 import { logger } from './logger';
 
 /**

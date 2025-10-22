@@ -9,7 +9,7 @@ import { View, Text, StyleSheet, FlatList, Alert } from 'react-native';
 import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
-import { NoteEditStorage } from '../note-edit/repositories/noteStorage';
+import { NoteEditStorage } from '../file-edit/repositories/noteStorage';
 import { FileVersion, File } from '../../../shared/types/file';
 import { format } from 'date-fns';
 import { useTheme } from '../../design/theme/ThemeContext';
