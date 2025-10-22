@@ -31,9 +31,9 @@ export class ValidationService {
   ];
 
   /**
-   * ノート全体をバリデーション
+   * ファイル全体をバリデーション
    */
-  validateNote(data: Partial<File>): ValidationResult {
+  validateFile(data: Partial<File>): ValidationResult {
     const errors: string[] = [];
 
     for (const rule of this.rules) {

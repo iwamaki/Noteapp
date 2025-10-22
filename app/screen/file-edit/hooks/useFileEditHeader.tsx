@@ -1,6 +1,6 @@
 /**
- * @file useNoteEditHeader.ts
- * @summary ノート編集画面のヘッダー設定ロジックを管理するフック
+ * @file useFileEditHeader.ts
+ * @summary ファイル編集画面のヘッダー設定ロジックを管理するフック
  */
 
 import React, { useLayoutEffect } from 'react';
@@ -15,9 +15,9 @@ import { useTheme } from '../../../design/theme/ThemeContext';
 import { FileEditHeader } from '../components/FileEditHeader';
 import { FileEditOverflowMenu } from '../components/FileEditOverflowMenu';
 
-interface UseNoteEditHeaderProps {
+interface UseFileEditHeaderProps {
   title: string;
-  activeNoteId: string | undefined;
+  activeFileId: string | undefined;
   viewMode: ViewMode;
   isLoading: boolean;
   isEditable: boolean;
@@ -29,13 +29,13 @@ interface UseNoteEditHeaderProps {
   onRedo: () => void;
   canUndo: boolean;
   canRedo: boolean;
-  originalNoteContent: string;
+  originalFileContent: string;
   currentContent: string;
 }
 
 export const useFileEditHeader = ({
   title,
-  activeNoteId,
+  activeFileId,
   viewMode,
   isLoading,
   isEditable,
@@ -47,9 +47,9 @@ export const useFileEditHeader = ({
   onRedo,
   canUndo,
   canRedo,
-  originalNoteContent,
+  originalFileContent,
   currentContent,
-}: UseNoteEditHeaderProps) => {
+}: UseFileEditHeaderProps) => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { createHeaderConfig } = useCustomHeader();
   const { colors } = useTheme();
@@ -60,13 +60,13 @@ export const useFileEditHeader = ({
     };
 
     const handleShowVersionHistory = () => {
-            navigation.navigate('VersionHistory', { fileId: activeNoteId || '' });
+            navigation.navigate('VersionHistory', { fileId: activeFileId || '' });
     };
 
     const handleShowDiffView = () => {
       navigation.navigate('DiffView', {
         mode: 'readonly',
-        originalContent: originalNoteContent,
+        originalContent: originalFileContent,
         newContent: currentContent,
       });
     };
@@ -120,7 +120,7 @@ export const useFileEditHeader = ({
   }, [
     navigation,
     title,
-    activeNoteId,
+    activeFileId,
     viewMode,
     isLoading,
     isEditable,
@@ -134,7 +134,7 @@ export const useFileEditHeader = ({
     canRedo,
     createHeaderConfig,
     colors,
-    originalNoteContent,
+    originalFileContent,
     currentContent,
   ]);
 };

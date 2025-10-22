@@ -93,7 +93,7 @@ export const CreateItemModal: React.FC<CreateItemModalProps> = ({
 
         <TextInput
           style={styles.input}
-          placeholder="例: note.txt または folder1/note.txt"
+          placeholder="例: file.txt または folder1/file.txt"
           placeholderTextColor={colors.textSecondary}
           value={inputValue}
           onChangeText={setInputValue}
@@ -102,7 +102,7 @@ export const CreateItemModal: React.FC<CreateItemModalProps> = ({
         />
 
         <Text style={styles.exampleText}>
-          💡 &quot;aaa/bbb/note.txt&quot; と入力すると、
+          💡 &quot;aaa/bbb/file.txt&quot; と入力すると、
           {'\n'}   aaa/bbb フォルダが自動作成されます
         </Text>
       </View>

@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { File, Folder } from '@shared/types/file';
 import StorageUtils from '@data/asyncStorageUtils';
 
-const NOTES_STORAGE_KEY = '@notes';
+const FILES_STORAGE_KEY = '@files';
 const FOLDERS_STORAGE_KEY = '@folders';
 
 // --- Error Class ---
@@ -16,7 +16,7 @@ export class StorageError extends Error {
 // --- Raw File Methods ---
 export const getAllFilesRaw = async (): Promise<File[]> => {
   try {
-    const jsonValue = await AsyncStorage.getItem(NOTES_STORAGE_KEY);
+    const jsonValue = await AsyncStorage.getItem(FILES_STORAGE_KEY);
     const files = await StorageUtils.safeJsonParse<any[]>(jsonValue);
     if (!files) return [];
     return files.map(file => StorageUtils.convertDates(file) as File);
@@ -27,7 +27,7 @@ export const getAllFilesRaw = async (): Promise<File[]> => {
 
 export const saveAllFiles = async (files: File[]): Promise<void> => {
   try {
-    await AsyncStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(files));
+    await AsyncStorage.setItem(FILES_STORAGE_KEY, JSON.stringify(files));
   } catch (e) {
     throw new StorageError('Failed to save files', 'SAVE_ERROR', e);
   }

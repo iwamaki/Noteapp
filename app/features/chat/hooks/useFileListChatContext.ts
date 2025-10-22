@@ -1,7 +1,7 @@
 /**
- * @file useNoteListChatContext.ts
+ * @file useFileListChatContext.ts
  * @summary FileListScreen用のチャットコンテキストプロバイダーフック
- * @responsibility ノート一覧画面のコンテキストをChatServiceに提供し、
+ * @responsibility ファイル一覧画面のコンテキストをChatServiceに提供し、
  *                 コンテキスト依存のコマンドハンドラを登録する
  */
 
@@ -17,21 +17,21 @@ import { deleteItemHandler } from '../handlers/deleteItemHandler';
 import { moveItemHandler } from '../handlers/moveItemHandler';
 import { CommandHandlerContext } from '../handlers/types';
 
-interface UseNoteListChatContextParams {
+interface UseFileListChatContextParams {
   items: FileSystemItem[];
   currentPath: string;
 }
 
 /**
- * ノート一覧画面用のチャットコンテキストプロバイダーフック
+ * ファイル一覧画面用のチャットコンテキストプロバイダーフック
  *
- * このフックは、ノート一覧画面のコンテキストをChatServiceに登録します。
- * LLMには、現在表示されているノートとフォルダのリストを提供します。
+ * このフックは、ファイル一覧画面のコンテキストをChatServiceに登録します。
+ * LLMには、現在表示されているファイルとフォルダのリストを提供します。
  */
 export const useFileListChatContext = ({
   items,
   currentPath,
-}: UseNoteListChatContextParams): void => {
+}: UseFileListChatContextParams): void => {
   // 最新のitemsとcurrentPathを参照するためのref
   const itemsRef = useRef(items);
   const currentPathRef = useRef(currentPath);
@@ -46,7 +46,7 @@ export const useFileListChatContext = ({
     // ActiveScreenContextProviderの実装
     const contextProvider: ActiveScreenContextProvider = {
       getScreenContext: async (): Promise<ActiveScreenContext> => {
-        logger.debug('chatService', '[useNoteListChatContext] Getting screen context', {
+        logger.debug('chatService', '[useFileListChatContext] Getting screen context', {
           itemsCount: itemsRef.current.length,
           currentPath: currentPathRef.current,
         });
@@ -67,7 +67,7 @@ export const useFileListChatContext = ({
           });
 
         return {
-          name: 'notelist',
+          name: 'filelist',
           currentPath: currentPathRef.current,
           visibleFileList,
         };
@@ -87,13 +87,13 @@ export const useFileListChatContext = ({
     };
 
     // ChatServiceにプロバイダーとハンドラを登録
-    logger.debug('chatService', '[useNoteListChatContext] Registering context provider and handlers');
+    logger.debug('chatService', '[useFileListChatContext] Registering context provider and handlers');
     ChatService.registerActiveContextProvider(contextProvider);
     ChatService.registerCommandHandlers(commandHandlers);
 
     // クリーンアップ: アンマウント時にプロバイダーを解除
     return () => {
-      logger.debug('chatService', '[useNoteListChatContext] Unregistering context provider');
+      logger.debug('chatService', '[useFileListChatContext] Unregistering context provider');
       ChatService.unregisterActiveContextProvider();
     };
   }, [items, currentPath]);

@@ -7,7 +7,7 @@ from src.llm.routers import chat_router
 from src.llm.routers import llm_providers_router
 from src.llm.routers import tools_router
 
-app = FastAPI(title="LLM Note App API")
+app = FastAPI(title="LLM File App API")
 
 # CORS設定
 app.add_middleware(
@@ -28,7 +28,7 @@ app.include_router(tools_router.router)
 async def root():
     """ルートエンドポイント"""
     return {
-        "message": "LLM Note App API",
+        "message": "LLM File App API",
         "version": "1.0.0",
         "endpoints": {
             "chat": "/api/chat",

@@ -5,11 +5,11 @@ import { File, Folder } from '@shared/types/file';
  * テスト用のモックデータ生成ユーティリティ
  */
 
-export const createMockNote = (overrides: Partial<File> = {}): File => {
+export const createMockFile = (overrides: Partial<File> = {}): File => {
   const now = new Date();
   return {
-    id: `note-${Date.now()}-${Math.random()}`,
-    title: 'Test Note',
+    id: `file-${Date.now()}-${Math.random()}`,
+    title: 'Test File',
     content: 'Test content',
     tags: [],
     path: '/',
@@ -32,10 +32,10 @@ export const createMockFolder = (overrides: Partial<Folder> = {}): Folder => {
   };
 };
 
-export const createMockNotes = (count: number, basePath: string = '/'): File[] => {
+export const createMockFiles = (count: number, basePath: string = '/'): File[] => {
   return Array.from({ length: count }, (_, i) =>
-    createMockNote({
-      title: `Note ${i + 1}`,
+    createMockFile({
+      title: `File ${i + 1}`,
       content: `Content for file ${i + 1}`,
       path: basePath,
     })
@@ -59,9 +59,9 @@ export const createStorageMock = () => {
   const folders: Folder[] = [];
 
   return {
-    getAllNotes: jest.fn().mockResolvedValue(files),
+    getAllFiles: jest.fn().mockResolvedValue(files),
     getAllFolders: jest.fn().mockResolvedValue(folders),
-    createNote: jest.fn().mockImplementation((file: File) => {
+    createFile: jest.fn().mockImplementation((file: File) => {
       files.push(file);
       return Promise.resolve(file);
     }),
@@ -69,7 +69,7 @@ export const createStorageMock = () => {
       folders.push(folder);
       return Promise.resolve(folder);
     }),
-    deleteNotes: jest.fn().mockImplementation((ids: string[]) => {
+    deleteFiles: jest.fn().mockImplementation((ids: string[]) => {
       const remaining = files.filter(n => !ids.includes(n.id));
       files.length = 0;
       files.push(...remaining);
@@ -87,9 +87,9 @@ export const createStorageMock = () => {
       folders.length = 0;
     },
     // データを設定
-    setNotes: (newNotes: File[]) => {
+    setFiles: (newFiles: File[]) => {
       files.length = 0;
-      files.push(...newNotes);
+      files.push(...newFiles);
     },
     setFolders: (newFolders: Folder[]) => {
       folders.length = 0;
@@ -101,8 +101,8 @@ export const createStorageMock = () => {
 /**
  * FileServiceのテスト例
  */
-export const noteServiceTestSuite = {
-  'should delete notes and folders': async () => {
+export const fileServiceTestSuite = {
+  'should delete files and folders': async () => {
     // テストの実装例
   },
   'should validate move operations': async () => {

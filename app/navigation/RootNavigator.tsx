@@ -51,8 +51,8 @@ function RootNavigatorContent() {
             headerTintColor: colors.text,
           }}
         >
-          <Stack.Screen name="FileList" component={FileListScreen} options={{ title: 'Notes' }} />
-          <Stack.Screen name="FileEdit" component={FileEditScreen} options={{ title: 'Edit Note' }} />
+          <Stack.Screen name="FileList" component={FileListScreen} options={{ title: 'Files' }} />
+          <Stack.Screen name="FileEdit" component={FileEditScreen} options={{ title: 'Edit File' }} />
           <Stack.Screen name="DiffView" component={DiffViewScreen} options={{ title: 'View Diff' }} />
           <Stack.Screen name="VersionHistory" component={VersionHistoryScreen} options={{ title: 'Version History' }} />
           <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />

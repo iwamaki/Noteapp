@@ -32,7 +32,7 @@ export function buildTree(
   if (__DEV__) {
     logger.debug('tree', '🌲 Building tree from storage:', {
       totalFolders: allFolders.length,
-      totalNotes: allFiles.length,
+      totalFiles: allFiles.length,
       expandedFolders: expandedFolderIds.size,
     });
   }
@@ -58,11 +58,11 @@ function getRootItems(allFolders: Folder[], allFiles: File[]): FileSystemItem[] 
     .filter(f => PathService.normalizePath(f.path) === '/')
     .map(f => ({ type: 'folder' as const, item: f }));
 
-  const rootNotes = allFiles
+  const rootFiles = allFiles
     .filter(n => PathService.normalizePath(n.path) === '/')
     .map(n => ({ type: 'file' as const, item: n }));
 
-  return [...rootFolders, ...rootNotes];
+  return [...rootFolders, ...rootFiles];
 }
 
 /**
@@ -85,11 +85,11 @@ function buildTreeNode(
       .filter(f => PathService.normalizePath(f.path) === folderPath)
       .map(f => ({ type: 'folder' as const, item: f }));
 
-    const childNotes = allFiles
+    const childFiles = allFiles
       .filter(n => PathService.normalizePath(n.path) === folderPath)
       .map(n => ({ type: 'file' as const, item: n }));
 
-    const childItems = [...childFolders, ...childNotes];
+    const childItems = [...childFolders, ...childFiles];
     const children = childItems.map(child =>
       buildTreeNode(child, allFolders, allFiles, expandedFolderIds, depth + 1)
     );

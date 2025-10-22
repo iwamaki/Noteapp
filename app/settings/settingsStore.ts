@@ -60,7 +60,7 @@ export interface AppSettings {
   exportFormat: 'markdown' | 'html' | 'pdf' | 'text';
   appLockEnabled: boolean;
   autoLockTimeout: number; // 分
-  encryptSensitiveNotes: boolean;
+  encryptSensitiveFiles: boolean;
 
   // 6. その他
   cacheLimit: number; // MB
@@ -126,7 +126,7 @@ const defaultSettings: AppSettings = {
   exportFormat: 'markdown',
   appLockEnabled: false,
   autoLockTimeout: 5,
-  encryptSensitiveNotes: false,
+  encryptSensitiveFiles: false,
 
   // その他
   cacheLimit: 100,
@@ -161,28 +161,9 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       if (stored) {
         const parsedSettings = JSON.parse(stored);
 
-        // マイグレーション: sendNoteContextToLLM → sendFileContextToLLM
-        if ('sendNoteContextToLLM' in parsedSettings && !('sendFileContextToLLM' in parsedSettings)) {
-          parsedSettings.sendFileContextToLLM = parsedSettings.sendNoteContextToLLM;
-          delete parsedSettings.sendNoteContextToLLM;
-          // マイグレーション後の設定を保存
-          await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ ...defaultSettings, ...parsedSettings }));
-        }
 
-        // マイグレーション: startupScreen の旧値を新値に変換
-        if (parsedSettings.startupScreen) {
-          const startupScreenMigrations: Record<string, 'file-list' | 'last-file' | 'new-file'> = {
-            'note-list': 'file-list',
-            'last-note': 'last-file',
-            'new-note': 'new-file',
-          };
-          const oldValue = parsedSettings.startupScreen;
-          if (oldValue in startupScreenMigrations) {
-            parsedSettings.startupScreen = startupScreenMigrations[oldValue];
-            // マイグレーション後の設定を保存
-            await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ ...defaultSettings, ...parsedSettings }));
-          }
-        }
+
+
 
         set({ settings: { ...defaultSettings, ...parsedSettings } });
       }

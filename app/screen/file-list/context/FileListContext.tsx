@@ -68,7 +68,7 @@ export interface FileListContextValue {
   dispatch: React.Dispatch<FileListAction>;
   actions: FileListActions;
   /**
-   * folders + notesの統合リスト（派生値）
+   * folders + filesの統合リスト（派生値）
    */
   items: FileSystemItem[];
 }

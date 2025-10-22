@@ -164,16 +164,16 @@ export const FileListProvider: React.FC<FileListProviderProps> = ({ children }) 
   );
 
   /**
-   * folders + notesの統合リスト（派生値）
+   * folders + filesの統合リスト（派生値）
    */
   const items: FileSystemItem[] = useMemo(() => {
     const folderItems: FileSystemItem[] = state.folders.map(folder => ({
       type: 'folder' as const,
       item: folder,
     }));
-    const fileItems: FileSystemItem[] = state.files.map(note => ({
+    const fileItems: FileSystemItem[] = state.files.map(file => ({
       type: 'file' as const,
-      item: note,
+      item: file,
     }));
     return [...folderItems, ...fileItems];
   }, [state.folders, state.files]);

@@ -6,13 +6,13 @@
 
 import { ChatContext, LLMResponse, LLMService } from './index';
 
-export interface CreateNoteRequest {
+export interface CreateFileRequest {
   title: string;
   content: string;
   tags?: string[];
 }
 
-export interface UpdateNoteRequest {
+export interface UpdateFileRequest {
   id: string;
   title?: string;
   content?: string;

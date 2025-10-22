@@ -1,7 +1,7 @@
 /**
- * @file repositories/AsyncStorageNoteRepository.ts
+ * @file repositories/AsyncStorageFileRepository.ts
  * @summary AsyncStorageを使用したファイルリポジトリの実装
- * @description NoteEditStorageをリポジトリインターフェースに適合させたラッパー
+ * @description FileEditStorageをリポジトリインターフェースに適合させたラッパー
  */
 
 import { FileRepository } from './FileRepository';
@@ -11,7 +11,7 @@ import { FileEditStorage } from './fileStorage';
 
 /**
  * AsyncStorageを使用したリポジトリ実装
- * 既存のNoteEditStorageをラップして、リポジトリインターフェースに適合
+ * 既存のFileEditStorageをラップして、リポジトリインターフェースに適合
  */
 export class AsyncStorageFileRepository implements FileRepository {
   async findById(id: string): Promise<File | null> {
@@ -19,7 +19,7 @@ export class AsyncStorageFileRepository implements FileRepository {
   }
 
   async findAll(): Promise<File[]> {
-    // NoteEditStorageにfindAllがないため、空配列を返す
+    // FileEditStorageにfindAllがないため、空配列を返す
     // 必要に応じて実装を追加
     return [];
   }
@@ -36,7 +36,7 @@ export class AsyncStorageFileRepository implements FileRepository {
   }
 
   async delete(): Promise<void> {
-    // NoteEditStorageにdeleteがないため、未実装
+    // FileEditStorageにdeleteがないため、未実装
     // 必要に応じて実装を追加
     throw new Error('Delete operation not implemented');
   }

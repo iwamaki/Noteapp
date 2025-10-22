@@ -9,7 +9,7 @@ import { TreeNode } from '../utils/treeUtils';
 /**
  * 検索ターゲット
  */
-export type SearchTarget = 'all' | 'notes' | 'folders';
+export type SearchTarget = 'all' | 'files' | 'folders';
 
 /**
  * 検索フィールド

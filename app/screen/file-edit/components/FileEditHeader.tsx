@@ -1,6 +1,6 @@
 /**
- * @file NoteEditHeader.tsx
- * @summary ノート編集画面のヘッダータイトル入力コンポーネント
+ * @file FileEditHeader.tsx
+ * @summary ファイル編集画面のヘッダータイトル入力コンポーネント
  */
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -16,7 +16,7 @@ import { useTheme } from '../../../design/theme/ThemeContext';
 import { responsive } from '../../../design/styles/commonStyles';
 import { Ionicons } from '@expo/vector-icons';
 
-interface NoteEditHeaderProps {
+interface FileEditHeaderProps {
   title: string;
   onTitleChange: (title: string) => void;
   editable: boolean;
@@ -28,7 +28,7 @@ interface NoteEditHeaderProps {
   canRedo: boolean;
 }
 
-export const FileEditHeader: React.FC<NoteEditHeaderProps> = ({
+export const FileEditHeader: React.FC<FileEditHeaderProps> = ({
   title,
   onTitleChange,
   editable,

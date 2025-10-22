@@ -1,5 +1,5 @@
 /**
- * @file repositories/NoteRepository.ts
+ * @file repositories/FileRepository.ts
  * @summary ファイルデータアクセス層のインターフェース
  * @description データソースの抽象化により、実装の差し替えを容易にする
  */

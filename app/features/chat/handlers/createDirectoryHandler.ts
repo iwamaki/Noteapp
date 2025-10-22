@@ -16,7 +16,7 @@ import { FileListStorage } from '../../../screen/file-list/fileStorage';
  * FileListStorageを使用してフォルダを作成します。
  *
  * @param command create_directoryコマンド
- * @param context noteListStorageを含むコンテキスト（オプション）
+ * @param context fileListStorageを含むコンテキスト（オプション）
  */
 export const createDirectoryHandler: CommandHandler = async (command: LLMCommand, context?) => {
   logger.debug('toolService', 'Handling create_directory command', {

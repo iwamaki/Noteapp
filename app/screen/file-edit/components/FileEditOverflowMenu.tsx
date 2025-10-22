@@ -4,13 +4,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { HeaderButton } from '../../../components/HeaderButton';
 
-interface NoteEditOverflowMenuProps {
+interface FileEditOverflowMenuProps {
   onToggleViewMode: () => void;
   onShowVersionHistory: () => void;
   onShowDiffView: () => void;
 }
 
-export const FileEditOverflowMenu: React.FC<NoteEditOverflowMenuProps> = ({
+export const FileEditOverflowMenu: React.FC<FileEditOverflowMenuProps> = ({
   onToggleViewMode,
   onShowVersionHistory,
   onShowDiffView,

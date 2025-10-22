@@ -9,7 +9,7 @@ def edit_file(filename: str, content: str) -> str:
     実際のファイル編集はフロントエンドで行われます。
 
     Args:
-        filename: 編集するファイルのパス（例: "note.txt"）
+        filename: 編集するファイルのパス（例: "document.txt"）
         content: ファイルの新しい内容（全文）
 
     Returns:

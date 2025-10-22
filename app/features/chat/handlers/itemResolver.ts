@@ -1,7 +1,7 @@
 /**
  * @file itemResolver.ts
  * @summary アイテム検索ユーティリティ
- * @responsibility パスからノートやフォルダを検索する共通ロジックを提供します
+ * @responsibility パスからファイルやフォルダを検索する共通ロジックを提供します
  */
 
 import { File, Folder } from '@shared/types/file';
@@ -20,7 +20,7 @@ export interface ResolvedItem {
 }
 
 /**
- * パスからアイテム（ノートまたはフォルダ）を検索します
+ * パスからアイテム（ファイルまたはフォルダ）を検索します
  *
  * @param path - 検索対象のフルパス（例: "/folder1/file.txt" または "/folder1/subfolder/"）
  * @returns 見つかったアイテム情報、見つからない場合はnull
@@ -71,13 +71,13 @@ export async function findItemByPath(path: string): Promise<ResolvedItem | null>
 
       for (const file of files) {
         const fullPath = PathService.getFullPath(file.path, file.title, 'file');
-        const normalizedNotePath = PathService.normalizePath(file.path);
+        const normalizedFilePath = PathService.normalizePath(file.path);
         const normalizedParentPath = PathService.normalizePath(parentPath);
 
         // パスとタイトルの両方が一致するかチェック
         if (
           (fullPath === trimmedPath || fullPath === `/${trimmedPath}`) ||
-          (normalizedNotePath === normalizedParentPath && file.title === fileName)
+          (normalizedFilePath === normalizedParentPath && file.title === fileName)
         ) {
           logger.debug('itemResolver', 'Found file by path', {
             path: trimmedPath,

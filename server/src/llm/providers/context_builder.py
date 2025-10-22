@@ -6,11 +6,11 @@ from typing import List, Optional, Dict, Any
 from dataclasses import dataclass
 from langchain.schema import BaseMessage, HumanMessage, AIMessage
 
-from src.llm.models import ChatContext, EditScreenContext, NotelistScreenContext
+from src.llm.models import ChatContext, EditScreenContext, FilelistScreenContext
 from src.llm.tools.context_manager import set_file_context, set_directory_context, set_all_files_context
 from src.llm.providers.config import (
     CONTEXT_MSG_EDIT_SCREEN,
-    CONTEXT_MSG_NOTELIST_SCREEN,
+    CONTEXT_MSG_FILELIST_SCREEN,
     CONTEXT_MSG_ATTACHED_FILE,
     DEFAULT_ROOT_PATH
 )
@@ -95,8 +95,8 @@ class ChatContextBuilder:
 
         if isinstance(active_screen, EditScreenContext):
             self._setup_edit_screen_context(active_screen)
-        elif isinstance(active_screen, NotelistScreenContext):
-            self._setup_notelist_screen_context(active_screen)
+        elif isinstance(active_screen, FilelistScreenContext):
+            self._setup_filelist_screen_context(active_screen)
 
     def _setup_edit_screen_context(self, screen: EditScreenContext) -> None:
         """編集画面のコンテキストを設定
@@ -124,11 +124,11 @@ class ChatContextBuilder:
                 content=file_content
             )
 
-    def _setup_notelist_screen_context(self, screen: NotelistScreenContext) -> None:
-        """ノートリスト画面のコンテキストを設定
+    def _setup_filelist_screen_context(self, screen: FilelistScreenContext) -> None:
+        """ファイルリスト画面のコンテキストを設定
 
         Args:
-            screen: ノートリスト画面のコンテキスト
+            screen: ファイルリスト画面のコンテキスト
         """
         # ファイルリストの処理
         processed_file_list = self._process_visible_file_list(screen.visibleFileList)
@@ -139,7 +139,7 @@ class ChatContextBuilder:
             'fileList': processed_file_list
         })
         logger.info(
-            f"Directory context set from NotelistScreen: {screen.currentPath} "
+            f"Directory context set from FilelistScreen: {screen.currentPath} "
             f"with {len(processed_file_list)} items"
         )
 
@@ -148,7 +148,7 @@ class ChatContextBuilder:
             file_list_str = "\n".join([
                 f"- {item.filePath}" for item in screen.visibleFileList
             ])
-            self._context_msg = CONTEXT_MSG_NOTELIST_SCREEN.format(
+            self._context_msg = CONTEXT_MSG_FILELIST_SCREEN.format(
                 current_path=screen.currentPath,
                 file_list=file_list_str
             )

@@ -69,7 +69,7 @@ export const moveItemHandler: CommandHandler = async (command: LLMCommand, conte
     if (resolvedItem.type === 'file') {
       logger.debug('moveItemHandler', 'Moving file', {
         fileId: resolvedItem.id,
-        noteTitle: (resolvedItem.item as any).title,
+        fileTitle: (resolvedItem.item as any).title,
         sourcePath: command.source_path,
         destPath,
       });

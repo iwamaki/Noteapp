@@ -112,7 +112,7 @@ export class FolderDomainService {
    * @param allFiles 全ファイルの配列
    * @returns 子ファイルの配列
    */
-  static getChildNotes(folderPath: string, allFiles: File[]): File[] {
+  static getChildFiles(folderPath: string, allFiles: File[]): File[] {
     const normalizedFolderPath = PathService.normalizePath(folderPath);
     return allFiles.filter(
       file => PathService.normalizePath(file.path) === normalizedFolderPath
@@ -156,7 +156,7 @@ export class FolderDomainService {
    * @param allFolders 全フォルダの配列
    * @returns 全ファイルの配列
    */
-  static getAllDescendantNotes(
+  static getAllDescendantFiles(
     folderPath: string,
     allFiles: File[],
     allFolders: Folder[]
@@ -164,14 +164,14 @@ export class FolderDomainService {
     const normalizedPath = PathService.normalizePath(folderPath);
     const files: File[] = [];
 
-    // 直接の子ノート
-    files.push(...this.getChildNotes(normalizedPath, allFiles));
+    // 直接の子ファイル
+    files.push(...this.getChildFiles(normalizedPath, allFiles));
 
-    // 子孫フォルダ内のノート
+    // 子孫フォルダ内のファイル
     const descendantFolders = this.getAllDescendantFolders(normalizedPath, allFolders);
     for (const folder of descendantFolders) {
       const folderFullPath = PathService.getFullPath(folder.path, folder.name, 'folder');
-      files.push(...this.getChildNotes(folderFullPath, allFiles));
+      files.push(...this.getChildFiles(folderFullPath, allFiles));
     }
 
     return files;
@@ -189,9 +189,9 @@ export class FolderDomainService {
     allFiles: File[],
     allFolders: Folder[]
   ): boolean {
-    const childNotes = this.getChildNotes(folderPath, allFiles);
+    const childFiles = this.getChildFiles(folderPath, allFiles);
     const childFolders = this.getChildFolders(folderPath, allFolders);
-    return childNotes.length === 0 && childFolders.length === 0;
+    return childFiles.length === 0 && childFolders.length === 0;
   }
 
   /**

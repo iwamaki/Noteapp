@@ -65,7 +65,7 @@ Langchainエージェントを使用する共通実装。
 入力されたChatContextから、LLMとツールに必要なコンテキストを構築。
 
 **責務:**
-- アクティブスクリーン（Edit/Notelist）からのコンテキスト抽出
+- アクティブスクリーン（Edit/Filelist）からのコンテキスト抽出
 - フォールバック用の古い形式のサポート
 - ツール用のグローバルコンテキスト設定
 - LLM用の会話履歴構築
@@ -73,7 +73,7 @@ Langchainエージェントを使用する共通実装。
 **主要メソッド:**
 - `build()`: コンテキスト構築のエントリーポイント
 - `_setup_edit_screen_context()`: 編集画面用コンテキスト設定
-- `_setup_notelist_screen_context()`: ノートリスト画面用コンテキスト設定
+- `_setup_filelist_screen_context()`: ファイルリスト画面用コンテキスト設定
 
 **戻り値:**
 - `BuiltContext`: 構築されたコンテキスト情報を保持するデータクラス

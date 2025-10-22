@@ -18,8 +18,8 @@ class FileListItem(BaseModel):
     tags: Optional[List[str]] = None
 
 
-class NotelistScreenContext(BaseModel):
-    name: Literal["notelist"] = "notelist"
+class FilelistScreenContext(BaseModel):
+    name: Literal["filelist"] = "filelist"
     currentPath: str
     visibleFileList: List[FileListItem]
     selectedFileList: Optional[List[FileListItem]] = None
@@ -38,7 +38,7 @@ class ChatContext(BaseModel):
     currentFileContent: Optional[Dict[str, Optional[str]]] = None  # 現在開いているファイルの内容 {"filename": "...", "content": "..."}
     attachedFileContent: Optional[Dict[str, str]] = None
     conversationHistory: Optional[List[Dict[str, Any]]] = None
-    activeScreen: Optional[Union[NotelistScreenContext, EditScreenContext]] = Field(None, discriminator='name')
+    activeScreen: Optional[Union[FilelistScreenContext, EditScreenContext]] = Field(None, discriminator='name')
     allFiles: Optional[List[Dict[str, Any]]] = None
 
 

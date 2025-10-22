@@ -1,6 +1,6 @@
 /**
- * @file stores/NoteEditorStore.ts
- * @summary ノート編集の状態管理（Zustand Store）
+ * @file stores/FileEditorStore.ts
+ * @summary ファイル編集の状態管理（Zustand Store）
  * @description エディタの状態とアクションを一元管理
  */
 
@@ -123,7 +123,7 @@ export const useFileEditorStore = create<FileEditorStore>((set, get) => ({
     });
 
     try {
-      const savedNote = await fileService.save({
+      const savedFile = await fileService.save({
         id: fileId || undefined,
         title,
         content,
@@ -132,9 +132,9 @@ export const useFileEditorStore = create<FileEditorStore>((set, get) => ({
       set({
         isSaving: false,
         isDirty: false,
-        file: savedNote,
-        originalFile: savedNote,
-        fileId: savedNote.id,
+        file: savedFile,
+        originalFile: savedFile,
+        fileId: savedFile.id,
       });
     } catch (error) {
       set({

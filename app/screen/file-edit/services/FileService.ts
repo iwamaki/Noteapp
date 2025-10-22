@@ -1,5 +1,5 @@
 /**
- * @file services/NoteService.ts
+ * @file services/FileService.ts
  * @summary ノート編集のビジネスロジック層
  * @description データアクセス層とバリデーションを組み合わせたビジネスロジック
  */
@@ -61,7 +61,7 @@ export class FileService {
    */
   async save(data: Partial<File & { id?: string }>): Promise<File> {
     // バリデーション
-    const validationResult = this.validator.validateNote(data);
+    const validationResult = this.validator.validateFile(data);
     if (!validationResult.isValid) {
       const error: EditorError = {
         code: ErrorCode.VALIDATION_ERROR,

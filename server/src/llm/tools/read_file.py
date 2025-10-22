@@ -11,7 +11,7 @@ def read_file(filename: str) -> str:
     それ以外の場合は、allFilesコンテキストから検索します。
 
     Args:
-        filename: 読み取るファイルのパスまたは名前（例: "/project/note.txt", "note.txt", "新しいノート"）
+        filename: 読み取るファイルのパスまたは名前（例: "/project/document.txt", "document.txt", "新しいドキュメント"）
 
     Returns:
         ファイルの内容、またはファイルが見つからない場合はエラーメッセージ

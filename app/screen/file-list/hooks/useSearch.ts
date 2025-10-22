@@ -3,7 +3,7 @@ import { useState, useMemo, useCallback } from 'react';
 import { flattenTree, TreeNode } from '../utils/treeUtils';
 import { File, Folder } from '../../../../shared/types/file';
 
-export type SearchTarget = 'all' | 'notes' | 'folders';
+export type SearchTarget = 'all' | 'files' | 'folders';
 export type SearchField = 'title' | 'content' | 'all';
 
 export interface SearchOptions {
@@ -36,7 +36,7 @@ export const useSearch = (treeNodes: TreeNode[]) => {
 
     return flattenedTree.filter(node => {
       // ターゲットフィルタ
-      if (searchOptions.target === 'notes' && node.type !== 'file') return false;
+      if (searchOptions.target === 'files' && node.type !== 'file') return false;
       if (searchOptions.target === 'folders' && node.type !== 'folder') return false;
 
       if (node.type === 'file') {
