@@ -6,7 +6,7 @@
 
 import { create } from 'zustand';
 import { EditorState, EditorActions, ViewMode, EditorError } from '../types';
-import { Note } from '@shared/types/note';
+import { File } from '@shared/types/file';
 import { noteService } from '../services/NoteService';
 import { HistoryManager } from './HistoryManager';
 
@@ -16,7 +16,7 @@ import { HistoryManager } from './HistoryManager';
 interface NoteEditorStore extends EditorState, EditorActions {
   // 追加の状態
   noteId: string | null;
-  originalNote: Note | null;
+  originalNote: File | null;
   history: HistoryManager;
 
   // 追加のアクション

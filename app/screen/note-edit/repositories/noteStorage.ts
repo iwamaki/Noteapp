@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { v4 as uuidv4 } from 'uuid';
-import { Note, NoteVersion, CreateNoteData, UpdateNoteData } from '../../../../shared/types/note';
+import { File, FileVersion, CreateFileData, UpdateFileData } from '../../../../shared/types/file';
 
 const NOTES_STORAGE_KEY = '@notes';
 const NOTE_VERSIONS_STORAGE_KEY = '@note_versions';
@@ -18,19 +18,19 @@ export class StorageError extends Error {
 // ノートストレージサービス (note-edit feature specific)
 export class NoteEditStorage {
   // --- Private Raw Note Methods ---
-  private static async getAllNotesRaw(): Promise<Note[]> {
+  private static async getAllNotesRaw(): Promise<File[]> {
     try {
       const jsonValue = await AsyncStorage.getItem(NOTES_STORAGE_KEY);
       const notes = await StorageUtils.safeJsonParse<any[]>(jsonValue);
       if (!notes) return [];
-      return notes.map(note => StorageUtils.convertDates(note) as Note);
+      return notes.map(note => StorageUtils.convertDates(note) as File);
     } catch (error) {
       console.error('Failed to get notes from AsyncStorage:', error);
       throw new StorageError('Failed to retrieve notes', 'FETCH_ERROR');
     }
   }
 
-  private static async saveAllNotes(notes: Note[]): Promise<void> {
+  private static async saveAllNotes(notes: File[]): Promise<void> {
     try {
       await AsyncStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(notes));
     } catch (error) {
@@ -40,19 +40,19 @@ export class NoteEditStorage {
   }
 
   // --- Private Raw Version Methods ---
-  private static async getAllVersionsRaw(): Promise<NoteVersion[]> {
+  private static async getAllVersionsRaw(): Promise<FileVersion[]> {
     try {
       const jsonValue = await AsyncStorage.getItem(NOTE_VERSIONS_STORAGE_KEY);
       const versions = await StorageUtils.safeJsonParse<any[]>(jsonValue);
       if (!versions) return [];
-      return versions.map(version => StorageUtils.convertDates(version) as NoteVersion);
+      return versions.map(version => StorageUtils.convertDates(version) as FileVersion);
     } catch (error) {
       console.error('Failed to retrieve note versions from AsyncStorage:', error);
       throw new StorageError('Failed to retrieve note versions', 'FETCH_VERSIONS_ERROR');
     }
   }
 
-  private static async saveAllVersions(versions: NoteVersion[]): Promise<void> {
+  private static async saveAllVersions(versions: FileVersion[]): Promise<void> {
     try {
       await AsyncStorage.setItem(NOTE_VERSIONS_STORAGE_KEY, JSON.stringify(versions));
     } catch (error) {
@@ -62,14 +62,14 @@ export class NoteEditStorage {
   }
 
   // --- Public Note Methods for note-edit ---
-  static async getNoteById(id: string): Promise<Note | null> {
+  static async getNoteById(id: string): Promise<File | null> {
     const notes = await this.getAllNotesRaw();
     return notes.find(note => note.id === id) || null;
   }
 
-  static async createNote(data: CreateNoteData): Promise<Note> {
+  static async createNote(data: CreateFileData): Promise<File> {
     const now = new Date();
-    const newNote: Note = {
+    const newNote: File = {
       id: uuidv4(),
       title: data.title,
       content: data.content,
@@ -85,9 +85,9 @@ export class NoteEditStorage {
     await this.saveAllNotes(notes);
 
     // Create initial version
-    const initialVersion: NoteVersion = {
+    const initialVersion: FileVersion = {
       id: uuidv4(),
-      noteId: newNote.id,
+      fileId: newNote.id,
       content: newNote.content,
       version: newNote.version,
       createdAt: newNote.createdAt,
@@ -99,7 +99,7 @@ export class NoteEditStorage {
     return newNote;
   }
 
-  static async updateNote(data: UpdateNoteData): Promise<Note> {
+  static async updateNote(data: UpdateFileData): Promise<File> {
     const notes = await this.getAllNotesRaw();
     const index = notes.findIndex(note => note.id === data.id);
 
@@ -110,9 +110,9 @@ export class NoteEditStorage {
     const existingNote = notes[index];
 
     // Save current state as a new version before updating
-    const newVersionForOldState: NoteVersion = {
+    const newVersionForOldState: FileVersion = {
       id: uuidv4(),
-      noteId: existingNote.id,
+      fileId: existingNote.id,
       content: existingNote.content,
       version: existingNote.version,
       createdAt: existingNote.updatedAt, // Use updatedAt as the creation time for this version
@@ -121,7 +121,7 @@ export class NoteEditStorage {
     versions.push(newVersionForOldState);
     await this.saveAllVersions(versions);
 
-    const updatedNote: Note = {
+    const updatedNote: File = {
       ...existingNote,
       ...data,
       updatedAt: new Date(),
@@ -135,19 +135,19 @@ export class NoteEditStorage {
   }
 
   // --- Public Version Methods for note-edit ---
-  static async getNoteVersions(noteId: string): Promise<NoteVersion[]> {
+  static async getNoteVersions(noteId: string): Promise<FileVersion[]> {
     const allVersions = await this.getAllVersionsRaw();
-    return allVersions.filter(version => version.noteId === noteId);
+    return allVersions.filter(version => version.fileId === noteId);
   }
 
-  static async getNoteVersion(versionId: string): Promise<NoteVersion | null> {
+  static async getNoteVersion(versionId: string): Promise<FileVersion | null> {
     const allVersions = await this.getAllVersionsRaw();
     return allVersions.find(version => version.id === versionId) || null;
   }
 
-  static async restoreNoteVersion(noteId: string, versionId: string): Promise<Note> {
+  static async restoreNoteVersion(noteId: string, versionId: string): Promise<File> {
     const versionToRestore = await this.getNoteVersion(versionId);
-    if (!versionToRestore || versionToRestore.noteId !== noteId) {
+    if (!versionToRestore || versionToRestore.fileId !== noteId) {
       throw new StorageError(`Version with id ${versionId} for note ${noteId} not found`, 'VERSION_NOT_FOUND');
     }
 

@@ -1,7 +1,7 @@
 // app/screen/note-list/hooks/useSearch.ts (拡張版)
 import { useState, useMemo, useCallback } from 'react';
 import { flattenTree, TreeNode } from '../utils/treeUtils';
-import { Note, Folder } from '../../../../shared/types/note';
+import { File, Folder } from '../../../../shared/types/file';
 
 export type SearchTarget = 'all' | 'notes' | 'folders';
 export type SearchField = 'title' | 'content' | 'all';

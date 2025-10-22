@@ -1,5 +1,5 @@
 // app/screen/note-list/utils/typeGuards.ts
-import { FileSystemItem, Folder, Note } from '@shared/types/note';
+import { FileSystemItem, Folder, File } from '@shared/types/file';
 import { TreeNode } from './treeUtils';
 
 /**

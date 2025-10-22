@@ -3,7 +3,7 @@
  * @summary NoteListContext用の型定義
  */
 
-import { Note, Folder, FileSystemItem } from '@shared/types/note';
+import { File, Folder, FileSystemItem } from '@shared/types/file';
 import { TreeNode } from '../utils/treeUtils';
 
 /**
@@ -31,7 +31,7 @@ export interface SearchOptions {
 export interface NoteListState {
   // データ
   folders: Folder[];
-  notes: Note[];
+  notes: File[];
   treeNodes: TreeNode[];
 
   // UI状態
@@ -65,7 +65,7 @@ export interface NoteListState {
  */
 export type NoteListAction =
   // データ更新
-  | { type: 'SET_DATA'; payload: { folders: Folder[]; notes: Note[] } }
+  | { type: 'SET_DATA'; payload: { folders: Folder[]; notes: File[] } }
   | { type: 'SET_LOADING'; payload: boolean }
 
   // ツリー操作
@@ -102,4 +102,4 @@ export type NoteListAction =
   | { type: 'EXIT_MOVE_MODE' }
 
   // 複合操作
-  | { type: 'REFRESH_COMPLETE'; payload: { folders: Folder[]; notes: Note[] } };
+  | { type: 'REFRESH_COMPLETE'; payload: { folders: Folder[]; notes: File[] } };

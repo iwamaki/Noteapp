@@ -4,7 +4,7 @@
  * @responsibility パスからノートやフォルダを検索する共通ロジックを提供します
  */
 
-import { Note, Folder } from '@shared/types/note';
+import { File, Folder } from '@shared/types/file';
 import { NoteListStorage } from '../../../screen/note-list/noteStorage';
 import { PathService } from '../../../services/PathService';
 import { logger } from '../../../utils/logger';
@@ -13,9 +13,9 @@ import { logger } from '../../../utils/logger';
  * 検索結果の型定義
  */
 export interface ResolvedItem {
-  type: 'note' | 'folder';
+  type: 'file' | 'folder';
   id: string;
-  item: Note | Folder;
+  item: File | Folder;
   fullPath: string;
 }
 

@@ -12,7 +12,7 @@ import { noteListReducer, createInitialState } from './noteListReducer';
 import { NoteRepository } from '../infrastructure/NoteRepository';
 import { FolderRepository } from '../infrastructure/FolderRepository';
 import { NoteListUseCases } from '../application/NoteListUseCases';
-import { FileSystemItem } from '@shared/types/note';
+import { FileSystemItem } from '@shared/types/file';
 
 interface NoteListProviderProps {
   children: React.ReactNode;

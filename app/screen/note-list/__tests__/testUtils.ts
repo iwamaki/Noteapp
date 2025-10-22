@@ -1,11 +1,11 @@
 // app/screen/note-list/__tests__/testUtils.ts
-import { Note, Folder } from '@shared/types/note';
+import { File, Folder } from '@shared/types/file';
 
 /**
  * テスト用のモックデータ生成ユーティリティ
  */
 
-export const createMockNote = (overrides: Partial<Note> = {}): Note => {
+export const createMockNote = (overrides: Partial<File> = {}): File => {
   const now = new Date();
   return {
     id: `note-${Date.now()}-${Math.random()}`,
@@ -32,7 +32,7 @@ export const createMockFolder = (overrides: Partial<Folder> = {}): Folder => {
   };
 };
 
-export const createMockNotes = (count: number, basePath: string = '/'): Note[] => {
+export const createMockNotes = (count: number, basePath: string = '/'): File[] => {
   return Array.from({ length: count }, (_, i) =>
     createMockNote({
       title: `Note ${i + 1}`,
@@ -55,13 +55,13 @@ export const createMockFolders = (count: number, basePath: string = '/'): Folder
  * ストレージのモック
  */
 export const createStorageMock = () => {
-  const notes: Note[] = [];
+  const notes: File[] = [];
   const folders: Folder[] = [];
 
   return {
     getAllNotes: jest.fn().mockResolvedValue(notes),
     getAllFolders: jest.fn().mockResolvedValue(folders),
-    createNote: jest.fn().mockImplementation((note: Note) => {
+    createNote: jest.fn().mockImplementation((note: File) => {
       notes.push(note);
       return Promise.resolve(note);
     }),
@@ -87,7 +87,7 @@ export const createStorageMock = () => {
       folders.length = 0;
     },
     // データを設定
-    setNotes: (newNotes: Note[]) => {
+    setNotes: (newNotes: File[]) => {
       notes.length = 0;
       notes.push(...newNotes);
     },

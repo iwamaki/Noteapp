@@ -4,8 +4,8 @@
  * @description データソースの抽象化により、実装の差し替えを容易にする
  */
 
-import { Note, NoteVersion } from '../types';
-import { CreateNoteData, UpdateNoteData } from '@shared/types/note';
+import { File, FileVersion } from '../types';
+import { CreateFileData, UpdateFileData } from '@shared/types/file';
 
 /**
  * ノートリポジトリのインターフェース
@@ -15,22 +15,22 @@ export interface NoteRepository {
   /**
    * IDでノートを検索
    */
-  findById(id: string): Promise<Note | null>;
+  findById(id: string): Promise<File | null>;
 
   /**
    * すべてのノートを取得
    */
-  findAll(): Promise<Note[]>;
+  findAll(): Promise<File[]>;
 
   /**
    * 新しいノートを作成
    */
-  create(data: CreateNoteData): Promise<Note>;
+  create(data: CreateFileData): Promise<File>;
 
   /**
    * ノートを更新
    */
-  update(id: string, data: Partial<UpdateNoteData>): Promise<Note>;
+  update(id: string, data: Partial<UpdateFileData>): Promise<File>;
 
   /**
    * ノートを削除
@@ -40,10 +40,10 @@ export interface NoteRepository {
   /**
    * ノートのバージョン履歴を取得
    */
-  getVersions(noteId: string): Promise<NoteVersion[]>;
+  getVersions(noteId: string): Promise<FileVersion[]>;
 
   /**
    * 特定のバージョンを復元
    */
-  restoreVersion(noteId: string, versionId: string): Promise<Note>;
+  restoreVersion(noteId: string, versionId: string): Promise<File>;
 }
