@@ -11,15 +11,15 @@ interface OverflowMenuProps {
   onCreateNew: () => void;
 }
 
-type NoteListScreenNavigationProp = StackNavigationProp<
+type FileListScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
-  'NoteList'
+  'FileList'
 >;
 
 export const OverflowMenu: React.FC<OverflowMenuProps> = ({ onCreateNew }) => {
   const { colors, spacing } = useTheme();
   const [modalVisible, setModalVisible] = useState(false);
-  const navigation = useNavigation<NoteListScreenNavigationProp>();
+  const navigation = useNavigation<FileListScreenNavigationProp>();
 
   const handleSettingsPress = () => {
     setModalVisible(false);

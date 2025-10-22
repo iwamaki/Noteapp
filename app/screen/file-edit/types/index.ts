@@ -19,7 +19,7 @@ export type ViewMode = 'edit' | 'preview' | 'diff';
  * エディタの状態を表す型
  */
 export interface EditorState {
-  note: File | null;
+  file: File | null;
   content: string;
   title: string;
   isDirty: boolean;

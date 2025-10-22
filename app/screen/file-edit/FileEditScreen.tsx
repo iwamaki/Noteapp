@@ -27,7 +27,7 @@ function FileEditScreen() {
   const { keyboardHeight, chatInputBarHeight } = useKeyboardHeight();
 
   const {
-    note,
+    file,
     title,
     content,
     setContent,
@@ -76,7 +76,7 @@ function FileEditScreen() {
 
   useFileEditHeader({
     title,
-    activeNoteId: note?.id,
+    activeNoteId: file?.id,
     viewMode,
     isLoading,
     isEditable: viewMode === 'edit' && !isLoading,
@@ -88,14 +88,14 @@ function FileEditScreen() {
     onRedo: redo,
     canUndo,
     canRedo,
-    originalNoteContent: note?.content ?? '',
+    originalNoteContent: file?.content ?? '',
     currentContent: content,
   });
 
   useFileEditChatContext({
     title,
     content,
-    path: note?.path || '', // Pass note.path
+    path: file?.path || '', // Pass file.path
     setContent,
   });
 

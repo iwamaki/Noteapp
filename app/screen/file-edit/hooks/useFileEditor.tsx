@@ -48,7 +48,7 @@ export const useFileEditor = (noteId?: string) => {
   // シンプルなインターフェースを返す
   return {
     // 状態
-    note: store.note,
+    file: store.file,
     content: store.content,
     title: store.title,
     isDirty: store.isDirty,

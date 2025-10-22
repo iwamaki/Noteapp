@@ -32,7 +32,7 @@ function RootNavigatorContent() {
   const { colors } = useTheme();
 
 
-  const shouldShowChat = currentRouteName === 'NoteList' || currentRouteName === 'FileEdit';
+  const shouldShowChat = currentRouteName === 'FileList' || currentRouteName === 'FileEdit';
 
   return (
     <>
@@ -46,12 +46,12 @@ function RootNavigatorContent() {
         }}
       >
         <Stack.Navigator
-          initialRouteName="NoteList"
+          initialRouteName="FileList"
           screenOptions={{
             headerTintColor: colors.text,
           }}
         >
-          <Stack.Screen name="NoteList" component={FileListScreen} options={{ title: 'Notes' }} />
+          <Stack.Screen name="FileList" component={FileListScreen} options={{ title: 'Notes' }} />
           <Stack.Screen name="FileEdit" component={FileEditScreen} options={{ title: 'Edit Note' }} />
           <Stack.Screen name="DiffView" component={DiffViewScreen} options={{ title: 'View Diff' }} />
           <Stack.Screen name="VersionHistory" component={VersionHistoryScreen} options={{ title: 'Version History' }} />
