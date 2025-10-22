@@ -41,7 +41,7 @@ export interface AppSettings {
   localLlmPort: string;
   aiResponseStyle: 'concise' | 'detailed' | 'custom';
   contextHistoryLength: number;
-  sendNoteContextToLLM: boolean; // Add this new setting
+  sendFileContextToLLM: boolean; // ファイルコンテキストをLLMに送信するかどうか
   llmContextMaxDepth: number; // LLMに渡すファイルリストの最大階層
 
   // 4. バージョン管理/バックアップ設定
@@ -107,7 +107,7 @@ const defaultSettings: AppSettings = {
   localLlmPort: '8080',
   aiResponseStyle: 'concise',
   contextHistoryLength: 10,
-  sendNoteContextToLLM: true,
+  sendFileContextToLLM: true,
   llmContextMaxDepth: 3,
 
   // バージョン管理/バックアップ設定
@@ -160,6 +160,15 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       const stored = await AsyncStorage.getItem(SETTINGS_STORAGE_KEY);
       if (stored) {
         const parsedSettings = JSON.parse(stored);
+
+        // マイグレーション: sendNoteContextToLLM → sendFileContextToLLM
+        if ('sendNoteContextToLLM' in parsedSettings && !('sendFileContextToLLM' in parsedSettings)) {
+          parsedSettings.sendFileContextToLLM = parsedSettings.sendNoteContextToLLM;
+          delete parsedSettings.sendNoteContextToLLM;
+          // マイグレーション後の設定を保存
+          await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ ...defaultSettings, ...parsedSettings }));
+        }
+
         set({ settings: { ...defaultSettings, ...parsedSettings } });
       }
     } catch (error) {

@@ -5,7 +5,7 @@ import { RootStackParamList } from '../../navigation/types';
 import { FileEditor, ViewMode as FileEditorViewMode } from './components/FileEditor';
 import { useFileEditor } from './hooks/useFileEditor';
 import { useFileEditHeader } from './hooks/useFileEditHeader';
-import { useNoteEditChatContext } from '../../features/chat/hooks/useNoteEditChatContext';
+import { useFileEditChatContext } from '../../features/chat/hooks/useFileEditChatContext';
 import { CustomModal } from '../../components/CustomModal';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { MainContainer } from '../../components/MainContainer';
@@ -18,8 +18,8 @@ import { useToastMessage } from './hooks/useToastMessage'; // useToastMessageを
 
 type FileEditScreenRouteProp = RouteProp<RootStackParamList, 'FileEdit'>;
 
-// ノート編集画面コンポーネント
-function NoteEditScreen() {
+// ファイル編集画面コンポーネント
+function FileEditScreen() {
   const { colors } = useTheme();
   const route = useRoute<FileEditScreenRouteProp>();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
@@ -92,7 +92,7 @@ function NoteEditScreen() {
     currentContent: content,
   });
 
-  useNoteEditChatContext({
+  useFileEditChatContext({
     title,
     content,
     path: note?.path || '', // Pass note.path
@@ -182,4 +182,4 @@ function NoteEditScreen() {
   );
 }
 
-export default NoteEditScreen;
+export default FileEditScreen;
