@@ -1,6 +1,6 @@
 /**
  * @file services/ValidationService.ts
- * @summary ノートのバリデーションロジック
+ * @summary ファイルのバリデーションロジック
  * @description 入力値の検証ルールを一元管理
  */
 
@@ -9,7 +9,7 @@ import { File } from '@shared/types/file';
 
 /**
  * バリデーションサービス
- * ノートデータの妥当性を検証
+ * ファイルデータの妥当性を検証
  */
 export class ValidationService {
   private rules: ValidationRule[] = [

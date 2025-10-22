@@ -38,7 +38,7 @@ export const useDiffView = () => {
   const handleRestore = useCallback(async () => {
     Alert.alert(
       '復元確認',
-      'このバージョンにノートを復元しますか？現在の内容は上書きされます。',
+      'このバージョンにファイルを復元しますか？現在の内容は上書きされます。',
       [
         { text: 'キャンセル', style: 'cancel' },
         {
@@ -57,9 +57,9 @@ export const useDiffView = () => {
             } catch (error: unknown) {
               console.error('Failed to restore file version:', error);
               if (error instanceof StorageError) {
-                Alert.alert('復元エラー', `ノートの復元に失敗しました: ${error.message}`);
+                Alert.alert('復元エラー', `ファイルの復元に失敗しました: ${error.message}`);
               } else {
-                Alert.alert('復元エラー', 'ノートの復元中に不明なエラーが発生しました。');
+                Alert.alert('復元エラー', 'ファイルの復元中に不明なエラーが発生しました。');
               }
             }
           },

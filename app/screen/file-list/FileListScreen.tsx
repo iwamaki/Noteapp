@@ -139,7 +139,7 @@ function FileListScreenContent() {
   const handleCopySelected = useCallback(async () => {
     try {
       await actions.copySelectedFiles(Array.from(state.selectedFileIds));
-      Alert.alert('成功', 'ノートをコピーしました');
+      Alert.alert('成功', 'ファイルをコピーしました');
     } catch (error: any) {
       Alert.alert('エラー', error.message);
     }
@@ -166,13 +166,13 @@ function FileListScreenContent() {
    */
   const handleOpenRenameModal = useCallback((id: string, type: 'file' | 'folder') => {
     const item: FileSystemItem | null = type === 'folder'
-      ? { type: 'folder', item: state.folders.find(f => f.id === id)! }
-      : { type: 'file', item: state.notes.find(n => n.id === id)! };
+      ? { type: 'folder', item: state.folders.find(f => n.id === id)! }
+      : { type: 'file', item: state.files.find(n => n.id === id)! };
 
     if (item && item.item) {
       dispatch({ type: 'OPEN_RENAME_MODAL', payload: item });
     }
-  }, [state.folders, state.notes, dispatch]);
+  }, [state.folders, state.files, dispatch]);
 
   /**
    * リネーム実行

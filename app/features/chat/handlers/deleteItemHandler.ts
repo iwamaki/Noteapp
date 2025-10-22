@@ -46,12 +46,12 @@ export const deleteItemHandler: CommandHandler = async (command: LLMCommand, con
     // アイテムの種類に応じて削除
     if (resolvedItem.type === 'file') {
       logger.debug('deleteItemHandler', 'Deleting file', {
-        noteId: resolvedItem.id,
+        fileId: resolvedItem.id,
         noteTitle: (resolvedItem.item as any).title,
       });
       await storage.deleteFiles([resolvedItem.id]);
-      logger.info('deleteItemHandler', 'Note deleted successfully', {
-        noteId: resolvedItem.id,
+      logger.info('deleteItemHandler', 'File deleted successfully', {
+        fileId: resolvedItem.id,
       });
     } else if (resolvedItem.type === 'folder') {
       logger.debug('deleteItemHandler', 'Deleting folder and its contents', {

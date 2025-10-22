@@ -54,7 +54,7 @@ export const useFileEditorStore = create<FileEditorStore>((set, get) => ({
 
     try {
       if (fileId) {
-        // 既存ノートを読み込む
+        // 既存ファイルを読み込む
         const file = await fileService.loadFile(fileId);
         set({
           file: file,
@@ -66,7 +66,7 @@ export const useFileEditorStore = create<FileEditorStore>((set, get) => ({
         });
         get().history.reset(file.content);
       } else {
-        // 新規ノートの作成
+        // 新規ファイルの作成
         set({
           file: null,
           originalFile: null,

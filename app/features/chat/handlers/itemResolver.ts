@@ -61,33 +61,33 @@ export async function findItemByPath(path: string): Promise<ResolvedItem | null>
         }
       }
     } else {
-      // ノートを検索
-      const notes = await FileListStorage.getAllFiles();
+      // ファイルを検索
+      const files = await FileListStorage.getAllFiles();
 
       // パスをパースして親パスとファイル名を取得
       const parts = trimmedPath.split('/').filter(Boolean);
       const fileName = parts[parts.length - 1];
       const parentPath = parts.length > 1 ? `/${parts.slice(0, -1).join('/')}/` : '/';
 
-      for (const note of notes) {
-        const fullPath = PathService.getFullPath(note.path, note.title, 'file');
-        const normalizedNotePath = PathService.normalizePath(note.path);
+      for (const file of files) {
+        const fullPath = PathService.getFullPath(file.path, file.title, 'file');
+        const normalizedNotePath = PathService.normalizePath(file.path);
         const normalizedParentPath = PathService.normalizePath(parentPath);
 
         // パスとタイトルの両方が一致するかチェック
         if (
           (fullPath === trimmedPath || fullPath === `/${trimmedPath}`) ||
-          (normalizedNotePath === normalizedParentPath && note.title === fileName)
+          (normalizedNotePath === normalizedParentPath && file.title === fileName)
         ) {
           logger.debug('itemResolver', 'Found file by path', {
             path: trimmedPath,
-            noteId: note.id,
-            noteTitle: note.title,
+            fileId: file.id,
+            fileTitle: file.title,
           });
           return {
             type: 'file',
-            id: note.id,
-            item: note,
+            id: file.id,
+            item: file,
             fullPath,
           };
         }

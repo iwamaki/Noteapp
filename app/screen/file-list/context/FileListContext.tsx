@@ -46,7 +46,7 @@ export interface FileListActions {
   createFolder: (name: string, parentPath: string) => Promise<Folder>;
 
   /**
-   * ノートをパス指定で作成
+   * ファイルをパス指定で作成
    */
   createFileWithPath: (
     inputPath: string,

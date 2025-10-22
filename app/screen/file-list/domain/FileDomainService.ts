@@ -2,7 +2,7 @@
  * @file NoteDomainService.ts
  * @summary ノートに関するビジネスロジック層
  * @description
- * ノートのバリデーション、重複チェック、ビジネスルールの実装を担当します。
+ * ファイルのバリデーション、重複チェック、ビジネスルールの実装を担当します。
  * データアクセスはRepositoryを通じて行います。
  */
 
@@ -68,7 +68,7 @@ export class FileDomainService {
   }
 
   /**
-   * ノートの重複チェック
+   * ファイルの重複チェック
    * @param title ノートタイトル
    * @param folderPath フォルダパス
    * @param excludeId 除外するファイルID（更新時に使用）
@@ -79,12 +79,12 @@ export class FileDomainService {
     folderPath: string,
     excludeId?: string
   ): Promise<DuplicateCheckResult> {
-    const allNotes = await FileRepository.getAll();
-    const existing = allNotes.find(
-      note =>
-        note.title === title &&
-        note.path === folderPath &&
-        note.id !== excludeId
+    const allFiles = await FileRepository.getAll();
+    const existing = allFiles.find(
+      file =>
+        file.title === title &&
+        file.path === folderPath &&
+        file.id !== excludeId
     );
 
     return {
@@ -94,39 +94,39 @@ export class FileDomainService {
   }
 
   /**
-   * ノートの移動操作をバリデーション
+   * ファイルの移動操作をバリデーション
    * @param fileIds 移動するファイルIDの配列
    * @param targetFolderPath 移動先フォルダパス
    * @returns バリデーション結果
    */
   static async validateMoveOperation(
-    noteIds: string[],
+    fileIds: string[],
     targetFolderPath: string
   ): Promise<MoveValidationResult> {
-    const allNotes = await FileRepository.getAll();
+    const allFiles = await FileRepository.getAll();
     const errors: string[] = [];
 
-    for (const noteId of noteIds) {
-      const note = allNotes.find(n => n.id === noteId);
+    for (const fileId of fileIds) {
+      const file = allFiles.find(n => n.id === fileId);
       if (!note) {
-        errors.push(`ノート ${noteId} が見つかりません`);
+        errors.push(`ノート ${fileId} が見つかりません`);
         continue;
       }
 
       // 移動先が同じ場合はスキップ
-      if (note.path === targetFolderPath) {
+      if (file.path === targetFolderPath) {
         continue;
       }
 
       // 重複チェック
       const { isDuplicate } = await this.checkDuplicate(
-        note.title,
+        file.title,
         targetFolderPath,
-        noteId
+        fileId
       );
 
       if (isDuplicate) {
-        errors.push(`"${note.title}" は移動先に既に存在します`);
+        errors.push(`"${file.title}" は移動先に既に存在します`);
       }
     }
 
@@ -137,18 +137,18 @@ export class FileDomainService {
   }
 
   /**
-   * ノートのコピー操作をバリデーション
+   * ファイルのコピー操作をバリデーション
    * @param fileIds コピーするファイルIDの配列
    * @returns バリデーション結果
    */
-  static async validateCopyOperation(noteIds: string[]): Promise<MoveValidationResult> {
-    const allNotes = await FileRepository.getAll();
+  static async validateCopyOperation(fileIds: string[]): Promise<MoveValidationResult> {
+    const allFiles = await FileRepository.getAll();
     const errors: string[] = [];
 
-    for (const noteId of noteIds) {
-      const note = allNotes.find(n => n.id === noteId);
+    for (const fileId of fileIds) {
+      const file = allFiles.find(n => n.id === fileId);
       if (!note) {
-        errors.push(`ノート ${noteId} が見つかりません`);
+        errors.push(`ノート ${fileId} が見つかりません`);
       }
     }
 
@@ -159,7 +159,7 @@ export class FileDomainService {
   }
 
   /**
-   * ノートのタイトルと内容が有効かチェック
+   * ファイルのタイトルと内容が有効かチェック
    * @param title タイトル
    * @param content 内容
    * @returns バリデーション結果
@@ -175,7 +175,7 @@ export class FileDomainService {
     if (content.length > MAX_CONTENT_LENGTH) {
       return {
         valid: false,
-        error: `ノートの内容が大きすぎます（最大${MAX_CONTENT_LENGTH}文字）`,
+        error: `ファイルの内容が大きすぎます（最大${MAX_CONTENT_LENGTH}文字）`,
       };
     }
 
@@ -183,12 +183,12 @@ export class FileDomainService {
   }
 
   /**
-   * 指定パス内のノートを全て取得（再帰的）
+   * 指定パス内のファイルを全て取得（再帰的）
    * @param folderPath フォルダパス
-   * @param allNotes 全ノートの配列
-   * @returns パス内の全ノート
+   * @param allFiles 全ファイルの配列
+   * @returns パス内の全ファイル
    */
-  static getFilesInPath(folderPath: string, allNotes: File[]): File[] {
-    return allNotes.filter(note => note.path.startsWith(folderPath));
+  static getFilesInPath(folderPath: string, allFiles: File[]): File[] {
+    return allFiles.filter(note => file.path.startsWith(folderPath));
   }
 }

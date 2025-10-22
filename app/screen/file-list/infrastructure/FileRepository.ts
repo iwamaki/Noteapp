@@ -1,32 +1,32 @@
 /**
  * @file FileRepository.ts
- * @summary ノートデータアクセス層
+ * @summary ファイルデータアクセス層
  * @description
  * AsyncStorageへのアクセスを抽象化し、データアクセスの詳細を隠蔽します。
  * ビジネスロジックは含まず、純粋にデータの永続化のみを担当します。
  */
 
 import { File, CreateFileData } from '@shared/types/file';
-import { getAllNotesRaw, saveAllNotes } from '../fileStorage/storage';
+import { getAllFilesRaw, saveAllFiles } from '../fileStorage/storage';
 import * as FileFns from '../fileStorage/file';
 
 /**
- * ノートリポジトリ
+ * ファイルリポジトリ
  * データアクセスの単一窓口として機能
  */
 export class FileRepository {
   /**
-   * 全ノートを取得
-   * @returns 全ノートの配列（更新日時降順）
+   * 全ファイルを取得
+   * @returns 全ファイルの配列（更新日時降順）
    */
   static async getAll(): Promise<File[]> {
     return await FileFns.getAllFiles();
   }
 
   /**
-   * 指定パス内のノートを取得
+   * 指定パス内のファイルを取得
    * @param path フォルダパス
-   * @returns パス内のノートの配列
+   * @returns パス内のファイルの配列
    */
   static async getByPath(path: string): Promise<File[]> {
     return await FileFns.getFilesByPath(path);
@@ -37,22 +37,22 @@ export class FileRepository {
    * @returns ノート、見つからない場合はundefined
    */
   static async getById(fileId: string): Promise<File | undefined> {
-    const allNotes = await getAllNotesRaw();
-    return allNotes.find(file => file.id === fileId);
+    const allFiles = await getAllFilesRaw();
+    return allFiles.find(file => file.id === fileId);
   }
 
   /**
    * @param fileIds ファイルIDの配列
-   * @returns 見つかったノートの配列
+   * @returns 見つかったファイルの配列
    */
   static async getByIds(fileIds: string[]): Promise<File[]> {
-    const allNotes = await getAllNotesRaw();
-    return allNotes.filter(file => fileIds.includes(file.id));
+    const allFiles = await getAllFilesRaw();
+    return allFiles.filter(file => fileIds.includes(file.id));
   }
 
   /**
-   * ノートを作成
-   * @param data ノート作成データ
+   * ファイルを作成
+   * @param data ファイル作成データ
    * @returns 作成されたノート
    */
   static async create(data: CreateFileData): Promise<File> {
@@ -60,30 +60,30 @@ export class FileRepository {
   }
 
   /**
-   * ノートを更新
+   * ファイルを更新
    * @param file 更新するファイル
    * @returns 更新されたノート
    */
   static async update(note: File): Promise<File> {
-    const allNotes = await getAllNotesRaw();
-    const noteIndex = allNotes.findIndex(n => n.id === note.id);
+    const allFiles = await getAllFilesRaw();
+    const fileIndex = allFiles.findIndex(n => n.id === file.id);
 
-    if (noteIndex === -1) {
-      throw new Error(`File with id ${note.id} not found`);
+    if (fileIndex === -1) {
+      throw new Error(`File with id ${file.id} not found`);
     }
 
-    const updatedNote = {
+    const updatedFile = {
       ...note,
       updatedAt: new Date(),
     };
 
-    allNotes[noteIndex] = updatedNote;
-    await saveAllNotes(allNotes);
-    return updatedNote;
+    allFiles[fileIndex] = updatedFile;
+    await saveAllFiles(allFiles);
+    return updatedFile;
   }
 
   /**
-   * 単一ノートを削除
+   * 単一ファイルを削除
    * @param fileId ファイルID
    */
   static async delete(fileId: string): Promise<void> {
@@ -91,7 +91,7 @@ export class FileRepository {
   }
 
   /**
-   * 複数ノートを一括削除
+   * 複数ファイルを一括削除
    * @param fileIds ファイルIDの配列
    */
   static async batchDelete(fileIds: string[]): Promise<void> {
@@ -99,42 +99,42 @@ export class FileRepository {
   }
 
   /**
-   * 複数ノートを一括更新
+   * 複数ファイルを一括更新
    * @param notes 更新するファイルの配列
    * @description
-   * 既存のノートをIDでマッチングして更新します。
+   * 既存のファイルをIDでマッチングして更新します。
    * 見つからないIDは無視されます。
    */
-  static async batchUpdate(notes: File[]): Promise<void> {
-    const allNotes = await getAllNotesRaw();
-    const noteMap = new Map(notes.map(n => [n.id, n]));
+  static async batchUpdate(files: File[]): Promise<void> {
+    const allFiles = await getAllFilesRaw();
+    const fileMap = new Map(files.map(n => [n.id, n]));
 
-    // 既存ノートを更新されたノートで置き換え
-    const updated = allNotes.map(n => {
-      const updatedNote = noteMap.get(n.id);
-      if (updatedNote) {
+    // 既存ファイルを更新されたノートで置き換え
+    const updated = allFiles.map(n => {
+      const updatedFile = fileMap.get(n.id);
+      if (updatedFile) {
         return {
-          ...updatedNote,
+          ...updatedFile,
           updatedAt: new Date(),
         };
       }
       return n;
     });
 
-    await saveAllNotes(updated);
+    await saveAllFiles(updated);
   }
 
   /**
-   * ノートをコピー
+   * ファイルをコピー
    * @param sourceIds コピー元ファイルIDの配列
-   * @returns コピーされたノートの配列
+   * @returns コピーされたファイルの配列
    */
   static async copy(sourceIds: string[]): Promise<File[]> {
     return await FileFns.copyFiles(sourceIds);
   }
 
   /**
-   * ノートを移動（パス変更）
+   * ファイルを移動（パス変更）
    * @param fileId ファイルID
    * @param newPath 新しいフォルダパス
    * @returns 更新されたノート
@@ -144,14 +144,14 @@ export class FileRepository {
   }
 
   /**
-   * 全ノートを保存（内部用）
-   * @param notes 保存するノートの配列
+   * 全ファイルを保存（内部用）
+   * @param notes 保存するファイルの配列
    * @description
    * 既存の全データを上書きします。使用には注意が必要です。
    * 通常はbatchUpdate()を使用してください。
    * @internal
    */
-  static async saveAll(notes: File[]): Promise<void> {
-    await saveAllNotes(notes);
+  static async saveAll(files: File[]): Promise<void> {
+    await saveAllFiles(files);
   }
 }

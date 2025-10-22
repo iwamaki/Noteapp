@@ -55,24 +55,24 @@ export const createMockFolders = (count: number, basePath: string = '/'): Folder
  * ストレージのモック
  */
 export const createStorageMock = () => {
-  const notes: File[] = [];
+  const files: File[] = [];
   const folders: Folder[] = [];
 
   return {
-    getAllNotes: jest.fn().mockResolvedValue(notes),
+    getAllNotes: jest.fn().mockResolvedValue(files),
     getAllFolders: jest.fn().mockResolvedValue(folders),
-    createNote: jest.fn().mockImplementation((note: File) => {
-      notes.push(note);
-      return Promise.resolve(note);
+    createNote: jest.fn().mockImplementation((file: File) => {
+      files.push(file);
+      return Promise.resolve(file);
     }),
     createFolder: jest.fn().mockImplementation((folder: Folder) => {
       folders.push(folder);
       return Promise.resolve(folder);
     }),
     deleteNotes: jest.fn().mockImplementation((ids: string[]) => {
-      const remaining = notes.filter(n => !ids.includes(n.id));
-      notes.length = 0;
-      notes.push(...remaining);
+      const remaining = files.filter(n => !ids.includes(n.id));
+      files.length = 0;
+      files.push(...remaining);
       return Promise.resolve();
     }),
     deleteFolder: jest.fn().mockImplementation((id: string) => {
@@ -83,13 +83,13 @@ export const createStorageMock = () => {
     }),
     // データをリセット
     reset: () => {
-      notes.length = 0;
+      files.length = 0;
       folders.length = 0;
     },
     // データを設定
     setNotes: (newNotes: File[]) => {
-      notes.length = 0;
-      notes.push(...newNotes);
+      files.length = 0;
+      files.push(...newNotes);
     },
     setFolders: (newFolders: Folder[]) => {
       folders.length = 0;

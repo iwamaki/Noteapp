@@ -27,7 +27,7 @@ export const checkTreeConsistency = async (treeNodes: TreeNode[]): Promise<void>
   try {
 
     // 1. Get the source of truth from storage
-    const allNotes = await FileListStorage.getAllFiles();      
+    const allFiles = await FileListStorage.getAllFiles();      
     const allFolders = await FileListStorage.getAllFolders();
 
     // 2. Get the UI data - collect ALL nodes including those in collapsed folders
@@ -36,18 +36,18 @@ export const checkTreeConsistency = async (treeNodes: TreeNode[]): Promise<void>
     const uiFolders = allUiNodes.filter(node => node.type === 'folder');
 
     // 3. Compare counts
-    if (allNotes.length !== uiNotes.length) {
-      const storageNoteIds = allNotes.map(n => n.id);
+    if (allFiles.length !== uiNotes.length) {
+      const storageNoteIds = allFiles.map(n => n.id);
       const uiNoteIds = uiNotes.map(n => n.id);
       const missingInUi = storageNoteIds.filter(id => !uiNoteIds.includes(id));
       const extraInUi = uiNoteIds.filter(id => !storageNoteIds.includes(id));
 
       throw new Error(
-        `Data Inconsistency: Note count mismatch.\n` +
-        `Storage: ${allNotes.length} notes, UI: ${uiNotes.length} notes.\n` +
+        `Data Inconsistency: File count mismatch.\n` +
+        `Storage: ${allFiles.length} notes, UI: ${uiNotes.length} notes.\n` +
         `Missing in UI: ${JSON.stringify(missingInUi)}\n` +
         `Extra in UI: ${JSON.stringify(extraInUi)}\n` +
-        `Storage notes:\n${JSON.stringify(allNotes.map(n => ({ id: n.id, title: n.title, path: n.path })), null, 2)}`
+        `Storage files:\n${JSON.stringify(allFiles.map(n => ({ id: n.id, title: n.title, path: n.path })), null, 2)}`
       );
     }
 
@@ -67,11 +67,11 @@ export const checkTreeConsistency = async (treeNodes: TreeNode[]): Promise<void>
     }
 
     // 4. Compare content (IDs)
-    const storageNoteIds = new Set(allNotes.map(n => n.id));
+    const storageNoteIds = new Set(allFiles.map(n => n.id));
     const uiNoteIds = new Set(uiNotes.map(n => n.id));
     for (const id of storageNoteIds) {
       if (!uiNoteIds.has(id)) {
-        const missingNote = allNotes.find(n => n.id === id);
+        const missingNote = allFiles.find(n => n.id === id);
         throw new Error(
           `Data Inconsistency: Note with ID '${id}' exists in storage but not in UI.\n` +
           `Missing file: ${JSON.stringify(missingNote, null, 2)}`
@@ -106,11 +106,11 @@ export const checkTreeConsistency = async (treeNodes: TreeNode[]): Promise<void>
  */
 export const logStorageState = async (): Promise<void> => {
   try {
-    const allNotes = await FileListStorage.getAllFiles();
+    const allFiles = await FileListStorage.getAllFiles();
     const allFolders = await FileListStorage.getAllFolders();
 
     console.log('📦 Current Storage State:');
-    console.log(`  Notes: ${allNotes.length}`);
+    console.log(`  Notes: ${allFiles.length}`);
     console.log(`  Folders: ${allFolders.length}`);
 
     if (allFolders.length > 0) {
@@ -120,9 +120,9 @@ export const logStorageState = async (): Promise<void> => {
       });
     }
 
-    if (allNotes.length > 0) {
-      console.log('  Note structure:');
-      allNotes.forEach(n => {
+    if (allFiles.length > 0) {
+      console.log('  File structure:');
+      allFiles.forEach(n => {
         console.log(`    - ${n.title} (path: ${n.path}, id: ${n.id})`);
       });
     }

@@ -1,6 +1,6 @@
 /**
  * @file repositories/AsyncStorageNoteRepository.ts
- * @summary AsyncStorageを使用したノートリポジトリの実装
+ * @summary AsyncStorageを使用したファイルリポジトリの実装
  * @description NoteEditStorageをリポジトリインターフェースに適合させたラッパー
  */
 
@@ -41,11 +41,11 @@ export class AsyncStorageFileRepository implements FileRepository {
     throw new Error('Delete operation not implemented');
   }
 
-  async getVersions(noteId: string): Promise<FileVersion[]> {
-    return await FileEditStorage.getFileVersions(noteId);
+  async getVersions(fileId: string): Promise<FileVersion[]> {
+    return await FileEditStorage.getFileVersions(fileId);
   }
 
-  async restoreVersion(noteId: string, versionId: string): Promise<File> {
-    return await FileEditStorage.restoreFileVersion(noteId, versionId);
+  async restoreVersion(fileId: string, versionId: string): Promise<File> {
+    return await FileEditStorage.restoreFileVersion(fileId, versionId);
   }
 }

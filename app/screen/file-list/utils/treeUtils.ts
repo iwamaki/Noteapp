@@ -20,28 +20,28 @@ export interface TreeNode {
 /**
  * フラットなアイテムリストを階層的なツリー構造に変換
  * @param allFolders すべてのフォルダ
- * @param allNotes すべてのノート
+ * @param allFiles すべてのノート
  * @param expandedFolderIds 展開中のフォルダID（Set）
  * @returns ルートレベルのTreeNode配列
  */
 export function buildTree(
   allFolders: Folder[],
-  allNotes: File[],
+  allFiles: File[],
   expandedFolderIds: Set<string>
 ): TreeNode[] {
   if (__DEV__) {
     logger.debug('tree', '🌲 Building tree from storage:', {
       totalFolders: allFolders.length,
-      totalNotes: allNotes.length,
+      totalNotes: allFiles.length,
       expandedFolders: expandedFolderIds.size,
     });
   }
 
   // ルートレベルのアイテムを取得
-  const rootItems = getRootItems(allFolders, allNotes);
+  const rootItems = getRootItems(allFolders, allFiles);
 
   // ツリーを構築
-  const tree = rootItems.map(item => buildTreeNode(item, allFolders, allNotes, expandedFolderIds, 0));
+  const tree = rootItems.map(item => buildTreeNode(item, allFolders, allFiles, expandedFolderIds, 0));
 
   if (__DEV__) {
     logger.debug('tree', `🌲 Tree built: ${tree.length} root items`);
@@ -53,12 +53,12 @@ export function buildTree(
 /**
  * ルートレベル（path: '/'）のアイテムを取得
  */
-function getRootItems(allFolders: Folder[], allNotes: File[]): FileSystemItem[] {
+function getRootItems(allFolders: Folder[], allFiles: File[]): FileSystemItem[] {
   const rootFolders = allFolders
     .filter(f => PathService.normalizePath(f.path) === '/')
     .map(f => ({ type: 'folder' as const, item: f }));
 
-  const rootNotes = allNotes
+  const rootNotes = allFiles
     .filter(n => PathService.normalizePath(n.path) === '/')
     .map(n => ({ type: 'file' as const, item: n }));
 
@@ -71,7 +71,7 @@ function getRootItems(allFolders: Folder[], allNotes: File[]): FileSystemItem[] 
 function buildTreeNode(
   item: FileSystemItem,
   allFolders: Folder[],
-  allNotes: File[],
+  allFiles: File[],
   expandedFolderIds: Set<string>,
   depth: number
 ): TreeNode {
@@ -85,13 +85,13 @@ function buildTreeNode(
       .filter(f => PathService.normalizePath(f.path) === folderPath)
       .map(f => ({ type: 'folder' as const, item: f }));
 
-    const childNotes = allNotes
+    const childNotes = allFiles
       .filter(n => PathService.normalizePath(n.path) === folderPath)
       .map(n => ({ type: 'file' as const, item: n }));
 
     const childItems = [...childFolders, ...childNotes];
     const children = childItems.map(child =>
-      buildTreeNode(child, allFolders, allNotes, expandedFolderIds, depth + 1)
+      buildTreeNode(child, allFolders, allFiles, expandedFolderIds, depth + 1)
     );
 
     return {

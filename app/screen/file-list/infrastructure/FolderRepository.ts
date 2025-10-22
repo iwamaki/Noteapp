@@ -68,7 +68,7 @@ export class FolderRepository {
    */
   static async update(folder: Folder): Promise<Folder> {
     const allFolders = await getAllFoldersRaw();
-    const folderIndex = allFolders.findIndex(f => f.id === folder.id);
+    const folderIndex = allFolders.findIndex(f => n.id === folder.id);
 
     if (folderIndex === -1) {
       throw new Error(`Folder with id ${folder.id} not found`);

@@ -33,7 +33,7 @@ export const FileListEmptyState: React.FC<NoteListEmptyStateProps> = ({
       ) : (
         <>
           <Text style={[messageStyle, styles.emptyMessage]}>ノートがありません。</Text>
-          <Text style={[messageStyle, styles.emptyMessage]}>下の「+」ボタンから新しいノートを作成しましょう。</Text>
+          <Text style={[messageStyle, styles.emptyMessage]}>下の「+」ボタンから新しいファイルを作成しましょう。</Text>
         </>
       )}
     </View>

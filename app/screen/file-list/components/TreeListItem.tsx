@@ -1,7 +1,7 @@
 /**
  * @file TreeListItem.tsx
  * @summary ツリー構造用のリストアイテムコンポーネント
- * @responsibility インデント、展開/折りたたみアイコン、フォルダ/ノートの視覚的表現
+ * @responsibility インデント、展開/折りたたみアイコン、フォルダ/ファイルの視覚的表現
  */
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
@@ -82,16 +82,16 @@ export const TreeListItem: React.FC<TreeListItemProps> = ({
       const folder = node.item as Folder;
       return folder.name;
     }
-    const note = node.item as File;
-    return note.title || '無題のノート';
+    const file = node.item as File;
+    return file.title || '無題のノート';
   };
 
   const renderSubtitle = () => {
     if (node.type === 'file') {
-      const note = node.item as File;
-      return note.content ? (
+      const file = node.item as File;
+      return file.content ? (
         <ListItem.Description numberOfLines={1}>
-          {note.content}
+          {file.content}
         </ListItem.Description>
       ) : null;
     }
