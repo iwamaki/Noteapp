@@ -11,8 +11,8 @@ import {
 } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { RootStackParamList } from './types';
-import NoteListScreen from '../screen/note-list/NoteListScreen';
-import NoteEditScreen from '../screen/note-edit/NoteEditScreen';
+import NoteListScreen from '../screen/file-list/NoteListScreen';
+import NoteEditScreen from '../screen/file-edit/NoteEditScreen';
 import DiffViewScreen from '../screen/diff-view/DiffViewScreen';
 import VersionHistoryScreen from '../screen/version-history/VersionHistoryScreen';
 import SettingsScreen from '../settings/SettingsScreen';

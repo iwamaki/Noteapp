@@ -7,8 +7,8 @@
  */
 
 import { File, CreateFileData } from '@shared/types/file';
-import { getAllNotesRaw, saveAllNotes } from '../noteStorage/storage';
-import * as NoteFns from '../noteStorage/note';
+import { getAllNotesRaw, saveAllNotes } from '../fileStorage/storage';
+import * as NoteFns from '../fileStorage/note';
 
 /**
  * ノートリポジトリ

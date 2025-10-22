@@ -7,7 +7,7 @@
 import { LLMCommand } from '../llmService/types/types';
 import { CommandHandler } from './types';
 import { logger } from '../../../utils/logger';
-import { NoteListStorage } from '../../../screen/note-list/noteStorage';
+import { NoteListStorage } from '../../../screen/file-list/fileStorage';
 
 /**
  * create_directoryコマンドのハンドラ

@@ -5,7 +5,7 @@
  */
 
 import { File, Folder } from '@shared/types/file';
-import { NoteListStorage } from '../../../screen/note-list/noteStorage';
+import { NoteListStorage } from '../../../screen/file-list/fileStorage';
 import { PathService } from '../../../services/PathService';
 import { logger } from '../../../utils/logger';
 

@@ -7,7 +7,7 @@
 import { LLMCommand } from '../llmService/types/types';
 import { CommandHandler } from './types';
 import { logger } from '../../../utils/logger';
-import { NoteListStorage, StorageError } from '../../../screen/note-list/noteStorage';
+import { NoteListStorage, StorageError } from '../../../screen/file-list/fileStorage';
 import { PathService } from '../../../services/PathService';
 import { findItemByPath, isValidDirectoryPath } from './itemResolver';
 
