@@ -8,7 +8,7 @@ export { FolderDomainService } from './FolderDomainService';
 
 export type {
   ValidationResult,
-  DuplicateCheckResult as NoteDuplicateCheckResult,
+  DuplicateCheckResult as FileDuplicateCheckResult,
   MoveValidationResult,
 } from './FileDomainService';
 

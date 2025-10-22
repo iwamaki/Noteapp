@@ -465,6 +465,27 @@ Issue #004は「resolved」とマークされていますが、詳細な分析�
 - **結果**: 約80-100箇所の"note"識別子が残存していることを確認
 - **メモ**: このIssueドキュメント（#005）を作成し、Option A（完全統一）のための詳細な実装計画を策定
 
+### 試行 #1 (2025-10-22) - Phase 2, 3, 5, 7 完了
+
+- **Phase 2 完了**: 設定値リテラルの統一とマイグレーション (`settingsStore.ts`)
+  - `startupScreen` の型と値を `'file-list' | 'last-file' | 'new-file'` に変更
+  - 既存ユーザーデータのマイグレーションロジック実装
+
+- **Phase 3 完了**: EditorState型プロパティの統一
+  - `EditorState.note` → `EditorState.file` に変更
+  - 影響ファイル: `types/index.ts`, `FileEditorStore.ts`, `useFileEditor.tsx`, `FileEditScreen.tsx`
+
+- **Phase 5 完了**: インターフェース名・型エイリアスの統一
+  - `NoteListProviderProps` → `FileListProviderProps`
+  - `NoteListSearchBarProps` → `FileListSearchBarProps`
+  - `NoteDuplicateCheckResult` → `FileDuplicateCheckResult`
+
+- **Phase 7 完了**: ログカテゴリの統一
+  - `LogCategory` 型の `'note'` → `'file'` に変更
+
+- **結果**: 全て型チェック成功、Phase 4（変数名統一）とPhase 6（テスト）はスキップ
+- **次**: Phase 8（コメント・JSDoc統一）が残存
+
 ---
 
 ## AIへの申し送り事項 (Handover to AI)
