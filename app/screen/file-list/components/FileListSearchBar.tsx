@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, TextInput } from 'react-native';
 import { useTheme } from '../../../design/theme/ThemeContext';
 
-interface NoteListSearchBarProps {
+interface FileListSearchBarProps {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   placeholder?: string;
@@ -10,7 +10,7 @@ interface NoteListSearchBarProps {
   isSearchActive?: boolean;
 }
 
-export const FileListSearchBar: React.FC<NoteListSearchBarProps> = ({
+export const FileListSearchBar: React.FC<FileListSearchBarProps> = ({
   searchQuery,
   setSearchQuery,
   placeholder = "Search ...",

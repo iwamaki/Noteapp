@@ -14,7 +14,7 @@ import { FolderRepository } from '../infrastructure/FolderRepository';
 import { FileListUseCases } from '../application/FileListUseCases';
 import { FileSystemItem } from '@shared/types/file';
 
-interface NoteListProviderProps {
+interface FileListProviderProps {
   children: React.ReactNode;
 }
 
@@ -22,7 +22,7 @@ interface NoteListProviderProps {
  * NoteListProvider
  * 状態管理とビジネスロジックを提供
  */
-export const FileListProvider: React.FC<NoteListProviderProps> = ({ children }) => {
+export const FileListProvider: React.FC<FileListProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(fileListReducer, undefined, createInitialState);
 
   /**
