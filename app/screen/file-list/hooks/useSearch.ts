@@ -40,9 +40,9 @@ export const useSearch = (treeNodes: TreeNode[]) => {
       if (searchOptions.target === 'folders' && node.type !== 'folder') return false;
 
       if (node.type === 'file') {
-        const note = node.item as File;
-        const title = searchOptions.caseSensitive ? note.title : note.title.toLowerCase();
-        const content = searchOptions.caseSensitive ? note.content : note.content.toLowerCase();
+        const file = node.item as File;
+        const title = searchOptions.caseSensitive ? file.title : file.title.toLowerCase();
+        const content = searchOptions.caseSensitive ? file.content : file.content.toLowerCase();
 
         switch (searchOptions.field) {
           case 'title':

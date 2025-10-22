@@ -13,23 +13,23 @@ export class StorageError extends Error {
   }
 }
 
-// --- Raw Note Methods ---
-export const getAllNotesRaw = async (): Promise<File[]> => {
+// --- Raw File Methods ---
+export const getAllFilesRaw = async (): Promise<File[]> => {
   try {
     const jsonValue = await AsyncStorage.getItem(NOTES_STORAGE_KEY);
-    const notes = await StorageUtils.safeJsonParse<any[]>(jsonValue);
-    if (!notes) return [];
-    return notes.map(note => StorageUtils.convertDates(note) as File);
+    const files = await StorageUtils.safeJsonParse<any[]>(jsonValue);
+    if (!files) return [];
+    return files.map(file => StorageUtils.convertDates(file) as File);
   } catch (e) {
-    throw new StorageError('Failed to retrieve notes', 'FETCH_ERROR', e);
+    throw new StorageError('Failed to retrieve files', 'FETCH_ERROR', e);
   }
 };
 
-export const saveAllNotes = async (notes: File[]): Promise<void> => {
+export const saveAllFiles = async (files: File[]): Promise<void> => {
   try {
-    await AsyncStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(notes));
+    await AsyncStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(files));
   } catch (e) {
-    throw new StorageError('Failed to save notes', 'SAVE_ERROR', e);
+    throw new StorageError('Failed to save files', 'SAVE_ERROR', e);
   }
 };
 

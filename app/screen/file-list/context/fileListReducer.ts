@@ -14,7 +14,7 @@ import { buildTree } from '../utils/treeUtils';
 export const createInitialState = (): FileListState => ({
   // データ
   folders: [],
-  notes: [],
+  files: [],
   treeNodes: [],
 
   // UI状態
@@ -60,12 +60,12 @@ export function fileListReducer(
     // データ更新
     // ======================================
     case 'SET_DATA': {
-      const { folders, notes } = action.payload;
+      const { folders, files } = action.payload;
       return {
         ...state,
         folders,
-        notes,
-        treeNodes: buildTree(folders, notes, state.expandedFolderIds),
+        files,
+        treeNodes: buildTree(folders, files, state.expandedFolderIds),
       };
     }
 
@@ -88,7 +88,7 @@ export function fileListReducer(
       return {
         ...state,
         expandedFolderIds: newExpanded,
-        treeNodes: buildTree(state.folders, state.notes, newExpanded),
+        treeNodes: buildTree(state.folders, state.files, newExpanded),
       };
     }
 
@@ -98,7 +98,7 @@ export function fileListReducer(
       return {
         ...state,
         expandedFolderIds: newExpanded,
-        treeNodes: buildTree(state.folders, state.notes, newExpanded),
+        treeNodes: buildTree(state.folders, state.files, newExpanded),
       };
     }
 
@@ -108,7 +108,7 @@ export function fileListReducer(
       return {
         ...state,
         expandedFolderIds: newExpanded,
-        treeNodes: buildTree(state.folders, state.notes, newExpanded),
+        treeNodes: buildTree(state.folders, state.files, newExpanded),
       };
     }
 
@@ -116,7 +116,7 @@ export function fileListReducer(
       return {
         ...state,
         expandedFolderIds: new Set(),
-        treeNodes: buildTree(state.folders, state.notes, new Set()),
+        treeNodes: buildTree(state.folders, state.files, new Set()),
       };
 
     // ======================================
@@ -302,13 +302,13 @@ export function fileListReducer(
     // 複合操作
     // ======================================
     case 'REFRESH_COMPLETE': {
-      const { folders, notes } = action.payload;
+      const { folders, files } = action.payload;
       // 全状態をリセットしながら、データのみ更新
       return {
         ...state,
         folders,
-        notes,
-        treeNodes: buildTree(folders, notes, state.expandedFolderIds),
+        files,
+        treeNodes: buildTree(folders, files, state.expandedFolderIds),
         loading: false,
 
         // 選択状態はクリア

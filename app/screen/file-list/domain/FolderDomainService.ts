@@ -107,15 +107,15 @@ export class FolderDomainService {
   }
 
   /**
-   * 直接の子ノートを取得
+   * 直接の子ファイルを取得
    * @param folderPath フォルダパス
-   * @param allNotes 全ノートの配列
-   * @returns 子ノートの配列
+   * @param allFiles 全ファイルの配列
+   * @returns 子ファイルの配列
    */
-  static getChildNotes(folderPath: string, allNotes: File[]): File[] {
+  static getChildNotes(folderPath: string, allFiles: File[]): File[] {
     const normalizedFolderPath = PathService.normalizePath(folderPath);
-    return allNotes.filter(
-      note => PathService.normalizePath(note.path) === normalizedFolderPath
+    return allFiles.filter(
+      file => PathService.normalizePath(file.path) === normalizedFolderPath
     );
   }
 
@@ -150,28 +150,28 @@ export class FolderDomainService {
   }
 
   /**
-   * フォルダとその子孫にある全てのノートを取得
+   * フォルダとその子孫にある全てのファイルを取得
    * @param folderPath フォルダパス
-   * @param allNotes 全ノートの配列
+   * @param allFiles 全ファイルの配列
    * @param allFolders 全フォルダの配列
-   * @returns 全ノートの配列
+   * @returns 全ファイルの配列
    */
   static getAllDescendantNotes(
     folderPath: string,
-    allNotes: File[],
+    allFiles: File[],
     allFolders: Folder[]
   ): File[] {
     const normalizedPath = PathService.normalizePath(folderPath);
-    const notes: File[] = [];
+    const files: File[] = [];
 
     // 直接の子ノート
-    notes.push(...this.getChildNotes(normalizedPath, allNotes));
+    files.push(...this.getChildNotes(normalizedPath, allFiles));
 
     // 子孫フォルダ内のノート
     const descendantFolders = this.getAllDescendantFolders(normalizedPath, allFolders);
     for (const folder of descendantFolders) {
       const folderFullPath = PathService.getFullPath(folder.path, folder.name, 'folder');
-      notes.push(...this.getChildNotes(folderFullPath, allNotes));
+      files.push(...this.getChildNotes(folderFullPath, allFiles));
     }
 
     return notes;
@@ -180,16 +180,16 @@ export class FolderDomainService {
   /**
    * フォルダが空かどうかをチェック
    * @param folderPath フォルダパス
-   * @param allNotes 全ノートの配列
+   * @param allFiles 全ファイルの配列
    * @param allFolders 全フォルダの配列
    * @returns 空の場合true
    */
   static isFolderEmpty(
     folderPath: string,
-    allNotes: File[],
+    allFiles: File[],
     allFolders: Folder[]
   ): boolean {
-    const childNotes = this.getChildNotes(folderPath, allNotes);
+    const childNotes = this.getChildNotes(folderPath, allFiles);
     const childFolders = this.getChildFolders(folderPath, allFolders);
     return childNotes.length === 0 && childFolders.length === 0;
   }
@@ -206,7 +206,7 @@ export class FolderDomainService {
     targetParentPath: string,
     allFolders: Folder[]
   ): Promise<ValidationResult> {
-    const folder = allFolders.find(f => f.id === folderId);
+    const folder = allFolders.find(f => n.id === folderId);
     if (!folder) {
       return { valid: false, error: 'フォルダが見つかりません' };
     }

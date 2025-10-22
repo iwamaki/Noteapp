@@ -68,7 +68,7 @@ export const moveItemHandler: CommandHandler = async (command: LLMCommand, conte
     // アイテムの種類に応じて移動
     if (resolvedItem.type === 'file') {
       logger.debug('moveItemHandler', 'Moving file', {
-        noteId: resolvedItem.id,
+        fileId: resolvedItem.id,
         noteTitle: (resolvedItem.item as any).title,
         sourcePath: command.source_path,
         destPath,
@@ -76,8 +76,8 @@ export const moveItemHandler: CommandHandler = async (command: LLMCommand, conte
 
       await storage.moveFile(resolvedItem.id, destPath);
 
-      logger.info('moveItemHandler', 'Note moved successfully', {
-        noteId: resolvedItem.id,
+      logger.info('moveItemHandler', 'File moved successfully', {
+        fileId: resolvedItem.id,
         destPath,
       });
     } else if (resolvedItem.type === 'folder') {

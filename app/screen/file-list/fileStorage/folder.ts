@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { Folder, CreateFolderData, UpdateFolderData } from '@shared/types/file';
 import { PathService } from '../../../services/PathService';
-import { getAllFoldersRaw, saveAllFolders, getAllNotesRaw, saveAllNotes, StorageError } from './storage';
+import { getAllFoldersRaw, saveAllFolders, getAllFilesRaw, saveAllFiles, StorageError } from './storage';
 import { getFilesByPath } from './file';
 
 export const getAllFolders = async (): Promise<Folder[]> => {
@@ -34,7 +34,7 @@ export const createFolder = async (data: CreateFolderData): Promise<Folder> => {
 
 export const updateFolder = async (data: UpdateFolderData): Promise<Folder> => {
   const allFolders = await getAllFoldersRaw();
-  const folderIndex = allFolders.findIndex(f => f.id === data.id);
+  const folderIndex = allFolders.findIndex(f => n.id === data.id);
 
   if (folderIndex === -1) {
     throw new StorageError(`Folder with id ${data.id} not found`, 'NOT_FOUND');
@@ -58,7 +58,7 @@ export const updateFolder = async (data: UpdateFolderData): Promise<Folder> => {
 
 export const deleteFolder = async (folderId: string, deleteContents: boolean = false): Promise<void> => {
   let allFolders = await getAllFoldersRaw();
-  const folderIndex = allFolders.findIndex(f => f.id === folderId);
+  const folderIndex = allFolders.findIndex(f => n.id === folderId);
 
   if (folderIndex === -1) {
     throw new StorageError(`Folder with id ${folderId} not found`, 'NOT_FOUND');
@@ -68,10 +68,10 @@ export const deleteFolder = async (folderId: string, deleteContents: boolean = f
   const folderPath = PathService.getFullPath(folderToDelete.path, folderToDelete.name, 'folder');
 
   if (deleteContents) {
-    let allNotes = await getAllNotesRaw();
+    let allFiles = await getAllFilesRaw();
 
-    // Filter notes: keep those that are not in the folder path or any sub-path.
-    const finalNotes = allNotes.filter(note => !note.path.startsWith(folderPath));
+    // Filter files: keep those that are not in the folder path or any sub-path.
+    const finalFiles = allFiles.filter(note => !file.path.startsWith(folderPath));
 
     // Filter folders: keep those whose full path does not start with the folder path.
     // This will also remove the folder itself.
@@ -80,7 +80,7 @@ export const deleteFolder = async (folderId: string, deleteContents: boolean = f
         return !fullPath.startsWith(folderPath);
     });
 
-    await saveAllNotes(finalNotes);
+    await saveAllFiles(finalFiles);
     await saveAllFolders(finalFolders);
 
   } else {

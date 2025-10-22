@@ -1,8 +1,8 @@
 import { v4 as uuidv4 } from 'uuid';
 import { File, CreateFileData } from '@shared/types/file';
-import { getAllNotesRaw, saveAllNotes, StorageError } from './storage';
+import { getAllFilesRaw, saveAllFiles, StorageError } from './storage';
 
-export interface UpdateNoteData {
+export interface UpdateFileData {
   id: string;
   title?: string;
   content?: string;
@@ -11,62 +11,62 @@ export interface UpdateNoteData {
 }
 
 export const getAllFiles = async (): Promise<File[]> => {
-  const notes = await getAllNotesRaw();
-  return notes.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+  const files = await getAllFilesRaw();
+  return files.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
 };
 
 export const getFilesByPath = async (path: string): Promise<File[]> => {
-  const notes = await getAllNotesRaw();
+  const files = await getAllFilesRaw();
   // パスは正規化済みと仮定して、単純な文字列比較を行う
-  return notes
-    .filter(note => note.path === path)
+  return files
+    .filter(file => file.path === path)
     .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
 };
 
-export const deleteFiles = async (noteIds: string[]): Promise<void> => {
-  let notes = await getAllNotesRaw();
-  notes = notes.filter(note => !noteIds.includes(note.id));
-  await saveAllNotes(notes);
+export const deleteFiles = async (fileIds: string[]): Promise<void> => {
+  let files = await getAllFilesRaw();
+  files = files.filter(file => !fileIds.includes(file.id));
+  await saveAllFiles(files);
 };
 
 export const copyFiles = async (sourceIds: string[]): Promise<File[]> => {
-  const notes = await getAllNotesRaw();
-  const copiedNotes: File[] = [];
+  const files = await getAllFilesRaw();
+  const copiedFiles: File[] = [];
   const now = new Date();
 
   for (const id of sourceIds) {
-    const noteToCopy = notes.find(note => note.id === id);
-    if (noteToCopy) {
-      // Find a unique title for the copied note
-      let newTitle = `Copy of ${noteToCopy.title}`;
+    const fileToCopy = files.find(file => file.id === id);
+    if (fileToCopy) {
+      // Find a unique title for the copied file
+      let newTitle = `Copy of ${fileToCopy.title}`;
       let counter = 1;
 
       // Check if the title already exists, and if so, add a number
       // パスは正規化済みと仮定して、単純な文字列比較を行う
       while (
-        notes.some(n => n.path === noteToCopy.path && n.title === newTitle) ||
-        copiedNotes.some(n => n.path === noteToCopy.path && n.title === newTitle)
+        files.some(n => n.path === fileToCopy.path && n.title === newTitle) ||
+        copiedFiles.some(n => n.path === fileToCopy.path && n.title === newTitle)
       ) {
-        newTitle = `Copy of ${noteToCopy.title} (${counter})`;
+        newTitle = `Copy of ${fileToCopy.title} (${counter})`;
         counter++;
       }
 
-      const newNote: File = {
-        ...noteToCopy,
+      const newFile: File = {
+        ...fileToCopy,
         id: uuidv4(),
         createdAt: now,
         updatedAt: now,
         title: newTitle,
         version: 1,
       };
-      copiedNotes.push(newNote);
+      copiedFiles.push(newFile);
     }
   }
 
-  if (copiedNotes.length > 0) {
-    await saveAllNotes([...notes, ...copiedNotes]);
+  if (copiedFiles.length > 0) {
+    await saveAllFiles([...files, ...copiedFiles]);
   }
-  return copiedNotes;
+  return copiedFiles;
 };
 
 export const createFile = async (data: CreateFileData): Promise<File> => {
@@ -74,7 +74,7 @@ export const createFile = async (data: CreateFileData): Promise<File> => {
   // パスは呼び出し側で正規化済みと仮定
   // 重複チェックは呼び出し側（NoteService）が行う
 
-  const newNote: File = {
+  const newFile: File = {
     id: uuidv4(),
     title: data.title,
     content: data.content,
@@ -85,46 +85,46 @@ export const createFile = async (data: CreateFileData): Promise<File> => {
     version: 1,
   };
 
-  const notes = await getAllNotesRaw();
-  notes.push(newNote);
-  await saveAllNotes(notes);
-  return newNote;
+  const files = await getAllFilesRaw();
+  files.push(newFile);
+  await saveAllFiles(files);
+  return newFile;
 };
 
-export const updateFile = async (data: UpdateNoteData): Promise<File> => {
-  const notes = await getAllNotesRaw();
-  const noteIndex = notes.findIndex(n => n.id === data.id);
+export const updateFile = async (data: UpdateFileData): Promise<File> => {
+  const files = await getAllFilesRaw();
+  const fileIndex = files.findIndex(n => n.id === data.id);
 
-  if (noteIndex === -1) {
-    throw new StorageError(`Note with id ${data.id} not found`, 'NOT_FOUND');
+  if (fileIndex === -1) {
+    throw new StorageError(`File with id ${data.id} not found`, 'NOT_FOUND');
   }
 
-  const existingNote = notes[noteIndex];
-  // 重複チェックは呼び出し側（NoteService）が行う
+  const existingFile = files[fileIndex];
+  // 重複チェックは呼び出し側（FileService）が行う
 
-  const updatedNote = {
-    ...existingNote,
+  const updatedFile = {
+    ...existingFile,
     ...data,
     updatedAt: new Date(),
   };
-  notes[noteIndex] = updatedNote;
-  await saveAllNotes(notes);
-  return updatedNote;
+  files[fileIndex] = updatedFile;
+  await saveAllFiles(files);
+  return updatedFile;
 };
 
-export const moveFile = async (noteId: string, newPath: string): Promise<File> => {
-  const notes = await getAllNotesRaw();
-  const noteIndex = notes.findIndex(n => n.id === noteId);
+export const moveFile = async (fileId: string, newPath: string): Promise<File> => {
+  const files = await getAllFilesRaw();
+  const fileIndex = files.findIndex(n => n.id === fileId);
 
-  if (noteIndex === -1) {
-    throw new StorageError(`Note with id ${noteId} not found`, 'NOT_FOUND');
+  if (fileIndex === -1) {
+    throw new StorageError(`File with id ${fileId} not found`, 'NOT_FOUND');
   }
 
   // パスは呼び出し側で正規化済みと仮定
-  // 重複チェックは呼び出し側（NoteService）が行う
+  // 重複チェックは呼び出し側（FileService）が行う
 
-  notes[noteIndex].path = newPath;
-  notes[noteIndex].updatedAt = new Date();
-  await saveAllNotes(notes);
-  return notes[noteIndex];
+  files[fileIndex].path = newPath;
+  files[fileIndex].updatedAt = new Date();
+  await saveAllFiles(files);
+  return files[fileIndex];
 };

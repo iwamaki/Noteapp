@@ -23,22 +23,22 @@ export class FileService {
   ) {}
 
   /**
-   * ノートを読み込む
+   * ファイルを読み込む
    */
   async loadFile(id: string): Promise<File> {
     try {
-      const note = await this.repository.findById(id);
+      const file = await this.repository.findById(id);
 
-      if (!note) {
+      if (!file) {
         const error: EditorError = {
           code: ErrorCode.NOT_FOUND,
-          message: `ノート(ID: ${id})が見つかりませんでした。`,
+          message: `ファイル(ID: ${id})が見つかりませんでした。`,
           recoverable: false,
         };
         throw error;
       }
 
-      return note;
+      return file;
     } catch (error) {
       // EditorErrorの場合はそのまま再スロー
       if ((error as EditorError).code) {
@@ -48,7 +48,7 @@ export class FileService {
       // それ以外のエラーの場合はEditorErrorに変換
       const editorError: EditorError = {
         code: ErrorCode.LOAD_FAILED,
-        message: 'ノートの読み込みに失敗しました。',
+        message: 'ファイルの読み込みに失敗しました。',
         recoverable: true,
         retry: () => this.loadFile(id),
       };
@@ -57,7 +57,7 @@ export class FileService {
   }
 
   /**
-   * ノートを保存（新規作成または更新）
+   * ファイルを保存（新規作成または更新）
    */
   async save(data: Partial<File & { id?: string }>): Promise<File> {
     // バリデーション
@@ -73,16 +73,16 @@ export class FileService {
 
     try {
       if (data.id) {
-        // 既存ノートの更新
+        // 既存ファイルの更新
         return await this.repository.update(data.id, data as Partial<UpdateFileData>);
       } else {
-        // 新規ノートの作成
+        // 新規ファイルの作成
         return await this.repository.create(data as CreateFileData);
       }
     } catch {
       const editorError: EditorError = {
         code: ErrorCode.SAVE_FAILED,
-        message: 'ノートの保存に失敗しました。',
+        message: 'ファイルの保存に失敗しました。',
         recoverable: true,
         retry: () => this.save(data),
       };
@@ -91,7 +91,7 @@ export class FileService {
   }
 
   /**
-   * ノートを削除
+   * ファイルを削除
    */
   async deleteFile(id: string): Promise<void> {
     try {
@@ -99,7 +99,7 @@ export class FileService {
     } catch {
       const editorError: EditorError = {
         code: ErrorCode.STORAGE_ERROR,
-        message: 'ノートの削除に失敗しました。',
+        message: 'ファイルの削除に失敗しました。',
         recoverable: true,
         retry: () => this.deleteFile(id),
       };
@@ -108,7 +108,7 @@ export class FileService {
   }
 
   /**
-   * ノートのバージョン履歴を取得
+   * ファイルのバージョン履歴を取得
    */
   async getVersionHistory(fileId: string) {
     try {
@@ -125,7 +125,7 @@ export class FileService {
   }
 
   /**
-   * ノートを特定のバージョンに復元
+   * ファイルを特定のバージョンに復元
    */
   async restoreVersion(fileId: string, versionId: string): Promise<File> {
     try {

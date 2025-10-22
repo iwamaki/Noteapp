@@ -1,7 +1,7 @@
 /**
  * @file VersionHistoryScreen.tsx
- * @summary このファイルは、アプリケーションのノートのバージョン履歴画面をレンダリングします。
- * @responsibility 特定のノートの過去のバージョンを一覧表示し、選択したバージョンと現在のノートの差分を表示する機能を提供します。
+ * @summary このファイルは、アプリケーションのファイルのバージョン履歴画面をレンダリングします。
+ * @responsibility 特定のファイルの過去のバージョンを一覧表示し、選択したバージョンと現在のファイルの差分を表示する機能を提供します。
  */
 
 import React, { useState, useCallback, useLayoutEffect } from 'react';
@@ -98,7 +98,7 @@ function VersionHistoryScreen() {
     navigation.navigate('DiffView', {
       fileId: currentNote.id,
       versionId: selectedVersion.id,
-      originalContent: currentNote.content, // 現在のノートのコンテンツ
+      originalContent: currentNote.content, // 現在のファイルのコンテンツ
       newContent: selectedVersion.content,          // 選択された過去のバージョンのコンテンツ
       mode: 'restore'
     });

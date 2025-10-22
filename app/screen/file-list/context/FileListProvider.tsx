@@ -35,13 +35,13 @@ export const FileListProvider: React.FC<FileListProviderProps> = ({ children }) 
       // AsyncStorageから確実にデータを取得
       // batchUpdate() などの await が完了した後に呼ばれるため、
       // 確実に最新データが取得できる
-      const [folders, notes] = await Promise.all([
+      const [folders, files] = await Promise.all([
         FolderRepository.getAll(),
         FileRepository.getAll(),
       ]);
 
       // データ更新と状態リセットを一括実行
-      dispatch({ type: 'REFRESH_COMPLETE', payload: { folders, notes } });
+      dispatch({ type: 'REFRESH_COMPLETE', payload: { folders, files } });
     } catch (error) {
       dispatch({ type: 'SET_LOADING', payload: false });
       throw error;
@@ -66,7 +66,7 @@ export const FileListProvider: React.FC<FileListProviderProps> = ({ children }) 
   );
 
   /**
-   * ノートをリネーム
+   * ファイルをリネーム
    */
   const renameFile = useCallback(
     async (fileId: string, newTitle: string) => {
@@ -111,7 +111,7 @@ export const FileListProvider: React.FC<FileListProviderProps> = ({ children }) 
   );
 
   /**
-   * ノートをパス指定で作成
+   * ファイルをパス指定で作成
    */
   const createFileWithPath = useCallback(
     async (inputPath: string, content?: string, tags?: string[]) => {
@@ -127,7 +127,7 @@ export const FileListProvider: React.FC<FileListProviderProps> = ({ children }) 
   );
 
   /**
-   * 選択されたノートをコピー
+   * 選択されたファイルをコピー
    */
   const copySelectedFiles = useCallback(
     async (fileIds: string[]) => {
@@ -171,12 +171,12 @@ export const FileListProvider: React.FC<FileListProviderProps> = ({ children }) 
       type: 'folder' as const,
       item: folder,
     }));
-    const fileItems: FileSystemItem[] = state.notes.map(note => ({
+    const fileItems: FileSystemItem[] = state.files.map(note => ({
       type: 'file' as const,
       item: note,
     }));
     return [...folderItems, ...fileItems];
-  }, [state.folders, state.notes]);
+  }, [state.folders, state.files]);
 
   /**
    * Contextの値をメモ化

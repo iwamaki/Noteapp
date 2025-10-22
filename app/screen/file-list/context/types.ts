@@ -31,7 +31,7 @@ export interface SearchOptions {
 export interface FileListState {
   // データ
   folders: Folder[];
-  notes: File[];
+  files: File[];
   treeNodes: TreeNode[];
 
   // UI状態
@@ -65,7 +65,7 @@ export interface FileListState {
  */
 export type FileListAction =
   // データ更新
-  | { type: 'SET_DATA'; payload: { folders: Folder[]; notes: File[] } }
+  | { type: 'SET_DATA'; payload: { folders: Folder[]; files: File[] } }
   | { type: 'SET_LOADING'; payload: boolean }
 
   // ツリー操作
@@ -102,4 +102,4 @@ export type FileListAction =
   | { type: 'EXIT_MOVE_MODE' }
 
   // 複合操作
-  | { type: 'REFRESH_COMPLETE'; payload: { folders: Folder[]; notes: File[] } };
+  | { type: 'REFRESH_COMPLETE'; payload: { folders: Folder[]; files: File[] } };
