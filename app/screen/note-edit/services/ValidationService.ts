@@ -33,11 +33,11 @@ export class ValidationService {
   /**
    * ノート全体をバリデーション
    */
-  validateNote(data: Partial<Note>): ValidationResult {
+  validateNote(data: Partial<File>): ValidationResult {
     const errors: string[] = [];
 
     for (const rule of this.rules) {
-      const value = data[rule.field as keyof Note];
+      const value = data[rule.field as keyof File];
       if (!rule.validate(value)) {
         errors.push(rule.message);
       }

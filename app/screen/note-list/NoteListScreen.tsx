@@ -164,10 +164,10 @@ function NoteListScreenContent() {
   /**
    * リネームモーダルを開く
    */
-  const handleOpenRenameModal = useCallback((id: string, type: 'note' | 'folder') => {
+  const handleOpenRenameModal = useCallback((id: string, type: 'file' | 'folder') => {
     const item: FileSystemItem | null = type === 'folder'
       ? { type: 'folder', item: state.folders.find(f => f.id === id)! }
-      : { type: 'note', item: state.notes.find(n => n.id === id)! };
+      : { type: 'file', item: state.notes.find(n => n.id === id)! };
 
     if (item && item.item) {
       dispatch({ type: 'OPEN_RENAME_MODAL', payload: item });

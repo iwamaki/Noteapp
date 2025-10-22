@@ -173,7 +173,7 @@ export const NoteListProvider: React.FC<NoteListProviderProps> = ({ children }) 
       item: folder,
     }));
     const noteItems: FileSystemItem[] = state.notes.map(note => ({
-      type: 'note' as const,
+      type: 'file' as const,
       item: note,
     }));
     return [...folderItems, ...noteItems];

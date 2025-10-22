@@ -25,7 +25,7 @@ export class NoteService {
   /**
    * ノートを読み込む
    */
-  async loadNote(id: string): Promise<Note> {
+  async loadNote(id: string): Promise<File> {
     try {
       const note = await this.repository.findById(id);
 
@@ -59,7 +59,7 @@ export class NoteService {
   /**
    * ノートを保存（新規作成または更新）
    */
-  async save(data: Partial<Note & { id?: string }>): Promise<Note> {
+  async save(data: Partial<File & { id?: string }>): Promise<File> {
     // バリデーション
     const validationResult = this.validator.validateNote(data);
     if (!validationResult.isValid) {
@@ -74,10 +74,10 @@ export class NoteService {
     try {
       if (data.id) {
         // 既存ノートの更新
-        return await this.repository.update(data.id, data as Partial<UpdateNoteData>);
+        return await this.repository.update(data.id, data as Partial<UpdateFileData>);
       } else {
         // 新規ノートの作成
-        return await this.repository.create(data as CreateNoteData);
+        return await this.repository.create(data as CreateFileData);
       }
     } catch {
       const editorError: EditorError = {
@@ -127,7 +127,7 @@ export class NoteService {
   /**
    * ノートを特定のバージョンに復元
    */
-  async restoreVersion(noteId: string, versionId: string): Promise<Note> {
+  async restoreVersion(noteId: string, versionId: string): Promise<File> {
     try {
       return await this.repository.restoreVersion(noteId, versionId);
     } catch {

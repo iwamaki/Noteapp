@@ -13,7 +13,7 @@ interface UseNoteListHeaderProps {
   handleCancelSelection: () => void;
   handleDeleteSelected: () => Promise<void>;
   handleCopySelected: () => Promise<void>;
-  handleOpenRenameModal: (id: string, type: 'note' | 'folder') => void;
+  handleOpenRenameModal: (id: string, type: 'file' | 'folder') => void;
   startMoveMode: () => void;
   isMoveMode: boolean;
   cancelMoveMode: () => void;
@@ -78,7 +78,7 @@ export const useNoteListHeader = ({
         const selectedNoteId = Array.from(selectedNoteIds)[0];
         selectionRightButtons.unshift({
           title: '名前変更',
-          onPress: () => handleOpenRenameModal(selectedNoteId, 'note'),
+          onPress: () => handleOpenRenameModal(selectedNoteId, 'file'),
           variant: 'secondary'
         });
       }

@@ -9,8 +9,8 @@ import { logger } from '../../../utils/logger';
 
 export interface TreeNode {
   id: string;
-  type: 'folder' | 'note';
-  item: Folder | Note;
+  type: 'folder' | 'file';
+  item: Folder | File;
   children: TreeNode[];
   depth: number;
   isExpanded: boolean;
@@ -26,7 +26,7 @@ export interface TreeNode {
  */
 export function buildTree(
   allFolders: Folder[],
-  allNotes: Note[],
+  allNotes: File[],
   expandedFolderIds: Set<string>
 ): TreeNode[] {
   if (__DEV__) {
@@ -53,14 +53,14 @@ export function buildTree(
 /**
  * ルートレベル（path: '/'）のアイテムを取得
  */
-function getRootItems(allFolders: Folder[], allNotes: Note[]): FileSystemItem[] {
+function getRootItems(allFolders: Folder[], allNotes: File[]): FileSystemItem[] {
   const rootFolders = allFolders
     .filter(f => PathService.normalizePath(f.path) === '/')
     .map(f => ({ type: 'folder' as const, item: f }));
 
   const rootNotes = allNotes
     .filter(n => PathService.normalizePath(n.path) === '/')
-    .map(n => ({ type: 'note' as const, item: n }));
+    .map(n => ({ type: 'file' as const, item: n }));
 
   return [...rootFolders, ...rootNotes];
 }
@@ -71,7 +71,7 @@ function getRootItems(allFolders: Folder[], allNotes: Note[]): FileSystemItem[] 
 function buildTreeNode(
   item: FileSystemItem,
   allFolders: Folder[],
-  allNotes: Note[],
+  allNotes: File[],
   expandedFolderIds: Set<string>,
   depth: number
 ): TreeNode {
@@ -87,7 +87,7 @@ function buildTreeNode(
 
     const childNotes = allNotes
       .filter(n => PathService.normalizePath(n.path) === folderPath)
-      .map(n => ({ type: 'note' as const, item: n }));
+      .map(n => ({ type: 'file' as const, item: n }));
 
     const childItems = [...childFolders, ...childNotes];
     const children = childItems.map(child =>
@@ -107,7 +107,7 @@ function buildTreeNode(
     // ノート
     return {
       id: item.item.id,
-      type: 'note',
+      type: 'file',
       item: item.item,
       children: [],
       depth,
