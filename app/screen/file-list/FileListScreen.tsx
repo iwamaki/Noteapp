@@ -1,36 +1,36 @@
 import React, { useCallback, useMemo, useEffect } from 'react';
 import { StyleSheet, FlatList, Alert } from 'react-native';
 import { useTheme } from '../../design/theme/ThemeContext';
-import { useNoteListHeader } from './hooks/useNoteListHeader';
-import { useNoteListChatContext } from '../../features/chat/hooks/useNoteListChatContext';
-import { NoteListEmptyState } from './components/NoteListEmptyState';
+import { useFileListHeader } from './hooks/useFileListHeader';
+import { useFileListChatContext } from '../../features/chat/hooks/useFileListChatContext';
+import { FileListEmptyState } from './components/FileListEmptyState';
 import { OverflowMenu } from './components/OverflowMenu';
 import { CreateItemModal } from './components/CreateItemModal';
 import { TreeListItem } from './components/TreeListItem';
 import { RenameItemModal } from './components/RenameItemModal';
 import { MainContainer } from '../../components/MainContainer';
 import { useKeyboardHeight } from '../../contexts/KeyboardHeightContext';
-import { NoteListProvider, useNoteListContext } from './context';
+import { FileListProvider, useFileListContext } from './context';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/types';
 import { FileSystemItem, Folder } from '@shared/types/file';
 
 import { Ionicons } from '@expo/vector-icons';
 import { useSearch } from './hooks/useSearch';
-import { NoteListSearchBar } from './components/NoteListSearchBar';
+import { FileListSearchBar } from './components/FileListSearchBar';
 
 // 静的スタイル（コンポーネント外部で定義）
 const staticStyles = StyleSheet.create({
   centered: { justifyContent: 'center', alignItems: 'center' },
 });
 
-function NoteListScreenContent() {
+function FileListScreenContent() {
   const { colors, spacing } = useTheme();
   const { keyboardHeight, chatInputBarHeight } = useKeyboardHeight();
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
   // 新しいContext APIを使用
-  const { state, dispatch, actions, items } = useNoteListContext();
+  const { state, dispatch, actions, items } = useFileListContext();
 
   // データ初期読み込み
   useEffect(() => {
@@ -61,7 +61,7 @@ function NoteListScreenContent() {
         const folder = item.item as Folder;
         const targetPath = `${folder.path}/${folder.name}`;
         actions.moveSelectedItems(
-          Array.from(state.selectedNoteIds),
+          Array.from(state.selectedFileIds),
           Array.from(state.selectedFolderIds),
           targetPath
         ).then(() => {
@@ -79,20 +79,20 @@ function NoteListScreenContent() {
       if (item.type === 'folder') {
         dispatch({ type: 'TOGGLE_SELECT_FOLDER', payload: item.item.id });
       } else {
-        dispatch({ type: 'TOGGLE_SELECT_NOTE', payload: item.item.id });
+        dispatch({ type: 'TOGGLE_SELECT_FILE', payload: item.item.id });
       }
     } else {
       // 通常モード
       if (item.type === 'folder') {
         dispatch({ type: 'TOGGLE_FOLDER', payload: item.item.id });
       } else {
-        navigation.navigate('NoteEdit', { noteId: item.item.id });
+        navigation.navigate('FileEdit', { fileId: item.item.id });
       }
     }
   }, [
     state.isMoveMode,
     state.isSelectionMode,
-    state.selectedNoteIds,
+    state.selectedFileIds,
     state.selectedFolderIds,
     actions,
     dispatch,
@@ -107,7 +107,7 @@ function NoteListScreenContent() {
     if (item.type === 'folder') {
       dispatch({ type: 'TOGGLE_SELECT_FOLDER', payload: item.item.id });
     } else {
-      dispatch({ type: 'TOGGLE_SELECT_NOTE', payload: item.item.id });
+      dispatch({ type: 'TOGGLE_SELECT_FILE', payload: item.item.id });
     }
   }, [dispatch]);
 
@@ -124,35 +124,35 @@ function NoteListScreenContent() {
   const handleDeleteSelected = useCallback(async () => {
     try {
       await actions.deleteSelectedItems(
-        Array.from(state.selectedNoteIds),
+        Array.from(state.selectedFileIds),
         Array.from(state.selectedFolderIds)
       );
       Alert.alert('成功', 'アイテムを削除しました');
     } catch (error: any) {
       Alert.alert('エラー', error.message);
     }
-  }, [actions, state.selectedNoteIds, state.selectedFolderIds]);
+  }, [actions, state.selectedFileIds, state.selectedFolderIds]);
 
   /**
    * コピーハンドラ
    */
   const handleCopySelected = useCallback(async () => {
     try {
-      await actions.copySelectedNotes(Array.from(state.selectedNoteIds));
+      await actions.copySelectedFiles(Array.from(state.selectedFileIds));
       Alert.alert('成功', 'ノートをコピーしました');
     } catch (error: any) {
       Alert.alert('エラー', error.message);
     }
-  }, [actions, state.selectedNoteIds]);
+  }, [actions, state.selectedFileIds]);
 
   /**
    * 移動モード開始
    */
   const startMoveMode = useCallback(() => {
-    if (state.selectedNoteIds.size > 0 || state.selectedFolderIds.size > 0) {
+    if (state.selectedFileIds.size > 0 || state.selectedFolderIds.size > 0) {
       dispatch({ type: 'ENTER_MOVE_MODE' });
     }
-  }, [state.selectedNoteIds, state.selectedFolderIds, dispatch]);
+  }, [state.selectedFileIds, state.selectedFolderIds, dispatch]);
 
   /**
    * 移動モードキャンセル
@@ -184,7 +184,7 @@ function NoteListScreenContent() {
         if (item.type === 'folder') {
           await actions.renameFolder(item.item.id, newName);
         } else {
-          await actions.renameNote(item.item.id, newName);
+          await actions.renameFile(item.item.id, newName);
         }
         dispatch({ type: 'CLOSE_RENAME_MODAL' });
         Alert.alert('成功', '名前を変更しました');
@@ -199,9 +199,9 @@ function NoteListScreenContent() {
    */
   const handleCreate = useCallback(async (inputPath: string) => {
     try {
-      const note = await actions.createNoteWithPath(inputPath);
+      const file = await actions.createFileWithPath(inputPath);
       dispatch({ type: 'CLOSE_CREATE_MODAL' });
-      navigation.navigate('NoteEdit', { noteId: note.id });
+      navigation.navigate('FileEdit', { fileId: file.id });
     } catch (error: any) {
       Alert.alert('エラー', error.message);
     }
@@ -227,7 +227,7 @@ function NoteListScreenContent() {
   }), [chatBarOffset]);
 
   const searchInput = (
-    <NoteListSearchBar
+    <FileListSearchBar
       searchQuery={searchQuery}
       setSearchQuery={setSearchQuery}
       placeholderTextColor={colors.textSecondary}
@@ -235,9 +235,9 @@ function NoteListScreenContent() {
     />
   );
 
-  useNoteListHeader({
+  useFileListHeader({
     isSelectionMode: state.isSelectionMode,
-    selectedNoteIds: state.selectedNoteIds,
+    selectedFileIds: state.selectedFileIds,
     selectedFolderIds: state.selectedFolderIds,
     handleCancelSelection,
     handleDeleteSelected,
@@ -264,7 +264,7 @@ function NoteListScreenContent() {
       : undefined,
   });
 
-  useNoteListChatContext({
+  useFileListChatContext({
     items: items,
     currentPath: currentPath,
   });
@@ -272,7 +272,7 @@ function NoteListScreenContent() {
   const renderTreeItem = useCallback(({ item: node }: { item: any }) => {
     const isSelected = node.type === 'folder'
       ? state.selectedFolderIds.has(node.id)
-      : state.selectedNoteIds.has(node.id);
+      : state.selectedFileIds.has(node.id);
 
     const fileSystemItem = { type: node.type, item: node.item } as any;
 
@@ -287,7 +287,7 @@ function NoteListScreenContent() {
         onSelectDestinationFolder={(folder: Folder) => {
           const targetPath = `${folder.path}/${folder.name}`;
           actions.moveSelectedItems(
-            Array.from(state.selectedNoteIds),
+            Array.from(state.selectedFileIds),
             Array.from(state.selectedFolderIds),
             targetPath
           ).then(() => {
@@ -301,7 +301,7 @@ function NoteListScreenContent() {
     );
   }, [
     state.selectedFolderIds,
-    state.selectedNoteIds,
+    state.selectedFileIds,
     state.isSelectionMode,
     state.isMoveMode,
     handleSelectItem,
@@ -316,7 +316,7 @@ function NoteListScreenContent() {
       isLoading={state.loading && filteredNodes.length === 0}
     >
       {filteredNodes.length === 0 && !state.loading ? (
-        <NoteListEmptyState
+        <FileListEmptyState
           containerStyle={staticStyles.centered}
           messageStyle={dynamicStyles.emptyMessage}
           message={searchQuery ? `No results for "${searchQuery}"` : 'This folder is empty. Tap the + icon to create a new note or folder.'}
@@ -354,14 +354,14 @@ function NoteListScreenContent() {
 }
 
 /**
- * NoteListScreen (Providerでラップ)
+ * FileListScreen (Providerでラップ)
  */
-function NoteListScreen() {
+function FileListScreen() {
   return (
-    <NoteListProvider>
-      <NoteListScreenContent />
-    </NoteListProvider>
+    <FileListProvider>
+      <FileListScreenContent />
+    </FileListProvider>
   );
 }
 
-export default NoteListScreen;
+export default FileListScreen;

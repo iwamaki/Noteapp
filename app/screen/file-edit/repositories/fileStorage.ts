@@ -16,7 +16,7 @@ export class StorageError extends Error {
 }
 
 // ノートストレージサービス (note-edit feature specific)
-export class NoteEditStorage {
+export class FileEditStorage {
   // --- Private Raw Note Methods ---
   private static async getAllNotesRaw(): Promise<File[]> {
     try {
@@ -62,12 +62,12 @@ export class NoteEditStorage {
   }
 
   // --- Public Note Methods for note-edit ---
-  static async getNoteById(id: string): Promise<File | null> {
+  static async getFileById(id: string): Promise<File | null> {
     const notes = await this.getAllNotesRaw();
     return notes.find(note => note.id === id) || null;
   }
 
-  static async createNote(data: CreateFileData): Promise<File> {
+  static async createFile(data: CreateFileData): Promise<File> {
     const now = new Date();
     const newNote: File = {
       id: uuidv4(),
@@ -99,7 +99,7 @@ export class NoteEditStorage {
     return newNote;
   }
 
-  static async updateNote(data: UpdateFileData): Promise<File> {
+  static async updateFile(data: UpdateFileData): Promise<File> {
     const notes = await this.getAllNotesRaw();
     const index = notes.findIndex(note => note.id === data.id);
 
@@ -135,30 +135,30 @@ export class NoteEditStorage {
   }
 
   // --- Public Version Methods for note-edit ---
-  static async getNoteVersions(noteId: string): Promise<FileVersion[]> {
+  static async getFileVersions(noteId: string): Promise<FileVersion[]> {
     const allVersions = await this.getAllVersionsRaw();
     return allVersions.filter(version => version.fileId === noteId);
   }
 
-  static async getNoteVersion(versionId: string): Promise<FileVersion | null> {
+  static async getFileVersion(versionId: string): Promise<FileVersion | null> {
     const allVersions = await this.getAllVersionsRaw();
     return allVersions.find(version => version.id === versionId) || null;
   }
 
-  static async restoreNoteVersion(noteId: string, versionId: string): Promise<File> {
-    const versionToRestore = await this.getNoteVersion(versionId);
+  static async restoreFileVersion(noteId: string, versionId: string): Promise<File> {
+    const versionToRestore = await this.getFileVersion(versionId);
     if (!versionToRestore || versionToRestore.fileId !== noteId) {
       throw new StorageError(`Version with id ${versionId} for note ${noteId} not found`, 'VERSION_NOT_FOUND');
     }
 
-    const note = await this.getNoteById(noteId);
+    const note = await this.getFileById(noteId);
     if (!note) {
       throw new StorageError(`Note with id ${noteId} not found`, 'NOT_FOUND');
     }
 
     // Update the note with the content from the version to restore
     // This will automatically create a new version of the state *before* restoration
-    return this.updateNote({
+    return this.updateFile({
       id: noteId,
       content: versionToRestore.content,
       // We might not want to change the title when restoring content,

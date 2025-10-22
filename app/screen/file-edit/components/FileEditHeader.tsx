@@ -28,7 +28,7 @@ interface NoteEditHeaderProps {
   canRedo: boolean;
 }
 
-export const NoteEditHeader: React.FC<NoteEditHeaderProps> = ({
+export const FileEditHeader: React.FC<NoteEditHeaderProps> = ({
   title,
   onTitleChange,
   editable,

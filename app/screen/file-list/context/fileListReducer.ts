@@ -5,13 +5,13 @@
  * すべての状態遷移を一元管理し、予測可能な状態更新を保証します。
  */
 
-import { NoteListState, NoteListAction } from './types';
+import { FileListState, FileListAction } from './types';
 import { buildTree } from '../utils/treeUtils';
 
 /**
  * 初期状態
  */
-export const createInitialState = (): NoteListState => ({
+export const createInitialState = (): FileListState => ({
   // データ
   folders: [],
   notes: [],
@@ -23,7 +23,7 @@ export const createInitialState = (): NoteListState => ({
 
   // 選択状態
   isSelectionMode: false,
-  selectedNoteIds: new Set(),
+  selectedFileIds: new Set(),
   selectedFolderIds: new Set(),
 
   // モーダル状態
@@ -51,10 +51,10 @@ export const createInitialState = (): NoteListState => ({
  * NoteListReducer
  * すべての状態遷移を処理
  */
-export function noteListReducer(
-  state: NoteListState,
-  action: NoteListAction
-): NoteListState {
+export function fileListReducer(
+  state: FileListState,
+  action: FileListAction
+): FileListState {
   switch (action.type) {
     // ======================================
     // データ更新
@@ -132,12 +132,12 @@ export function noteListReducer(
       return {
         ...state,
         isSelectionMode: false,
-        selectedNoteIds: new Set(),
+        selectedFileIds: new Set(),
         selectedFolderIds: new Set(),
       };
 
-    case 'TOGGLE_SELECT_NOTE': {
-      const newSelected = new Set(state.selectedNoteIds);
+    case 'TOGGLE_SELECT_FILE': {
+      const newSelected = new Set(state.selectedFileIds);
       if (newSelected.has(action.payload)) {
         newSelected.delete(action.payload);
       } else {
@@ -145,7 +145,7 @@ export function noteListReducer(
       }
       return {
         ...state,
-        selectedNoteIds: newSelected,
+        selectedFileIds: newSelected,
       };
     }
 
@@ -164,13 +164,13 @@ export function noteListReducer(
 
     case 'SELECT_ALL_VISIBLE': {
       // 現在表示されている全アイテムを選択
-      const visibleNotes = new Set<string>();
+      const visibleFiles = new Set<string>();
       const visibleFolders = new Set<string>();
 
       const collectVisible = (nodes: typeof state.treeNodes) => {
         nodes.forEach(node => {
           if (node.type === 'file') {
-            visibleNotes.add(node.id);
+            visibleFiles.add(node.id);
           } else {
             visibleFolders.add(node.id);
             if (node.isExpanded && node.children.length > 0) {
@@ -184,7 +184,7 @@ export function noteListReducer(
 
       return {
         ...state,
-        selectedNoteIds: visibleNotes,
+        selectedFileIds: visibleFiles,
         selectedFolderIds: visibleFolders,
       };
     }
@@ -192,7 +192,7 @@ export function noteListReducer(
     case 'CLEAR_SELECTION':
       return {
         ...state,
-        selectedNoteIds: new Set(),
+        selectedFileIds: new Set(),
         selectedFolderIds: new Set(),
       };
 
@@ -313,7 +313,7 @@ export function noteListReducer(
 
         // 選択状態はクリア
         isSelectionMode: false,
-        selectedNoteIds: new Set(),
+        selectedFileIds: new Set(),
         selectedFolderIds: new Set(),
 
         // モーダルは閉じる

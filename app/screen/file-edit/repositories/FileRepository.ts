@@ -11,7 +11,7 @@ import { CreateFileData, UpdateFileData } from '@shared/types/file';
  * ノートリポジトリのインターフェース
  * データソースとの通信方法を抽象化
  */
-export interface NoteRepository {
+export interface FileRepository {
   /**
    * IDでノートを検索
    */

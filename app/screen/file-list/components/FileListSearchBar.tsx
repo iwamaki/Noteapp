@@ -10,7 +10,7 @@ interface NoteListSearchBarProps {
   isSearchActive?: boolean;
 }
 
-export const NoteListSearchBar: React.FC<NoteListSearchBarProps> = ({
+export const FileListSearchBar: React.FC<NoteListSearchBarProps> = ({
   searchQuery,
   setSearchQuery,
   placeholder = "Search ...",

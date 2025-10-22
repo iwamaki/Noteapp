@@ -8,7 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 interface UseNoteListHeaderProps {
   isSelectionMode: boolean;
-  selectedNoteIds: Set<string>;
+  selectedFileIds: Set<string>;
   selectedFolderIds: Set<string>;
   handleCancelSelection: () => void;
   handleDeleteSelected: () => Promise<void>;
@@ -22,9 +22,9 @@ interface UseNoteListHeaderProps {
   title?: React.ReactNode;
 }
 
-export const useNoteListHeader = ({
+export const useFileListHeader = ({
   isSelectionMode,
-  selectedNoteIds,
+  selectedFileIds,
   selectedFolderIds,
   handleCancelSelection,
   handleDeleteSelected,
@@ -53,7 +53,7 @@ export const useNoteListHeader = ({
         })
       );
     } else if (isSelectionMode) {
-      const selectedCount = selectedNoteIds.size + selectedFolderIds.size;
+      const selectedCount = selectedFileIds.size + selectedFolderIds.size;
       const selectionRightButtons: HeaderConfig['rightButtons'] = [
         {
           title: 'コピー',
@@ -67,18 +67,18 @@ export const useNoteListHeader = ({
         },
       ];
 
-      if (selectedFolderIds.size === 1 && selectedNoteIds.size === 0) {
+      if (selectedFolderIds.size === 1 && selectedFileIds.size === 0) {
         const selectedFolderId = Array.from(selectedFolderIds)[0];
         selectionRightButtons.unshift({
           title: '名前変更',
           onPress: () => handleOpenRenameModal(selectedFolderId, 'folder'),
           variant: 'secondary'
         });
-      } else if (selectedNoteIds.size === 1 && selectedFolderIds.size === 0) {
-        const selectedNoteId = Array.from(selectedNoteIds)[0];
+      } else if (selectedFileIds.size === 1 && selectedFolderIds.size === 0) {
+        const selectedFileId = Array.from(selectedFileIds)[0];
         selectionRightButtons.unshift({
           title: '名前変更',
-          onPress: () => handleOpenRenameModal(selectedNoteId, 'file'),
+          onPress: () => handleOpenRenameModal(selectedFileId, 'file'),
           variant: 'secondary'
         });
       }
@@ -110,7 +110,7 @@ export const useNoteListHeader = ({
       );
     }
   }, [
-    navigation, createHeaderConfig, isSelectionMode, selectedNoteIds.size,
+    navigation, createHeaderConfig, isSelectionMode, selectedFileIds.size,
     selectedFolderIds.size, handleCancelSelection, handleCopySelected,
     handleDeleteSelected, handleOpenRenameModal, startMoveMode, isMoveMode,
     cancelMoveMode, colors, typography, rightButtons, title, leftButtons

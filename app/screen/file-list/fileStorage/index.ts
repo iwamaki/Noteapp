@@ -1,6 +1,6 @@
 import { FileSystemItem, File, Folder } from '@shared/types/file';
 import { getAllNotesRaw, saveAllNotes, getAllFoldersRaw, saveAllFolders, StorageError } from './storage';
-import * as NoteFns from './note';
+import * as FileFns from './file';
 import * as FolderFns from './folder';
 
 // Re-export error class
@@ -12,7 +12,7 @@ export { saveAllNotes, saveAllFolders };
 // --- Composite & Helper Methods ---
 
 const getItemsByPath = async (path: string): Promise<FileSystemItem[]> => {
-  const notes = await NoteFns.getNotesByPath(path);
+  const notes = await FileFns.getFilesByPath(path);
   const folders = await FolderFns.getFoldersByPath(path);
 
   const items: FileSystemItem[] = [
@@ -77,9 +77,9 @@ const migrateExistingNotes = async (): Promise<void> => {
 
 // --- Main Export ---
 
-export const NoteListStorage = {
+export const FileListStorage = {
   // Note functions
-  ...NoteFns,
+  ...FileFns,
   // Folder functions
   ...FolderFns,
   // Composite functions

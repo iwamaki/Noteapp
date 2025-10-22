@@ -7,7 +7,7 @@
 import { LLMCommand } from '../llmService/types/types';
 import { CommandHandler } from './types';
 import { logger } from '../../../utils/logger';
-import { NoteListStorage, StorageError } from '../../../screen/file-list/fileStorage';
+import { FileListStorage, StorageError } from '../../../screen/file-list/fileStorage';
 import { PathService } from '../../../services/PathService';
 import { findItemByPath, isValidDirectoryPath } from './itemResolver';
 
@@ -63,7 +63,7 @@ export const moveItemHandler: CommandHandler = async (command: LLMCommand, conte
     }
 
     // NoteListStorageを取得（コンテキストから、またはデフォルト）
-    const storage = context?.noteListStorage || NoteListStorage;
+    const storage = context?.fileListStorage || FileListStorage;
 
     // アイテムの種類に応じて移動
     if (resolvedItem.type === 'file') {
@@ -74,7 +74,7 @@ export const moveItemHandler: CommandHandler = async (command: LLMCommand, conte
         destPath,
       });
 
-      await storage.moveNote(resolvedItem.id, destPath);
+      await storage.moveFile(resolvedItem.id, destPath);
 
       logger.info('moveItemHandler', 'Note moved successfully', {
         noteId: resolvedItem.id,

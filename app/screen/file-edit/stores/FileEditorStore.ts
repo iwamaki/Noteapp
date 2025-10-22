@@ -7,20 +7,20 @@
 import { create } from 'zustand';
 import { EditorState, EditorActions, ViewMode, EditorError } from '../types';
 import { File } from '@shared/types/file';
-import { noteService } from '../services/NoteService';
+import { fileService } from '../services/FileService';
 import { HistoryManager } from './HistoryManager';
 
 /**
  * ノートエディタストアの型定義
  */
-interface NoteEditorStore extends EditorState, EditorActions {
+interface FileEditorStore extends EditorState, EditorActions {
   // 追加の状態
-  noteId: string | null;
-  originalNote: File | null;
+  fileId: string | null;
+  originalFile: File | null;
   history: HistoryManager;
 
   // 追加のアクション
-  initialize: (noteId?: string) => Promise<void>;
+  initialize: (fileId?: string) => Promise<void>;
   cleanup: () => void;
   canUndo: () => boolean;
   canRedo: () => boolean;
@@ -30,7 +30,7 @@ interface NoteEditorStore extends EditorState, EditorActions {
  * Zustandストア
  * エディタの状態とアクションを統一管理
  */
-export const useNoteEditorStore = create<NoteEditorStore>((set, get) => ({
+export const useFileEditorStore = create<FileEditorStore>((set, get) => ({
   // ===== 初期状態 =====
   note: null,
   content: '',
@@ -40,37 +40,37 @@ export const useNoteEditorStore = create<NoteEditorStore>((set, get) => ({
   isSaving: false,
   error: null,
   viewMode: 'edit' as ViewMode,
-  noteId: null,
-  originalNote: null,
+  fileId: null, 
+  originalFile: null,
   history: new HistoryManager(),
 
   // ===== 初期化 =====
-  initialize: async (noteId?: string) => {
+  initialize: async (fileId?: string) => {
     set({
       isLoading: true,
       error: null,
-      noteId: noteId || null,
+      fileId: fileId || null,
     });
 
     try {
-      if (noteId) {
+      if (fileId) {
         // 既存ノートを読み込む
-        const note = await noteService.loadNote(noteId);
+        const file = await fileService.loadFile(fileId);
         set({
-          note,
-          originalNote: note,
-          content: note.content,
-          title: note.title,
+          note: file,
+          originalFile: file,
+          content: file.content,
+          title: file.title,
           isDirty: false,
           isLoading: false,
         });
-        get().history.reset(note.content);
+        get().history.reset(file.content);
       } else {
         // 新規ノートの作成
         set({
           note: null,
-          originalNote: null,
-          content: '',
+          originalFile: null,
+	  content: '',
           title: '',
           isDirty: false,
           isLoading: false,
@@ -86,13 +86,13 @@ export const useNoteEditorStore = create<NoteEditorStore>((set, get) => ({
   },
 
   // ===== コンテンツ設定 =====
-  setContent: (content: string) => {
-    const { originalNote } = get();
+    setContent: (content: string) => {
+    const { originalFile } = get();
 
     set((state) => ({
       content,
       isDirty:
-        content !== originalNote?.content || state.title !== originalNote?.title,
+        content !== originalFile?.content || state.title !== originalFile?.title,
     }));
 
     get().history.push(content);
@@ -100,18 +100,18 @@ export const useNoteEditorStore = create<NoteEditorStore>((set, get) => ({
 
   // ===== タイトル設定 =====
   setTitle: (title: string) => {
-    const { originalNote, content } = get();
+    const { originalFile, content } = get();
 
     set({
       title,
       isDirty:
-        content !== originalNote?.content || title !== originalNote?.title,
+        content !== originalFile?.content || title !== originalFile?.title,
     });
   },
 
   // ===== 保存 =====
   save: async () => {
-    const { noteId, title, content, isDirty } = get();
+    const { fileId, title, content, isDirty } = get();
 
     if (!isDirty) {
       return;
@@ -123,8 +123,8 @@ export const useNoteEditorStore = create<NoteEditorStore>((set, get) => ({
     });
 
     try {
-      const savedNote = await noteService.save({
-        id: noteId || undefined,
+      const savedNote = await fileService.save({
+        id: fileId || undefined,
         title,
         content,
       });
@@ -133,8 +133,8 @@ export const useNoteEditorStore = create<NoteEditorStore>((set, get) => ({
         isSaving: false,
         isDirty: false,
         note: savedNote,
-        originalNote: savedNote,
-        noteId: savedNote.id,
+        originalFile: savedNote,
+        fileId: savedNote.id,
       });
     } catch (error) {
       set({
@@ -154,8 +154,8 @@ export const useNoteEditorStore = create<NoteEditorStore>((set, get) => ({
       set((state) => ({
         content,
         isDirty:
-          content !== state.originalNote?.content ||
-          state.title !== state.originalNote?.title,
+          content !== state.originalFile?.content ||
+          state.title !== state.originalFile?.title,
       }));
     }
   },
@@ -169,24 +169,24 @@ export const useNoteEditorStore = create<NoteEditorStore>((set, get) => ({
       set((state) => ({
         content,
         isDirty:
-          content !== state.originalNote?.content ||
-          state.title !== state.originalNote?.title,
+          content !== state.originalFile?.content ||
+          state.title !== state.originalFile?.title,
       }));
     }
   },
 
   // ===== リセット =====
   reset: () => {
-    const { originalNote } = get();
+    const { originalFile } = get();
 
-    if (originalNote) {
+    if (originalFile) {
       set({
-        content: originalNote.content,
-        title: originalNote.title,
+        content: originalFile.content,
+        title: originalFile.title,
         isDirty: false,
         error: null,
       });
-      get().history.reset(originalNote.content);
+      get().history.reset(originalFile.content);
     }
   },
 
@@ -209,8 +209,8 @@ export const useNoteEditorStore = create<NoteEditorStore>((set, get) => ({
       isLoading: false,
       isSaving: false,
       error: null,
-      noteId: null,
-      originalNote: null,
+      fileId: null,
+      originalFile: null,
     });
   },
 

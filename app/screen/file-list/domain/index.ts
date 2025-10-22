@@ -3,14 +3,14 @@
  * @summary Domain層のエクスポート
  */
 
-export { NoteDomainService } from './NoteDomainService';
+export { FileDomainService } from './FileDomainService';
 export { FolderDomainService } from './FolderDomainService';
 
 export type {
   ValidationResult,
   DuplicateCheckResult as NoteDuplicateCheckResult,
   MoveValidationResult,
-} from './NoteDomainService';
+} from './FileDomainService';
 
 export type {
   ValidationResult as FolderValidationResult,

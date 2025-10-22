@@ -9,7 +9,7 @@ import { View, Text, StyleSheet, FlatList, Alert } from 'react-native';
 import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
-import { NoteEditStorage } from '../file-edit/repositories/noteStorage';
+import { FileEditStorage } from '../file-edit/repositories/fileStorage';
 import { FileVersion, File } from '../../../shared/types/file';
 import { format } from 'date-fns';
 import { useTheme } from '../../design/theme/ThemeContext';
@@ -24,7 +24,7 @@ type VersionHistoryScreenRouteProp = ReturnType<typeof useRoute<import('@react-n
 function VersionHistoryScreen() {
   const navigation = useNavigation<VersionHistoryScreenNavigationProp>();
   const route = useRoute<VersionHistoryScreenRouteProp>();
-  const { noteId } = route.params;
+  const { fileId } = route.params;
   const { colors, typography, spacing } = useTheme();
   const { createHeaderConfig } = useCustomHeader();
 
@@ -51,9 +51,9 @@ function VersionHistoryScreen() {
     try {
       setLoading(true);
       setError(null);
-      if (noteId) {
-        const fetchedVersions = await NoteEditStorage.getNoteVersions(noteId);
-        const fetchedCurrentNote = await NoteEditStorage.getNoteById(noteId);
+      if (fileId) {
+        const fetchedVersions = await FileEditStorage.getFileVersions(fileId);
+        const fetchedCurrentNote = await FileEditStorage.getFileById(fileId);
         setCurrentNote(fetchedCurrentNote);
 
         // Also add the current version to the list for context, but designate it
@@ -81,7 +81,7 @@ function VersionHistoryScreen() {
     } finally {
       setLoading(false);
     }
-  }, [noteId]);
+  }, [fileId]);
 
   useFocusEffect(
     useCallback(() => {
@@ -96,7 +96,7 @@ function VersionHistoryScreen() {
     }
     
     navigation.navigate('DiffView', {
-      noteId: currentNote.id,
+      fileId: currentNote.id,
       versionId: selectedVersion.id,
       originalContent: currentNote.content, // 現在のノートのコンテンツ
       newContent: selectedVersion.content,          // 選択された過去のバージョンのコンテンツ
@@ -156,7 +156,7 @@ function VersionHistoryScreen() {
         </View>
       ) : versions.length === 0 ? (
         <View style={styles.centered}>
-          <Text style={styles.emptyText}>No version history found for this note.</Text>
+          <Text style={styles.emptyText}>No version history found for this file.</Text>
         </View>
       ) : (
         <FlatList

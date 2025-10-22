@@ -3,4 +3,4 @@
  * @summary Application層のエクスポート
  */
 
-export { NoteListUseCases } from './NoteListUseCases';
+export { FileListUseCases } from './FileListUseCases';

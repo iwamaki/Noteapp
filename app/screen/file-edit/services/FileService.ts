@@ -4,8 +4,8 @@
  * @description データアクセス層とバリデーションを組み合わせたビジネスロジック
  */
 
-import { NoteRepository } from '../repositories/NoteRepository';
-import { AsyncStorageNoteRepository } from '../repositories/AsyncStorageNoteRepository';
+import { FileRepository } from '../repositories/FileRepository';
+import { AsyncStorageFileRepository } from '../repositories/AsyncStorageFileRepository';
 import { ValidationService } from './ValidationService';
 import { ErrorService } from './ErrorService';
 import { File, ErrorCode, EditorError } from '../types';
@@ -15,9 +15,9 @@ import { CreateFileData, UpdateFileData } from '@shared/types/file';
  * ノートサービス
  * ビジネスロジックを管理し、リポジトリとバリデーションを組み合わせる
  */
-export class NoteService {
+export class FileService {
   constructor(
-    private repository: NoteRepository,
+    private repository: FileRepository,
     private validator: ValidationService,
     private errorService: ErrorService
   ) {}
@@ -25,7 +25,7 @@ export class NoteService {
   /**
    * ノートを読み込む
    */
-  async loadNote(id: string): Promise<File> {
+  async loadFile(id: string): Promise<File> {
     try {
       const note = await this.repository.findById(id);
 
@@ -50,7 +50,7 @@ export class NoteService {
         code: ErrorCode.LOAD_FAILED,
         message: 'ノートの読み込みに失敗しました。',
         recoverable: true,
-        retry: () => this.loadNote(id),
+        retry: () => this.loadFile(id),
       };
       throw editorError;
     }
@@ -93,7 +93,7 @@ export class NoteService {
   /**
    * ノートを削除
    */
-  async deleteNote(id: string): Promise<void> {
+  async deleteFile(id: string): Promise<void> {
     try {
       await this.repository.delete(id);
     } catch {
@@ -101,7 +101,7 @@ export class NoteService {
         code: ErrorCode.STORAGE_ERROR,
         message: 'ノートの削除に失敗しました。',
         recoverable: true,
-        retry: () => this.deleteNote(id),
+        retry: () => this.deleteFile(id),
       };
       throw editorError;
     }
@@ -110,15 +110,15 @@ export class NoteService {
   /**
    * ノートのバージョン履歴を取得
    */
-  async getVersionHistory(noteId: string) {
+  async getVersionHistory(fileId: string) {
     try {
-      return await this.repository.getVersions(noteId);
+      return await this.repository.getVersions(fileId);
     } catch {
       const editorError: EditorError = {
         code: ErrorCode.STORAGE_ERROR,
         message: 'バージョン履歴の取得に失敗しました。',
         recoverable: true,
-        retry: () => this.getVersionHistory(noteId),
+        retry: () => this.getVersionHistory(fileId),
       };
       throw editorError;
     }
@@ -127,15 +127,15 @@ export class NoteService {
   /**
    * ノートを特定のバージョンに復元
    */
-  async restoreVersion(noteId: string, versionId: string): Promise<File> {
+  async restoreVersion(fileId: string, versionId: string): Promise<File> {
     try {
-      return await this.repository.restoreVersion(noteId, versionId);
+      return await this.repository.restoreVersion(fileId, versionId);
     } catch {
       const editorError: EditorError = {
         code: ErrorCode.STORAGE_ERROR,
         message: 'バージョンの復元に失敗しました。',
         recoverable: true,
-        retry: () => this.restoreVersion(noteId, versionId),
+        retry: () => this.restoreVersion(fileId, versionId),
       };
       throw editorError;
     }
@@ -145,8 +145,8 @@ export class NoteService {
 /**
  * デフォルトのサービスインスタンスを作成
  */
-const repository = new AsyncStorageNoteRepository();
+const repository = new AsyncStorageFileRepository();
 const validator = new ValidationService();
 const errorService = ErrorService.getInstance();
 
-export const noteService = new NoteService(repository, validator, errorService);
+export const fileService = new FileService(repository, validator, errorService);

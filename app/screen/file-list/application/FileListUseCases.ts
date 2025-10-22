@@ -7,9 +7,9 @@
  */
 
 import { File, Folder, CreateFileData, CreateFolderData } from '@shared/types/file';
-import { NoteRepository } from '../infrastructure/NoteRepository';
+import { FileRepository } from '../infrastructure/FileRepository';
 import { FolderRepository } from '../infrastructure/FolderRepository';
-import { NoteDomainService } from '../domain/NoteDomainService';
+import { FileDomainService } from '../domain/FileDomainService';
 import { FolderDomainService } from '../domain/FolderDomainService';
 import { PathService } from '../../../services/PathService';
 
@@ -17,7 +17,7 @@ import { PathService } from '../../../services/PathService';
  * ノートリストユースケース
  * 複雑なビジネスロジックを含む操作を提供
  */
-export class NoteListUseCases {
+export class FileListUseCases {
   /**
    * 選択されたアイテムを削除
    * @param noteIds 削除するノートIDの配列
@@ -26,12 +26,12 @@ export class NoteListUseCases {
    * フォルダを削除する場合、その子孫フォルダと含まれる全ノートも削除します。
    */
   static async deleteSelectedItems(
-    noteIds: string[],
+    fileIds: string[],
     folderIds: string[]
   ): Promise<void> {
     // 1. フォルダの子孫を全て取得
     const allFolders = await FolderRepository.getAll();
-    const allNotes = await NoteRepository.getAll();
+    const allNotes = await FileRepository.getAll();
 
     const foldersToDelete = new Set<string>(folderIds);
 
@@ -49,7 +49,7 @@ export class NoteListUseCases {
     }
 
     // 2. フォルダ内のノートを全て取得
-    const notesToDelete = new Set<string>(noteIds);
+    const filesToDelete = new Set<string>(fileIds);
 
     for (const folderId of foldersToDelete) {
       const folder = allFolders.find(f => f.id === folderId);
@@ -57,12 +57,12 @@ export class NoteListUseCases {
 
       const folderFullPath = FolderDomainService.getFullPath(folder);
       const childNotes = FolderDomainService.getChildNotes(folderFullPath, allNotes);
-      childNotes.forEach(n => notesToDelete.add(n.id));
+      childNotes.forEach(n => filesToDelete.add(n.id));
     }
 
     // 3. 一括削除（トランザクション的に実行）
     await Promise.all([
-      NoteRepository.batchDelete(Array.from(notesToDelete)),
+      FileRepository.batchDelete(Array.from(filesToDelete)),
       FolderRepository.batchDelete(Array.from(foldersToDelete)),
     ]);
   }
@@ -104,7 +104,7 @@ export class NoteListUseCases {
     const oldFullPath = FolderDomainService.getFullPath(folder);
     const descendants = FolderDomainService.getAllDescendantFolders(oldFullPath, allFolders);
 
-    const allNotes = await NoteRepository.getAll();
+    const allNotes = await FileRepository.getAll();
     const allChildNotes = FolderDomainService.getAllDescendantNotes(
       oldFullPath,
       allNotes,
@@ -141,7 +141,7 @@ export class NoteListUseCases {
     // 9. 一括更新（トランザクション的に実行）
     await Promise.all([
       FolderRepository.batchUpdate([updatedFolder, ...updatedDescendantFolders]),
-      NoteRepository.batchUpdate(updatedNotes),
+      FileRepository.batchUpdate(updatedNotes),
     ]);
 
     // 10. AsyncStorageの書き込み完了を待機
@@ -151,84 +151,85 @@ export class NoteListUseCases {
 
   /**
    * ノートをリネーム
-   * @param noteId ノートID
+   * @param fileId ファイルID
    * @param newTitle 新しいタイトル
    * @throws バリデーションエラー、重複エラー
    */
-  static async renameNote(noteId: string, newTitle: string): Promise<void> {
+  static async renameFile(fileId: string, newTitle: string): Promise<void> {
     // 1. バリデーション
-    const validation = NoteDomainService.validateNoteName(newTitle);
+    const validation = FileDomainService.validateFileName(newTitle);
     if (!validation.valid) {
       throw new Error(validation.error);
     }
 
     // 2. ノートを取得
-    const note = await NoteRepository.getById(noteId);
-    if (!note) {
+    const file = await FileRepository.getById(fileId);
+    if (!file) {
       throw new Error('ノートが見つかりません');
     }
 
     // 3. 重複チェック
-    const { isDuplicate } = await NoteDomainService.checkDuplicate(
+    const { isDuplicate } = await FileDomainService.checkDuplicate(
       newTitle,
-      note.path,
-      noteId
+      file.path,
+      fileId
     );
     if (isDuplicate) {
       throw new Error('同じ名前のノートが既に存在します');
     }
 
     // 4. 更新
-    const updatedNote: File = {
-      ...note,
+    const updatedFile: File = {
+      ...file,
+      id: file.id,
       title: newTitle,
       updatedAt: new Date(),
     };
 
-    await NoteRepository.update(updatedNote);
+    await FileRepository.update(updatedFile);
   }
 
   /**
    * 選択されたアイテムを移動
-   * @param noteIds 移動するノートIDの配列
+   * @param fileIds 移動するファイルIDの配列
    * @param folderIds 移動するフォルダIDの配列
    * @param targetFolderPath 移動先フォルダパス
    * @throws バリデーションエラー、重複エラー
    */
   static async moveSelectedItems(
-    noteIds: string[],
+    fileIds: string[],
     folderIds: string[],
     targetFolderPath: string
   ): Promise<void> {
     const normalizedTargetPath = PathService.normalizePath(targetFolderPath);
 
     // 1. ノートの移動バリデーション
-    const noteValidation = await NoteDomainService.validateMoveOperation(
-      noteIds,
+    const fileValidation = await FileDomainService.validateMoveOperation(
+      fileIds,
       normalizedTargetPath
     );
-    if (!noteValidation.valid) {
-      throw new Error(noteValidation.errors.join('\n'));
+    if (!fileValidation.valid) {
+      throw new Error(fileValidation.errors.join('\n'));
     }
 
     // 2. ノートを移動
-    const allNotes = await NoteRepository.getAll();
-    const updatedNotes = noteIds
-      .map(noteId => {
-        const note = allNotes.find(n => n.id === noteId);
-        if (!note) return null;
+    const allFiles = await FileRepository.getAll();
+    const updatedFiles = fileIds
+      .map(fileId => {
+        const file = allFiles.find(n => n.id === fileId);
+        if (!file) return null;
         return {
-          ...note,
+          ...file,
           path: normalizedTargetPath,
           updatedAt: new Date(),
         };
       })
-      .filter((n): n is File => n !== null);
+      .filter((f): f is File => f !== null);
 
     // 3. フォルダを移動
     const allFolders = await FolderRepository.getAll();
     const foldersToUpdate: Folder[] = [];
-    const notesInFolders: File[] = [];
+    const filesInFolders: File[] = [];
 
     for (const folderId of folderIds) {
       const folder = allFolders.find(f => f.id === folderId);
@@ -273,10 +274,10 @@ export class NoteListUseCases {
       // フォルダ内のノートも移動
       const childNotes = FolderDomainService.getAllDescendantNotes(
         oldFullPath,
-        allNotes,
+        allFiles,
         allFolders
       );
-      notesInFolders.push(
+      filesInFolders.push(
         ...childNotes.map(n => ({
           ...n,
           path: n.path.replace(oldFullPath, newFullPath),
@@ -287,13 +288,13 @@ export class NoteListUseCases {
 
     // 4. 一括更新
     await Promise.all([
-      NoteRepository.batchUpdate([...updatedNotes, ...notesInFolders]),
+      FileRepository.batchUpdate([...updatedFiles, ...filesInFolders]),
       FolderRepository.batchUpdate(foldersToUpdate),
     ]);
   }
 
   /**
-   * パス指定でノートを作成
+   * パス指定でファイルを作成
    * @param inputPath パス文字列（例: "folder1/folder2/note title"）
    * @param content ノート内容
    * @param tags タグ
@@ -301,7 +302,7 @@ export class NoteListUseCases {
    * @description
    * パス内のフォルダが存在しない場合は自動的に作成します。
    */
-  static async createNoteWithPath(
+  static async createFileWithPath(
     inputPath: string,
     content: string = '',
     tags: string[] = []
@@ -310,7 +311,7 @@ export class NoteListUseCases {
     const { folders, fileName } = PathService.parseInputPath(inputPath);
 
     // 2. タイトルのバリデーション
-    const validation = NoteDomainService.validateNoteName(fileName);
+    const validation = FileDomainService.validateFileName(fileName);
     if (!validation.valid) {
       throw new Error(validation.error);
     }
@@ -345,7 +346,7 @@ export class NoteListUseCases {
     }
 
     // 4. 重複チェック
-    const { isDuplicate } = await NoteDomainService.checkDuplicate(
+    const { isDuplicate } = await FileDomainService.checkDuplicate(
       fileName,
       currentPath
     );
@@ -354,14 +355,14 @@ export class NoteListUseCases {
     }
 
     // 5. ノートを作成
-    const noteData: CreateFileData = {
+    const fileData: CreateFileData = {
       title: fileName,
       content,
       tags,
       path: currentPath,
     };
 
-    return await NoteRepository.create(noteData);
+    return await FileRepository.create(fileData);
   }
 
   /**
@@ -395,37 +396,36 @@ export class NoteListUseCases {
 
   /**
    * ノートをコピー
-   * @param noteIds コピーするノートIDの配列
+   * @param fileIds コピーするファイルIDの配列
    * @returns コピーされたノートの配列
    */
-  static async copyNotes(noteIds: string[]): Promise<File[]> {
+  static async copyFiles(fileIds: string[]): Promise<File[]> {
     // バリデーション
-    const validation = await NoteDomainService.validateCopyOperation(noteIds);
+    const validation = await FileDomainService.validateCopyOperation(fileIds);
     if (!validation.valid) {
       throw new Error(validation.errors.join('\n'));
     }
 
-    return await NoteRepository.copy(noteIds);
+    return await FileRepository.copy(fileIds);
   }
 
   /**
    * アイテムの存在チェック
-   * @param noteIds ノートIDの配列
+   * @param fileIds ファイルIDの配列
    * @param folderIds フォルダIDの配列
    * @returns 全て存在する場合true
    */
   static async validateItemsExist(
-    noteIds: string[],
+    fileIds: string[],
     folderIds: string[]
   ): Promise<{ valid: boolean; errors: string[] }> {
     const errors: string[] = [];
-
-    const allNotes = await NoteRepository.getAll();
+    const allNotes = await FileRepository.getAll();
     const allFolders = await FolderRepository.getAll();
 
-    for (const noteId of noteIds) {
-      if (!allNotes.find(n => n.id === noteId)) {
-        errors.push(`ノート ${noteId} が見つかりません`);
+    for (const fileId of fileIds) {
+      if (!allNotes.find(n => n.id === fileId)) {
+        errors.push(`ファイル ${fileId} が見つかりません`);
       }
     }
 

@@ -10,12 +10,12 @@ export interface UpdateNoteData {
   path?: string;
 }
 
-export const getAllNotes = async (): Promise<File[]> => {
+export const getAllFiles = async (): Promise<File[]> => {
   const notes = await getAllNotesRaw();
   return notes.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
 };
 
-export const getNotesByPath = async (path: string): Promise<File[]> => {
+export const getFilesByPath = async (path: string): Promise<File[]> => {
   const notes = await getAllNotesRaw();
   // パスは正規化済みと仮定して、単純な文字列比較を行う
   return notes
@@ -23,13 +23,13 @@ export const getNotesByPath = async (path: string): Promise<File[]> => {
     .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
 };
 
-export const deleteNotes = async (noteIds: string[]): Promise<void> => {
+export const deleteFiles = async (noteIds: string[]): Promise<void> => {
   let notes = await getAllNotesRaw();
   notes = notes.filter(note => !noteIds.includes(note.id));
   await saveAllNotes(notes);
 };
 
-export const copyNotes = async (sourceIds: string[]): Promise<File[]> => {
+export const copyFiles = async (sourceIds: string[]): Promise<File[]> => {
   const notes = await getAllNotesRaw();
   const copiedNotes: File[] = [];
   const now = new Date();
@@ -69,7 +69,7 @@ export const copyNotes = async (sourceIds: string[]): Promise<File[]> => {
   return copiedNotes;
 };
 
-export const createNote = async (data: CreateFileData): Promise<File> => {
+export const createFile = async (data: CreateFileData): Promise<File> => {
   const now = new Date();
   // パスは呼び出し側で正規化済みと仮定
   // 重複チェックは呼び出し側（NoteService）が行う
@@ -91,7 +91,7 @@ export const createNote = async (data: CreateFileData): Promise<File> => {
   return newNote;
 };
 
-export const updateNote = async (data: UpdateNoteData): Promise<File> => {
+export const updateFile = async (data: UpdateNoteData): Promise<File> => {
   const notes = await getAllNotesRaw();
   const noteIndex = notes.findIndex(n => n.id === data.id);
 
@@ -112,7 +112,7 @@ export const updateNote = async (data: UpdateNoteData): Promise<File> => {
   return updatedNote;
 };
 
-export const moveNote = async (noteId: string, newPath: string): Promise<File> => {
+export const moveFile = async (noteId: string, newPath: string): Promise<File> => {
   const notes = await getAllNotesRaw();
   const noteIndex = notes.findIndex(n => n.id === noteId);
 

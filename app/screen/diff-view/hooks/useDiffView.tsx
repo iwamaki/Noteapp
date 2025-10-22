@@ -5,7 +5,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useLayoutEffect, useMemo, useCallback } from 'react';
 import { Alert, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { NoteEditStorage, StorageError } from '../../file-edit/repositories/noteStorage';
+import { FileEditStorage, StorageError } from '../../file-edit/repositories/fileStorage';
 import { RootStackParamList } from '../../../navigation/types';
 import { useCustomHeader, HeaderConfig } from '../../../components/CustomHeader';
 import { generateDiff } from '../services/diffService';
@@ -21,7 +21,7 @@ export const useDiffView = () => {
 
   // Destructure params based on mode
   const { mode, originalContent, newContent } = route.params;
-  const noteId = mode === 'restore' ? route.params.noteId : undefined;
+  const fileId = mode === 'restore' ? route.params.fileId : undefined;
   const versionId = mode === 'restore' ? route.params.versionId : undefined;
 
   const diff = useMemo(() => {
@@ -45,8 +45,8 @@ export const useDiffView = () => {
           text: '復元',
           onPress: async () => {
             try {
-              if (mode === 'restore' && noteId && versionId) {
-                await NoteEditStorage.restoreNoteVersion(noteId, versionId);
+              if (mode === 'restore' && fileId && versionId) {
+                await FileEditStorage.restoreFileVersion(fileId, versionId);
                 Alert.alert('成功', 'ノートが正常に復元されました。');
                 navigation.goBack(); // 復元後、前の画面に戻る
               } else if (mode !== 'restore') {
@@ -54,7 +54,7 @@ export const useDiffView = () => {
               } else {
                 throw new Error('ノートIDまたはバージョンIDが見つかりません。');
               }
-            } catch (error) {
+            } catch (error: unknown) {
               console.error('Failed to restore note version:', error);
               if (error instanceof StorageError) {
                 Alert.alert('復元エラー', `ノートの復元に失敗しました: ${error.message}`);
@@ -67,7 +67,7 @@ export const useDiffView = () => {
       ],
       { cancelable: true }
     );
-  }, [mode, noteId, versionId, navigation]);
+  }, [mode, fileId, versionId, navigation]);
 
   useLayoutEffect(() => {
     let titleText = '';
