@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { File, Folder, FileVersion } from '@shared/types/file';
+import { File, Folder, FileVersion } from './type';
 import StorageUtils from './asyncStorageUtils';
 
 // --- Storage Keys ---

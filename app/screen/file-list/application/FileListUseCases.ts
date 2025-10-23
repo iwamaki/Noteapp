@@ -6,7 +6,7 @@
  * 実際のビジネスユースケースを実装します。
  */
 
-import { File, Folder, CreateFileData, CreateFolderData } from '@shared/types/file';
+import { File, Folder, CreateFileData, CreateFolderData } from '@data/type';
 import { FileRepository } from '@data/fileRepository';
 import { FolderRepository } from '@data/folderRepository';
 import { FileDomainService } from '../domain/FileDomainService';

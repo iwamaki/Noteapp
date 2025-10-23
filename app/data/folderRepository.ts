@@ -6,7 +6,7 @@
  */
 
 import { v4 as uuidv4 } from 'uuid';
-import { Folder, CreateFolderData, UpdateFolderData } from '@shared/types/file';
+import { Folder, CreateFolderData, UpdateFolderData } from './type';
 import { PathService } from '../services/PathService';
 import {
   getAllFoldersRaw,

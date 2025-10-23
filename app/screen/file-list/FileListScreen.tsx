@@ -13,7 +13,7 @@ import { useKeyboardHeight } from '../../contexts/KeyboardHeightContext';
 import { FileListProvider, useFileListContext } from './context';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/types';
-import { FileSystemItem, Folder } from '@shared/types/file';
+import { FileSystemItem, Folder } from '@data/type';
 import { logger } from '../../utils/logger';
 
 import { Ionicons } from '@expo/vector-icons';

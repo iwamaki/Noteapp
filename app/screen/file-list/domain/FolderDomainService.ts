@@ -6,7 +6,7 @@
  * データアクセスはRepositoryを通じて行います。
  */
 
-import { Folder, File } from '@shared/types/file';
+import { Folder, File } from '@data/type';
 import { FolderRepository } from '@data/folderRepository';
 import { PathService } from '../../../services/PathService';
 

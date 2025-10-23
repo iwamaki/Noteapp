@@ -4,7 +4,7 @@
  * @description エディタの状態、エラー、アクションなどの型を一元管理
  */
 
-import { File, FileVersion } from '@shared/types/file';
+import { File, FileVersion } from '@data/type';
 
 // ============================================
 // エディタの状態型

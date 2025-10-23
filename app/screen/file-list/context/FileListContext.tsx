@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { FileListState, FileListAction } from './types';
-import { File, Folder, FileSystemItem } from '@shared/types/file';
+import { File, Folder, FileSystemItem } from '@data/type';
 
 /**
  * 非同期アクションヘルパーの型定義
