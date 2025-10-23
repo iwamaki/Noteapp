@@ -27,7 +27,10 @@ export const TextEditor: React.FC<TextEditorProps> = ({
     textEditor: {
       ...typography.body,
       fontFamily: 'monospace',
-      borderWidth: 1,
+      borderLeftWidth: 1,
+      borderTopWidth: 0,
+      borderRightWidth: 0,
+      borderBottomWidth: 0,
       borderColor: colors.border,
       borderRadius: 0,
       backgroundColor: colors.background,

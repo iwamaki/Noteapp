@@ -10,7 +10,6 @@ import { useTheme } from '../../../design/theme/ThemeContext';
 import { TreeNode } from '../utils/treeUtils';
 import { ListItem } from '../../../components/ListItem';
 import { File, Folder } from '@data/type';
-import { logger } from '@utils/logger';
 
 interface TreeListItemProps {
   node: TreeNode;
