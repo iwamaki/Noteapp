@@ -9,6 +9,8 @@ import APIService, { ChatContext } from './llmService/api';
 import { ChatMessage, LLMCommand } from './llmService/types/types';
 import { logger } from '../../utils/logger';
 import { ActiveScreenContextProvider, ActiveScreenContext, ChatServiceListener } from './types';
+import { FileRepository } from '@data/fileRepository';
+import { FolderRepository } from '@data/folderRepository';
 
 /**
  * シングルトンクラスとして機能し、アプリケーション全体でチャットの状態を管理します。
@@ -130,7 +132,7 @@ class ChatService {
       }
 
       // ChatContextを構築
-      const chatContext: ChatContext = this.buildChatContext(screenContext);
+      const chatContext: ChatContext = await this.buildChatContext(screenContext);
 
       // LLMの設定を適用
       APIService.setLLMProvider(this.llmProvider);
@@ -234,11 +236,46 @@ class ChatService {
   /**
    * 画面コンテキストからChatContextを構築
    */
-  private buildChatContext(screenContext: ActiveScreenContext | null): ChatContext {
+  private async buildChatContext(screenContext: ActiveScreenContext | null): Promise<ChatContext> {
+    // 全ファイルとフォルダを取得してallFiles形式に変換
+    const allFilesData = await this.getAllFilesForContext();
+
     const chatContext: ChatContext = {
       activeScreen: screenContext ?? undefined,
+      allFiles: allFilesData,
     };
     return chatContext;
+  }
+
+  /**
+   * LLMコンテキスト用に全ファイル・フォルダ情報を取得
+   */
+  private async getAllFilesForContext(): Promise<Array<{ title: string; path: string; type: 'file' | 'folder' }>> {
+    try {
+      const [files, folders] = await Promise.all([
+        FileRepository.getAll(),
+        FolderRepository.getAll(),
+      ]);
+
+      const allItems = [
+        ...files.map(file => ({
+          title: file.title,
+          path: file.path,
+          type: 'file' as const,
+        })),
+        ...folders.map(folder => ({
+          title: folder.name, // フォルダはnameフィールドを使用
+          path: folder.path,
+          type: 'folder' as const,
+        })),
+      ];
+
+      logger.debug('chatService', `Retrieved ${files.length} files and ${folders.length} folders for LLM context`);
+      return allItems;
+    } catch (error) {
+      logger.error('chatService', 'Error getting all files for context:', error);
+      return [];
+    }
   }
 
   /**

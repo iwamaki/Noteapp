@@ -43,7 +43,7 @@ export interface ChatContext {
   allFiles?: Array<{
     path: string;
     title: string;
-    type: 'file' | 'directory';
+    type: 'file' | 'folder';
   }>;
 }
 
