@@ -4,7 +4,7 @@
  * @responsibility パスからファイルやフォルダを検索する共通ロジックを提供します
  */
 
-import { File, Folder } from '@shared/types/file';
+import { File, Folder } from '@data/type';
 import { FileRepository } from '@data/fileRepository';
 import { FolderRepository } from '@data/folderRepository';
 import { PathService } from '../../../services/PathService';

@@ -7,7 +7,7 @@
  */
 
 import { v4 as uuidv4 } from 'uuid';
-import { File, FileVersion, CreateFileData, UpdateFileData } from '@shared/types/file';
+import { File, FileVersion, CreateFileData, UpdateFileData } from './type';
 import {
   getAllFilesRaw,
   saveAllFiles,

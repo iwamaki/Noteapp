@@ -1,7 +1,7 @@
 // app/screen/file-list/hooks/useSearch.ts (拡張版)
 import { useState, useMemo, useCallback } from 'react';
 import { flattenTree, TreeNode } from '../utils/treeUtils';
-import { File, Folder } from '../../../../shared/types/file';
+import { File, Folder } from '@data/type';
 
 export type SearchTarget = 'all' | 'files' | 'folders';
 export type SearchField = 'title' | 'content' | 'all';

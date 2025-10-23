@@ -3,7 +3,7 @@
  * @summary ツリー構造変換ユーティリティ
  * @responsibility フラットなFileSystemItemをツリー構造（TreeNode）に変換
  */
-import { FileSystemItem, Folder, File } from '../../../../shared/types/file';
+import { FileSystemItem, Folder, File } from '@data/type';
 import { PathService } from '../../../services/PathService';
 import { logger } from '../../../utils/logger';
 

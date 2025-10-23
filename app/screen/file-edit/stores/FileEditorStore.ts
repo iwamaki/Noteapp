@@ -6,7 +6,7 @@
 
 import { create } from 'zustand';
 import { EditorState, EditorActions, ViewMode, EditorError } from '../types';
-import { File } from '@shared/types/file';
+import { File } from '@data/type';
 import { fileService } from '../services/FileService';
 import { HistoryManager } from './HistoryManager';
 

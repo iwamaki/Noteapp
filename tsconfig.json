@@ -31,8 +31,7 @@
     "jest.config.js",
     "jest.setup.js",
     "babel.config.js",
-    "app.json",
-    "app/data/**/*.ts"
+    "app.json"
   ],
   "exclude": [
     "app/__tests__/**",

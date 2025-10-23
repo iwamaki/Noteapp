@@ -9,7 +9,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { TreeNode } from '../utils/treeUtils';
 import { ListItem } from '../../../components/ListItem';
-import { File, Folder } from '@shared/types/file';
+import { File, Folder } from '@data/type';
 
 interface TreeListItemProps {
   node: TreeNode;

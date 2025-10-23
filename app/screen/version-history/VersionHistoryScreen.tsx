@@ -10,7 +10,7 @@ import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/nativ
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
 import { FileRepository } from '@data/fileRepository';
-import { FileVersion, File } from '../../../shared/types/file';
+import { FileVersion, File } from '@data/type';
 import { format } from 'date-fns';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { useCustomHeader } from '../../components/CustomHeader';
