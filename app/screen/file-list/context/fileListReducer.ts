@@ -6,7 +6,7 @@
  */
 
 import { FileListState, FileListAction } from './types';
-import { buildTree } from '../utils/treeUtils';
+import { buildTree, flattenTree } from '../utils/treeUtils';
 
 /**
  * 初期状態
