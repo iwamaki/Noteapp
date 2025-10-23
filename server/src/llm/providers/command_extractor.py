@@ -144,8 +144,8 @@ class AgentCommandExtractor:
 
         return LLMCommand(
             action='move_item',
-            source=source_path,
-            destination=dest_path
+            source_path=source_path,
+            dest_path=dest_path
         )
 
     def _handle_delete_item(self, tool_input: Dict[str, Any]) -> Optional[LLMCommand]:
