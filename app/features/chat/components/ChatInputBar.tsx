@@ -8,11 +8,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   Text,
 } from 'react-native';
+import { CustomInlineInput } from '../../../components/CustomInlineInput';
 import { Ionicons } from '@expo/vector-icons';
 import { useChat } from '../hooks/useChat';
 import { useTheme } from '../../../design/theme/ThemeContext';
@@ -100,18 +100,10 @@ export const ChatInputBar: React.FC = () => {
       color: colors.text,
       fontWeight: '600',
     },
-    textInput: {
+    customInput: {
       flex: 1,
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: 20,
-      paddingHorizontal: 15,
-      paddingVertical: 10,
-      fontSize: typography.subtitle.fontSize,
-      backgroundColor: colors.background,
-      color: colors.text,
       maxHeight: 100,
-      marginRight: 10, // Increased margin for better spacing
+      marginRight: 10,
       minHeight: 44,
     },
     sendButton: {
@@ -151,10 +143,9 @@ export const ChatInputBar: React.FC = () => {
               <Text style={styles.expandButtonText}>▲ {messages.filter(msg => msg.role === 'user').length}</Text>
             </TouchableOpacity>
           )}
-          <TextInput
-            style={styles.textInput}
+          <CustomInlineInput
+            style={styles.customInput}
             placeholder="メッセージを入力..."
-            placeholderTextColor={colors.textSecondary}
             value={inputText}
             onChangeText={setInputText}
             multiline

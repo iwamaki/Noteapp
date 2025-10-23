@@ -46,7 +46,7 @@ export const CustomModal: React.FC<CustomModalProps> = ({
     },
     modalView: {
       margin: spacing.md,
-      backgroundColor: colors.background,
+      backgroundColor: colors.secondary,
       borderRadius: responsive.getResponsiveSize(10, 15, 20),
       padding: spacing.lg,
       alignItems: 'stretch', // Changed to stretch for children
@@ -61,7 +61,7 @@ export const CustomModal: React.FC<CustomModalProps> = ({
       width: '80%', // Adjust as needed
       maxWidth: 400,
       borderWidth: 2,
-      borderColor: colors.secondary,
+      borderColor: colors.background,
     },
     modalTitle: {
       ...typography.title,
