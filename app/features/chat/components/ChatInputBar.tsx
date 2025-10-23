@@ -5,7 +5,7 @@
  * およびキーボードの表示状態に応じたレイアウト調整を全て自己管理する責任があります。
  */
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   TextInput,
@@ -31,15 +31,28 @@ export const ChatInputBar: React.FC = () => {
     resetChat,
     chatAreaHeight,
     panResponder,
+    isResizing,
   } = useChat();
   const [inputText, setInputText] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
+  const lastHeightRef = useRef<number>(0);
 
   // ChatInputBarの高さを計測してContextに報告
   const handleLayout = (event: any) => {
     const { height } = event.nativeEvent.layout;
-    setChatInputBarHeight(height);
+    lastHeightRef.current = height;
+    // スワイプ中はレイアウト更新を抑制
+    if (!isResizing) {
+      setChatInputBarHeight(height);
+    }
   };
+
+  // スワイプ終了時にレイアウトを更新
+  useEffect(() => {
+    if (!isResizing && lastHeightRef.current > 0) {
+      setChatInputBarHeight(lastHeightRef.current);
+    }
+  }, [isResizing, setChatInputBarHeight]);
 
   // メッセージ送信処理
   const handleSendMessage = async () => {

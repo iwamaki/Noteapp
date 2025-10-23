@@ -24,6 +24,7 @@ const CHAT_AREA_INITIAL_HEIGHT = 250;   // 初期高さ
 export const useChat = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
   const { settings } = useSettingsStore();
 
   const chatAreaHeight = useRef(new Animated.Value(CHAT_AREA_INITIAL_HEIGHT)).current;
@@ -44,6 +45,7 @@ export const useChat = () => {
       onStartShouldSetPanResponder: () => true,
       onPanResponderGrant: () => {
         gestureStartHeight.current = heightValue.current;
+        setIsResizing(true);
       },
       onPanResponderMove: (_, gestureState) => {
         const newHeight = gestureStartHeight.current - gestureState.dy;
@@ -58,7 +60,7 @@ export const useChat = () => {
         chatAreaHeight.setValue(clampedHeight);
       },
       onPanResponderRelease: () => {
-        // onPanResponderMoveで値がすでに設定されているため、何もしません
+        setIsResizing(false);
       },
     })
   ).current;
@@ -114,5 +116,6 @@ export const useChat = () => {
     resetChat,
     chatAreaHeight,
     panResponder,
+    isResizing,
   };
 };
