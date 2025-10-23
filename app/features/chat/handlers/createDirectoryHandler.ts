@@ -5,7 +5,7 @@
  */
 
 import { LLMCommand } from '../llmService/types/types';
-import { CommandHandler } from './types';
+import { CommandHandler, CommandHandlerContext } from './types';
 import { logger } from '../../../utils/logger';
 import { FolderRepository } from '@data/folderRepository';
 
@@ -16,8 +16,12 @@ import { FolderRepository } from '@data/folderRepository';
  * FolderRepositoryを使用してフォルダを作成します。
  *
  * @param command create_directoryコマンド
+ * @param context コマンドハンドラのコンテキスト
  */
-export const createDirectoryHandler: CommandHandler = async (command: LLMCommand) => {
+export const createDirectoryHandler: CommandHandler = async (
+  command: LLMCommand,
+  context?: CommandHandlerContext
+) => {
   logger.debug('toolService', 'Handling create_directory command', {
     path: command.path,
     name: command.content,
@@ -30,6 +34,12 @@ export const createDirectoryHandler: CommandHandler = async (command: LLMCommand
     });
 
     logger.debug('toolService', `Folder created: ${command.content}`);
+
+    // FileListScreenの画面更新をトリガー
+    if (context?.refreshData) {
+      logger.debug('toolService', 'Refreshing FileList data after directory creation');
+      await context.refreshData();
+    }
   } catch (error) {
     logger.error('toolService', 'Error creating folder', error);
     throw error;

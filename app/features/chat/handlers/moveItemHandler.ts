@@ -5,7 +5,7 @@
  */
 
 import { LLMCommand } from '../llmService/types/types';
-import { CommandHandler } from './types';
+import { CommandHandler, CommandHandlerContext } from './types';
 import { logger } from '../../../utils/logger';
 import { FileRepository, StorageError } from '@data/fileRepository';
 import { FolderRepository } from '@data/folderRepository';
@@ -19,8 +19,12 @@ import { findItemByPath, isValidDirectoryPath } from './itemResolver';
  * パスからアイテムを特定し、指定された移動先ディレクトリに移動します。
  *
  * @param command move_itemコマンド（command.source_path: 移動元, command.dest_path: 移動先）
+ * @param context コマンドハンドラのコンテキスト
  */
-export const moveItemHandler: CommandHandler = async (command: LLMCommand) => {
+export const moveItemHandler: CommandHandler = async (
+  command: LLMCommand,
+  context?: CommandHandlerContext
+) => {
   logger.info('moveItemHandler', 'Handling move_item command', {
     source: command.source_path,
     destination: command.dest_path,
@@ -98,6 +102,12 @@ export const moveItemHandler: CommandHandler = async (command: LLMCommand) => {
       });
     } else {
       throw new Error(`未知のアイテムタイプ: ${resolvedItem.type}`);
+    }
+
+    // FileListScreenの画面更新をトリガー
+    if (context?.refreshData) {
+      logger.debug('moveItemHandler', 'Refreshing FileList data after move');
+      await context.refreshData();
     }
   } catch (error) {
     if (error instanceof StorageError) {

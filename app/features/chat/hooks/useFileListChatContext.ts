@@ -15,6 +15,7 @@ import { createDirectoryHandler } from '../handlers/createDirectoryHandler';
 import { deleteItemHandler } from '../handlers/deleteItemHandler';
 import { moveItemHandler } from '../handlers/moveItemHandler';
 import { CommandHandlerContext } from '../handlers/types';
+import { useFileListContext } from '../../../screen/file-list/context/useFileListContext';
 
 interface UseFileListChatContextParams {
   items: FileSystemItem[];
@@ -31,6 +32,9 @@ export const useFileListChatContext = ({
   items,
   currentPath,
 }: UseFileListChatContextParams): void => {
+  // FileListContextから actions を取得
+  const { actions } = useFileListContext();
+
   // 最新のitemsとcurrentPathを参照するためのref
   const itemsRef = useRef(items);
   const currentPathRef = useRef(currentPath);
@@ -51,17 +55,16 @@ export const useFileListChatContext = ({
         });
 
         const visibleFileList = itemsRef.current
-          .filter(item => item.type === 'file') // ファイルのみに限定
           .map(item => {
             const path = item.item.path;
-            const name = item.item.title;
-            const type = 'file';
+            const name = item.type === 'file' ? item.item.title : (item.item as any).name;
+            const type = item.type === 'file' ? 'file' : 'directory';
             const filePath = PathService.getFullPath(path, name, item.type);
             return {
               filePath,
-              name, // Include name
-              type, // Include type
-              tags: item.item.tags,
+              name,
+              type,
+              tags: item.type === 'file' ? item.item.tags : undefined,
             };
           });
 
@@ -73,8 +76,10 @@ export const useFileListChatContext = ({
       },
     };
 
-    // ハンドラのコンテキストを作成（将来の拡張用に空のコンテキストを維持）
-    const handlerContext: CommandHandlerContext = {};
+    // ハンドラのコンテキストを作成し、refreshData を含める
+    const handlerContext: CommandHandlerContext = {
+      refreshData: actions.refreshData,
+    };
 
     // コマンドハンドラの定義（新しいハンドラ構造を使用）
     const commandHandlers = {
@@ -93,5 +98,5 @@ export const useFileListChatContext = ({
       logger.debug('chatService', '[useFileListChatContext] Unregistering context provider');
       ChatService.unregisterActiveContextProvider();
     };
-  }, [items, currentPath]);
+  }, [actions.refreshData]);
 };

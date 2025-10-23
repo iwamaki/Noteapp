@@ -14,6 +14,9 @@ export interface CommandHandlerContext {
   // ノート編集画面用のコンテキスト
   setContent?: (content: string) => void;
 
+  // ファイル一覧画面用のコンテキスト
+  refreshData?: () => Promise<void>;
+
   // 将来的な拡張のための予約フィールド
   [key: string]: any;
 }

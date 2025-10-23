@@ -5,7 +5,7 @@
  */
 
 import { LLMCommand } from '../llmService/types/types';
-import { CommandHandler } from './types';
+import { CommandHandler, CommandHandlerContext } from './types';
 import { logger } from '../../../utils/logger';
 import { FileRepository, StorageError } from '@data/fileRepository';
 import { FolderRepository } from '@data/folderRepository';
@@ -18,8 +18,12 @@ import { findItemByPath } from './itemResolver';
  * パスからアイテムを特定し、ファイルまたはフォルダを削除します。
  *
  * @param command delete_itemコマンド（command.path: 削除対象のパス）
+ * @param context コマンドハンドラのコンテキスト
  */
-export const deleteItemHandler: CommandHandler = async (command: LLMCommand) => {
+export const deleteItemHandler: CommandHandler = async (
+  command: LLMCommand,
+  context?: CommandHandlerContext
+) => {
   logger.info('deleteItemHandler', 'Handling delete_item command', {
     path: command.path,
   });
@@ -62,6 +66,12 @@ export const deleteItemHandler: CommandHandler = async (command: LLMCommand) => 
       });
     } else {
       throw new Error(`未知のアイテムタイプ: ${resolvedItem.type}`);
+    }
+
+    // FileListScreenの画面更新をトリガー
+    if (context?.refreshData) {
+      logger.debug('deleteItemHandler', 'Refreshing FileList data after deletion');
+      await context.refreshData();
     }
   } catch (error) {
     if (error instanceof StorageError) {
