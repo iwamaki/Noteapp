@@ -10,7 +10,6 @@ import { ActiveScreenContextProvider, ActiveScreenContext } from '../types';
 import ChatService from '../index';
 import { logger } from '../../../utils/logger';
 import { FileSystemItem } from '@shared/types/file';
-import { FileListStorage } from '../../../screen/file-list/fileStorage';
 import { PathService } from '../../../services/PathService';
 import { createDirectoryHandler } from '../handlers/createDirectoryHandler';
 import { deleteItemHandler } from '../handlers/deleteItemHandler';
@@ -74,10 +73,8 @@ export const useFileListChatContext = ({
       },
     };
 
-    // ハンドラのコンテキストを作成
-    const handlerContext: CommandHandlerContext = {
-      fileListStorage: FileListStorage,
-    };
+    // ハンドラのコンテキストを作成（将来の拡張用に空のコンテキストを維持）
+    const handlerContext: CommandHandlerContext = {};
 
     // コマンドハンドラの定義（新しいハンドラ構造を使用）
     const commandHandlers = {

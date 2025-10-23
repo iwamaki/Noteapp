@@ -7,8 +7,8 @@
  */
 
 import { File, Folder, CreateFileData, CreateFolderData } from '@shared/types/file';
-import { FileRepository } from '../infrastructure/FileRepository';
-import { FolderRepository } from '../infrastructure/FolderRepository';
+import { FileRepository } from '@data/fileRepository';
+import { FolderRepository } from '@data/folderRepository';
 import { FileDomainService } from '../domain/FileDomainService';
 import { FolderDomainService } from '../domain/FolderDomainService';
 import { PathService } from '../../../services/PathService';

@@ -7,7 +7,7 @@
  */
 
 import { File } from '@shared/types/file';
-import { FileRepository } from '../infrastructure/FileRepository';
+import { FileRepository } from '@data/fileRepository';
 
 /**
  * バリデーション結果の型

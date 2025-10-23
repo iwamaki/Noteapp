@@ -7,7 +7,7 @@
  */
 
 import { Folder, File } from '@shared/types/file';
-import { FolderRepository } from '../infrastructure/FolderRepository';
+import { FolderRepository } from '@data/folderRepository';
 import { PathService } from '../../../services/PathService';
 
 /**

@@ -7,7 +7,8 @@
 import { LLMCommand } from '../llmService/types/types';
 import { CommandHandler } from './types';
 import { logger } from '../../../utils/logger';
-import { FileListStorage, StorageError } from '../../../screen/file-list/fileStorage';
+import { FileRepository, StorageError } from '@data/fileRepository';
+import { FolderRepository } from '@data/folderRepository';
 import { PathService } from '../../../services/PathService';
 import { findItemByPath, isValidDirectoryPath } from './itemResolver';
 
@@ -18,9 +19,8 @@ import { findItemByPath, isValidDirectoryPath } from './itemResolver';
  * パスからアイテムを特定し、指定された移動先ディレクトリに移動します。
  *
  * @param command move_itemコマンド（command.source_path: 移動元, command.dest_path: 移動先）
- * @param context コンテキスト（オプション）
  */
-export const moveItemHandler: CommandHandler = async (command: LLMCommand, context?) => {
+export const moveItemHandler: CommandHandler = async (command: LLMCommand) => {
   logger.info('moveItemHandler', 'Handling move_item command', {
     source: command.source_path,
     destination: command.dest_path,
@@ -62,9 +62,6 @@ export const moveItemHandler: CommandHandler = async (command: LLMCommand, conte
       throw new Error(errorMsg);
     }
 
-    // FileListStorageを取得（コンテキストから、またはデフォルト）
-    const storage = context?.fileListStorage || FileListStorage;
-
     // アイテムの種類に応じて移動
     if (resolvedItem.type === 'file') {
       logger.debug('moveItemHandler', 'Moving file', {
@@ -74,7 +71,7 @@ export const moveItemHandler: CommandHandler = async (command: LLMCommand, conte
         destPath,
       });
 
-      await storage.moveFile(resolvedItem.id, destPath);
+      await FileRepository.move(resolvedItem.id, destPath);
 
       logger.info('moveItemHandler', 'File moved successfully', {
         fileId: resolvedItem.id,
@@ -90,7 +87,7 @@ export const moveItemHandler: CommandHandler = async (command: LLMCommand, conte
 
       // フォルダの移動はupdateFolderで実現
       // パスを更新すると、子要素も自動的に更新される
-      await storage.updateFolder({
+      await FolderRepository.update({
         id: resolvedItem.id,
         path: destPath,
       });

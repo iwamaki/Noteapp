@@ -5,7 +5,8 @@
  */
 
 import { File, Folder } from '@shared/types/file';
-import { FileListStorage } from '../../../screen/file-list/fileStorage';
+import { FileRepository } from '@data/fileRepository';
+import { FolderRepository } from '@data/folderRepository';
 import { PathService } from '../../../services/PathService';
 import { logger } from '../../../utils/logger';
 
@@ -41,7 +42,7 @@ export async function findItemByPath(path: string): Promise<ResolvedItem | null>
 
     if (isFolder) {
       // フォルダを検索
-      const folders = await FileListStorage.getAllFolders();
+      const folders = await FolderRepository.getAll();
       const normalizedPath = PathService.normalizePath(trimmedPath);
 
       for (const folder of folders) {
@@ -62,7 +63,7 @@ export async function findItemByPath(path: string): Promise<ResolvedItem | null>
       }
     } else {
       // ファイルを検索
-      const files = await FileListStorage.getAllFiles();
+      const files = await FileRepository.getAll();
 
       // パスをパースして親パスとファイル名を取得
       const parts = trimmedPath.split('/').filter(Boolean);
@@ -118,7 +119,7 @@ export async function isValidDirectoryPath(path: string): Promise<boolean> {
     }
 
     // フォルダを検索
-    const folders = await FileListStorage.getAllFolders();
+    const folders = await FolderRepository.getAll();
     return folders.some(folder => {
       const fullPath = PathService.getFullPath(folder.path, folder.name, 'folder');
       return fullPath === normalizedPath;
