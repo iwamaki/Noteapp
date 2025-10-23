@@ -29,6 +29,7 @@ export function buildTree(
   allFiles: File[],
   expandedFolderIds: Set<string>
 ): TreeNode[] {
+  logger.debug('tree', '🌲 buildTree: Starting.', { totalFolders: allFolders.length, totalFiles: allFiles.length });
   if (__DEV__) {
     logger.debug('tree', '🌲 Building tree from storage:', {
       totalFolders: allFolders.length,
@@ -39,6 +40,7 @@ export function buildTree(
 
   // ルートレベルのアイテムを取得
   const rootItems = getRootItems(allFolders, allFiles);
+  logger.debug('tree', `🌲 buildTree: Found ${rootItems.length} root items.`);
 
   // ツリーを構築
   const tree = rootItems.map(item => buildTreeNode(item, allFolders, allFiles, expandedFolderIds, 0));
@@ -46,7 +48,7 @@ export function buildTree(
   if (__DEV__) {
     logger.debug('tree', `🌲 Tree built: ${tree.length} root items`);
   }
-
+  logger.debug('tree', '🌲 buildTree: Finished.');
   return tree;
 }
 
@@ -123,6 +125,7 @@ function buildTreeNode(
  * @returns フラット化されたTreeNode配列
  */
 export function flattenTree(tree: TreeNode[]): TreeNode[] {
+  logger.debug('tree', '🌳 flattenTree: Starting.', { treeLength: tree.length });
   const result: TreeNode[] = [];
 
   function traverse(nodes: TreeNode[]) {
@@ -135,5 +138,6 @@ export function flattenTree(tree: TreeNode[]): TreeNode[] {
   }
 
   traverse(tree);
+  logger.debug('tree', `🌳 flattenTree: Finished. Flattened to ${result.length} items.`);
   return result;
 }

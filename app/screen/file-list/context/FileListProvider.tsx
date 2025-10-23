@@ -9,10 +9,12 @@
 import React, { useReducer, useCallback, useMemo } from 'react';
 import { FileListContext, FileListActions } from './FileListContext';
 import { fileListReducer, createInitialState } from './fileListReducer';
+import { buildTree, flattenTree } from '../utils/treeUtils';
 import { FileRepository } from '@data/fileRepository';
 import { FolderRepository } from '@data/folderRepository';
 import { FileListUseCases } from '../application/FileListUseCases';
 import { FileSystemItem } from '@data/type';
+import { logger } from '@utils/logger';
 
 interface FileListProviderProps {
   children: React.ReactNode;
@@ -30,19 +32,20 @@ export const FileListProvider: React.FC<FileListProviderProps> = ({ children }) 
    * AsyncStorageから最新データを取得し、状態を更新
    */
   const refreshData = useCallback(async () => {
+    logger.debug('file', 'refreshData: Starting data refresh.');
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
-      // AsyncStorageから確実にデータを取得
-      // batchUpdate() などの await が完了した後に呼ばれるため、
-      // 確実に最新データが取得できる
       const [folders, files] = await Promise.all([
         FolderRepository.getAll(),
         FileRepository.getAll(),
       ]);
+      logger.debug('file', `refreshData: Fetched ${folders.length} folders and ${files.length} files.`);
 
-      // データ更新と状態リセットを一括実行
       dispatch({ type: 'REFRESH_COMPLETE', payload: { folders, files } });
+      logger.debug('file', 'refreshData: Dispatched REFRESH_COMPLETE.');
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      logger.error('file', `refreshData: Error during data refresh: ${errorMessage}`, error);
       dispatch({ type: 'SET_LOADING', payload: false });
       throw error;
     }

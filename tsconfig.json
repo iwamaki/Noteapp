@@ -21,7 +21,8 @@
     "paths": {
       "@shared/*": ["./shared/*"],
       "@data/*": ["./app/data/*"],
-      "@design/*": ["./app/design/*"]
+      "@design/*": ["./app/design/*"],
+      "@utils/*": ["./app/utils/*"]
     }
   },
   "include": [

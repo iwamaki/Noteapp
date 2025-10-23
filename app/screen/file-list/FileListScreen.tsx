@@ -344,6 +344,9 @@ function FileListScreenContent() {
     dispatch,
   ]);
 
+  // レンダリング時のデバッグログ
+  logger.debug('file', `FileListScreen: Rendering. filteredNodes.length: ${filteredNodes.length}, searchQuery: '${searchQuery}', state.loading: ${state.loading}`);
+
   return (
     <MainContainer
       backgroundColor={colors.secondary}
