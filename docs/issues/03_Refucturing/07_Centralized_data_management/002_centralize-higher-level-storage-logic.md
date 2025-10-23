@@ -76,4 +76,22 @@ tags: [data-management, refactoring, storage, repository]
 
 ## 開発ログ (Development Log)
 
+### 2025-10-23 - 責任分離の完了確認
+
+リファクタリング後、`FileListScreen`と`FileEditScreen`の両方について、データ層からの責任分離が完全に達成されたことを確認しました。
+
+*   **`FileListScreen`**:
+    *   `FileListScreen`は`useFileListContext`を介してデータ操作を行います。
+    *   `FileListProvider`は`../infrastructure/FileRepository`と`../infrastructure/FolderRepository`をインポートしています。
+    *   これらの`infrastructure`内のリポジトリは、`@data/fileRepository`と`@data/folderRepository`から新しい集中型リポジトリを再エクスポートする互換性レイヤーとして機能しています。
+    *   `FileListUseCases`もこれらの互換性レイヤーを介して新しい集中型リポジトリを利用しています。
+
+*   **`FileEditScreen`**:
+    *   `FileEditScreen`は`useFileEditor`フックを介してデータ操作を行います。
+    *   `useFileEditor`は`../stores/FileEditorStore`を使用し、`FileEditorStore`は`../services/FileService`を呼び出します。
+    *   `FileService`は`../repositories/AsyncStorageFileRepository`をインスタンス化しています。
+    *   `AsyncStorageFileRepository`は、`@data/fileRepository`から新しい集中型リポジトリをインポートし、すべてのデータ操作をそれに委譲しています。
+
+この結果、両画面とも、UI層がデータ操作のビジネスロジックを直接扱うことなく、明確に定義されたデータ層とやり取りする構造が確立されました。
+
 ## AIへの申し送り事項 (Handover to AI)
