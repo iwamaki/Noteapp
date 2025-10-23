@@ -7,7 +7,8 @@
 import { LLMCommand } from '../llmService/types/types';
 import { CommandHandler } from './types';
 import { logger } from '../../../utils/logger';
-import { FileListStorage, StorageError } from '../../../screen/file-list/fileStorage';
+import { FileRepository, StorageError } from '@data/fileRepository';
+import { FolderRepository } from '@data/folderRepository';
 import { findItemByPath } from './itemResolver';
 
 /**
@@ -17,9 +18,8 @@ import { findItemByPath } from './itemResolver';
  * パスからアイテムを特定し、ファイルまたはフォルダを削除します。
  *
  * @param command delete_itemコマンド（command.path: 削除対象のパス）
- * @param context コンテキスト（オプション）
  */
-export const deleteItemHandler: CommandHandler = async (command: LLMCommand, context?) => {
+export const deleteItemHandler: CommandHandler = async (command: LLMCommand) => {
   logger.info('deleteItemHandler', 'Handling delete_item command', {
     path: command.path,
   });
@@ -40,16 +40,13 @@ export const deleteItemHandler: CommandHandler = async (command: LLMCommand, con
       throw new Error(errorMsg);
     }
 
-    // FileListStorageを取得（コンテキストから、またはデフォルト）
-    const storage = context?.fileListStorage || FileListStorage;
-
     // アイテムの種類に応じて削除
     if (resolvedItem.type === 'file') {
       logger.debug('deleteItemHandler', 'Deleting file', {
         fileId: resolvedItem.id,
         fileTitle: (resolvedItem.item as any).title,
       });
-      await storage.deleteFiles([resolvedItem.id]);
+      await FileRepository.batchDelete([resolvedItem.id]);
       logger.info('deleteItemHandler', 'File deleted successfully', {
         fileId: resolvedItem.id,
       });
@@ -59,7 +56,7 @@ export const deleteItemHandler: CommandHandler = async (command: LLMCommand, con
         folderName: (resolvedItem.item as any).name,
       });
       // deleteContents = true で中身ごと削除
-      await storage.deleteFolder(resolvedItem.id, true);
+      await FolderRepository.delete(resolvedItem.id, true);
       logger.info('deleteItemHandler', 'Folder deleted successfully', {
         folderId: resolvedItem.id,
       });

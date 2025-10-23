@@ -4,8 +4,7 @@
  * @description データアクセス層とバリデーションを組み合わせたビジネスロジック
  */
 
-import { FileRepository } from '../repositories/FileRepository';
-import { AsyncStorageFileRepository } from '../repositories/AsyncStorageFileRepository';
+import { FileRepository } from '@data/fileRepository';
 import { ValidationService } from './ValidationService';
 import { ErrorService } from './ErrorService';
 import { File, ErrorCode, EditorError } from '../types';
@@ -17,7 +16,6 @@ import { CreateFileData, UpdateFileData } from '@shared/types/file';
  */
 export class FileService {
   constructor(
-    private repository: FileRepository,
     private validator: ValidationService,
     private errorService: ErrorService
   ) {}
@@ -27,7 +25,7 @@ export class FileService {
    */
   async loadFile(id: string): Promise<File> {
     try {
-      const file = await this.repository.findById(id);
+      const file = await FileRepository.getById(id);
 
       if (!file) {
         const error: EditorError = {
@@ -74,10 +72,13 @@ export class FileService {
     try {
       if (data.id) {
         // 既存ファイルの更新
-        return await this.repository.update(data.id, data as Partial<UpdateFileData>);
+        return await FileRepository.updateWithVersion({
+          id: data.id,
+          ...data,
+        } as UpdateFileData);
       } else {
         // 新規ファイルの作成
-        return await this.repository.create(data as CreateFileData);
+        return await FileRepository.createWithVersion(data as CreateFileData);
       }
     } catch {
       const editorError: EditorError = {
@@ -95,7 +96,7 @@ export class FileService {
    */
   async deleteFile(id: string): Promise<void> {
     try {
-      await this.repository.delete(id);
+      await FileRepository.delete(id);
     } catch {
       const editorError: EditorError = {
         code: ErrorCode.STORAGE_ERROR,
@@ -112,7 +113,7 @@ export class FileService {
    */
   async getVersionHistory(fileId: string) {
     try {
-      return await this.repository.getVersions(fileId);
+      return await FileRepository.getVersions(fileId);
     } catch {
       const editorError: EditorError = {
         code: ErrorCode.STORAGE_ERROR,
@@ -129,7 +130,7 @@ export class FileService {
    */
   async restoreVersion(fileId: string, versionId: string): Promise<File> {
     try {
-      return await this.repository.restoreVersion(fileId, versionId);
+      return await FileRepository.restoreVersion(fileId, versionId);
     } catch {
       const editorError: EditorError = {
         code: ErrorCode.STORAGE_ERROR,
@@ -145,8 +146,7 @@ export class FileService {
 /**
  * デフォルトのサービスインスタンスを作成
  */
-const repository = new AsyncStorageFileRepository();
 const validator = new ValidationService();
 const errorService = ErrorService.getInstance();
 
-export const fileService = new FileService(repository, validator, errorService);
+export const fileService = new FileService(validator, errorService);

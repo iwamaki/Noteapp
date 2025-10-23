@@ -9,8 +9,8 @@
 import React, { useReducer, useCallback, useMemo } from 'react';
 import { FileListContext, FileListActions } from './FileListContext';
 import { fileListReducer, createInitialState } from './fileListReducer';
-import { FileRepository } from '../infrastructure/FileRepository';
-import { FolderRepository } from '../infrastructure/FolderRepository';
+import { FileRepository } from '@data/fileRepository';
+import { FolderRepository } from '@data/folderRepository';
 import { FileListUseCases } from '../application/FileListUseCases';
 import { FileSystemItem } from '@shared/types/file';
 
