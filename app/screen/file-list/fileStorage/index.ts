@@ -1,19 +1,27 @@
+/**
+ * @file index.ts
+ * @summary FileListStorage互換レイヤー
+ * @description
+ * 統一リポジトリを使用しつつ、既存のFileListStorage APIを提供。
+ * 後方互換性を保ちながら、新しいアーキテクチャへの移行を実現。
+ */
+
 import { FileSystemItem, File, Folder } from '@shared/types/file';
-import { getAllFilesRaw, saveAllFiles, getAllFoldersRaw, saveAllFolders, StorageError } from './storage';
-import * as FileFns from './file';
-import * as FolderFns from './folder';
+import { FileRepository, StorageError } from '@data/fileRepository';
+import { FolderRepository } from '@data/folderRepository';
+import { getAllFilesRaw, getAllFoldersRaw, saveAllFiles } from '@data/storageService';
 
 // Re-export error class
 export { StorageError };
 
-// Re-export storage raw functions for FileService
-export { saveAllFiles, saveAllFolders };
+// Re-export storage raw functions for FileService (backward compatibility)
+export { saveAllFiles, saveAllFolders } from '@data/storageService';
 
 // --- Composite & Helper Methods ---
 
 const getItemsByPath = async (path: string): Promise<FileSystemItem[]> => {
-  const files = await FileFns.getFilesByPath(path);
-  const folders = await FolderFns.getFoldersByPath(path);
+  const files = await FileRepository.getByPath(path);
+  const folders = await FolderRepository.getByPath(path);
 
   const items: FileSystemItem[] = [
     ...folders.map(folder => ({ type: 'folder' as const, item: folder })),
@@ -75,13 +83,25 @@ const migrateExistingFiles = async (): Promise<void> => {
   }
 };
 
-// --- Main Export ---
+// --- Main Export with Unified Repositories ---
 
 export const FileListStorage = {
-  // File functions
-  ...FileFns,
-  // Folder functions
-  ...FolderFns,
+  // File functions (using FileRepository)
+  getAllFiles: FileRepository.getAll.bind(FileRepository),
+  getFilesByPath: FileRepository.getByPath.bind(FileRepository),
+  deleteFiles: FileRepository.batchDelete.bind(FileRepository),
+  copyFiles: FileRepository.copy.bind(FileRepository),
+  createFile: FileRepository.create.bind(FileRepository),
+  updateFile: FileRepository.update.bind(FileRepository),
+  moveFile: FileRepository.move.bind(FileRepository),
+
+  // Folder functions (using FolderRepository)
+  getAllFolders: FolderRepository.getAll.bind(FolderRepository),
+  getFoldersByPath: FolderRepository.getByPath.bind(FolderRepository),
+  createFolder: FolderRepository.create.bind(FolderRepository),
+  updateFolder: FolderRepository.update.bind(FolderRepository),
+  deleteFolder: FolderRepository.delete.bind(FolderRepository),
+
   // Composite functions
   getItemsByPath,
   getItemsRecursively,
