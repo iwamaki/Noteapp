@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useEffect } from 'react';
+import React, { useCallback, useMemo, useEffect, useState } from 'react';
 import { StyleSheet, FlatList, Alert } from 'react-native';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { useFileListHeader } from './hooks/useFileListHeader';
@@ -9,6 +9,7 @@ import { CreateItemModal } from './components/CreateItemModal';
 import { TreeListItem } from './components/TreeListItem';
 import { RenameItemModal } from './components/RenameItemModal';
 import { MainContainer } from '../../components/MainContainer';
+import { CustomModal } from '../../components/CustomModal';
 import { useKeyboardHeight } from '../../contexts/KeyboardHeightContext';
 import { FileListProvider, useFileListContext } from './context';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
@@ -34,6 +35,9 @@ function FileListScreenContent() {
 
   // 新しいContext APIを使用
   const { state, dispatch, actions, items } = useFileListContext();
+
+  // 削除確認モーダルの状態
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
 
   // データ初期読み込み
   useEffect(() => {
@@ -74,10 +78,8 @@ function FileListScreenContent() {
         ).then(() => {
           logger.info('file', `Successfully moved selected items to ${targetPath}`);
           dispatch({ type: 'EXIT_MOVE_MODE' });
-          Alert.alert('成功', 'アイテムを移動しました');
         }).catch(error => {
           logger.error('file', `Failed to move selected items to ${targetPath}: ${error.message}`, error);
-          Alert.alert('エラー', error.message);
         });
       }
       return;
@@ -137,20 +139,27 @@ function FileListScreenContent() {
   }, [dispatch]);
 
   /**
-   * 削除ハンドラ
+   * 削除確認モーダルを開く
    */
   const handleDeleteSelected = useCallback(async () => {
+    logger.info('file', 'Opening delete confirmation modal');
+    setShowDeleteConfirmModal(true);
+  }, []);
+
+  /**
+   * 削除実行
+   */
+  const handleConfirmDelete = useCallback(async () => {
     logger.info('file', `Attempting to delete selected items. Files: ${Array.from(state.selectedFileIds).join(', ')}, Folders: ${Array.from(state.selectedFolderIds).join(', ')}`);
+    setShowDeleteConfirmModal(false);
     try {
       await actions.deleteSelectedItems(
         Array.from(state.selectedFileIds),
         Array.from(state.selectedFolderIds)
       );
       logger.info('file', 'Successfully deleted selected items.');
-      Alert.alert('成功', 'アイテムを削除しました');
     } catch (error: any) {
       logger.error('file', `Failed to delete selected items: ${error.message}`, error);
-      Alert.alert('エラー', error.message);
     }
   }, [actions, state.selectedFileIds, state.selectedFolderIds]);
 
@@ -162,10 +171,8 @@ function FileListScreenContent() {
     try {
       await actions.copySelectedFiles(Array.from(state.selectedFileIds));
       logger.info('file', 'Successfully copied selected files.');
-      Alert.alert('成功', 'ファイルをコピーしました');
     } catch (error: any) {
       logger.error('file', `Failed to copy selected files: ${error.message}`, error);
-      Alert.alert('エラー', error.message);
     }
   }, [actions, state.selectedFileIds]);
 
@@ -326,10 +333,8 @@ function FileListScreenContent() {
           ).then(() => {
             logger.info('file', `TreeListItem: Successfully moved selected items to ${targetPath}`);
             dispatch({ type: 'EXIT_MOVE_MODE' });
-            Alert.alert('成功', 'アイテムを移動しました');
           }).catch(error => {
             logger.error('file', `TreeListItem: Failed to move selected items to ${targetPath}: ${error.message}`, error);
-            Alert.alert('エラー', error.message);
           });
         }}
       />
@@ -391,6 +396,25 @@ function FileListScreenContent() {
           onRename={handleRename}
         />
       )}
+
+      <CustomModal
+        isVisible={showDeleteConfirmModal}
+        title="削除確認"
+        message={`選択したアイテム（ファイル: ${state.selectedFileIds.size}件、フォルダ: ${state.selectedFolderIds.size}件）を削除しますか？この操作は取り消せません。`}
+        buttons={[
+          {
+            text: 'キャンセル',
+            style: 'cancel',
+            onPress: () => setShowDeleteConfirmModal(false),
+          },
+          {
+            text: '削除',
+            style: 'destructive',
+            onPress: handleConfirmDelete,
+          },
+        ]}
+        onClose={() => setShowDeleteConfirmModal(false)}
+      />
     </MainContainer>
   );
 }
