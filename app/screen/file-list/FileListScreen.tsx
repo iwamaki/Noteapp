@@ -251,9 +251,12 @@ function FileListScreenContent() {
   const chatBarOffset = chatInputBarHeight + keyboardHeight;
 
   // キーボードオフセット依存スタイル（メモ化）
-  const contentPaddingStyle = useMemo(() => ({
-    paddingBottom: chatBarOffset,
-  }), [chatBarOffset]);
+  const contentContainerStyle = useMemo(() => ([
+    {
+      paddingBottom: chatBarOffset,
+      padding: spacing.md,
+    },
+  ]), [chatBarOffset, spacing.md]);
 
   const searchInput = (
     <FileListSearchBar
@@ -368,10 +371,7 @@ function FileListScreenContent() {
           data={filteredNodes}
           renderItem={renderTreeItem}
           keyExtractor={(node) => `${node.type}-${node.id}`}
-          contentContainerStyle={[
-            contentPaddingStyle,
-            { padding: spacing.md },
-          ]}
+          contentContainerStyle={contentContainerStyle}
           keyboardShouldPersistTaps="handled"
         />
       )}
