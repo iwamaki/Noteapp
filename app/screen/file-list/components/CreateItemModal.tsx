@@ -4,7 +4,8 @@
  * @responsibility "aaa/bbb/file.txt" のような入力からフォルダ構造を自動作成
  */
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { CustomInlineInput } from '../../../components/CustomInlineInput';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { CustomModal } from '../../../components/CustomModal';
 
@@ -51,14 +52,7 @@ export const CreateItemModal: React.FC<CreateItemModalProps> = ({
       marginBottom: spacing.md,
     },
     input: {
-      ...typography.body,
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: 8,
-      padding: spacing.md,
-      marginBottom: spacing.md,
-      color: colors.text,
-      backgroundColor: colors.secondary,
+      // CustomInlineInput handles most of these styles
     },
     exampleText: {
       ...typography.body,
@@ -91,8 +85,16 @@ export const CreateItemModal: React.FC<CreateItemModalProps> = ({
         <Text style={styles.currentPathLabel}>現在の場所：</Text>
         <Text style={styles.currentPath}>{currentPath}</Text>
 
-        <TextInput
-          style={styles.input}
+        <CustomInlineInput
+          style={{
+            ...typography.body,
+            borderWidth: 1,
+            borderColor: colors.border,
+            borderRadius: 8,
+            padding: spacing.md,
+            marginBottom: spacing.md,
+            color: colors.text,
+          }}
           placeholder="例: file.txt または folder1/file.txt"
           placeholderTextColor={colors.textSecondary}
           value={inputValue}

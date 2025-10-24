@@ -3,7 +3,8 @@
  * @summary アイテム（ノート/フォルダ）の名前変更モーダル
  */
 import React, { useState, useEffect } from 'react';
-import { TextInput, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { CustomInlineInput } from '../../../components/CustomInlineInput';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { CustomModal } from '../../../components/CustomModal';
 
@@ -40,13 +41,7 @@ export const RenameItemModal: React.FC<RenameItemModalProps> = ({
 
   const styles = StyleSheet.create({
     input: {
-      ...typography.body,
-      borderWidth: 1,
-      borderColor: colors.border,
-      borderRadius: 8,
-      padding: spacing.md,
-      color: colors.text,
-      backgroundColor: colors.secondary,
+      // CustomInlineInput handles most of these styles
     },
   });
 
@@ -69,8 +64,16 @@ export const RenameItemModal: React.FC<RenameItemModalProps> = ({
         },
       ]}
     >
-      <TextInput
-        style={styles.input}
+      <CustomInlineInput
+        style={{
+          ...typography.body,
+          borderWidth: 1,
+          borderColor: colors.border,
+          borderRadius: 8,
+          padding: spacing.md,
+          color: colors.text,
+          backgroundColor: colors.background,
+        }}
         placeholder={itemType === 'folder' ? '新しいフォルダ名' : '新しいノート名'}
         placeholderTextColor={colors.textSecondary}
         value={inputValue}
