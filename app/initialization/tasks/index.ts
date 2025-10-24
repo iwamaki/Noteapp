@@ -8,6 +8,7 @@
 import { verifyAsyncStorageTask } from './verifyAsyncStorage';
 import { loadSettingsTask } from './loadSettings';
 import { configureLLMServiceTask } from './configureLLMService';
+import { preloadLLMProvidersTask } from './preloadLLMProviders';
 import { configureChatServiceTask } from './configureChatService';
 import { verifyAppReadyTask } from './verifyAppReady';
 import { loadIconFontsTask } from './loadIconFonts';
@@ -31,6 +32,7 @@ export const allInitializationTasks: InitializationTask[] = [
 
   // Stage 3: SERVICES - アプリケーションサービス
   configureLLMServiceTask,
+  preloadLLMProvidersTask,
   configureChatServiceTask,
   loadToolDefinitionsTask,
 
@@ -43,6 +45,7 @@ export {
   verifyAsyncStorageTask,
   loadSettingsTask,
   configureLLMServiceTask,
+  preloadLLMProvidersTask,
   configureChatServiceTask,
   loadToolDefinitionsTask,
   verifyAppReadyTask,

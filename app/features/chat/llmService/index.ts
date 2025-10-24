@@ -33,6 +33,8 @@ export class LLMService {
   private httpClient: HttpClient;
   private requestManager: RequestManager;
   private providerManager: ProviderManager;
+  private cachedProviders: Record<string, LLMProvider> | null = null;
+  private loadingPromise: Promise<Record<string, LLMProvider>> | null = null;
 
   constructor(config?: Partial<LLMConfig>) {
     this.config = {
@@ -123,6 +125,34 @@ export class LLMService {
   }
 
   async loadProviders(): Promise<Record<string, LLMProvider>> {
+    // 既にキャッシュがあれば返す
+    if (this.cachedProviders) {
+      logger.debug('llm', 'Returning cached LLM providers');
+      return this.cachedProviders;
+    }
+
+    // 既にロード中なら同じPromiseを返す（重複リクエスト防止）
+    if (this.loadingPromise) {
+      logger.debug('llm', 'LLM providers already loading, returning existing promise');
+      return this.loadingPromise;
+    }
+
+    // ロード開始
+    logger.info('llm', 'Loading LLM providers from API');
+    this.loadingPromise = this._fetchLLMProviders();
+
+    try {
+      this.cachedProviders = await this.loadingPromise;
+      return this.cachedProviders;
+    } finally {
+      this.loadingPromise = null;
+    }
+  }
+
+  /**
+   * LLMプロバイダーを実際に取得する内部メソッド
+   */
+  private async _fetchLLMProviders(): Promise<Record<string, LLMProvider>> {
     try {
       const response = await this.httpClient.get('/api/llm-providers');
       const providers = response.data;
@@ -136,6 +166,22 @@ export class LLMService {
       }
       throw new LLMError('プロバイダー読み込みに失敗しました', 'PROVIDER_LOAD_ERROR');
     }
+  }
+
+  /**
+   * キャッシュされたLLMプロバイダーを同期的に取得
+   * キャッシュがない場合はnullを返す
+   */
+  getCachedProviders(): Record<string, LLMProvider> | null {
+    return this.cachedProviders;
+  }
+
+  /**
+   * キャッシュをクリアして再読み込みを強制
+   */
+  refreshProviders(): void {
+    logger.info('llm', 'Clearing LLM providers cache');
+    this.cachedProviders = null;
   }
 
   async checkHealth(): Promise<LLMHealthStatus> {
