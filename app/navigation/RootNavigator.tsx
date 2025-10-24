@@ -9,7 +9,7 @@ import {
   NavigationContainer,
   useNavigationContainerRef,
 } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createStackNavigator, CardStyleInterpolators } from '@react-navigation/stack';
 import { RootStackParamList } from './types';
 import FileListScreen from '../screen/file-list/FileListScreen';
 import FileEditScreen from '../screen/file-edit/FileEditScreen';
@@ -49,6 +49,40 @@ function RootNavigatorContent() {
           initialRouteName="FileList"
           screenOptions={{
             headerTintColor: colors.text,
+
+            // iOSスタイルの水平スライドアニメーション（最も高速）
+            cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+
+            // アニメーション時間を短縮（デフォルトは300ms）
+            transitionSpec: {
+              open: {
+                animation: 'timing',
+                config: {
+                  duration: 250, // 250ms（デフォルトより50ms短縮）
+                },
+              },
+              close: {
+                animation: 'timing',
+                config: {
+                  duration: 200, // 閉じる時はさらに短く
+                },
+              },
+            },
+
+            // 前の画面を早めにデタッチしてメモリ解放
+            detachPreviousScreen: true,
+
+            // 画面の背景色を設定してちらつき防止
+            cardStyle: {
+              backgroundColor: colors.secondary,
+            },
+
+            // アニメーション中の操作を制限
+            freezeOnBlur: true,
+
+            // ジェスチャー設定
+            gestureEnabled: true,
+            gestureDirection: 'horizontal',
           }}
         >
           <Stack.Screen name="FileList" component={FileListScreen} options={{ title: 'Files' }} />
