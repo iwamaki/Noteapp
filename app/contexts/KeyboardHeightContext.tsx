@@ -26,11 +26,16 @@ export function KeyboardHeightProvider({ children }: { children: React.ReactNode
     const keyboardHideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
 
     const keyboardWillShowSub = Keyboard.addListener(keyboardShowEvent, (e) => {
-      setKeyboardHeight(e.endCoordinates.height);
+      // アニメーションフレームに同期してstate更新
+      requestAnimationFrame(() => {
+        setKeyboardHeight(e.endCoordinates.height);
+      });
     });
 
     const keyboardWillHideSub = Keyboard.addListener(keyboardHideEvent, () => {
-      setKeyboardHeight(0);
+      requestAnimationFrame(() => {
+        setKeyboardHeight(0);
+      });
     });
 
     return () => {

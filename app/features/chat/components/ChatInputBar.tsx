@@ -5,7 +5,7 @@
  * およびキーボードの表示状態に応じたレイアウト調整を全て自己管理する責任があります。
  */
 
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import {
   View,
   TouchableOpacity,
@@ -38,14 +38,19 @@ export const ChatInputBar: React.FC = () => {
   const lastHeightRef = useRef<number>(0);
 
   // ChatInputBarの高さを計測してContextに報告
-  const handleLayout = (event: any) => {
+  const handleLayout = useCallback((event: any) => {
     const { height } = event.nativeEvent.layout;
-    lastHeightRef.current = height;
-    // スワイプ中はレイアウト更新を抑制
-    if (!isResizing) {
-      setChatInputBarHeight(height);
+    const roundedHeight = Math.round(height); // 小数点以下を丸める
+
+    // 高さが実際に変わったときのみ更新（閾値1px以上）
+    if (Math.abs(roundedHeight - lastHeightRef.current) > 1) {
+      lastHeightRef.current = roundedHeight;
+      // スワイプ中はレイアウト更新を抑制
+      if (!isResizing) {
+        setChatInputBarHeight(roundedHeight);
+      }
     }
-  };
+  }, [isResizing, setChatInputBarHeight]);
 
   // スワイプ終了時にレイアウトを更新
   useEffect(() => {
