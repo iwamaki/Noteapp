@@ -4,7 +4,7 @@
  * @responsibility ファイル編集画面のコンテキストをChatServiceに提供し、
  *                 コンテキスト依存のコマンドハンドラを登録する
  */
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { ActiveScreenContextProvider, ActiveScreenContext } from '../types';
 import ChatService from '../index';
 import { logger } from '../../../utils/logger';
@@ -45,6 +45,15 @@ export const useFileEditChatContext = ({
 }: UseFileEditChatContextParams): void => {
   const { settings } = useSettingsStore();
 
+  // contentをuseRefで管理（依存配列から除外するため）
+  const contentRef = useRef(content);
+
+  // contentが変わったときにRefを同期
+  useEffect(() => {
+    contentRef.current = content;
+  }, [content]);
+
+  // ChatServiceへの登録（contentの変更では再登録されない）
   useEffect(() => {
     const fullPath = buildFullPath(path, title);
 
@@ -53,14 +62,14 @@ export const useFileEditChatContext = ({
       getScreenContext: async (): Promise<ActiveScreenContext> => {
         logger.debug('chatService', '[useFileEditChatContext] Getting screen context', {
           fullPath,
-          contentLength: content.length,
+          contentLength: contentRef.current.length,
           sendFileContextToLLM: settings.sendFileContextToLLM,
         });
 
         return {
           name: 'edit',
           filePath: fullPath,
-          fileContent: settings.sendFileContextToLLM ? content : '',
+          fileContent: settings.sendFileContextToLLM ? contentRef.current : '',
         };
       },
     };
@@ -86,5 +95,6 @@ export const useFileEditChatContext = ({
       logger.debug('chatService', '[useFileEditChatContext] Unregistering context provider');
       ChatService.unregisterActiveContextProvider();
     };
-  }, [title, content, path, setContent, settings.sendFileContextToLLM]);
+  }, [title, path, setContent, settings.sendFileContextToLLM]);
+  // contentを依存配列から削除！
 };

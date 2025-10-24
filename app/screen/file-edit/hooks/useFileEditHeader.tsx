@@ -3,7 +3,7 @@
  * @summary ファイル編集画面のヘッダー設定ロジックを管理するフック
  */
 
-import React, { useLayoutEffect } from 'react';
+import React, { useLayoutEffect, useCallback, useMemo } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { StyleSheet } from 'react-native';
@@ -54,27 +54,31 @@ export const useFileEditHeader = ({
   const { createHeaderConfig } = useCustomHeader();
   const { colors } = useTheme();
 
-  useLayoutEffect(() => {
-    const handleToggleViewMode = () => {
-      onViewModeChange(viewMode === 'edit' ? 'preview' : 'edit');
-    };
+  // ビューモード切り替えハンドラをメモ化
+  const handleToggleViewMode = useCallback(() => {
+    onViewModeChange(viewMode === 'edit' ? 'preview' : 'edit');
+  }, [viewMode, onViewModeChange]);
 
-    const handleShowVersionHistory = () => {
-            navigation.navigate('VersionHistory', { fileId: activeFileId || '' });
-    };
+  // バージョン履歴表示ハンドラをメモ化
+  const handleShowVersionHistory = useCallback(() => {
+    navigation.navigate('VersionHistory', { fileId: activeFileId || '' });
+  }, [navigation, activeFileId]);
 
-    const handleShowDiffView = () => {
-      navigation.navigate('DiffView', {
-        mode: 'readonly',
-        originalContent: originalFileContent,
-        newContent: currentContent,
-      });
-    };
+  // Diff表示ハンドラをメモ化（originalFileContentとcurrentContentはここでのみ使用）
+  const handleShowDiffView = useCallback(() => {
+    navigation.navigate('DiffView', {
+      mode: 'readonly',
+      originalContent: originalFileContent,
+      newContent: currentContent,
+    });
+  }, [navigation, originalFileContent, currentContent]);
 
-    const rightButtons: Array<React.ReactNode> = [];
+  // 右側のボタン群をメモ化
+  const rightButtons = useMemo(() => {
+    const buttons: Array<React.ReactNode> = [];
 
     if (!isLoading) {
-      rightButtons.push(
+      buttons.push(
         <Ionicons
           name="save-outline"
           size={24}
@@ -85,7 +89,7 @@ export const useFileEditHeader = ({
         />
       );
 
-      rightButtons.push(
+      buttons.push(
         <FileEditOverflowMenu
           onToggleViewMode={handleToggleViewMode}
           onShowVersionHistory={handleShowVersionHistory}
@@ -94,6 +98,11 @@ export const useFileEditHeader = ({
       );
     }
 
+    return buttons;
+  }, [isLoading, isDirty, colors.primary, colors.textSecondary, onSave, handleToggleViewMode, handleShowVersionHistory, handleShowDiffView]);
+
+  // ヘッダー設定を更新（依存配列を最小化）
+  useLayoutEffect(() => {
     navigation.setOptions(
       createHeaderConfig({
         title: (
@@ -120,22 +129,15 @@ export const useFileEditHeader = ({
   }, [
     navigation,
     title,
-    activeFileId,
-    viewMode,
-    isLoading,
     isEditable,
-    isDirty,
     onTitleChange,
-    onViewModeChange,
-    onSave,
     onUndo,
     onRedo,
     canUndo,
     canRedo,
+    rightButtons,
     createHeaderConfig,
-    colors,
-    originalFileContent,
-    currentContent,
+    colors.text,
   ]);
 };
 
