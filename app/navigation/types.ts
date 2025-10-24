@@ -6,7 +6,7 @@
 
 export type RootStackParamList = {
   FileList: undefined;
-  FileEdit: { fileId?: string; filename?: string; content?: string; saved?: boolean };
+  FileEdit: { fileId?: string; filename?: string; content?: string; saved?: boolean; initialViewMode?: 'edit' | 'preview' };
   VersionHistory: { fileId: string };
   DiffView:
     | {

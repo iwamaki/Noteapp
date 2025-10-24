@@ -161,6 +161,16 @@ function SettingsScreen() {
           (value) => updateSettings({ fontSize: value as 'small' | 'medium' | 'large' | 'xlarge' })
         )}
 
+        {renderPicker(
+          'デフォルトファイル表示',
+          settings.defaultFileViewScreen,
+          [
+            { label: '編集画面', value: 'edit' },
+            { label: 'プレビュー', value: 'preview' },
+          ],
+          (value) => updateSettings({ defaultFileViewScreen: value as 'edit' | 'preview' })
+        )}
+
         {renderSection('LLM設定')}
 
         {isLoadingProviders ? (

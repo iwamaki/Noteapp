@@ -26,6 +26,13 @@ export const RenameItemModal: React.FC<RenameItemModalProps> = ({
   const { colors, typography, spacing } = useTheme();
   const [inputValue, setInputValue] = useState(initialName);
 
+  const styles = StyleSheet.create({
+    inputBorder: {
+      borderWidth: 1,
+      borderRadius: 8,
+    },
+  });
+
   useEffect(() => {
     if (visible) {
       setInputValue(initialName);
@@ -38,12 +45,6 @@ export const RenameItemModal: React.FC<RenameItemModalProps> = ({
       onClose();
     }
   };
-
-  const styles = StyleSheet.create({
-    input: {
-      // CustomInlineInput handles most of these styles
-    },
-  });
 
   return (
     <CustomModal
@@ -65,15 +66,16 @@ export const RenameItemModal: React.FC<RenameItemModalProps> = ({
       ]}
     >
       <CustomInlineInput
-        style={{
-          ...typography.body,
-          borderWidth: 1,
-          borderColor: colors.border,
-          borderRadius: 8,
-          padding: spacing.md,
-          color: colors.text,
-          backgroundColor: colors.background,
-        }}
+        style={[
+          typography.body,
+          styles.inputBorder,
+          {
+            borderColor: colors.border,
+            padding: spacing.md,
+            color: colors.text,
+            backgroundColor: colors.background,
+          },
+        ]}
         placeholder={itemType === 'folder' ? '新しいフォルダ名' : '新しいノート名'}
         placeholderTextColor={colors.textSecondary}
         value={inputValue}

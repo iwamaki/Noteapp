@@ -51,14 +51,15 @@ export const CreateItemModal: React.FC<CreateItemModalProps> = ({
       fontWeight: '600',
       marginBottom: spacing.md,
     },
-    input: {
-      // CustomInlineInput handles most of these styles
-    },
     exampleText: {
       ...typography.body,
       fontSize: 12,
       color: colors.textSecondary,
       fontStyle: 'italic',
+    },
+    inputBorder: {
+      borderWidth: 1,
+      borderRadius: 8,
     },
   });
 
@@ -86,15 +87,16 @@ export const CreateItemModal: React.FC<CreateItemModalProps> = ({
         <Text style={styles.currentPath}>{currentPath}</Text>
 
         <CustomInlineInput
-          style={{
-            ...typography.body,
-            borderWidth: 1,
-            borderColor: colors.border,
-            borderRadius: 8,
-            padding: spacing.md,
-            marginBottom: spacing.md,
-            color: colors.text,
-          }}
+          style={[
+            typography.body,
+            styles.inputBorder,
+            {
+              borderColor: colors.border,
+              padding: spacing.md,
+              marginBottom: spacing.md,
+              color: colors.text,
+            },
+          ]}
           placeholder="例: file.txt または folder1/file.txt"
           placeholderTextColor={colors.textSecondary}
           value={inputValue}
