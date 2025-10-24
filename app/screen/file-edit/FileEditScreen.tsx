@@ -23,7 +23,7 @@ function FileEditScreen() {
   const { colors } = useTheme();
   const route = useRoute<FileEditScreenRouteProp>();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
-  const { fileId } = route.params || {};
+  const { fileId, initialViewMode } = route.params || {};
   const { keyboardHeight, chatInputBarHeight } = useKeyboardHeight();
 
   const {
@@ -42,7 +42,7 @@ function FileEditScreen() {
     isDirty,
     viewMode,
     setViewMode,
-  } = useFileEditor(fileId);
+  } = useFileEditor(fileId, initialViewMode);
 
   const [isConfirmModalVisible, setConfirmModalVisible] = useState(false);
   const [nextAction, setNextAction] = useState<any>(null);

@@ -26,6 +26,7 @@ export interface AppSettings {
   autoSaveEnabled: boolean;
   autoSaveInterval: number; // 秒
   defaultEditorMode: 'edit' | 'preview' | 'split';
+  defaultFileViewScreen: 'edit' | 'preview'; // ファイルリストからファイルを開く際のデフォルト表示画面
   autoIndent: boolean;
   tabSize: number;
   spellCheck: boolean;
@@ -92,6 +93,7 @@ const defaultSettings: AppSettings = {
   autoSaveEnabled: true,
   autoSaveInterval: 30,
   defaultEditorMode: 'edit',
+  defaultFileViewScreen: 'edit',
   autoIndent: true,
   tabSize: 2,
   spellCheck: true,

@@ -15,6 +15,7 @@ import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/types';
 import { FileSystemItem, Folder } from '@data/type';
 import { logger } from '../../utils/logger';
+import { useSettingsStore } from '../../settings/settingsStore';
 
 import { Ionicons } from '@expo/vector-icons';
 import { useSearch } from './hooks/useSearch';
@@ -29,6 +30,7 @@ function FileListScreenContent() {
   const { colors, spacing } = useTheme();
   const { keyboardHeight, chatInputBarHeight } = useKeyboardHeight();
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const { settings } = useSettingsStore();
 
   // 新しいContext APIを使用
   const { state, dispatch, actions, items } = useFileListContext();
@@ -95,8 +97,11 @@ function FileListScreenContent() {
       if (item.type === 'folder') {
         dispatch({ type: 'TOGGLE_FOLDER', payload: item.item.id });
       } else {
-        logger.info('file', `Navigating to FileEdit for file: ${item.item.id}`);
-        navigation.navigate('FileEdit', { fileId: item.item.id });
+        logger.info('file', `Navigating to FileEdit for file: ${item.item.id} with initialViewMode: ${settings.defaultFileViewScreen}`);
+        navigation.navigate('FileEdit', {
+          fileId: item.item.id,
+          initialViewMode: settings.defaultFileViewScreen
+        });
       }
     }
   }, [
@@ -104,6 +109,7 @@ function FileListScreenContent() {
     state.isSelectionMode,
     state.selectedFileIds,
     state.selectedFolderIds,
+    settings.defaultFileViewScreen,
     actions,
     dispatch,
     navigation,
@@ -231,26 +237,18 @@ function FileListScreenContent() {
       const file = await actions.createFileWithPath(inputPath);
       logger.info('file', `Successfully created file: ${file.id} at ${inputPath}`);
       dispatch({ type: 'CLOSE_CREATE_MODAL' });
-      navigation.navigate('FileEdit', { fileId: file.id });
+      navigation.navigate('FileEdit', {
+        fileId: file.id,
+        initialViewMode: settings.defaultFileViewScreen
+      });
     } catch (error: any) {
       logger.error('file', `Failed to create file at ${inputPath}: ${error.message}`, error);
       Alert.alert('エラー', error.message);
     }
-  }, [actions, dispatch, navigation]);
+  }, [actions, dispatch, navigation, settings.defaultFileViewScreen]);
 
   // キーボード + ChatInputBarの高さを計算してコンテンツが隠れないようにする
   const chatBarOffset = chatInputBarHeight + keyboardHeight;
-
-  // 動的スタイル（テーマ依存、メモ化）
-  const dynamicStyles = useMemo(() => StyleSheet.create({
-    emptyMessage: {
-      fontSize: 16,
-      color: colors.textSecondary,
-      textAlign: 'center',
-      paddingHorizontal: spacing.xl,
-    },
-    listContent: { padding: spacing.md },
-  }), [colors.textSecondary, spacing.xl, spacing.md]);
 
   // キーボードオフセット依存スタイル（メモ化）
   const contentPaddingStyle = useMemo(() => ({
@@ -347,6 +345,13 @@ function FileListScreenContent() {
   // レンダリング時のデバッグログ
   logger.debug('file', `FileListScreen: Rendering. filteredNodes.length: ${filteredNodes.length}, searchQuery: '${searchQuery}', state.loading: ${state.loading}`);
 
+  const messageTextStyle = useMemo(() => ({
+    fontSize: 16,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    paddingHorizontal: spacing.xl,
+  }), [colors.textSecondary, spacing.xl]);
+
   return (
     <MainContainer
       backgroundColor={colors.secondary}
@@ -355,7 +360,7 @@ function FileListScreenContent() {
       {filteredNodes.length === 0 && !state.loading ? (
         <FileListEmptyState
           containerStyle={staticStyles.centered}
-          messageStyle={dynamicStyles.emptyMessage}
+          messageStyle={messageTextStyle}
           message={searchQuery ? `No results for "${searchQuery}"` : 'This folder is empty. Tap the + icon to create a new file or folder.'}
         />
       ) : (
@@ -365,7 +370,7 @@ function FileListScreenContent() {
           keyExtractor={(node) => `${node.type}-${node.id}`}
           contentContainerStyle={[
             contentPaddingStyle,
-            dynamicStyles.listContent,
+            { padding: spacing.md },
           ]}
           keyboardShouldPersistTaps="handled"
         />

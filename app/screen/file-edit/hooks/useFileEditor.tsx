@@ -14,18 +14,18 @@ import { useUnsavedChangesWarning } from './useUnsavedChangesWarning';
  * リファクタリング後のノートエディタフック
  * すべての機能を統合したシンプルなインターフェース
  */
-export const useFileEditor = (fileId?: string) => {
+export const useFileEditor = (fileId?: string, initialViewMode?: 'edit' | 'preview') => {
   // Zustandストアから状態とアクションを取得
   const store = useFileEditorStore();
 
   // 初期化
   useEffect(() => {
-    store.initialize(fileId);
+    store.initialize(fileId, initialViewMode);
 
     return () => {
       store.cleanup();
     };
-  }, [fileId]);
+  }, [fileId, initialViewMode]);
 
   // 自動保存機能（オプション - デフォルトでは無効）
   // useAutoSave({

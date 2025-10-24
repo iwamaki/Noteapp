@@ -20,7 +20,7 @@ interface FileEditorStore extends EditorState, EditorActions {
   history: HistoryManager;
 
   // 追加のアクション
-  initialize: (fileId?: string) => Promise<void>;
+  initialize: (fileId?: string, initialViewMode?: 'edit' | 'preview') => Promise<void>;
   cleanup: () => void;
   canUndo: () => boolean;
   canRedo: () => boolean;
@@ -45,11 +45,12 @@ export const useFileEditorStore = create<FileEditorStore>((set, get) => ({
   history: new HistoryManager(),
 
   // ===== 初期化 =====
-  initialize: async (fileId?: string) => {
+  initialize: async (fileId?: string, initialViewMode?: 'edit' | 'preview') => {
     set({
       isLoading: true,
       error: null,
       fileId: fileId || null,
+      viewMode: initialViewMode || 'edit',
     });
 
     try {
