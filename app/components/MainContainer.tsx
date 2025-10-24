@@ -70,7 +70,7 @@ export function MainContainer({
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: backgroundColor || colors.background,
+      backgroundColor: backgroundColor || colors.secondary,
     },
     centered: {
       flex: 1,

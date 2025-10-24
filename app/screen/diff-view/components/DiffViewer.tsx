@@ -22,7 +22,7 @@ export const DiffViewer: React.FC<DiffViewerProps> = ({ diff }) => {
   const styles = StyleSheet.create({
     diffContainer: {
       flex: 1,
-      backgroundColor: colors.background,
+      backgroundColor: colors.secondary,
     },
     diffLine: {
       flexDirection: 'row',
