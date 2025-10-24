@@ -72,7 +72,7 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
     },
 
     messagesArea: {
-      backgroundColor: colors.background,
+      backgroundColor: colors.secondary,
       borderBottomColor: colors.border,
       borderBottomWidth: 1,
       overflow: 'hidden',

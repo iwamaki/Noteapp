@@ -113,7 +113,7 @@ function FileEditScreen() {
   const styles = StyleSheet.create({
     scrollView: {
       flex: 1,
-      backgroundColor: colors.background,
+      backgroundColor: colors.secondary,
     },
     contentContainer: {
       paddingHorizontal: 16,
