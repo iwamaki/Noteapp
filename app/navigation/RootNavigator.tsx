@@ -20,6 +20,7 @@ import SettingsScreen from '../settings/SettingsScreen';
 import { useTheme } from '../design/theme/ThemeContext';
 import { KeyboardHeightProvider } from '../contexts/KeyboardHeightContext';
 import { ChatInputBar } from '../features/chat/components/ChatInputBar';
+import { useSettingsStore } from '../settings/settingsStore';
 
 
 // スタックナビゲーターの作成
@@ -30,9 +31,9 @@ function RootNavigatorContent() {
   const navigationRef = useNavigationContainerRef();
   const [currentRouteName, setCurrentRouteName] = useState<string | undefined>(undefined);
   const { colors } = useTheme();
+  const { settings } = useSettingsStore();
 
-
-  const shouldShowChat = currentRouteName === 'FileList' || currentRouteName === 'FileEdit';
+  const shouldShowChat = (currentRouteName === 'FileList' || currentRouteName === 'FileEdit') && settings.llmEnabled;
 
   return (
     <>
