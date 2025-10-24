@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { StyleSheet, ScrollView } from 'react-native';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/types';
@@ -110,18 +110,22 @@ function FileEditScreen() {
 
   const chatBarOffset = chatInputBarHeight + keyboardHeight;
 
-  const styles = StyleSheet.create({
-    scrollView: {
-      flex: 1,
-      backgroundColor: colors.secondary,
-    },
-    contentContainer: {
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      paddingBottom: chatBarOffset,
-      flexGrow: 1,
-    },
-  });
+  // スタイルをメモ化（テーマとchatBarOffsetが変わったときのみ再作成）
+  const styles = useMemo(
+    () => StyleSheet.create({
+      scrollView: {
+        flex: 1,
+        backgroundColor: colors.secondary,
+      },
+      contentContainer: {
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        paddingBottom: chatBarOffset,
+        flexGrow: 1,
+      },
+    }),
+    [colors.secondary, chatBarOffset]
+  );
 
   return (
     <MainContainer isLoading={isLoading}>

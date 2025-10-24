@@ -5,7 +5,7 @@
  * およびキーボードの表示状態に応じたレイアウト調整を全て自己管理する責任があります。
  */
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   View,
   TouchableOpacity,
@@ -67,65 +67,75 @@ export const ChatInputBar: React.FC = () => {
   // 送信可能かどうかの判定
   const canSendMessage = inputText.trim().length > 0 && !isLoading;
 
-  const styles = StyleSheet.create({
-    container: {
-      position: 'absolute',
-      left: 0,
-      right: 0,
-      zIndex: 1,
-      backgroundColor: colors.secondary,
-      borderTopWidth: 1,
-      borderTopColor: colors.border,
-      paddingBottom: insets.bottom,
-      shadowColor: colors.shadow,
-      shadowOffset: { width: 0, height: -3 }, // Shadow above
-      shadowOpacity: 0.3,
-      shadowRadius: 5,
-      elevation: 5, // For Android
-    },
-    inputArea: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: 10,
-      paddingTop: 10,
-      paddingBottom: 10,
-      backgroundColor: colors.secondary,
-    },
-    expandButton: {
-      alignSelf: 'flex-end',
-      marginRight: 8,
-      marginBottom: 8,
-      paddingHorizontal: 8,
-      paddingVertical: 6,
-      backgroundColor: colors.border,
-      borderRadius: 4,
-    },
-    expandButtonText: {
-      fontSize: typography.caption.fontSize,
-      color: colors.text,
-      fontWeight: '600',
-    },
-    customInput: {
-      flex: 1,
-      maxHeight: 100,
-      marginRight: 10,
-      minHeight: 44,
-    },
-    sendButton: {
-      justifyContent: 'center',
-      alignItems: 'center',
-      // Removed: backgroundColor, padding, borderRadius, minHeight
-    },
-    disabledButton: {
-      opacity: 0.5,
-    },
-    disabledButtonText: {
-      opacity: 0.7,
-    },
-  });
+  // 静的スタイルをメモ化（テーマが変わったときのみ再作成）
+  const styles = useMemo(
+    () => StyleSheet.create({
+      container: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        zIndex: 1,
+        backgroundColor: colors.secondary,
+        borderTopWidth: 1,
+        borderTopColor: colors.border,
+        paddingBottom: insets.bottom,
+        shadowColor: colors.shadow,
+        shadowOffset: { width: 0, height: -3 }, // Shadow above
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+        elevation: 5, // For Android
+      },
+      inputArea: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 10,
+        paddingTop: 10,
+        paddingBottom: 10,
+        backgroundColor: colors.secondary,
+      },
+      expandButton: {
+        alignSelf: 'flex-end',
+        marginRight: 8,
+        marginBottom: 8,
+        paddingHorizontal: 8,
+        paddingVertical: 6,
+        backgroundColor: colors.border,
+        borderRadius: 4,
+      },
+      expandButtonText: {
+        fontSize: typography.caption.fontSize,
+        color: colors.text,
+        fontWeight: '600',
+      },
+      customInput: {
+        flex: 1,
+        maxHeight: 100,
+        marginRight: 10,
+        minHeight: 44,
+      },
+      sendButton: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        // Removed: backgroundColor, padding, borderRadius, minHeight
+      },
+      disabledButton: {
+        opacity: 0.5,
+      },
+      disabledButtonText: {
+        opacity: 0.7,
+      },
+    }),
+    [colors, typography, insets.bottom]
+  );
+
+  // 動的スタイルを分離（keyboardHeightが変わったときのみ再作成）
+  const dynamicContainerStyle = useMemo(
+    () => ({ bottom: keyboardHeight }),
+    [keyboardHeight]
+  );
 
   return (
-    <View style={[styles.container, { bottom: keyboardHeight }]} onLayout={handleLayout}>
+    <View style={[styles.container, dynamicContainerStyle]} onLayout={handleLayout}>
         {/* メッセージ履歴エリア（展開可能） */}
         {isExpanded && (
           <ChatHistory

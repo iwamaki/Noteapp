@@ -3,7 +3,7 @@
  * @summary このファイルは、アプリケーションの設定画面をレンダリングします。
  * @responsibility ユーザーがアプリケーションの各種設定（表示、動作、LLM関連など）を閲覧・変更できるUIを提供し、設定の永続化と更新を管理します。
  */
-import React, { useEffect, useLayoutEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -81,49 +81,52 @@ function SettingsScreen() {
     </ListItem.Container>
   );
 
-  // スタイルの定義
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.secondary,
-    },
-    content: {
-      padding: spacing.lg,
-    },
-    sectionTitle: {
-      ...typography.subtitle,
-      marginTop: spacing.xl,
-      marginBottom: spacing.md,
-      color: colors.primary,
-    },
-    infoText: {
-      ...typography.body,
-      color: colors.textSecondary,
-      textAlign: 'center',
-      marginBottom: spacing.xl,
-    },
-    resetButton: {
-      backgroundColor: colors.danger,
-      padding: spacing.lg,
-      borderRadius: 8,
-      alignItems: 'center',
-      marginTop: spacing.xl,
-      marginBottom: spacing.xxl,
-    },
-    resetButtonText: {
-      ...typography.subtitle,
-      color: colors.background,
-    },
-    loadingContent: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: spacing.md,
-    },
-    loadingText: {
-      ...typography.body,
-      color: colors.textSecondary,
-    },
-  });
+  // スタイルをメモ化（テーマが変わったときのみ再作成）
+  const styles = useMemo(
+    () => StyleSheet.create({
+      container: {
+        flex: 1,
+        backgroundColor: colors.secondary,
+      },
+      content: {
+        padding: spacing.lg,
+      },
+      sectionTitle: {
+        ...typography.subtitle,
+        marginTop: spacing.xl,
+        marginBottom: spacing.md,
+        color: colors.primary,
+      },
+      infoText: {
+        ...typography.body,
+        color: colors.textSecondary,
+        textAlign: 'center',
+        marginBottom: spacing.xl,
+      },
+      resetButton: {
+        backgroundColor: colors.danger,
+        padding: spacing.lg,
+        borderRadius: 8,
+        alignItems: 'center',
+        marginTop: spacing.xl,
+        marginBottom: spacing.xxl,
+      },
+      resetButtonText: {
+        ...typography.subtitle,
+        color: colors.background,
+      },
+      loadingContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.md,
+      },
+      loadingText: {
+        ...typography.body,
+        color: colors.textSecondary,
+      },
+    }),
+    [colors, spacing, typography]
+  );
 
   if (isLoading) {
     return (
