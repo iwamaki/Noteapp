@@ -27,17 +27,30 @@ function SettingsScreen() {
   const navigation = useNavigation();
   const { createHeaderConfig } = useCustomHeader();
   const { settings, loadSettings, updateSettings, isLoading } = useSettingsStore();
-  const [llmProviders, setLlmProviders] = useState<Record<string, LLMProvider>>({});
-  const [isLoadingProviders, setIsLoadingProviders] = useState(true);
+
+  // 初期値にキャッシュを使用（キャッシュがあれば即座に表示）
+  const [llmProviders, setLlmProviders] = useState<Record<string, LLMProvider>>(
+    () => APIService.getCachedLLMProviders() || {}
+  );
+  const [isLoadingProviders, setIsLoadingProviders] = useState(
+    () => !APIService.getCachedLLMProviders() // キャッシュがなければローディング状態
+  );
 
   useEffect(() => {
     loadSettings();
-    loadLLMProviders();
+
+    // キャッシュがあればすぐ表示、なければ読み込み
+    const cached = APIService.getCachedLLMProviders();
+    if (cached) {
+      setLlmProviders(cached);
+      setIsLoadingProviders(false);
+    } else {
+      loadLLMProviders();
+    }
   }, []);
 
   const loadLLMProviders = async () => {
     try {
-      setIsLoadingProviders(true);
       const providers = await APIService.loadLLMProviders();
       setLlmProviders(providers);
     } catch (error) {

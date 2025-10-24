@@ -72,6 +72,16 @@ export class APIService {
     this.llmServiceInstance.clearHistory();
   }
 
+  // キャッシュされたLLMプロバイダーを同期的に取得
+  static getCachedLLMProviders() {
+    return this.llmServiceInstance.getCachedProviders();
+  }
+
+  // LLMプロバイダーのキャッシュをクリア
+  static refreshLLMProviders() {
+    this.llmServiceInstance.refreshProviders();
+  }
+
 }
 
 export { LLMService } from './index';

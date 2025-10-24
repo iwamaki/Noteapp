@@ -243,9 +243,9 @@ return (
 ## AIへの申し送り事項 (Handover to AI)
 
 - **現在の状況:** Issue作成完了。実装未着手。
-- **次のアクション:**
-  1. `app/features/chat/llmService/api.ts`を開き、キャッシュ機能を実装する
-     - `cachedProviders`プライベート変数
+  - **次のアクション:**
+  1. LLMプロバイダーのプリロードは、`app/initialization/tasks` 内に新しいタスクとして実装することを検討する。これにより、初期化ロジックの分離と管理が容易になる。
+  2. `app/features/chat/llmService/api.ts`を開き、キャッシュ機能を実装する     - `cachedProviders`プライベート変数
      - `loadingPromise`プライベート変数
      - `getCachedLLMProviders()`メソッド
      - `refreshLLMProviders()`メソッド
