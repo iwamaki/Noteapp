@@ -143,7 +143,7 @@ export const useCustomHeader = () => {
     // ヘッダー自体のスタイルもテーマに合わせる
     headerStyle: {
       backgroundColor: colors.secondary,
-      borderBottomWidth: 1,
+      borderBottomWidth: 2,
       borderBottomColor: colors.border,
     },
     headerTintColor: colors.text,

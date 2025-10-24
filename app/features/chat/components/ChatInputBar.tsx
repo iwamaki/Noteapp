@@ -77,6 +77,11 @@ export const ChatInputBar: React.FC = () => {
       borderTopWidth: 1,
       borderTopColor: colors.border,
       paddingBottom: insets.bottom,
+      shadowColor: colors.shadow,
+      shadowOffset: { width: 0, height: -3 }, // Shadow above
+      shadowOpacity: 0.3,
+      shadowRadius: 5,
+      elevation: 5, // For Android
     },
     inputArea: {
       flexDirection: 'row',
