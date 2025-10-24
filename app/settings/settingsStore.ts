@@ -33,6 +33,7 @@ export interface AppSettings {
   autoComplete: boolean;
 
   // 3. LLM/AI設定
+  llmEnabled: boolean; // LLM機能の有効/無効
   privacyMode: 'normal' | 'private';
   llmService: string;
   llmProvider: string; // 現在選択中のLLMプロバイダー (openai, gemini, etc.)
@@ -100,6 +101,7 @@ const defaultSettings: AppSettings = {
   autoComplete: true,
 
   // LLM/AI設定
+  llmEnabled: process.env.EXPO_PUBLIC_LLM_ENABLED === 'true',
   privacyMode: 'normal',
   llmService: 'openai',
   llmProvider: 'openai',

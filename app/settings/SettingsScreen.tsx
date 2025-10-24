@@ -187,65 +187,69 @@ function SettingsScreen() {
           (value) => updateSettings({ defaultFileViewScreen: value as 'edit' | 'preview' })
         )}
 
-        {renderSection('LLM設定')}
-
-        {isLoadingProviders ? (
-          <ListItem.Container>
-            <View style={styles.loadingContent}>
-              <ActivityIndicator size="small" color={colors.primary} />
-              <Text style={styles.loadingText}>LLMプロバイダーを読み込み中...</Text>
-            </View>
-          </ListItem.Container>
-        ) : (
+        {settings.llmEnabled && (
           <>
-            {renderPicker(
-              'LLMプロバイダー',
-              settings.llmProvider,
-              Object.entries(llmProviders).map(([key, provider]) => ({
-                label: `${provider.name}${provider.status === 'unavailable' ? ' (利用不可)' : ''}`,
-                value: key,
-              })),
-              (value) => {
-                const updates: any = { llmProvider: value };
-                // プロバイダー変更時はデフォルトモデルも設定
-                if (llmProviders[value]) {
-                  updates.llmModel = llmProviders[value].defaultModel;
-                }
-                updateSettings(updates);
-              }
-            )}
+            {renderSection('LLM設定')}
 
-            {settings.llmProvider && llmProviders[settings.llmProvider] && (
-              renderPicker(
-                'モデル',
-                settings.llmModel,
-                llmProviders[settings.llmProvider].models.map((model: string) => ({
-                  label: model,
-                  value: model,
-                })),
-                (value) => updateSettings({ llmModel: value })
-              )
-            )}
+            {isLoadingProviders ? (
+              <ListItem.Container>
+                <View style={styles.loadingContent}>
+                  <ActivityIndicator size="small" color={colors.primary} />
+                  <Text style={styles.loadingText}>LLMプロバイダーを読み込み中...</Text>
+                </View>
+              </ListItem.Container>
+            ) : (
+              <>
+                {renderPicker(
+                  'LLMプロバイダー',
+                  settings.llmProvider,
+                  Object.entries(llmProviders).map(([key, provider]) => ({
+                    label: `${provider.name}${provider.status === 'unavailable' ? ' (利用不可)' : ''}`,
+                    value: key,
+                  })),
+                  (value) => {
+                    const updates: any = { llmProvider: value };
+                    // プロバイダー変更時はデフォルトモデルも設定
+                    if (llmProviders[value]) {
+                      updates.llmModel = llmProviders[value].defaultModel;
+                    }
+                    updateSettings(updates);
+                  }
+                )}
 
-            <ListItem.Container>
-              <ListItem.Title><Text style={{...typography.body, color: colors.text}}>ノートコンテキストをLLMに送信</Text></ListItem.Title>
-              <Switch
-                value={settings.sendFileContextToLLM}
-                onValueChange={(value: boolean) => updateSettings({ sendFileContextToLLM: value })}
-              />
-            </ListItem.Container>
+                {settings.llmProvider && llmProviders[settings.llmProvider] && (
+                  renderPicker(
+                    'モデル',
+                    settings.llmModel,
+                    llmProviders[settings.llmProvider].models.map((model: string) => ({
+                      label: model,
+                      value: model,
+                    })),
+                    (value) => updateSettings({ llmModel: value })
+                  )
+                )}
 
-            {settings.sendFileContextToLLM && renderPicker(
-              'コンテキスト階層の深さ',
-              String(settings.llmContextMaxDepth),
-              [
-                { label: '1層 (現在)', value: '1' },
-                { label: '2層', value: '2' },
-                { label: '3層', value: '3' },
-                { label: '5層', value: '5' },
-                { label: '全階層', value: '-1' },
-              ],
-              (value) => updateSettings({ llmContextMaxDepth: Number(value) })
+                <ListItem.Container>
+                  <ListItem.Title><Text style={{...typography.body, color: colors.text}}>ノートコンテキストをLLMに送信</Text></ListItem.Title>
+                  <Switch
+                    value={settings.sendFileContextToLLM}
+                    onValueChange={(value: boolean) => updateSettings({ sendFileContextToLLM: value })}
+                  />
+                </ListItem.Container>
+
+                {settings.sendFileContextToLLM && renderPicker(
+                  'コンテキスト階層の深さ',
+                  String(settings.llmContextMaxDepth),
+                  [
+                    { label: '1層 (現在)', value: '1' },
+                    { label: '2層', value: '2' },
+                    { label: '3層', value: '3' },
+                    { label: '5層', value: '5' },
+                    { label: '全階層', value: '-1' },
+                  ],
+                  (value) => updateSettings({ llmContextMaxDepth: Number(value) })
+                )}
+              </>
             )}
           </>
         )}
