@@ -9,10 +9,10 @@ import { v4 as uuidv4 } from 'uuid';
 import { Folder, CreateFolderData, UpdateFolderData } from './type';
 import { PathService } from '../services/PathService';
 import {
-  getAllFoldersRaw,
-  saveAllFolders,
-  getAllFilesRaw,
-  saveAllFiles,
+  getAllFoldersRawFS,
+  saveAllFoldersFS,
+  getAllFilesRawFS,
+  saveAllFilesFS,
   StorageError,
 } from './storageService';
 import { FileRepository } from './fileRepository';
@@ -31,14 +31,14 @@ export class FolderRepository {
    * 全フォルダを取得
    */
   static async getAll(): Promise<Folder[]> {
-    return await getAllFoldersRaw();
+    return await getAllFoldersRawFS();
   }
 
   /**
    * 指定パス内のフォルダを取得
    */
   static async getByPath(path: string): Promise<Folder[]> {
-    const folders = await getAllFoldersRaw();
+    const folders = await getAllFoldersRawFS();
     return folders.filter(folder => folder.path === path);
   }
 
@@ -46,7 +46,7 @@ export class FolderRepository {
    * IDでフォルダを取得
    */
   static async getById(folderId: string): Promise<Folder | null> {
-    const allFolders = await getAllFoldersRaw();
+    const allFolders = await getAllFoldersRawFS();
     return allFolders.find(folder => folder.id === folderId) || null;
   }
 
@@ -54,7 +54,7 @@ export class FolderRepository {
    * 複数のフォルダをIDで取得
    */
   static async getByIds(folderIds: string[]): Promise<Folder[]> {
-    const allFolders = await getAllFoldersRaw();
+    const allFolders = await getAllFoldersRawFS();
     return allFolders.filter(folder => folderIds.includes(folder.id));
   }
 
@@ -74,9 +74,9 @@ export class FolderRepository {
       updatedAt: now,
     };
 
-    const folders = await getAllFoldersRaw();
+    const folders = await getAllFoldersRawFS();
     folders.push(newFolder);
-    await saveAllFolders(folders);
+    await saveAllFoldersFS(folders);
     return newFolder;
   }
 
@@ -84,7 +84,7 @@ export class FolderRepository {
    * フォルダを更新
    */
   static async update(data: UpdateFolderData): Promise<Folder> {
-    const allFolders = await getAllFoldersRaw();
+    const allFolders = await getAllFoldersRawFS();
     const folderIndex = allFolders.findIndex(f => f.id === data.id);
 
     if (folderIndex === -1) {
@@ -101,7 +101,7 @@ export class FolderRepository {
     }
     folderToUpdate.updatedAt = new Date();
 
-    await saveAllFolders(allFolders);
+    await saveAllFoldersFS(allFolders);
     return folderToUpdate;
   }
 
@@ -109,7 +109,7 @@ export class FolderRepository {
    * フォルダ全体を上書き更新
    */
   static async updateFull(folder: Folder): Promise<Folder> {
-    const allFolders = await getAllFoldersRaw();
+    const allFolders = await getAllFoldersRawFS();
     const folderIndex = allFolders.findIndex(f => f.id === folder.id);
 
     if (folderIndex === -1) {
@@ -122,7 +122,7 @@ export class FolderRepository {
     };
 
     allFolders[folderIndex] = updatedFolder;
-    await saveAllFolders(allFolders);
+    await saveAllFoldersFS(allFolders);
     return updatedFolder;
   }
 
@@ -130,7 +130,7 @@ export class FolderRepository {
    * 複数フォルダを一括更新
    */
   static async batchUpdate(folders: Folder[]): Promise<void> {
-    const allFolders = await getAllFoldersRaw();
+    const allFolders = await getAllFoldersRawFS();
     const folderMap = new Map(folders.map(f => [f.id, f]));
 
     const updated = allFolders.map(f => {
@@ -144,7 +144,7 @@ export class FolderRepository {
       return f;
     });
 
-    await saveAllFolders(updated);
+    await saveAllFoldersFS(updated);
   }
 
   // --- 削除操作 ---
@@ -155,7 +155,7 @@ export class FolderRepository {
    * @param deleteContents 中身も削除するかどうか
    */
   static async delete(folderId: string, deleteContents: boolean = false): Promise<void> {
-    let allFolders = await getAllFoldersRaw();
+    let allFolders = await getAllFoldersRawFS();
     const folderIndex = allFolders.findIndex(f => f.id === folderId);
 
     if (folderIndex === -1) {
@@ -166,7 +166,7 @@ export class FolderRepository {
     const folderPath = PathService.getFullPath(folderToDelete.path, folderToDelete.name, 'folder');
 
     if (deleteContents) {
-      let allFiles = await getAllFilesRaw();
+      let allFiles = await getAllFilesRawFS();
 
       // Filter files: keep those that are not in the folder path or any sub-path.
       const finalFiles = allFiles.filter(file => !file.path.startsWith(folderPath));
@@ -177,8 +177,8 @@ export class FolderRepository {
         return !fullPath.startsWith(folderPath);
       });
 
-      await saveAllFiles(finalFiles);
-      await saveAllFolders(finalFolders);
+      await saveAllFilesFS(finalFiles);
+      await saveAllFoldersFS(finalFolders);
     } else {
       // Folder must be empty
       const filesInFolder = await FileRepository.getByPath(folderPath);
@@ -188,7 +188,7 @@ export class FolderRepository {
       }
       // Just delete the folder
       allFolders.splice(folderIndex, 1);
-      await saveAllFolders(allFolders);
+      await saveAllFoldersFS(allFolders);
     }
   }
 
@@ -196,9 +196,9 @@ export class FolderRepository {
    * 複数フォルダを一括削除
    */
   static async batchDelete(folderIds: string[]): Promise<void> {
-    const allFolders = await getAllFoldersRaw();
+    const allFolders = await getAllFoldersRawFS();
     const remaining = allFolders.filter(f => !folderIds.includes(f.id));
-    await saveAllFolders(remaining);
+    await saveAllFoldersFS(remaining);
   }
 
   // --- 内部用メソッド ---
@@ -208,6 +208,6 @@ export class FolderRepository {
    * @internal
    */
   static async saveAll(folders: Folder[]): Promise<void> {
-    await saveAllFolders(folders);
+    await saveAllFoldersFS(folders);
   }
 }

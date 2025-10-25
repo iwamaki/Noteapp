@@ -9,10 +9,10 @@
 import { v4 as uuidv4 } from 'uuid';
 import { File, FileVersion, CreateFileData, UpdateFileData } from './type';
 import {
-  getAllFilesRaw,
-  saveAllFiles,
-  getAllVersionsRaw,
-  saveAllVersions,
+  getAllFilesRawFS,
+  saveAllFilesFS,
+  getAllVersionsRawFS,
+  saveAllVersionsFS,
   StorageError,
 } from './storageService';
 
@@ -41,7 +41,7 @@ export class FileRepository {
    * 全ファイルを取得（更新日時降順）
    */
   static async getAll(): Promise<File[]> {
-    const files = await getAllFilesRaw();
+    const files = await getAllFilesRawFS();
     return files.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
   }
 
@@ -49,7 +49,7 @@ export class FileRepository {
    * 指定パス内のファイルを取得（更新日時降順）
    */
   static async getByPath(path: string): Promise<File[]> {
-    const files = await getAllFilesRaw();
+    const files = await getAllFilesRawFS();
     return files
       .filter(file => file.path === path)
       .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
@@ -59,7 +59,7 @@ export class FileRepository {
    * IDでファイルを取得
    */
   static async getById(id: string): Promise<File | null> {
-    const files = await getAllFilesRaw();
+    const files = await getAllFilesRawFS();
     return files.find(file => file.id === id) || null;
   }
 
@@ -67,7 +67,7 @@ export class FileRepository {
    * 複数のファイルをIDで取得
    */
   static async getByIds(fileIds: string[]): Promise<File[]> {
-    const allFiles = await getAllFilesRaw();
+    const allFiles = await getAllFilesRawFS();
     return allFiles.filter(file => fileIds.includes(file.id));
   }
 
@@ -90,9 +90,9 @@ export class FileRepository {
       version: 1,
     };
 
-    const files = await getAllFilesRaw();
+    const files = await getAllFilesRawFS();
     files.push(newFile);
-    await saveAllFiles(files);
+    await saveAllFilesFS(files);
     return newFile;
   }
 
@@ -113,9 +113,9 @@ export class FileRepository {
       version: 1,
     };
 
-    const files = await getAllFilesRaw();
+    const files = await getAllFilesRawFS();
     files.push(newFile);
-    await saveAllFiles(files);
+    await saveAllFilesFS(files);
 
     // Create initial version
     const initialVersion: FileVersion = {
@@ -125,9 +125,9 @@ export class FileRepository {
       version: newFile.version,
       createdAt: newFile.createdAt,
     };
-    const versions = await getAllVersionsRaw();
+    const versions = await getAllVersionsRawFS();
     versions.push(initialVersion);
-    await saveAllVersions(versions);
+    await saveAllVersionsFS(versions);
 
     return newFile;
   }
@@ -136,7 +136,7 @@ export class FileRepository {
    * ファイルを更新（シンプル版、file-list用）
    */
   static async update(data: UpdateFileDataSimple): Promise<File> {
-    const files = await getAllFilesRaw();
+    const files = await getAllFilesRawFS();
     const fileIndex = files.findIndex(n => n.id === data.id);
 
     if (fileIndex === -1) {
@@ -150,7 +150,7 @@ export class FileRepository {
       updatedAt: new Date(),
     };
     files[fileIndex] = updatedFile;
-    await saveAllFiles(files);
+    await saveAllFilesFS(files);
     return updatedFile;
   }
 
@@ -158,7 +158,7 @@ export class FileRepository {
    * ファイルを更新（バージョン管理あり、file-edit用）
    */
   static async updateWithVersion(data: UpdateFileData): Promise<File> {
-    const files = await getAllFilesRaw();
+    const files = await getAllFilesRawFS();
     const index = files.findIndex(file => file.id === data.id);
 
     if (index === -1) {
@@ -175,9 +175,9 @@ export class FileRepository {
       version: existingFile.version,
       createdAt: existingFile.updatedAt,
     };
-    const versions = await getAllVersionsRaw();
+    const versions = await getAllVersionsRawFS();
     versions.push(newVersionForOldState);
-    await saveAllVersions(versions);
+    await saveAllVersionsFS(versions);
 
     const updatedFile: File = {
       ...existingFile,
@@ -187,7 +187,7 @@ export class FileRepository {
     };
 
     files[index] = updatedFile;
-    await saveAllFiles(files);
+    await saveAllFilesFS(files);
 
     return updatedFile;
   }
@@ -196,7 +196,7 @@ export class FileRepository {
    * ファイル全体を上書き更新
    */
   static async updateFull(file: File): Promise<File> {
-    const allFiles = await getAllFilesRaw();
+    const allFiles = await getAllFilesRawFS();
     const fileIndex = allFiles.findIndex(f => f.id === file.id);
 
     if (fileIndex === -1) {
@@ -209,7 +209,7 @@ export class FileRepository {
     };
 
     allFiles[fileIndex] = updatedFile;
-    await saveAllFiles(allFiles);
+    await saveAllFilesFS(allFiles);
     return updatedFile;
   }
 
@@ -217,7 +217,7 @@ export class FileRepository {
    * 複数ファイルを一括更新
    */
   static async batchUpdate(files: File[]): Promise<void> {
-    const allFiles = await getAllFilesRaw();
+    const allFiles = await getAllFilesRawFS();
     const fileMap = new Map(files.map(n => [n.id, n]));
 
     const updated = allFiles.map(n => {
@@ -231,7 +231,7 @@ export class FileRepository {
       return n;
     });
 
-    await saveAllFiles(updated);
+    await saveAllFilesFS(updated);
   }
 
   // --- 削除操作 ---
@@ -247,9 +247,9 @@ export class FileRepository {
    * 複数ファイルを一括削除
    */
   static async batchDelete(fileIds: string[]): Promise<void> {
-    let files = await getAllFilesRaw();
+    let files = await getAllFilesRawFS();
     files = files.filter(file => !fileIds.includes(file.id));
-    await saveAllFiles(files);
+    await saveAllFilesFS(files);
   }
 
   // --- コピー・移動操作 ---
@@ -258,7 +258,7 @@ export class FileRepository {
    * ファイルをコピー
    */
   static async copy(sourceIds: string[]): Promise<File[]> {
-    const files = await getAllFilesRaw();
+    const files = await getAllFilesRawFS();
     const copiedFiles: File[] = [];
     const now = new Date();
 
@@ -290,7 +290,7 @@ export class FileRepository {
     }
 
     if (copiedFiles.length > 0) {
-      await saveAllFiles([...files, ...copiedFiles]);
+      await saveAllFilesFS([...files, ...copiedFiles]);
     }
     return copiedFiles;
   }
@@ -299,7 +299,7 @@ export class FileRepository {
    * ファイルを移動（パス変更）
    */
   static async move(fileId: string, newPath: string): Promise<File> {
-    const files = await getAllFilesRaw();
+    const files = await getAllFilesRawFS();
     const fileIndex = files.findIndex(n => n.id === fileId);
 
     if (fileIndex === -1) {
@@ -308,7 +308,7 @@ export class FileRepository {
 
     files[fileIndex].path = newPath;
     files[fileIndex].updatedAt = new Date();
-    await saveAllFiles(files);
+    await saveAllFilesFS(files);
     return files[fileIndex];
   }
 
@@ -318,7 +318,7 @@ export class FileRepository {
    * ファイルのバージョン履歴を取得
    */
   static async getVersions(fileId: string): Promise<FileVersion[]> {
-    const allVersions = await getAllVersionsRaw();
+    const allVersions = await getAllVersionsRawFS();
     return allVersions.filter(version => version.fileId === fileId);
   }
 
@@ -326,7 +326,7 @@ export class FileRepository {
    * 特定バージョンを取得
    */
   static async getVersion(versionId: string): Promise<FileVersion | null> {
-    const allVersions = await getAllVersionsRaw();
+    const allVersions = await getAllVersionsRawFS();
     return allVersions.find(version => version.id === versionId) || null;
   }
 
@@ -361,6 +361,6 @@ export class FileRepository {
    * @internal
    */
   static async saveAll(files: File[]): Promise<void> {
-    await saveAllFiles(files);
+    await saveAllFilesFS(files);
   }
 }
