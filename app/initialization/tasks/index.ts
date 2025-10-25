@@ -7,6 +7,7 @@
 
 import { verifyAsyncStorageTask } from './verifyAsyncStorage';
 import { initializeFileSystemTask } from './initializeFileSystem';
+import { migrateDataTask } from './migrateData';
 import { loadSettingsTask } from './loadSettings';
 import { configureLLMServiceTask } from './configureLLMService';
 import { preloadLLMProvidersTask } from './preloadLLMProviders';
@@ -26,6 +27,7 @@ export const allInitializationTasks: InitializationTask[] = [
   // Stage 1: CRITICAL - 必須リソース
   verifyAsyncStorageTask,
   initializeFileSystemTask,  // FileSystemディレクトリ構造の初期化
+  migrateDataTask,           // AsyncStorage → FileSystem データ移行
   loadSettingsTask,
 
   // Stage 2: CORE - コアサービス
@@ -46,6 +48,7 @@ export const allInitializationTasks: InitializationTask[] = [
 export {
   verifyAsyncStorageTask,
   initializeFileSystemTask,
+  migrateDataTask,
   loadSettingsTask,
   configureLLMServiceTask,
   preloadLLMProvidersTask,
