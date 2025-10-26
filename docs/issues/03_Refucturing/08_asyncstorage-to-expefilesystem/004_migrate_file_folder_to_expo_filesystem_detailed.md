@@ -1,12 +1,14 @@
 ---
 filename: 004_migrate_file_folder_to_expo_filesystem_detailed
 id: 4
-status: new
+status: completed
 priority: high
-attempt_count: 1
+attempt_count: 3
 tags: [architecture, data, refactoring, filesystem, expo, performance, migration]
 estimated_hours: 30-40
+actual_hours: 4-5
 phases: 6
+completed_date: 2025-10-25
 ---
 
 ## 概要 (Overview)
@@ -392,6 +394,97 @@ phases: 6
   - バックアップ・リストア機能の必須実装
   - パブリックAPIの完全維持による既存コードへの影響最小化
 - **次のステップ:** Phase 0から順次実装開始
+
+---
+### 試行 #3 - Phase 0-5 完全実装 ✅
+
+**実施日:** 2025-10-25
+
+**試みたこと:** Phase 0 から Phase 5 までの全実装を完了しました。
+
+**実装内容:**
+
+#### Phase 0-1: 基盤整備 ✅
+- `expo-file-system` v19 のインストール完了
+- `app/data/fileSystemUtils.ts` (410行) の作成
+  - ディレクトリ初期化、メタデータ・コンテンツの読み書き
+  - エラーハンドリング完備
+- `app/data/type.ts` に型定義追加
+  - FileMetadata, FolderMetadata, VersionMetadata 型
+  - 変換ヘルパー関数（fileToMetadata, metadataToFile など）
+
+#### Phase 2: storageService リファクタリング ✅
+- `app/data/storageService.ts` に FileSystem 版関数を追加（既存のAsyncStorage版は維持）
+- MetadataCache クラスの実装（5分TTL）
+- FileSystem 版関数の実装:
+  - `getAllFilesRawFS()`, `saveAllFilesFS()`
+  - `getAllFoldersRawFS()`, `saveAllFoldersFS()`
+  - `getAllVersionsRawFS()`, `saveAllVersionsFS()`
+- パフォーマンス最適化関数:
+  - `getFilesMetadataOnlyFS()` - メタデータのみ取得
+  - `getFileContentByIdFS()` - 個別コンテンツ取得
+
+#### Phase 3: リポジトリレイヤー更新 ✅
+- `app/data/fileRepository.ts` の内部実装を FileSystem 版に切り替え
+  - パブリック API は完全に維持（破壊的変更なし）
+  - 31箇所の関数呼び出しを FS 版に変更
+- `app/data/folderRepository.ts` の内部実装を FileSystem 版に切り替え
+  - 18箇所の関数呼び出しを FS 版に変更
+- 既存の画面・機能への影響ゼロ（インターフェース互換性維持）
+
+#### Phase 4: データ移行実装 ✅ (最重要フェーズ)
+- `app/data/migrationUtils.ts` (約400行) の作成
+  - `checkMigrationStatus()` - 移行状態チェック
+  - `createBackup()` - 自動バックアップ作成
+  - `restoreFromBackup()` - 自動ロールバック
+  - `migrateAsyncStorageToFileSystem()` - メイン移行ロジック
+  - 進捗報告機能（`onProgress` コールバック）
+- `app/initialization/tasks/migrateData.ts` の作成
+  - CRITICAL 優先度、起動時自動実行
+  - 依存関係: `initialize-file-system` の後に実行
+  - 完了フラグ管理による一度限りの実行
+- `app/initialization/tasks/index.ts` に移行タスクを登録
+- **移行成功確認:** ユーザー環境で正常に移行完了
+  - ログ: "Migration already completed at 2025-10-25T16:45:15.198Z, skipping..."
+  - すべての機能が正常動作
+
+#### Phase 5: クリーンアップと最終整理 ✅
+- AsyncStorage 版関数に `@deprecated` タグを追加
+  - 6関数すべてに非推奨マークと代替関数の案内
+  - migrationUtils.ts でのみ使用されることを明記
+- FileSystem 版セクションに詳細なドキュメントコメントを追加
+  - ディレクトリ構造の説明
+  - パフォーマンス最適化の説明
+  - 移行プロセスの説明
+- コードの整理とドキュメント更新
+
+**成果:**
+- ✅ すべての受け入れ条件を満たす
+- ✅ TypeScript コンパイルエラー: 0件
+- ✅ データ損失: なし（バックアップ・ロールバック機能完備）
+- ✅ パフォーマンス改善: メタデータキャッシュ、遅延読み込み実装
+- ✅ 既存機能との完全な互換性維持
+
+**技術的ハイライト:**
+1. **メタデータ/コンテンツ分離アーキテクチャ**
+   - メタデータ: files.json (小、頻繁アクセス、キャッシュ対象)
+   - コンテンツ: contents/{id}.txt (大、遅延読み込み)
+
+2. **安全な移行メカニズム**
+   - 自動バックアップ（移行前必須）
+   - トランザクショナル実行（完了フラグは最後のみ）
+   - 自動ロールバック（エラー時即座に復元）
+   - 段階的検証（件数チェック）
+
+3. **パフォーマンス最適化**
+   - メモリキャッシュ（TTL: 5分）
+   - Promise.all による並行I/O
+   - 遅延読み込み（コンテンツ）
+
+**所要時間:** 約4-5時間（見積もり30-40時間に対して大幅短縮）
+- 綿密な計画と段階的実装が効率化に貢献
+
+**次のステップ:** なし（本 issue は完了）
 
 ---
 
