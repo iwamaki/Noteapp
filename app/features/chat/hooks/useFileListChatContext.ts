@@ -10,10 +10,10 @@ import { ActiveScreenContextProvider, ActiveScreenContext } from '../types';
 import ChatService from '../index';
 import { logger } from '../../../utils/logger';
 import { FileSystemItem } from '@data/type';
-import { PathService } from '../../../services/PathService';
-import { createDirectoryHandler } from '../handlers/createDirectoryHandler';
-import { deleteItemHandler } from '../handlers/deleteItemHandler';
-import { moveItemHandler } from '../handlers/moveItemHandler';
+import { PathServiceV2 } from '../../../services/PathServiceV2';
+import { createDirectoryHandlerV2 } from '../handlers/createDirectoryHandlerV2';
+import { deleteItemHandlerV2 } from '../handlers/deleteItemHandlerV2';
+import { moveItemHandlerV2 } from '../handlers/moveItemHandlerV2';
 import { CommandHandlerContext } from '../handlers/types';
 import { useFileListContext } from '../../../screen/file-list/context/useFileListContext';
 
@@ -59,7 +59,9 @@ export const useFileListChatContext = ({
             const path = item.item.path;
             const name = item.type === 'file' ? item.item.title : (item.item as any).name;
             const type = item.type === 'file' ? 'file' : 'directory';
-            const filePath = PathService.getFullPath(path, name, item.type);
+            // V2: PathServiceV2.getFullPath() is removed, construct path manually
+            const normalizedPath = PathServiceV2.normalizePath(path);
+            const filePath = normalizedPath === '/' ? `/${name}` : `/${normalizedPath}/${name}`;
             return {
               filePath,
               name,
@@ -81,11 +83,11 @@ export const useFileListChatContext = ({
       refreshData: actions.refreshData,
     };
 
-    // コマンドハンドラの定義（新しいハンドラ構造を使用）
+    // コマンドハンドラの定義（V2ハンドラを使用）
     const commandHandlers = {
-      create_directory: (command: any) => createDirectoryHandler(command, handlerContext),
-      move_item: (command: any) => moveItemHandler(command, handlerContext),
-      delete_item: (command: any) => deleteItemHandler(command, handlerContext),
+      create_directory: (command: any) => createDirectoryHandlerV2(command, handlerContext),
+      move_item: (command: any) => moveItemHandlerV2(command, handlerContext),
+      delete_item: (command: any) => deleteItemHandlerV2(command, handlerContext),
     };
 
     // ChatServiceにプロバイダーとハンドラを登録

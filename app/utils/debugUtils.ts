@@ -7,6 +7,11 @@ import { logger } from './logger';
  * A debug utility to ensure consistency between the data in storage and the data in the UI tree.
  * This function should only be called in development mode (__DEV__ === true).
  *
+ * TODO: V2への移行が必要
+ * このファイルはV1リポジトリ（FileRepository, FolderRepository）を使用しています。
+ * 将来的にFileRepositoryV2とFolderRepositoryV2に移行する必要があります。
+ * ただし、デバッグ用ユーティリティのため、優先度は低いです。
+ *
  * @param treeNodes The tree structure from the UI state.
  * @throws An error if an inconsistency is detected.
  */

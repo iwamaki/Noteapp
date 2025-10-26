@@ -9,10 +9,11 @@
 import React, { useReducer, useCallback, useMemo } from 'react';
 import { FileListContext, FileListActions } from './FileListContext';
 import { fileListReducer, createInitialState } from './fileListReducer';
-import { FileRepository } from '@data/fileRepository';
-import { FolderRepository } from '@data/folderRepository';
-import { FileListUseCases } from '../application/FileListUseCases';
+import { FileRepositoryV2 } from '@data/fileRepositoryV2';
+import { FolderRepositoryV2 } from '@data/folderRepositoryV2';
+import { FileListUseCasesV2 } from '../application/FileListUseCasesV2';
 import { FileSystemItem } from '@data/type';
+import { folderV2ToV1, fileV2ToV1 } from '@data/typeConversion';
 import { logger } from '@utils/logger';
 
 interface FileListProviderProps {
@@ -28,23 +29,30 @@ export const FileListProvider: React.FC<FileListProviderProps> = ({ children }) 
 
   /**
    * データを再取得してリフレッシュ
-   * AsyncStorageから最新データを取得し、状態を更新
+   * FileSystemから最新データを取得し、状態を更新（V2）
    */
   const refreshData = useCallback(async () => {
-    logger.debug('file', 'refreshData: Starting data refresh.');
+    logger.debug('file', 'refreshData: Starting data refresh (V2).');
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
-      const [folders, files] = await Promise.all([
-        FolderRepository.getAll(),
-        FileRepository.getAll(),
+      // V2: getAllRootItems()を使用してルートレベルのアイテムを取得
+      // TODO: 現在のpathに応じてアイテムを取得する機能を実装する必要があるかもしれません
+      const [foldersV2, filesV2] = await Promise.all([
+        FolderRepositoryV2.getByParentPath('/'),
+        FileRepositoryV2.getByFolderPath('/'),
       ]);
-      logger.debug('file', `refreshData: Fetched ${folders.length} folders and ${files.length} files.`);
+
+      // V2型からV1型に変換（互換性レイヤー）
+      const folders = foldersV2.map(f => folderV2ToV1(f, '/'));
+      const files = filesV2.map(f => fileV2ToV1(f, '/'));
+
+      logger.debug('file', `refreshData: Fetched ${folders.length} folders and ${files.length} files (V2).`);
 
       dispatch({ type: 'REFRESH_COMPLETE', payload: { folders, files } });
       logger.debug('file', 'refreshData: Dispatched REFRESH_COMPLETE.');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-      logger.error('file', `refreshData: Error during data refresh: ${errorMessage}`, error);
+      logger.error('file', `refreshData: Error during data refresh (V2): ${errorMessage}`, error);
       dispatch({ type: 'SET_LOADING', payload: false });
       throw error;
     }
@@ -52,90 +60,95 @@ export const FileListProvider: React.FC<FileListProviderProps> = ({ children }) 
 
   /**
    * フォルダをリネーム
-   * 子要素のパスも自動的に更新
+   * 子要素のパスも自動的に更新（V2）
    */
   const renameFolder = useCallback(
     async (folderId: string, newName: string) => {
-      // 1. UseCaseを実行（AsyncStorage書き込みが完了するまで待機）
-      await FileListUseCases.renameFolder(folderId, newName);
+      // V2: UseCaseを実行（FileSystem書き込みが完了するまで待機）
+      await FileListUseCasesV2.renameFolder(folderId, newName);
 
-      // 2. refreshData() でデータを再取得
-      // この時点で AsyncStorage の書き込みは完了しているため、
-      // 確実に最新データが取得できる
+      // refreshData() でデータを再取得
       await refreshData();
     },
     [refreshData]
   );
 
   /**
-   * ファイルをリネーム
+   * ファイルをリネーム（V2）
    */
   const renameFile = useCallback(
     async (fileId: string, newTitle: string) => {
-      await FileListUseCases.renameFile(fileId, newTitle);
+      await FileListUseCasesV2.renameFile(fileId, newTitle);
       await refreshData();
     },
     [refreshData]
   );
 
   /**
-   * 選択されたアイテムを削除
+   * 選択されたアイテムを削除（V2）
    */
   const deleteSelectedItems = useCallback(
     async (fileIds: string[], folderIds: string[]) => {
-      await FileListUseCases.deleteSelectedItems(fileIds, folderIds);
+      await FileListUseCasesV2.deleteSelectedItems(fileIds, folderIds);
       await refreshData();
     },
     [refreshData]
   );
 
   /**
-   * 選択されたアイテムを移動
+   * 選択されたアイテムを移動（V2）
    */
   const moveSelectedItems = useCallback(
     async (fileIds: string[], folderIds: string[], targetPath: string) => {
-      await FileListUseCases.moveSelectedItems(fileIds, folderIds, targetPath);
+      await FileListUseCasesV2.moveSelectedItems(fileIds, folderIds, targetPath);
       await refreshData();
     },
     [refreshData]
   );
 
   /**
-   * フォルダを作成
+   * フォルダを作成（V2）
    */
   const createFolder = useCallback(
     async (name: string, parentPath: string) => {
-      const folder = await FileListUseCases.createFolder(name, parentPath);
+      const folderV2 = await FileListUseCasesV2.createFolder(name, parentPath);
       await refreshData();
-      return folder;
+      // V2型からV1型に変換して返す（互換性レイヤー）
+      return folderV2ToV1(folderV2, parentPath);
     },
     [refreshData]
   );
 
   /**
-   * ファイルをパス指定で作成
+   * ファイルをパス指定で作成（V2）
    */
   const createFileWithPath = useCallback(
     async (inputPath: string, content?: string, tags?: string[]) => {
-      const file = await FileListUseCases.createFileWithPath(
+      const fileV2 = await FileListUseCasesV2.createFileWithPath(
         inputPath,
         content,
         tags
       );
       await refreshData();
-      return file;
+      // V2型からV1型に変換して返す（互換性レイヤー）
+      // inputPathから親パスを抽出
+      const parts = inputPath.split('/').filter(Boolean);
+      const parentPath = parts.length > 1 ? `/${parts.slice(0, -1).join('/')}/` : '/';
+      return fileV2ToV1(fileV2, parentPath);
     },
     [refreshData]
   );
 
   /**
-   * 選択されたファイルをコピー
+   * 選択されたファイルをコピー（V2）
    */
   const copySelectedFiles = useCallback(
     async (fileIds: string[]) => {
-      const copiedFiles = await FileListUseCases.copyFiles(fileIds);
+      const copiedFilesV2 = await FileListUseCasesV2.copyFiles(fileIds);
       await refreshData();
-      return copiedFiles;
+      // V2型からV1型に変換して返す（互換性レイヤー）
+      // TODO: 正確な親パスを取得する必要がある場合は、FileRepositoryV2から取得
+      return copiedFilesV2.map(f => fileV2ToV1(f, '/'));
     },
     [refreshData]
   );
