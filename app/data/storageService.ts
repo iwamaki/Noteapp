@@ -18,7 +18,16 @@ export class StorageError extends Error {
   }
 }
 
-// --- Raw File Methods ---
+// --- Raw File Methods (AsyncStorage) ---
+// ⚠️ 以下の AsyncStorage 版関数は非推奨です
+// 新規コードでは getAllFilesRawFS() などの FileSystem 版を使用してください
+// これらは migrationUtils.ts のバックアップ・リストア機能でのみ使用されます
+
+/**
+ * AsyncStorage から全ファイルを取得
+ * @deprecated 新規コードでは getAllFilesRawFS() を使用してください
+ * この関数は migrationUtils.ts のバックアップ・リストア機能でのみ使用されます
+ */
 export const getAllFilesRaw = async (): Promise<File[]> => {
   try {
     const jsonValue = await AsyncStorage.getItem(STORAGE_KEYS.FILES);
@@ -30,6 +39,11 @@ export const getAllFilesRaw = async (): Promise<File[]> => {
   }
 };
 
+/**
+ * AsyncStorage に全ファイルを保存
+ * @deprecated 新規コードでは saveAllFilesFS() を使用してください
+ * この関数は migrationUtils.ts のバックアップ・リストア機能でのみ使用されます
+ */
 export const saveAllFiles = async (files: File[]): Promise<void> => {
   try {
     await AsyncStorage.setItem(STORAGE_KEYS.FILES, JSON.stringify(files));
@@ -38,7 +52,13 @@ export const saveAllFiles = async (files: File[]): Promise<void> => {
   }
 };
 
-// --- Raw Folder Methods ---
+// --- Raw Folder Methods (AsyncStorage) ---
+
+/**
+ * AsyncStorage から全フォルダを取得
+ * @deprecated 新規コードでは getAllFoldersRawFS() を使用してください
+ * この関数は migrationUtils.ts のバックアップ・リストア機能でのみ使用されます
+ */
 export const getAllFoldersRaw = async (): Promise<Folder[]> => {
   try {
     const jsonValue = await AsyncStorage.getItem(STORAGE_KEYS.FOLDERS);
@@ -50,6 +70,11 @@ export const getAllFoldersRaw = async (): Promise<Folder[]> => {
   }
 };
 
+/**
+ * AsyncStorage に全フォルダを保存
+ * @deprecated 新規コードでは saveAllFoldersFS() を使用してください
+ * この関数は migrationUtils.ts のバックアップ・リストア機能でのみ使用されます
+ */
 export const saveAllFolders = async (folders: Folder[]): Promise<void> => {
   try {
     await AsyncStorage.setItem(STORAGE_KEYS.FOLDERS, JSON.stringify(folders));
@@ -58,7 +83,13 @@ export const saveAllFolders = async (folders: Folder[]): Promise<void> => {
   }
 };
 
-// --- Raw File Version Methods ---
+// --- Raw File Version Methods (AsyncStorage) ---
+
+/**
+ * AsyncStorage から全バージョンを取得
+ * @deprecated 新規コードでは getAllVersionsRawFS() を使用してください
+ * この関数は migrationUtils.ts のバックアップ・リストア機能でのみ使用されます
+ */
 export const getAllVersionsRaw = async (): Promise<FileVersion[]> => {
   try {
     const jsonValue = await AsyncStorage.getItem(STORAGE_KEYS.FILE_VERSIONS);
@@ -70,6 +101,11 @@ export const getAllVersionsRaw = async (): Promise<FileVersion[]> => {
   }
 };
 
+/**
+ * AsyncStorage に全バージョンを保存
+ * @deprecated 新規コードでは saveAllVersionsFS() を使用してください
+ * この関数は migrationUtils.ts のバックアップ・リストア機能でのみ使用されます
+ */
 export const saveAllVersions = async (versions: FileVersion[]): Promise<void> => {
   try {
     await AsyncStorage.setItem(STORAGE_KEYS.FILE_VERSIONS, JSON.stringify(versions));
@@ -79,7 +115,31 @@ export const saveAllVersions = async (versions: FileVersion[]): Promise<void> =>
 };
 
 // =============================================================================
-// FileSystem版の実装（Phase 2）
+// FileSystem版の実装（Phase 2-4で実装完了）
+// =============================================================================
+//
+// 📂 メタデータとコンテンツを分離したファイルシステム実装
+//
+// ディレクトリ構造:
+//   noteapp/
+//   ├── metadata/
+//   │   ├── files.json           # ファイルメタデータ（contentなし）
+//   │   ├── folders.json         # フォルダメタデータ
+//   │   └── versions-meta.json   # バージョンメタデータ（contentなし）
+//   ├── contents/
+//   │   └── {fileId}.txt         # 各ファイルのコンテンツ
+//   └── version-contents/
+//       └── {versionId}.txt      # 各バージョンのコンテンツ
+//
+// パフォーマンス最適化:
+//   - メタデータのメモリキャッシュ（TTL: 5分）
+//   - コンテンツの遅延読み込み
+//   - 並行I/O処理（Promise.all）
+//
+// 移行:
+//   - Phase 4 で AsyncStorage → FileSystem への自動移行を実装
+//   - アプリ起動時に一度だけ実行される（完了フラグで管理）
+//   - バックアップ・リストア機能により安全性を確保
 // =============================================================================
 
 /**
