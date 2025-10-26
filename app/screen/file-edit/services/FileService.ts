@@ -4,11 +4,12 @@
  * @description データアクセス層とバリデーションを組み合わせたビジネスロジック
  */
 
-import { FileRepository } from '@data/fileRepository';
+import { FileRepositoryV2 } from '@data/fileRepositoryV2';
 import { ValidationService } from './ValidationService';
 import { ErrorService } from './ErrorService';
 import { File, ErrorCode, EditorError } from '../types';
 import { CreateFileData, UpdateFileData } from '@data/type';
+import { fileV2ToV1, fileV1ToV2 } from '@data/typeConversion';
 
 /**
  * ノートサービス
@@ -21,13 +22,13 @@ export class FileService {
   ) {}
 
   /**
-   * ファイルを読み込む
+   * ファイルを読み込む（V2）
    */
   async loadFile(id: string): Promise<File> {
     try {
-      const file = await FileRepository.getById(id);
+      const fileV2 = await FileRepositoryV2.getById(id);
 
-      if (!file) {
+      if (!fileV2) {
         const error: EditorError = {
           code: ErrorCode.NOT_FOUND,
           message: `ファイル(ID: ${id})が見つかりませんでした。`,
@@ -36,7 +37,9 @@ export class FileService {
         throw error;
       }
 
-      return file;
+      // V2型からV1型に変換（互換性レイヤー）
+      // TODO: 正確な親パスを取得する必要がある場合は、DirectoryResolverから取得
+      return fileV2ToV1(fileV2, '/');
     } catch (error) {
       // EditorErrorの場合はそのまま再スロー
       if ((error as EditorError).code) {
@@ -55,7 +58,7 @@ export class FileService {
   }
 
   /**
-   * ファイルを保存（新規作成または更新）
+   * ファイルを保存（新規作成または更新）（V2）
    */
   async save(data: Partial<File & { id?: string }>): Promise<File> {
     // バリデーション
@@ -71,14 +74,27 @@ export class FileService {
 
     try {
       if (data.id) {
-        // 既存ファイルの更新
-        return await FileRepository.updateWithVersion({
-          id: data.id,
-          ...data,
-        } as UpdateFileData);
+        // 既存ファイルの更新（V2）
+        const fileV2 = await FileRepositoryV2.updateWithVersion(data.id, {
+          title: data.title,
+          content: data.content,
+          tags: data.tags,
+        });
+        // V2型からV1型に変換
+        return fileV2ToV1(fileV2, data.path || '/');
       } else {
-        // 新規ファイルの作成
-        return await FileRepository.createWithVersion(data as CreateFileData);
+        // 新規ファイルの作成（V2）
+        const folderPath = data.path || '/';
+        const fileV2 = await FileRepositoryV2.createWithVersion(
+          {
+            title: data.title || '',
+            content: data.content || '',
+            tags: data.tags || [],
+          },
+          folderPath
+        );
+        // V2型からV1型に変換
+        return fileV2ToV1(fileV2, folderPath);
       }
     } catch {
       const editorError: EditorError = {
@@ -92,11 +108,11 @@ export class FileService {
   }
 
   /**
-   * ファイルを削除
+   * ファイルを削除（V2）
    */
   async deleteFile(id: string): Promise<void> {
     try {
-      await FileRepository.delete(id);
+      await FileRepositoryV2.delete(id);
     } catch {
       const editorError: EditorError = {
         code: ErrorCode.STORAGE_ERROR,
@@ -109,11 +125,11 @@ export class FileService {
   }
 
   /**
-   * ファイルのバージョン履歴を取得
+   * ファイルのバージョン履歴を取得（V2）
    */
   async getVersionHistory(fileId: string) {
     try {
-      return await FileRepository.getVersions(fileId);
+      return await FileRepositoryV2.getVersions(fileId);
     } catch {
       const editorError: EditorError = {
         code: ErrorCode.STORAGE_ERROR,
@@ -126,11 +142,14 @@ export class FileService {
   }
 
   /**
-   * ファイルを特定のバージョンに復元
+   * ファイルを特定のバージョンに復元（V2）
    */
   async restoreVersion(fileId: string, versionId: string): Promise<File> {
     try {
-      return await FileRepository.restoreVersion(fileId, versionId);
+      const fileV2 = await FileRepositoryV2.restoreVersion(fileId, versionId);
+      // V2型からV1型に変換
+      // TODO: 正確な親パスを取得する必要がある場合は、DirectoryResolverから取得
+      return fileV2ToV1(fileV2, '/');
     } catch {
       const editorError: EditorError = {
         code: ErrorCode.STORAGE_ERROR,
