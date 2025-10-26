@@ -9,8 +9,12 @@ import APIService, { ChatContext } from './llmService/api';
 import { ChatMessage, LLMCommand } from './llmService/types/types';
 import { logger } from '../../utils/logger';
 import { ActiveScreenContextProvider, ActiveScreenContext, ChatServiceListener } from './types';
-import { FileRepository } from '@data/fileRepository';
-import { FolderRepository } from '@data/folderRepository';
+import { FileRepositoryV2 } from '@data/fileRepositoryV2';
+import { FolderRepositoryV2 } from '@data/folderRepositoryV2';
+import { DirectoryResolver } from '@data/directoryResolver';
+import { Directory } from 'expo-file-system';
+import * as FileSystemUtilsV2 from '@data/fileSystemUtilsV2';
+import { metadataToFolderV2 } from '@data/typeV2';
 
 /**
  * シングルトンクラスとして機能し、アプリケーション全体でチャットの状態を管理します。
@@ -248,33 +252,76 @@ class ChatService {
   }
 
   /**
-   * LLMコンテキスト用に全ファイル・フォルダ情報を取得
+   * LLMコンテキスト用に全ファイル・フォルダ情報を取得（V2）
+   *
+   * V2では全件取得パターンが排除されているため、再帰的に全アイテムを収集します。
+   * これはLLMコンテキスト用の正当なユースケースです。
    */
   private async getAllFilesForContext(): Promise<Array<{ title: string; path: string; type: 'file' | 'folder' }>> {
     try {
-      const [files, folders] = await Promise.all([
-        FileRepository.getAll(),
-        FolderRepository.getAll(),
-      ]);
+      const allItems: Array<{ title: string; path: string; type: 'file' | 'folder' }> = [];
 
-      const allItems = [
-        ...files.map(file => ({
-          title: file.title,
-          path: file.path,
-          type: 'file' as const,
-        })),
-        ...folders.map(folder => ({
-          title: folder.name, // フォルダはnameフィールドを使用
-          path: folder.path,
-          type: 'folder' as const,
-        })),
-      ];
+      // ルートディレクトリから再帰的に全アイテムを収集
+      await this.collectAllItemsRecursively(DirectoryResolver.getRootDirectory(), '/', allItems);
 
-      logger.debug('chatService', `Retrieved ${files.length} files and ${folders.length} folders for LLM context`);
+      const fileCount = allItems.filter(item => item.type === 'file').length;
+      const folderCount = allItems.filter(item => item.type === 'folder').length;
+      logger.debug('chatService', `Retrieved ${fileCount} files and ${folderCount} folders for LLM context (V2)`);
+
       return allItems;
     } catch (error) {
-      logger.error('chatService', 'Error getting all files for context:', error);
+      logger.error('chatService', 'Error getting all files for context (V2):', error);
       return [];
+    }
+  }
+
+  /**
+   * 再帰的に全フォルダと全ファイルを収集するヘルパー関数（V2）
+   *
+   * @param folderDir - 現在のフォルダディレクトリ
+   * @param currentPath - 現在の仮想パス（例: "/folder1/"）
+   * @param allItems - 収集結果を格納する配列
+   */
+  private async collectAllItemsRecursively(
+    folderDir: Directory,
+    currentPath: string,
+    allItems: Array<{ title: string; path: string; type: 'file' | 'folder' }>
+  ): Promise<void> {
+    try {
+      // 現在のフォルダ内のサブフォルダを取得
+      const subfolders = await FileSystemUtilsV2.listSubfoldersInFolder(folderDir);
+
+      // 各サブフォルダをアイテムリストに追加し、再帰的に探索
+      for (const subfolder of subfolders) {
+        const subfolderPath = currentPath === '/' ? `/${subfolder.slug}/` : `${currentPath}${subfolder.slug}/`;
+
+        allItems.push({
+          title: subfolder.name,
+          path: subfolderPath,
+          type: 'folder',
+        });
+
+        // サブフォルダを再帰的に探索
+        const subfolderDir = new Directory(folderDir, subfolder.slug);
+        await this.collectAllItemsRecursively(subfolderDir, subfolderPath, allItems);
+      }
+
+      // 現在のフォルダ内のファイルを取得
+      const files = await FileSystemUtilsV2.listFilesInFolder(folderDir);
+
+      // 各ファイルをアイテムリストに追加
+      for (const file of files) {
+        const filePath = currentPath === '/' ? `/${file.title}` : `${currentPath}${file.title}`;
+
+        allItems.push({
+          title: file.title,
+          path: filePath,
+          type: 'file',
+        });
+      }
+    } catch (error) {
+      logger.error('chatService', `Error collecting items from ${currentPath}:`, error);
+      // エラーが発生しても処理を続行（部分的な結果を返す）
     }
   }
 

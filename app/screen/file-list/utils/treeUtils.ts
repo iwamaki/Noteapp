@@ -2,10 +2,25 @@
  * @file treeUtils.ts
  * @summary ツリー構造変換ユーティリティ
  * @responsibility フラットなFileSystemItemをツリー構造（TreeNode）に変換
+ *
+ * Note: V2への移行中。V1型（Folder, File）を使用しているため、
+ * 一時的なヘルパー関数を使用してパス操作を行います。
  */
 import { FileSystemItem, Folder, File } from '@data/type';
-import { PathService } from '../../../services/PathService';
+import { PathServiceV2 } from '../../../services/PathServiceV2';
 import { logger } from '../../../utils/logger';
+
+/**
+ * V1型用のヘルパー関数：フォルダのフルパスを取得
+ * V2型への移行後は不要になります
+ */
+function getFullPathV1(parentPath: string, name: string): string {
+  const normalized = PathServiceV2.normalizePath(parentPath);
+  if (normalized === '/') {
+    return `/${name}/`;
+  }
+  return `/${normalized}/${name}/`;
+}
 
 export interface TreeNode {
   id: string;
@@ -57,11 +72,11 @@ export function buildTree(
  */
 function getRootItems(allFolders: Folder[], allFiles: File[]): FileSystemItem[] {
   const rootFolders = allFolders
-    .filter(f => PathService.normalizePath(f.path) === '/')
+    .filter(f => PathServiceV2.normalizePath(f.path) === '/')
     .map(f => ({ type: 'folder' as const, item: f }));
 
   const rootFiles = allFiles
-    .filter(n => PathService.normalizePath(n.path) === '/')
+    .filter(n => PathServiceV2.normalizePath(n.path) === '/')
     .map(n => ({ type: 'file' as const, item: n }));
 
   return [...rootFolders, ...rootFiles];
@@ -79,16 +94,16 @@ function buildTreeNode(
 ): TreeNode {
   if (item.type === 'folder') {
     const folder = item.item;
-    const folderPath = PathService.getFullPath(folder.path, folder.name, 'folder');
+    const folderPath = getFullPathV1(folder.path, folder.name);
     const isExpanded = expandedFolderIds.has(folder.id);
 
 
     const childFolders = allFolders
-      .filter(f => PathService.normalizePath(f.path) === folderPath)
+      .filter(f => PathServiceV2.normalizePath(f.path) === folderPath)
       .map(f => ({ type: 'folder' as const, item: f }));
 
     const childFiles = allFiles
-      .filter(n => PathService.normalizePath(n.path) === folderPath)
+      .filter(n => PathServiceV2.normalizePath(n.path) === folderPath)
       .map(n => ({ type: 'file' as const, item: n }));
 
     const childItems = [...childFolders, ...childFiles];

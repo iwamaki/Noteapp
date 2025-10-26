@@ -5,7 +5,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useLayoutEffect, useMemo, useCallback } from 'react';
 import { Alert, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { FileRepository, StorageError } from '@data/fileRepository';
+import { FileRepositoryV2, FileSystemV2Error } from '@data/fileRepositoryV2';
 import { RootStackParamList } from '../../../navigation/types';
 import { useCustomHeader, HeaderConfig } from '../../../components/CustomHeader';
 import { generateDiff } from '../services/diffService';
@@ -46,7 +46,8 @@ export const useDiffView = () => {
           onPress: async () => {
             try {
               if (mode === 'restore' && fileId && versionId) {
-                await FileRepository.restoreVersion(fileId, versionId);
+                // V2リポジトリを使用してバージョン復元
+                await FileRepositoryV2.restoreVersion(fileId, versionId);
                 Alert.alert('成功', 'ノートが正常に復元されました。');
                 navigation.goBack(); // 復元後、前の画面に戻る
               } else if (mode !== 'restore') {
@@ -56,7 +57,7 @@ export const useDiffView = () => {
               }
             } catch (error: unknown) {
               console.error('Failed to restore file version:', error);
-              if (error instanceof StorageError) {
+              if (error instanceof FileSystemV2Error) {
                 Alert.alert('復元エラー', `ファイルの復元に失敗しました: ${error.message}`);
               } else {
                 Alert.alert('復元エラー', 'ファイルの復元中に不明なエラーが発生しました。');
