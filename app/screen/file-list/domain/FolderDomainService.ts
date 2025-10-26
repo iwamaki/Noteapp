@@ -4,6 +4,16 @@
  * @description
  * フォルダのバリデーション、階層管理、子要素取得などのビジネスルールを実装します。
  * データアクセスはRepositoryを通じて行います。
+ *
+ * @deprecated
+ * このクラスは旧V1構造（AsyncStorage由来の複雑なパス管理）向けです。
+ * 新しいコードでは FolderDomainServiceV2 を使用してください。
+ *
+ * FolderDomainServiceV2では、全件取得パターンを排除し、
+ * パスベースの効率的なアクセスに変更しています。
+ * 複雑なキュー処理や再帰探索も削除されています。
+ *
+ * @see FolderDomainServiceV2
  */
 
 import { Folder, File } from '@data/type';

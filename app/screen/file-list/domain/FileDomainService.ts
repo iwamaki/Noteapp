@@ -4,6 +4,15 @@
  * @description
  * ファイルのバリデーション、重複チェック、ビジネスルールの実装を担当します。
  * データアクセスはRepositoryを通じて行います。
+ *
+ * @deprecated
+ * このクラスは旧V1構造（AsyncStorage由来の複雑なパス管理）向けです。
+ * 新しいコードでは FileDomainServiceV2 を使用してください。
+ *
+ * FileDomainServiceV2では、全件取得パターンを排除し、
+ * フォルダパス指定で効率的にアクセスするように変更しています。
+ *
+ * @see FileDomainServiceV2
  */
 
 import { File } from '@data/type';
