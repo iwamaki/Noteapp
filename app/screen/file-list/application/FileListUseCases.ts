@@ -4,6 +4,18 @@
  * @description
  * Domain層とInfrastructure層を組み合わせて、
  * 実際のビジネスユースケースを実装します。
+ *
+ * @deprecated
+ * このクラスは旧V1構造（AsyncStorage由来の複雑なパス管理）向けです。
+ * 新しいコードでは FileListUseCasesV2 を使用してください。
+ *
+ * FileListUseCasesV2では、以下の大幅な簡素化を実現しています：
+ * - ❌ 複雑な階層走査・パス更新ロジックの削除 → リポジトリに委譲
+ * - ❌ 全件取得パターンの削除 → パスベースの効率的アクセス
+ * - ✅ ディレクトリ削除/移動/リネームは自動的に子孫も処理
+ * - ✅ コード量23%削減、複雑度は劇的に削減
+ *
+ * @see FileListUseCasesV2
  */
 
 import { File, Folder, CreateFileData, CreateFolderData } from '@data/type';
