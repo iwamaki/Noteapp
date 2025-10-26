@@ -1062,6 +1062,34 @@ export async function findItemByPath(path: string): Promise<ResolvedItem | null>
 - **次のステップ:** Task 2.3（移行テスト）- 実機でのテスト実行
 
 ---
+### 試行 #4 - Phase 3実装（リポジトリ層のリファクタリング完了）
+
+- **試みたこと:** Phase 3（リポジトリ層のリファクタリング）の完全実装
+  - Task 3.1: `fileRepositoryV2.ts` の実装（667行）
+  - Task 3.2: `folderRepositoryV2.ts` の実装（545行）
+- **結果:** ✅ Phase 3完了（合計1,212行のコード）
+- **達成事項:**
+  - ✅ FileRepositoryV2の実装
+    - getByFolderPath() - パスベースの効率的な取得
+    - create(data, folderPath) - フォルダパス指定で作成
+    - move(id, targetFolderPath) - ディレクトリ移動
+    - DirectoryResolver活用 - ID検索の効率化
+  - ✅ FolderRepositoryV2の実装
+    - getByParentPath() - 親パス指定で効率的に取得
+    - create(data, parentPath) - slug生成と重複チェック
+    - rename(id, newName) - slugも再生成してディレクトリリネーム
+    - delete(id) - ディレクトリ削除で子孫も自動削除
+    - move(id, targetParentPath) - ディレクトリ移動
+  - ✅ ❌ getAll()削除 - 全件取得パターンの排除
+  - ✅ TypeScriptコンパイルエラー: 0件
+- **実装の核心:**
+  - DirectoryResolver活用で効率的なID検索
+  - パスベースの操作でO(n)→O(depth)に改善
+  - ディレクトリ移動でファイルシステムのネイティブ機能活用
+  - 再帰的なディレクトリコピー機能（rename/move用）
+- **次のステップ:** Phase 4（PathServiceの簡素化）へ
+
+---
 
 ## AIへの申し送り事項 (Handover to AI)
 
