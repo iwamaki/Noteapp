@@ -1090,38 +1090,82 @@ export async function findItemByPath(path: string): Promise<ResolvedItem | null>
 - **次のステップ:** Phase 4（PathServiceの簡素化）へ
 
 ---
+### 試行 #5 - Phase 4実装（PathServiceの簡素化完了）
+
+- **試みたこと:** Phase 4（PathServiceの簡素化）の完全実装
+  - Task 4.1: `PathServiceV2.ts` の実装（67行）
+  - Task 4.2: 旧PathServiceのdeprecated化
+- **結果:** ✅ Phase 4完了（PathServiceV2作成、旧コードdeprecated化）
+- **達成事項:**
+  - ✅ PathServiceV2の実装（最小限の機能のみ）
+    - `normalizePath()` - 互換性のため残す（動作変更：スラッシュ除去）
+    - `generateSlug()` - typeV2から再エクスポート
+  - ✅ 旧PathServiceの全メソッドを@deprecatedとしてマーク
+    - ❌ `getFullPath()` - V2では不要（Directoryが自動管理）
+    - ❌ `getParentPath()` - V2では不要（Directory.parent）
+    - ❌ `getFolderName()` - V2では不要（メタデータから取得）
+    - ❌ `parseInputPath()` - V2では不要（上位レイヤーで処理）
+  - ✅ TypeScriptコンパイルエラー: 0件
+- **実装の核心:**
+  - PathServiceV2は旧PathServiceの40%（2/5関数）に縮小
+  - 複雑な文字列操作を排除
+  - Directoryオブジェクト中心の設計を推進
+- **旧PathService使用箇所（後続フェーズで更新予定）:**
+  - `app/data/folderRepository.ts` - Phase 7で削除
+  - `app/screen/file-list/application/FileListUseCases.ts` - Phase 6で更新
+  - `app/screen/file-list/domain/FolderDomainService.ts` - Phase 5で更新
+  - `app/screen/file-list/utils/treeUtils.ts` - Phase 6で更新
+  - `app/features/chat/handlers/*.ts` - Phase 6で更新
+- **次のステップ:** Phase 5（ドメインサービス層のリファクタリング）へ
+
+---
 
 ## AIへの申し送り事項 (Handover to AI)
 
 ### 現在の状況
-✅ **Phase 1完了**（2025-10-26）
-- 新しいV2型定義とFileSystemUtilsが実装完了
-- 1,151行の新規コード作成
-- TypeScriptコンパイルエラー: 0件
+✅ **Phase 1-4完了**（2025-10-26）
 
-**完成ファイル:**
+**Phase 1完了** - 新しいFileSystemUtils v2の実装（1,151行）
 - `app/data/typeV2.ts` - V2型定義（pathフィールド削除、slug追加）
 - `app/data/fileSystemUtilsV2.ts` - 低レベルAPI（階層的構造対応）
 - `app/data/directoryResolver.ts` - パス解決ユーティリティ
 
+**Phase 2完了** - データ移行ロジックの実装（791行、実機確認OK）
+- `app/data/migrationUtilsV2.ts` - V1→V2移行ロジック
+- `app/initialization/tasks/migrateToV2.ts` - 移行タスク登録
+
+**Phase 3完了** - リポジトリ層のリファクタリング（1,212行、実機確認OK）
+- `app/data/fileRepositoryV2.ts` - パスベース効率アクセス
+- `app/data/folderRepositoryV2.ts` - 階層的操作、getAll()削除
+
+**Phase 4完了** - PathServiceの簡素化（67行）
+- `app/services/PathServiceV2.ts` - 最小限の機能（2/5関数に縮小）
+- 旧PathServiceを@deprecated化
+
+**累計:** 3,221行の新規コード作成
+**TypeScriptコンパイルエラー:** 0件
+
 ### 次のアクション
-**Phase 2: データ移行ロジックの実装** を開始します。
+**Phase 5: ドメインサービス層のリファクタリング** を開始します。
 
 具体的には：
-1. `app/data/migrationUtilsV2.ts` の実装（6-8時間）
-   - V1データの読み込み
-   - フォルダ階層の再構築（pathフィールドから推測）
-   - ファイルの移行
-   - バージョンの移行
-   - バックアップ・ロールバック機能
-2. `app/initialization/tasks/migrateToV2.ts` の実装（1時間）
-3. 移行のテスト（3-4時間）
+1. **Task 5.1**: `FolderDomainServiceV2.ts` の実装（3-4時間）
+   - FolderRepositoryV2/DirectoryResolverを使用
+   - 全件取得パターンの削除
+   - 複雑なキュー処理・再帰探索の排除
+   - コード量50%以上削減が目標
+
+2. **Task 5.2**: `FileDomainServiceV2.ts` の実装（3-4時間）
+   - FileRepositoryV2を使用
+   - バリデーション・重複チェックの簡素化
+   - コード量50%以上削減が目標
 
 ### 考慮事項/ヒント
-- **データ移行は最高リスク**: 必ずバックアップ作成とロールバック機能を実装
-- **段階的検証**: 小規模→中規模→大規模データの順にテスト
-- **フォルダ階層の再構築**: pathフィールド（例: "/folder1/subfolder/"）からslugベースのディレクトリ構造を作成
-- **V1データの保持**: 移行完了後も旧V1データを削除せず、Phase 7まで保持
+- **V2リポジトリの活用**: FolderRepositoryV2/FileRepositoryV2はパスベースで効率的
+- **DirectoryResolver活用**: ID検索はDirectoryResolverに委譲
+- **全件取得の排除**: `getAll()`を使わず、パス指定で直接取得
+- **コード削減の徹底**: 複雑なメモリ内処理を排除し、シンプルな実装に
+- **V1コードは残す**: FolderDomainService/FileDomainServiceは削除せず、V2ファイルを並行作成
 
 ---
 
