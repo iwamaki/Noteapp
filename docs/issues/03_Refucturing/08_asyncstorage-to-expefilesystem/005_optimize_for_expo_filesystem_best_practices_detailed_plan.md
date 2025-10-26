@@ -1017,28 +1017,59 @@ export async function findItemByPath(path: string): Promise<ResolvedItem | null>
 - **メモ:** Phase 1から順次開始予定。各Phaseは独立してテスト可能。
 
 ---
+### 試行 #2 - Phase 1実装
+
+- **試みたこと:** Phase 1（新しいFileSystemUtils v2の実装）の完全実装
+  - Task 1.1: `typeV2.ts` の作成（246行）
+  - Task 1.2: `fileSystemUtilsV2.ts` の実装（616行）
+  - Task 1.3: `directoryResolver.ts` の実装（289行）
+- **結果:** ✅ Phase 1完了（合計1,151行のコード）
+- **達成事項:**
+  - ✅ pathフィールドを削除した新型定義（FolderV2, FileV2）
+  - ✅ slugベースのディレクトリ構造対応
+  - ✅ 階層的メタデータ配置（.folder.json, meta.json）
+  - ✅ Directory/FSFileオブジェクト中心の実装
+  - ✅ 効率的なパス解決ユーティリティ
+  - ✅ ID検索（再帰探索）機能
+  - ✅ TypeScriptコンパイルエラー: 0件
+- **技術的課題と解決:**
+  - `Directory.list()`の返り値型の扱い → `instanceof`チェックで解決
+  - Arrow function syntax in static methods → 通常のメソッド構文に修正
+- **次のステップ:** Phase 2（データ移行ロジック）の実装へ
+
+---
 
 ## AIへの申し送り事項 (Handover to AI)
 
 ### 現在の状況
-詳細な実装計画（7 Phase, 40-50時間）が完成しました。ビジョンB（expo-file-systemの完全に自然な使い方）での実装が決定されています。
+✅ **Phase 1完了**（2025-10-26）
+- 新しいV2型定義とFileSystemUtilsが実装完了
+- 1,151行の新規コード作成
+- TypeScriptコンパイルエラー: 0件
+
+**完成ファイル:**
+- `app/data/typeV2.ts` - V2型定義（pathフィールド削除、slug追加）
+- `app/data/fileSystemUtilsV2.ts` - 低レベルAPI（階層的構造対応）
+- `app/data/directoryResolver.ts` - パス解決ユーティリティ
 
 ### 次のアクション
-**Phase 1: 新しいFileSystemUtils v2の実装** から開始します。
+**Phase 2: データ移行ロジックの実装** を開始します。
 
 具体的には：
-1. `app/data/typeV2.ts` の作成（型定義、Slug生成）
-2. `app/data/fileSystemUtilsV2.ts` の実装（低レベルAPI）
-3. `app/data/directoryResolver.ts` の実装（パス解決）
+1. `app/data/migrationUtilsV2.ts` の実装（6-8時間）
+   - V1データの読み込み
+   - フォルダ階層の再構築（pathフィールドから推測）
+   - ファイルの移行
+   - バージョンの移行
+   - バックアップ・ロールバック機能
+2. `app/initialization/tasks/migrateToV2.ts` の実装（1時間）
+3. 移行のテスト（3-4時間）
 
 ### 考慮事項/ヒント
-- **段階的実装**: 各Taskを独立してテスト可能に
-- **V2ファイルとして並行実装**: 旧コードを残しながら新コードを作成（リスク軽減）
-- **データ移行は慎重に**: Phase 2で小・中・大規模データテストを徹底
-- **シンプル化を最優先**: 複雑なロジックは全て削除
-
-### 実装開始の確認
-ユーザーに実装開始の最終確認を取り、Phase 1, Task 1.1から着手します。
+- **データ移行は最高リスク**: 必ずバックアップ作成とロールバック機能を実装
+- **段階的検証**: 小規模→中規模→大規模データの順にテスト
+- **フォルダ階層の再構築**: pathフィールド（例: "/folder1/subfolder/"）からslugベースのディレクトリ構造を作成
+- **V1データの保持**: 移行完了後も旧V1データを削除せず、Phase 7まで保持
 
 ---
 
