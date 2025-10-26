@@ -13,6 +13,8 @@ strict digraph "dependency-cruiser output"{
     subgraph "cluster_app" {label="app" subgraph "cluster_app/components" {label="components" "app/components/CustomHeader.tsx" [label=<CustomHeader.tsx> tooltip="CustomHeader.tsx" URL="app/components/CustomHeader.tsx" fillcolor="#bbfeff"] } }
     "app/components/CustomHeader.tsx" -> "app/design/theme/ThemeContext.tsx"
     "app/components/CustomHeader.tsx" -> "app/components/HeaderButton.tsx"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/components" {label="components" "app/components/CustomInlineInput.tsx" [label=<CustomInlineInput.tsx> tooltip="CustomInlineInput.tsx" URL="app/components/CustomInlineInput.tsx" fillcolor="#bbfeff"] } }
+    "app/components/CustomInlineInput.tsx" -> "app/design/theme/ThemeContext.tsx"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/components" {label="components" "app/components/CustomModal.tsx" [label=<CustomModal.tsx> tooltip="CustomModal.tsx" URL="app/components/CustomModal.tsx" fillcolor="#bbfeff"] } }
     "app/components/CustomModal.tsx" -> "app/design/styles/commonStyles.ts"
     "app/components/CustomModal.tsx" -> "app/design/theme/ThemeContext.tsx"
@@ -33,18 +35,49 @@ strict digraph "dependency-cruiser output"{
     "app/components/SplashScreen.tsx" -> "app/initialization/InitializationStore.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/contexts" {label="contexts" "app/contexts/KeyboardHeightContext.tsx" [label=<KeyboardHeightContext.tsx> tooltip="KeyboardHeightContext.tsx" URL="app/contexts/KeyboardHeightContext.tsx" fillcolor="#bbfeff"] } }
     subgraph "cluster_app" {label="app" subgraph "cluster_app/data" {label="data" "app/data/asyncStorageUtils.ts" [label=<asyncStorageUtils.ts> tooltip="asyncStorageUtils.ts" URL="app/data/asyncStorageUtils.ts" fillcolor="#ddfeff"] } }
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/data" {label="data" "app/data/directoryResolver.ts" [label=<directoryResolver.ts> tooltip="directoryResolver.ts" URL="app/data/directoryResolver.ts" fillcolor="#ddfeff"] } }
+    "app/data/directoryResolver.ts" -> "app/data/fileSystemUtilsV2.ts"
+    "app/data/directoryResolver.ts" -> "app/data/typeV2.ts" [arrowhead="onormal" penwidth="1.0"]
     subgraph "cluster_app" {label="app" subgraph "cluster_app/data" {label="data" "app/data/fileRepository.ts" [label=<fileRepository.ts> tooltip="fileRepository.ts" URL="app/data/fileRepository.ts" fillcolor="#ddfeff"] } }
     "app/data/fileRepository.ts" -> "app/data/storageService.ts"
     "app/data/fileRepository.ts" -> "app/data/type.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/data" {label="data" "app/data/fileRepositoryV2.ts" [label=<fileRepositoryV2.ts> tooltip="fileRepositoryV2.ts" URL="app/data/fileRepositoryV2.ts" fillcolor="#ddfeff"] } }
+    "app/data/fileRepositoryV2.ts" -> "app/data/directoryResolver.ts"
+    "app/data/fileRepositoryV2.ts" -> "app/data/fileSystemUtilsV2.ts"
+    "app/data/fileRepositoryV2.ts" -> "app/data/typeV2.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/data" {label="data" "app/data/fileSystemUtils.test.ts" [label=<fileSystemUtils.test.ts> tooltip="fileSystemUtils.test.ts" URL="app/data/fileSystemUtils.test.ts" fillcolor="#ddfeff"] } }
+    "app/data/fileSystemUtils.test.ts" -> "app/data/fileSystemUtils.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/data" {label="data" "app/data/fileSystemUtils.ts" [label=<fileSystemUtils.ts> tooltip="fileSystemUtils.ts" URL="app/data/fileSystemUtils.ts" fillcolor="#ddfeff"] } }
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/data" {label="data" "app/data/fileSystemUtilsV2.ts" [label=<fileSystemUtilsV2.ts> tooltip="fileSystemUtilsV2.ts" URL="app/data/fileSystemUtilsV2.ts" fillcolor="#ddfeff"] } }
+    "app/data/fileSystemUtilsV2.ts" -> "app/data/typeV2.ts" [arrowhead="onormal" penwidth="1.0"]
     subgraph "cluster_app" {label="app" subgraph "cluster_app/data" {label="data" "app/data/folderRepository.ts" [label=<folderRepository.ts> tooltip="folderRepository.ts" URL="app/data/folderRepository.ts" fillcolor="#ddfeff"] } }
     "app/data/folderRepository.ts" -> "app/services/PathService.ts"
     "app/data/folderRepository.ts" -> "app/data/fileRepository.ts"
     "app/data/folderRepository.ts" -> "app/data/storageService.ts"
     "app/data/folderRepository.ts" -> "app/data/type.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/data" {label="data" "app/data/folderRepositoryV2.ts" [label=<folderRepositoryV2.ts> tooltip="folderRepositoryV2.ts" URL="app/data/folderRepositoryV2.ts" fillcolor="#ddfeff"] } }
+    "app/data/folderRepositoryV2.ts" -> "app/data/directoryResolver.ts"
+    "app/data/folderRepositoryV2.ts" -> "app/data/fileSystemUtilsV2.ts"
+    "app/data/folderRepositoryV2.ts" -> "app/data/typeV2.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/data" {label="data" "app/data/migrationUtils.ts" [label=<migrationUtils.ts> tooltip="migrationUtils.ts" URL="app/data/migrationUtils.ts" fillcolor="#ddfeff"] } }
+    "app/data/migrationUtils.ts" -> "app/data/fileSystemUtils.ts"
+    "app/data/migrationUtils.ts" -> "app/data/storageService.ts"
+    "app/data/migrationUtils.ts" -> "app/data/type.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/data" {label="data" "app/data/migrationUtilsV2.ts" [label=<migrationUtilsV2.ts> tooltip="migrationUtilsV2.ts" URL="app/data/migrationUtilsV2.ts" fillcolor="#ddfeff"] } }
+    "app/data/migrationUtilsV2.ts" -> "app/data/directoryResolver.ts"
+    "app/data/migrationUtilsV2.ts" -> "app/data/fileSystemUtilsV2.ts"
+    "app/data/migrationUtilsV2.ts" -> "app/data/storageService.ts"
+    "app/data/migrationUtilsV2.ts" -> "app/data/type.ts"
+    "app/data/migrationUtilsV2.ts" -> "app/data/typeV2.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/data" {label="data" "app/data/storageService.ts" [label=<storageService.ts> tooltip="storageService.ts" URL="app/data/storageService.ts" fillcolor="#ddfeff"] } }
     "app/data/storageService.ts" -> "app/data/asyncStorageUtils.ts"
+    "app/data/storageService.ts" -> "app/data/fileSystemUtils.ts"
     "app/data/storageService.ts" -> "app/data/type.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/data" {label="data" "app/data/type.ts" [label=<type.ts> tooltip="type.ts" URL="app/data/type.ts" fillcolor="#ddfeff"] } }
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/data" {label="data" "app/data/typeConversion.ts" [label=<typeConversion.ts> tooltip="typeConversion.ts" URL="app/data/typeConversion.ts" fillcolor="#ddfeff"] } }
+    "app/data/typeConversion.ts" -> "app/data/type.ts"
+    "app/data/typeConversion.ts" -> "app/data/typeV2.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/data" {label="data" "app/data/typeV2.ts" [label=<typeV2.ts> tooltip="typeV2.ts" URL="app/data/typeV2.ts" fillcolor="#ddfeff"] } }
     subgraph "cluster_app" {label="app" subgraph "cluster_app/design" {label="design" subgraph "cluster_app/design/styles" {label="styles" "app/design/styles/commonStyles.ts" [label=<commonStyles.ts> tooltip="commonStyles.ts" URL="app/design/styles/commonStyles.ts" fillcolor="#ddfeff"] } } }
     subgraph "cluster_app" {label="app" subgraph "cluster_app/design" {label="design" subgraph "cluster_app/design/theme" {label="theme" "app/design/theme/ThemeContext.tsx" [label=<ThemeContext.tsx> tooltip="ThemeContext.tsx" URL="app/design/theme/ThemeContext.tsx" fillcolor="#bbfeff"] } } }
     "app/design/theme/ThemeContext.tsx" -> "app/settings/settingsStore.ts"
@@ -53,6 +86,7 @@ strict digraph "dependency-cruiser output"{
     "app/features/chat/components/ChatHistory.tsx" -> "app/features/chat/llmService/index.ts"
     "app/features/chat/components/ChatHistory.tsx" -> "app/features/chat/components/MessageItem.tsx"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/components" {label="components" "app/features/chat/components/ChatInputBar.tsx" [label=<ChatInputBar.tsx> tooltip="ChatInputBar.tsx" URL="app/features/chat/components/ChatInputBar.tsx" fillcolor="#bbfeff"] } } } }
+    "app/features/chat/components/ChatInputBar.tsx" -> "app/components/CustomInlineInput.tsx"
     "app/features/chat/components/ChatInputBar.tsx" -> "app/contexts/KeyboardHeightContext.tsx"
     "app/features/chat/components/ChatInputBar.tsx" -> "app/design/theme/ThemeContext.tsx"
     "app/features/chat/components/ChatInputBar.tsx" -> "app/features/chat/components/ChatHistory.tsx"
@@ -65,6 +99,11 @@ strict digraph "dependency-cruiser output"{
     "app/features/chat/handlers/createDirectoryHandler.ts" -> "app/features/chat/llmService/types/types.ts"
     "app/features/chat/handlers/createDirectoryHandler.ts" -> "app/features/chat/handlers/types.ts"
     "app/features/chat/handlers/createDirectoryHandler.ts" -> "app/data/folderRepository.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/handlers" {label="handlers" "app/features/chat/handlers/createDirectoryHandlerV2.ts" [label=<createDirectoryHandlerV2.ts> tooltip="createDirectoryHandlerV2.ts" URL="app/features/chat/handlers/createDirectoryHandlerV2.ts" fillcolor="#ddfeff"] } } } }
+    "app/features/chat/handlers/createDirectoryHandlerV2.ts" -> "app/utils/logger.ts"
+    "app/features/chat/handlers/createDirectoryHandlerV2.ts" -> "app/features/chat/llmService/types/types.ts"
+    "app/features/chat/handlers/createDirectoryHandlerV2.ts" -> "app/features/chat/handlers/types.ts"
+    "app/features/chat/handlers/createDirectoryHandlerV2.ts" -> "app/data/folderRepositoryV2.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/handlers" {label="handlers" "app/features/chat/handlers/deleteItemHandler.ts" [label=<deleteItemHandler.ts> tooltip="deleteItemHandler.ts" URL="app/features/chat/handlers/deleteItemHandler.ts" fillcolor="#ddfeff"] } } } }
     "app/features/chat/handlers/deleteItemHandler.ts" -> "app/utils/logger.ts"
     "app/features/chat/handlers/deleteItemHandler.ts" -> "app/features/chat/llmService/types/types.ts"
@@ -72,6 +111,13 @@ strict digraph "dependency-cruiser output"{
     "app/features/chat/handlers/deleteItemHandler.ts" -> "app/features/chat/handlers/types.ts"
     "app/features/chat/handlers/deleteItemHandler.ts" -> "app/data/fileRepository.ts"
     "app/features/chat/handlers/deleteItemHandler.ts" -> "app/data/folderRepository.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/handlers" {label="handlers" "app/features/chat/handlers/deleteItemHandlerV2.ts" [label=<deleteItemHandlerV2.ts> tooltip="deleteItemHandlerV2.ts" URL="app/features/chat/handlers/deleteItemHandlerV2.ts" fillcolor="#ddfeff"] } } } }
+    "app/features/chat/handlers/deleteItemHandlerV2.ts" -> "app/utils/logger.ts"
+    "app/features/chat/handlers/deleteItemHandlerV2.ts" -> "app/features/chat/llmService/types/types.ts"
+    "app/features/chat/handlers/deleteItemHandlerV2.ts" -> "app/features/chat/handlers/itemResolverV2.ts"
+    "app/features/chat/handlers/deleteItemHandlerV2.ts" -> "app/features/chat/handlers/types.ts"
+    "app/features/chat/handlers/deleteItemHandlerV2.ts" -> "app/data/fileRepositoryV2.ts"
+    "app/features/chat/handlers/deleteItemHandlerV2.ts" -> "app/data/folderRepositoryV2.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/handlers" {label="handlers" "app/features/chat/handlers/editFileHandler.ts" [label=<editFileHandler.ts> tooltip="editFileHandler.ts" URL="app/features/chat/handlers/editFileHandler.ts" fillcolor="#ddfeff"] } } } }
     "app/features/chat/handlers/editFileHandler.ts" -> "app/utils/logger.ts"
     "app/features/chat/handlers/editFileHandler.ts" -> "app/features/chat/llmService/types/types.ts"
@@ -88,6 +134,13 @@ strict digraph "dependency-cruiser output"{
     "app/features/chat/handlers/itemResolver.ts" -> "app/data/fileRepository.ts"
     "app/features/chat/handlers/itemResolver.ts" -> "app/data/folderRepository.ts"
     "app/features/chat/handlers/itemResolver.ts" -> "app/data/type.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/handlers" {label="handlers" "app/features/chat/handlers/itemResolverV2.ts" [label=<itemResolverV2.ts> tooltip="itemResolverV2.ts" URL="app/features/chat/handlers/itemResolverV2.ts" fillcolor="#ddfeff"] } } } }
+    "app/features/chat/handlers/itemResolverV2.ts" -> "app/services/PathServiceV2.ts"
+    "app/features/chat/handlers/itemResolverV2.ts" -> "app/utils/logger.ts"
+    "app/features/chat/handlers/itemResolverV2.ts" -> "app/data/directoryResolver.ts"
+    "app/features/chat/handlers/itemResolverV2.ts" -> "app/data/fileRepositoryV2.ts"
+    "app/features/chat/handlers/itemResolverV2.ts" -> "app/data/fileSystemUtilsV2.ts"
+    "app/features/chat/handlers/itemResolverV2.ts" -> "app/data/typeV2.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/handlers" {label="handlers" "app/features/chat/handlers/moveItemHandler.ts" [label=<moveItemHandler.ts> tooltip="moveItemHandler.ts" URL="app/features/chat/handlers/moveItemHandler.ts" fillcolor="#ddfeff"] } } } }
     "app/features/chat/handlers/moveItemHandler.ts" -> "app/services/PathService.ts"
     "app/features/chat/handlers/moveItemHandler.ts" -> "app/utils/logger.ts"
@@ -96,6 +149,14 @@ strict digraph "dependency-cruiser output"{
     "app/features/chat/handlers/moveItemHandler.ts" -> "app/features/chat/handlers/types.ts"
     "app/features/chat/handlers/moveItemHandler.ts" -> "app/data/fileRepository.ts"
     "app/features/chat/handlers/moveItemHandler.ts" -> "app/data/folderRepository.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/handlers" {label="handlers" "app/features/chat/handlers/moveItemHandlerV2.ts" [label=<moveItemHandlerV2.ts> tooltip="moveItemHandlerV2.ts" URL="app/features/chat/handlers/moveItemHandlerV2.ts" fillcolor="#ddfeff"] } } } }
+    "app/features/chat/handlers/moveItemHandlerV2.ts" -> "app/services/PathServiceV2.ts"
+    "app/features/chat/handlers/moveItemHandlerV2.ts" -> "app/utils/logger.ts"
+    "app/features/chat/handlers/moveItemHandlerV2.ts" -> "app/features/chat/llmService/types/types.ts"
+    "app/features/chat/handlers/moveItemHandlerV2.ts" -> "app/features/chat/handlers/itemResolverV2.ts"
+    "app/features/chat/handlers/moveItemHandlerV2.ts" -> "app/features/chat/handlers/types.ts"
+    "app/features/chat/handlers/moveItemHandlerV2.ts" -> "app/data/fileRepositoryV2.ts"
+    "app/features/chat/handlers/moveItemHandlerV2.ts" -> "app/data/folderRepositoryV2.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/handlers" {label="handlers" "app/features/chat/handlers/types.ts" [label=<types.ts> tooltip="types.ts" URL="app/features/chat/handlers/types.ts" fillcolor="#ddfeff"] } } } }
     "app/features/chat/handlers/types.ts" -> "app/features/chat/llmService/types/types.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/hooks" {label="hooks" "app/features/chat/hooks/useChat.ts" [label=<useChat.ts> tooltip="useChat.ts" URL="app/features/chat/hooks/useChat.ts" fillcolor="#ddfeff"] } } } }
@@ -111,11 +172,12 @@ strict digraph "dependency-cruiser output"{
     "app/features/chat/hooks/useFileEditChatContext.ts" -> "app/features/chat/index.ts"
     "app/features/chat/hooks/useFileEditChatContext.ts" -> "app/features/chat/types.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/hooks" {label="hooks" "app/features/chat/hooks/useFileListChatContext.ts" [label=<useFileListChatContext.ts> tooltip="useFileListChatContext.ts" URL="app/features/chat/hooks/useFileListChatContext.ts" fillcolor="#ddfeff"] } } } }
-    "app/features/chat/hooks/useFileListChatContext.ts" -> "app/services/PathService.ts"
+    "app/features/chat/hooks/useFileListChatContext.ts" -> "app/screen/file-list/context/useFileListContext.ts"
+    "app/features/chat/hooks/useFileListChatContext.ts" -> "app/services/PathServiceV2.ts"
     "app/features/chat/hooks/useFileListChatContext.ts" -> "app/utils/logger.ts"
-    "app/features/chat/hooks/useFileListChatContext.ts" -> "app/features/chat/handlers/createDirectoryHandler.ts"
-    "app/features/chat/hooks/useFileListChatContext.ts" -> "app/features/chat/handlers/deleteItemHandler.ts"
-    "app/features/chat/hooks/useFileListChatContext.ts" -> "app/features/chat/handlers/moveItemHandler.ts"
+    "app/features/chat/hooks/useFileListChatContext.ts" -> "app/features/chat/handlers/createDirectoryHandlerV2.ts"
+    "app/features/chat/hooks/useFileListChatContext.ts" -> "app/features/chat/handlers/deleteItemHandlerV2.ts"
+    "app/features/chat/hooks/useFileListChatContext.ts" -> "app/features/chat/handlers/moveItemHandlerV2.ts"
     "app/features/chat/hooks/useFileListChatContext.ts" -> "app/features/chat/handlers/types.ts"
     "app/features/chat/hooks/useFileListChatContext.ts" -> "app/features/chat/index.ts"
     "app/features/chat/hooks/useFileListChatContext.ts" -> "app/features/chat/types.ts"
@@ -125,6 +187,11 @@ strict digraph "dependency-cruiser output"{
     "app/features/chat/index.ts" -> "app/features/chat/llmService/api.ts"
     "app/features/chat/index.ts" -> "app/features/chat/llmService/types/types.ts"
     "app/features/chat/index.ts" -> "app/features/chat/types.ts"
+    "app/features/chat/index.ts" -> "app/data/directoryResolver.ts"
+    "app/features/chat/index.ts" -> "app/data/fileRepositoryV2.ts"
+    "app/features/chat/index.ts" -> "app/data/fileSystemUtilsV2.ts"
+    "app/features/chat/index.ts" -> "app/data/folderRepositoryV2.ts"
+    "app/features/chat/index.ts" -> "app/data/typeV2.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/llmService" {label="llmService" "app/features/chat/llmService/api.ts" [label=<api.ts> tooltip="api.ts" URL="app/features/chat/llmService/api.ts" fillcolor="#ddfeff"] } } } }
     "app/features/chat/llmService/api.ts" -> "app/features/chat/llmService/index.ts"
     "app/features/chat/llmService/api.ts" -> "app/features/chat/llmService/types/types.ts" [arrowhead="inv"]
@@ -178,11 +245,18 @@ strict digraph "dependency-cruiser output"{
     "app/initialization/tasks/index.ts" -> "app/initialization/types.ts"
     "app/initialization/tasks/index.ts" -> "app/initialization/tasks/configureChatService.ts"
     "app/initialization/tasks/index.ts" -> "app/initialization/tasks/configureLLMService.ts"
+    "app/initialization/tasks/index.ts" -> "app/initialization/tasks/initializeFileSystem.ts"
     "app/initialization/tasks/index.ts" -> "app/initialization/tasks/loadIconFonts.ts"
     "app/initialization/tasks/index.ts" -> "app/initialization/tasks/loadSettings.ts"
     "app/initialization/tasks/index.ts" -> "app/initialization/tasks/loadToolDefinitions.ts"
+    "app/initialization/tasks/index.ts" -> "app/initialization/tasks/migrateData.ts"
+    "app/initialization/tasks/index.ts" -> "app/initialization/tasks/migrateToV2.ts"
+    "app/initialization/tasks/index.ts" -> "app/initialization/tasks/preloadLLMProviders.ts"
     "app/initialization/tasks/index.ts" -> "app/initialization/tasks/verifyAppReady.ts"
     "app/initialization/tasks/index.ts" -> "app/initialization/tasks/verifyAsyncStorage.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/initialization" {label="initialization" subgraph "cluster_app/initialization/tasks" {label="tasks" "app/initialization/tasks/initializeFileSystem.ts" [label=<initializeFileSystem.ts> tooltip="initializeFileSystem.ts" URL="app/initialization/tasks/initializeFileSystem.ts" fillcolor="#ddfeff"] } } }
+    "app/initialization/tasks/initializeFileSystem.ts" -> "app/data/fileSystemUtils.ts"
+    "app/initialization/tasks/initializeFileSystem.ts" -> "app/initialization/types.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/initialization" {label="initialization" subgraph "cluster_app/initialization/tasks" {label="tasks" "app/initialization/tasks/loadIconFonts.ts" [label=<loadIconFonts.ts> tooltip="loadIconFonts.ts" URL="app/initialization/tasks/loadIconFonts.ts" fillcolor="#ddfeff"] } } }
     "app/initialization/tasks/loadIconFonts.ts" -> "app/initialization/types.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/initialization" {label="initialization" subgraph "cluster_app/initialization/tasks" {label="tasks" "app/initialization/tasks/loadSettings.ts" [label=<loadSettings.ts> tooltip="loadSettings.ts" URL="app/initialization/tasks/loadSettings.ts" fillcolor="#ddfeff"] } } }
@@ -191,6 +265,15 @@ strict digraph "dependency-cruiser output"{
     subgraph "cluster_app" {label="app" subgraph "cluster_app/initialization" {label="initialization" subgraph "cluster_app/initialization/tasks" {label="tasks" "app/initialization/tasks/loadToolDefinitions.ts" [label=<loadToolDefinitions.ts> tooltip="loadToolDefinitions.ts" URL="app/initialization/tasks/loadToolDefinitions.ts" fillcolor="#ddfeff"] } } }
     "app/initialization/tasks/loadToolDefinitions.ts" -> "app/features/chat/services/ToolService.ts"
     "app/initialization/tasks/loadToolDefinitions.ts" -> "app/initialization/types.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/initialization" {label="initialization" subgraph "cluster_app/initialization/tasks" {label="tasks" "app/initialization/tasks/migrateData.ts" [label=<migrateData.ts> tooltip="migrateData.ts" URL="app/initialization/tasks/migrateData.ts" fillcolor="#ddfeff"] } } }
+    "app/initialization/tasks/migrateData.ts" -> "app/data/migrationUtils.ts"
+    "app/initialization/tasks/migrateData.ts" -> "app/initialization/types.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/initialization" {label="initialization" subgraph "cluster_app/initialization/tasks" {label="tasks" "app/initialization/tasks/migrateToV2.ts" [label=<migrateToV2.ts> tooltip="migrateToV2.ts" URL="app/initialization/tasks/migrateToV2.ts" fillcolor="#ddfeff"] } } }
+    "app/initialization/tasks/migrateToV2.ts" -> "app/data/migrationUtilsV2.ts"
+    "app/initialization/tasks/migrateToV2.ts" -> "app/initialization/types.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/initialization" {label="initialization" subgraph "cluster_app/initialization/tasks" {label="tasks" "app/initialization/tasks/preloadLLMProviders.ts" [label=<preloadLLMProviders.ts> tooltip="preloadLLMProviders.ts" URL="app/initialization/tasks/preloadLLMProviders.ts" fillcolor="#ddfeff"] } } }
+    "app/initialization/tasks/preloadLLMProviders.ts" -> "app/features/chat/llmService/api.ts"
+    "app/initialization/tasks/preloadLLMProviders.ts" -> "app/initialization/types.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/initialization" {label="initialization" subgraph "cluster_app/initialization/tasks" {label="tasks" "app/initialization/tasks/verifyAppReady.ts" [label=<verifyAppReady.ts> tooltip="verifyAppReady.ts" URL="app/initialization/tasks/verifyAppReady.ts" fillcolor="#ddfeff"] } } }
     "app/initialization/tasks/verifyAppReady.ts" -> "app/settings/settingsStore.ts"
     "app/initialization/tasks/verifyAppReady.ts" -> "app/initialization/types.ts"
@@ -206,6 +289,7 @@ strict digraph "dependency-cruiser output"{
     "app/navigation/RootNavigator.tsx" -> "app/screen/file-list/FileListScreen.tsx"
     "app/navigation/RootNavigator.tsx" -> "app/screen/version-history/VersionHistoryScreen.tsx"
     "app/navigation/RootNavigator.tsx" -> "app/settings/SettingsScreen.tsx"
+    "app/navigation/RootNavigator.tsx" -> "app/settings/settingsStore.ts"
     "app/navigation/RootNavigator.tsx" -> "app/navigation/types.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/navigation" {label="navigation" "app/navigation/types.ts" [label=<types.ts> tooltip="types.ts" URL="app/navigation/types.ts" fillcolor="#ddfeff"] } }
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/diff-view" {label="diff-view" "app/screen/diff-view/DiffViewScreen.tsx" [label=<DiffViewScreen.tsx> tooltip="DiffViewScreen.tsx" URL="app/screen/diff-view/DiffViewScreen.tsx" fillcolor="#bbfeff"] } } }
@@ -277,8 +361,9 @@ strict digraph "dependency-cruiser output"{
     "app/screen/file-edit/services/FileService.ts" -> "app/screen/file-edit/types/index.ts"
     "app/screen/file-edit/services/FileService.ts" -> "app/screen/file-edit/services/ErrorService.ts"
     "app/screen/file-edit/services/FileService.ts" -> "app/screen/file-edit/services/ValidationService.ts"
-    "app/screen/file-edit/services/FileService.ts" -> "app/data/fileRepository.ts"
+    "app/screen/file-edit/services/FileService.ts" -> "app/data/fileRepositoryV2.ts"
     "app/screen/file-edit/services/FileService.ts" -> "app/data/type.ts"
+    "app/screen/file-edit/services/FileService.ts" -> "app/data/typeConversion.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/file-edit" {label="file-edit" subgraph "cluster_app/screen/file-edit/services" {label="services" "app/screen/file-edit/services/ValidationService.ts" [label=<ValidationService.ts> tooltip="ValidationService.ts" URL="app/screen/file-edit/services/ValidationService.ts" fillcolor="#ddfeff"] } } } }
     "app/screen/file-edit/services/ValidationService.ts" -> "app/screen/file-edit/types/index.ts"
     "app/screen/file-edit/services/ValidationService.ts" -> "app/data/type.ts"
@@ -291,11 +376,13 @@ strict digraph "dependency-cruiser output"{
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/file-edit" {label="file-edit" subgraph "cluster_app/screen/file-edit/types" {label="types" "app/screen/file-edit/types/index.ts" [label=<index.ts> tooltip="index.ts" URL="app/screen/file-edit/types/index.ts" fillcolor="#ddfeff"] } } } }
     "app/screen/file-edit/types/index.ts" -> "app/data/type.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/file-list" {label="file-list" "app/screen/file-list/FileListScreen.tsx" [label=<FileListScreen.tsx> tooltip="FileListScreen.tsx" URL="app/screen/file-list/FileListScreen.tsx" fillcolor="#bbfeff"] } } }
+    "app/screen/file-list/FileListScreen.tsx" -> "app/components/CustomModal.tsx"
     "app/screen/file-list/FileListScreen.tsx" -> "app/components/MainContainer.tsx"
     "app/screen/file-list/FileListScreen.tsx" -> "app/contexts/KeyboardHeightContext.tsx"
     "app/screen/file-list/FileListScreen.tsx" -> "app/design/theme/ThemeContext.tsx"
     "app/screen/file-list/FileListScreen.tsx" -> "app/features/chat/hooks/useFileListChatContext.ts"
     "app/screen/file-list/FileListScreen.tsx" -> "app/navigation/types.ts"
+    "app/screen/file-list/FileListScreen.tsx" -> "app/settings/settingsStore.ts"
     "app/screen/file-list/FileListScreen.tsx" -> "app/utils/logger.ts"
     "app/screen/file-list/FileListScreen.tsx" -> "app/screen/file-list/components/CreateItemModal.tsx"
     "app/screen/file-list/FileListScreen.tsx" -> "app/screen/file-list/components/FileListEmptyState.tsx"
@@ -314,9 +401,17 @@ strict digraph "dependency-cruiser output"{
     "app/screen/file-list/application/FileListUseCases.ts" -> "app/data/fileRepository.ts"
     "app/screen/file-list/application/FileListUseCases.ts" -> "app/data/folderRepository.ts"
     "app/screen/file-list/application/FileListUseCases.ts" -> "app/data/type.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/file-list" {label="file-list" subgraph "cluster_app/screen/file-list/application" {label="application" "app/screen/file-list/application/FileListUseCasesV2.ts" [label=<FileListUseCasesV2.ts> tooltip="FileListUseCasesV2.ts" URL="app/screen/file-list/application/FileListUseCasesV2.ts" fillcolor="#ddfeff"] } } } }
+    "app/screen/file-list/application/FileListUseCasesV2.ts" -> "app/services/PathServiceV2.ts"
+    "app/screen/file-list/application/FileListUseCasesV2.ts" -> "app/screen/file-list/domain/FileDomainServiceV2.ts"
+    "app/screen/file-list/application/FileListUseCasesV2.ts" -> "app/screen/file-list/domain/FolderDomainServiceV2.ts"
+    "app/screen/file-list/application/FileListUseCasesV2.ts" -> "app/data/fileRepositoryV2.ts"
+    "app/screen/file-list/application/FileListUseCasesV2.ts" -> "app/data/folderRepositoryV2.ts"
+    "app/screen/file-list/application/FileListUseCasesV2.ts" -> "app/data/typeV2.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/file-list" {label="file-list" subgraph "cluster_app/screen/file-list/application" {label="application" "app/screen/file-list/application/index.ts" [label=<index.ts> tooltip="index.ts" URL="app/screen/file-list/application/index.ts" fillcolor="#ddfeff"] } } } }
     "app/screen/file-list/application/index.ts" -> "app/screen/file-list/application/FileListUseCases.ts" [arrowhead="inv"]
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/file-list" {label="file-list" subgraph "cluster_app/screen/file-list/components" {label="components" "app/screen/file-list/components/CreateItemModal.tsx" [label=<CreateItemModal.tsx> tooltip="CreateItemModal.tsx" URL="app/screen/file-list/components/CreateItemModal.tsx" fillcolor="#bbfeff"] } } } }
+    "app/screen/file-list/components/CreateItemModal.tsx" -> "app/components/CustomInlineInput.tsx"
     "app/screen/file-list/components/CreateItemModal.tsx" -> "app/components/CustomModal.tsx"
     "app/screen/file-list/components/CreateItemModal.tsx" -> "app/design/theme/ThemeContext.tsx"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/file-list" {label="file-list" subgraph "cluster_app/screen/file-list/components" {label="components" "app/screen/file-list/components/FileListEmptyState.tsx" [label=<FileListEmptyState.tsx> tooltip="FileListEmptyState.tsx" URL="app/screen/file-list/components/FileListEmptyState.tsx" fillcolor="#bbfeff"] } } } }
@@ -328,6 +423,7 @@ strict digraph "dependency-cruiser output"{
     "app/screen/file-list/components/OverflowMenu.tsx" -> "app/design/theme/ThemeContext.tsx"
     "app/screen/file-list/components/OverflowMenu.tsx" -> "app/navigation/types.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/file-list" {label="file-list" subgraph "cluster_app/screen/file-list/components" {label="components" "app/screen/file-list/components/RenameItemModal.tsx" [label=<RenameItemModal.tsx> tooltip="RenameItemModal.tsx" URL="app/screen/file-list/components/RenameItemModal.tsx" fillcolor="#bbfeff"] } } } }
+    "app/screen/file-list/components/RenameItemModal.tsx" -> "app/components/CustomInlineInput.tsx"
     "app/screen/file-list/components/RenameItemModal.tsx" -> "app/components/CustomModal.tsx"
     "app/screen/file-list/components/RenameItemModal.tsx" -> "app/design/theme/ThemeContext.tsx"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/file-list" {label="file-list" subgraph "cluster_app/screen/file-list/components" {label="components" "app/screen/file-list/components/TreeListItem.tsx" [label=<TreeListItem.tsx> tooltip="TreeListItem.tsx" URL="app/screen/file-list/components/TreeListItem.tsx" fillcolor="#bbfeff"] } } } }
@@ -335,18 +431,17 @@ strict digraph "dependency-cruiser output"{
     "app/screen/file-list/components/TreeListItem.tsx" -> "app/design/theme/ThemeContext.tsx"
     "app/screen/file-list/components/TreeListItem.tsx" -> "app/screen/file-list/utils/treeUtils.ts"
     "app/screen/file-list/components/TreeListItem.tsx" -> "app/data/type.ts"
-    "app/screen/file-list/components/TreeListItem.tsx" -> "app/utils/logger.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/file-list" {label="file-list" subgraph "cluster_app/screen/file-list/context" {label="context" "app/screen/file-list/context/FileListContext.tsx" [label=<FileListContext.tsx> tooltip="FileListContext.tsx" URL="app/screen/file-list/context/FileListContext.tsx" fillcolor="#bbfeff"] } } } }
     "app/screen/file-list/context/FileListContext.tsx" -> "app/screen/file-list/context/types.ts"
     "app/screen/file-list/context/FileListContext.tsx" -> "app/data/type.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/file-list" {label="file-list" subgraph "cluster_app/screen/file-list/context" {label="context" "app/screen/file-list/context/FileListProvider.tsx" [label=<FileListProvider.tsx> tooltip="FileListProvider.tsx" URL="app/screen/file-list/context/FileListProvider.tsx" fillcolor="#bbfeff"] } } } }
-    "app/screen/file-list/context/FileListProvider.tsx" -> "app/screen/file-list/application/FileListUseCases.ts"
-    "app/screen/file-list/context/FileListProvider.tsx" -> "app/screen/file-list/utils/treeUtils.ts"
+    "app/screen/file-list/context/FileListProvider.tsx" -> "app/screen/file-list/application/FileListUseCasesV2.ts"
     "app/screen/file-list/context/FileListProvider.tsx" -> "app/screen/file-list/context/FileListContext.tsx"
     "app/screen/file-list/context/FileListProvider.tsx" -> "app/screen/file-list/context/fileListReducer.ts"
-    "app/screen/file-list/context/FileListProvider.tsx" -> "app/data/fileRepository.ts"
-    "app/screen/file-list/context/FileListProvider.tsx" -> "app/data/folderRepository.ts"
+    "app/screen/file-list/context/FileListProvider.tsx" -> "app/data/fileRepositoryV2.ts"
+    "app/screen/file-list/context/FileListProvider.tsx" -> "app/data/folderRepositoryV2.ts"
     "app/screen/file-list/context/FileListProvider.tsx" -> "app/data/type.ts"
+    "app/screen/file-list/context/FileListProvider.tsx" -> "app/data/typeConversion.ts"
     "app/screen/file-list/context/FileListProvider.tsx" -> "app/utils/logger.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/file-list" {label="file-list" subgraph "cluster_app/screen/file-list/context" {label="context" "app/screen/file-list/context/fileListReducer.ts" [label=<fileListReducer.ts> tooltip="fileListReducer.ts" URL="app/screen/file-list/context/fileListReducer.ts" fillcolor="#ddfeff"] } } } }
     "app/screen/file-list/context/fileListReducer.ts" -> "app/screen/file-list/utils/treeUtils.ts"
@@ -365,10 +460,18 @@ strict digraph "dependency-cruiser output"{
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/file-list" {label="file-list" subgraph "cluster_app/screen/file-list/domain" {label="domain" "app/screen/file-list/domain/FileDomainService.ts" [label=<FileDomainService.ts> tooltip="FileDomainService.ts" URL="app/screen/file-list/domain/FileDomainService.ts" fillcolor="#ddfeff"] } } } }
     "app/screen/file-list/domain/FileDomainService.ts" -> "app/data/fileRepository.ts"
     "app/screen/file-list/domain/FileDomainService.ts" -> "app/data/type.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/file-list" {label="file-list" subgraph "cluster_app/screen/file-list/domain" {label="domain" "app/screen/file-list/domain/FileDomainServiceV2.ts" [label=<FileDomainServiceV2.ts> tooltip="FileDomainServiceV2.ts" URL="app/screen/file-list/domain/FileDomainServiceV2.ts" fillcolor="#ddfeff"] } } } }
+    "app/screen/file-list/domain/FileDomainServiceV2.ts" -> "app/data/fileRepositoryV2.ts"
+    "app/screen/file-list/domain/FileDomainServiceV2.ts" -> "app/data/typeV2.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/file-list" {label="file-list" subgraph "cluster_app/screen/file-list/domain" {label="domain" "app/screen/file-list/domain/FolderDomainService.ts" [label=<FolderDomainService.ts> tooltip="FolderDomainService.ts" URL="app/screen/file-list/domain/FolderDomainService.ts" fillcolor="#ddfeff"] } } } }
     "app/screen/file-list/domain/FolderDomainService.ts" -> "app/services/PathService.ts"
     "app/screen/file-list/domain/FolderDomainService.ts" -> "app/data/folderRepository.ts"
     "app/screen/file-list/domain/FolderDomainService.ts" -> "app/data/type.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/file-list" {label="file-list" subgraph "cluster_app/screen/file-list/domain" {label="domain" "app/screen/file-list/domain/FolderDomainServiceV2.ts" [label=<FolderDomainServiceV2.ts> tooltip="FolderDomainServiceV2.ts" URL="app/screen/file-list/domain/FolderDomainServiceV2.ts" fillcolor="#ddfeff"] } } } }
+    "app/screen/file-list/domain/FolderDomainServiceV2.ts" -> "app/services/PathServiceV2.ts"
+    "app/screen/file-list/domain/FolderDomainServiceV2.ts" -> "app/data/fileRepositoryV2.ts"
+    "app/screen/file-list/domain/FolderDomainServiceV2.ts" -> "app/data/folderRepositoryV2.ts"
+    "app/screen/file-list/domain/FolderDomainServiceV2.ts" -> "app/data/typeV2.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/file-list" {label="file-list" subgraph "cluster_app/screen/file-list/domain" {label="domain" "app/screen/file-list/domain/index.ts" [label=<index.ts> tooltip="index.ts" URL="app/screen/file-list/domain/index.ts" fillcolor="#ddfeff"] } } } }
     "app/screen/file-list/domain/index.ts" -> "app/screen/file-list/domain/FileDomainService.ts" [arrowhead="inv"]
     "app/screen/file-list/domain/index.ts" -> "app/screen/file-list/domain/FolderDomainService.ts" [arrowhead="inv"]
@@ -395,6 +498,8 @@ strict digraph "dependency-cruiser output"{
     "app/screen/version-history/VersionHistoryScreen.tsx" -> "app/data/fileRepository.ts"
     "app/screen/version-history/VersionHistoryScreen.tsx" -> "app/data/type.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/services" {label="services" "app/services/PathService.ts" [label=<PathService.ts> tooltip="PathService.ts" URL="app/services/PathService.ts" fillcolor="#ddfeff"] } }
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/services" {label="services" "app/services/PathServiceV2.ts" [label=<PathServiceV2.ts> tooltip="PathServiceV2.ts" URL="app/services/PathServiceV2.ts" fillcolor="#ddfeff"] } }
+    "app/services/PathServiceV2.ts" -> "app/data/typeV2.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/settings" {label="settings" "app/settings/SettingsScreen.tsx" [label=<SettingsScreen.tsx> tooltip="SettingsScreen.tsx" URL="app/settings/SettingsScreen.tsx" fillcolor="#bbfeff"] } }
     "app/settings/SettingsScreen.tsx" -> "app/components/CustomHeader.tsx"
     "app/settings/SettingsScreen.tsx" -> "app/components/ListItem.tsx"

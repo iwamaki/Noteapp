@@ -9,8 +9,10 @@ import { View, Text, StyleSheet, FlatList, Alert } from 'react-native';
 import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
-import { FileRepository } from '@data/fileRepository';
+import { FileRepositoryV2 } from '@data/fileRepositoryV2';
 import { FileVersion, File } from '@data/type';
+import { fileV2ToV1 } from '@data/typeConversion';
+import type { FileVersionV2 } from '@data/typeV2';
 import { format } from 'date-fns';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { useCustomHeader } from '../../components/CustomHeader';
@@ -52,9 +54,22 @@ function VersionHistoryScreen() {
       setLoading(true);
       setError(null);
       if (fileId) {
-        const fetchedVersions = await FileRepository.getVersions(fileId);
-        const fetchedCurrentFile = await FileRepository.getById(fileId);
+        // V2リポジトリからデータ取得
+        const fetchedVersionsV2 = await FileRepositoryV2.getVersions(fileId);
+        const fetchedCurrentFileV2 = await FileRepositoryV2.getById(fileId);
+
+        // V2型からV1型に変換（互換性レイヤー）
+        const fetchedCurrentFile = fetchedCurrentFileV2 ? fileV2ToV1(fetchedCurrentFileV2, '/') : null;
         setCurrentFile(fetchedCurrentFile);
+
+        // FileVersionV2からFileVersionに変換
+        const fetchedVersions: FileVersion[] = fetchedVersionsV2.map(v => ({
+          id: v.id,
+          fileId: v.fileId,
+          content: v.content,
+          version: v.version,
+          createdAt: v.createdAt,
+        }));
 
         // Also add the current version to the list for context, but designate it
         if (fetchedCurrentFile) {

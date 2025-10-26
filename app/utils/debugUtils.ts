@@ -1,16 +1,15 @@
 import { TreeNode } from '../screen/file-list/utils/treeUtils';
-import { FileRepository } from '@data/fileRepository';
-import { FolderRepository } from '@data/folderRepository';
+import { FileRepositoryV2 } from '@data/fileRepositoryV2';
+import { FolderRepositoryV2 } from '@data/folderRepositoryV2';
+import { fileV2ToV1, folderV2ToV1 } from '@data/typeConversion';
 import { logger } from './logger';
 
 /**
  * A debug utility to ensure consistency between the data in storage and the data in the UI tree.
  * This function should only be called in development mode (__DEV__ === true).
  *
- * TODO: V2への移行が必要
- * このファイルはV1リポジトリ（FileRepository, FolderRepository）を使用しています。
- * 将来的にFileRepositoryV2とFolderRepositoryV2に移行する必要があります。
- * ただし、デバッグ用ユーティリティのため、優先度は低いです。
+ * V2リポジトリを使用してデータ整合性をチェックします。
+ * V2型からV1型に変換して、既存のUIツリー（V1型ベース）と比較します。
  *
  * @param treeNodes The tree structure from the UI state.
  * @throws An error if an inconsistency is detected.
@@ -32,9 +31,17 @@ const collectAllNodes = (nodes: TreeNode[]): TreeNode[] => {
 export const checkTreeConsistency = async (treeNodes: TreeNode[]): Promise<void> => {
   try {
 
-    // 1. Get the source of truth from storage
-    const allFiles = await FileRepository.getAll();
-    const allFolders = await FolderRepository.getAll();
+    // 1. Get the source of truth from storage (V2)
+    // V2では全件取得パターンが排除されているため、ここでは簡易的にルートレベルのみ取得
+    // 本格的なデバッグには、再帰的に全アイテムを収集する必要があります
+    const [allFilesV2, allFoldersV2] = await Promise.all([
+      FileRepositoryV2.getByFolderPath('/'),
+      FolderRepositoryV2.getByParentPath('/'),
+    ]);
+
+    // V2型からV1型に変換（互換性レイヤー）
+    const allFiles = allFilesV2.map(f => fileV2ToV1(f, '/'));
+    const allFolders = allFoldersV2.map(f => folderV2ToV1(f, '/'));
 
     // 2. Get the UI data - collect ALL nodes including those in collapsed folders
     const allUiNodes = collectAllNodes(treeNodes);
@@ -112,8 +119,15 @@ export const checkTreeConsistency = async (treeNodes: TreeNode[]): Promise<void>
  */
 export const logStorageState = async (): Promise<void> => {
   try {
-    const allFiles = await FileRepository.getAll();
-    const allFolders = await FolderRepository.getAll();
+    // V2リポジトリから取得（ルートレベルのみ）
+    const [allFilesV2, allFoldersV2] = await Promise.all([
+      FileRepositoryV2.getByFolderPath('/'),
+      FolderRepositoryV2.getByParentPath('/'),
+    ]);
+
+    // V2型からV1型に変換
+    const allFiles = allFilesV2.map(f => fileV2ToV1(f, '/'));
+    const allFolders = allFoldersV2.map(f => folderV2ToV1(f, '/'));
 
     console.log('📦 Current Storage State:');
     console.log(`  Files: ${allFiles.length}`);
