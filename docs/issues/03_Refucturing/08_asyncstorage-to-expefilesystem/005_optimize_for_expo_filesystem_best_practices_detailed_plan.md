@@ -1038,6 +1038,30 @@ export async function findItemByPath(path: string): Promise<ResolvedItem | null>
 - **次のステップ:** Phase 2（データ移行ロジック）の実装へ
 
 ---
+### 試行 #3 - Phase 2実装（Task 2.1, 2.2完了）
+
+- **試みたこと:** Phase 2（データ移行ロジック）のコア実装
+  - Task 2.1: `migrationUtilsV2.ts` の実装（716行）
+  - Task 2.2: `migrateToV2.ts` の実装（75行）+ `index.ts`への登録
+- **結果:** ✅ Task 2.1, 2.2完了（合計791行のコード）
+- **達成事項:**
+  - ✅ V1データ読み込みロジック
+  - ✅ フォルダ階層の再構築（pathフィールドから推測）
+  - ✅ slug生成と重複チェック
+  - ✅ ファイル移行ロジック（親フォルダ解決）
+  - ✅ バージョン移行ロジック
+  - ✅ 検証ロジック（件数チェック）
+  - ✅ バックアップ・ロールバック機能
+  - ✅ 初期化タスクへの登録（dependencies: migrate-data）
+  - ✅ TypeScriptコンパイルエラー: 0件
+- **実装の核心:**
+  - `buildFolderHierarchy()`: pathの深さで階層をソート、親→子の順に作成
+  - `migrateFolders()`: slugマッピングを記録、重複時は `-1`, `-2` を追加
+  - `migrateFiles()`: pathからフォルダを解決、DirectoryResolverでID検索
+  - `validateMigrationV2()`: 再帰的にフォルダ・ファイルをカウントして検証
+- **次のステップ:** Task 2.3（移行テスト）- 実機でのテスト実行
+
+---
 
 ## AIへの申し送り事項 (Handover to AI)
 
