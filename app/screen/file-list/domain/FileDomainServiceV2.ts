@@ -11,7 +11,7 @@
  * - ✅ コード量40%以上削減（195行 → ~110行）
  */
 
-import { FileV2 } from '@data/typeV2';
+import { File } from '@data/types';
 import { FileRepositoryV2 } from '@data/fileRepositoryV2';
 
 /**
@@ -27,7 +27,7 @@ export interface ValidationResult {
  */
 export interface DuplicateCheckResult {
   isDuplicate: boolean;
-  existing?: FileV2;
+  existing?: File;
 }
 
 /**

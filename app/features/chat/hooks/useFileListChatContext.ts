@@ -9,8 +9,7 @@ import { useEffect, useRef } from 'react';
 import { ActiveScreenContextProvider, ActiveScreenContext } from '../types';
 import ChatService from '../index';
 import { logger } from '../../../utils/logger';
-import { FileSystemItem } from '@data/type';
-import { PathServiceV2 } from '../../../services/PathServiceV2';
+import { FileSystemItem } from '@data/types';
 import { createDirectoryHandlerV2 } from '../handlers/createDirectoryHandlerV2';
 import { deleteItemHandlerV2 } from '../handlers/deleteItemHandlerV2';
 import { moveItemHandlerV2 } from '../handlers/moveItemHandlerV2';
@@ -56,12 +55,11 @@ export const useFileListChatContext = ({
 
         const visibleFileList = itemsRef.current
           .map(item => {
-            const path = item.item.path;
             const name = item.type === 'file' ? item.item.title : (item.item as any).name;
             const type = item.type === 'file' ? 'file' : 'directory';
-            // V2: PathServiceV2.getFullPath() is removed, construct path manually
-            const normalizedPath = PathServiceV2.normalizePath(path);
-            const filePath = normalizedPath === '/' ? `/${name}` : `/${normalizedPath}/${name}`;
+            // V2型ではpathフィールドがないため、名前のみを使用
+            // TODO: DirectoryResolverを使って完全なパスを取得
+            const filePath = `/${name}`;
             return {
               filePath,
               name,

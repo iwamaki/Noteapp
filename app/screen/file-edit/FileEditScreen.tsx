@@ -95,7 +95,7 @@ function FileEditScreen() {
   useFileEditChatContext({
     title,
     content,
-    path: file?.path || '', // Pass file.path
+    path: '', // V2型にはpathフィールドがない
     setContent,
   });
 

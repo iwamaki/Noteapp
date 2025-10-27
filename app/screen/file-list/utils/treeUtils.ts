@@ -3,24 +3,11 @@
  * @summary ツリー構造変換ユーティリティ
  * @responsibility フラットなFileSystemItemをツリー構造（TreeNode）に変換
  *
- * Note: V2への移行中。V1型（Folder, File）を使用しているため、
- * 一時的なヘルパー関数を使用してパス操作を行います。
+ * V2型に対応。pathフィールドは使用せず、slug-based階層構造を使用します。
  */
-import { FileSystemItem, Folder, File } from '@data/type';
-import { PathServiceV2 } from '../../../services/PathServiceV2';
+import { FileSystemItem, Folder, File } from '@data/types';
 import { logger } from '../../../utils/logger';
 
-/**
- * V1型用のヘルパー関数：フォルダのフルパスを取得
- * V2型への移行後は不要になります
- */
-function getFullPathV1(parentPath: string, name: string): string {
-  const normalized = PathServiceV2.normalizePath(parentPath);
-  if (normalized === '/') {
-    return `/${name}/`;
-  }
-  return `/${normalized}/${name}/`;
-}
 
 export interface TreeNode {
   id: string;
@@ -29,7 +16,6 @@ export interface TreeNode {
   children: TreeNode[];
   depth: number;
   isExpanded: boolean;
-  path: string; // フルパス（フォルダの場合）
 }
 
 /**
@@ -68,22 +54,21 @@ export function buildTree(
 }
 
 /**
- * ルートレベル（path: '/'）のアイテムを取得
+ * ルートレベルのアイテムを取得
+ * V2型では、FileListProviderから渡されるfoldersとfilesはすでに
+ * 特定のパスのアイテムなので、そのまま使用します
  */
 function getRootItems(allFolders: Folder[], allFiles: File[]): FileSystemItem[] {
-  const rootFolders = allFolders
-    .filter(f => PathServiceV2.normalizePath(f.path) === '/')
-    .map(f => ({ type: 'folder' as const, item: f }));
-
-  const rootFiles = allFiles
-    .filter(n => PathServiceV2.normalizePath(n.path) === '/')
-    .map(n => ({ type: 'file' as const, item: n }));
+  const rootFolders = allFolders.map(f => ({ type: 'folder' as const, item: f }));
+  const rootFiles = allFiles.map(n => ({ type: 'file' as const, item: n }));
 
   return [...rootFolders, ...rootFiles];
 }
 
 /**
- * TreeNodeを再帰的に構築
+ * TreeNodeを構築
+ * V2型では階層構造はFileSystemで管理されているため、
+ * 渡されたアイテムをそのままTreeNodeに変換します（子の再帰検索なし）
  */
 function buildTreeNode(
   item: FileSystemItem,
@@ -94,22 +79,11 @@ function buildTreeNode(
 ): TreeNode {
   if (item.type === 'folder') {
     const folder = item.item;
-    const folderPath = getFullPathV1(folder.path, folder.name);
     const isExpanded = expandedFolderIds.has(folder.id);
 
-
-    const childFolders = allFolders
-      .filter(f => PathServiceV2.normalizePath(f.path) === folderPath)
-      .map(f => ({ type: 'folder' as const, item: f }));
-
-    const childFiles = allFiles
-      .filter(n => PathServiceV2.normalizePath(n.path) === folderPath)
-      .map(n => ({ type: 'file' as const, item: n }));
-
-    const childItems = [...childFolders, ...childFiles];
-    const children = childItems.map(child =>
-      buildTreeNode(child, allFolders, allFiles, expandedFolderIds, depth + 1)
-    );
+    // V2型では、子アイテムはFileListProviderから
+    // 明示的に取得する必要があるため、ここでは空配列
+    const children: TreeNode[] = [];
 
     return {
       id: folder.id,
@@ -118,10 +92,9 @@ function buildTreeNode(
       children,
       depth,
       isExpanded,
-      path: folderPath,
     };
   } else {
-    // ノート
+    // ファイル
     return {
       id: item.item.id,
       type: 'file',
@@ -129,7 +102,6 @@ function buildTreeNode(
       children: [],
       depth,
       isExpanded: false,
-      path: item.item.path,
     };
   }
 }

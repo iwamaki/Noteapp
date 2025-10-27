@@ -5,7 +5,7 @@
  */
 
 import { ValidationRule, ValidationResult } from '../types';
-import { File } from '@data/type';
+import { File } from '@data/types';
 
 /**
  * バリデーションサービス

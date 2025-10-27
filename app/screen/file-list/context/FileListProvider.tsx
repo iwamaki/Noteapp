@@ -12,8 +12,7 @@ import { fileListReducer, createInitialState } from './fileListReducer';
 import { FileRepositoryV2 } from '@data/fileRepositoryV2';
 import { FolderRepositoryV2 } from '@data/folderRepositoryV2';
 import { FileListUseCasesV2 } from '../application/FileListUseCasesV2';
-import { FileSystemItem } from '@data/type';
-import { folderV2ToV1, fileV2ToV1 } from '@data/typeConversion';
+import { FileSystemItem } from '@data/types';
 import { logger } from '@utils/logger';
 
 interface FileListProviderProps {
@@ -35,18 +34,13 @@ export const FileListProvider: React.FC<FileListProviderProps> = ({ children }) 
     logger.debug('file', 'refreshData: Starting data refresh (V2).');
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
-      // V2: getAllRootItems()を使用してルートレベルのアイテムを取得
-      // TODO: 現在のpathに応じてアイテムを取得する機能を実装する必要があるかもしれません
-      const [foldersV2, filesV2] = await Promise.all([
+      // V2リポジトリを使用してルートレベルのアイテムを取得
+      const [folders, files] = await Promise.all([
         FolderRepositoryV2.getByParentPath('/'),
         FileRepositoryV2.getByFolderPath('/'),
       ]);
 
-      // V2型からV1型に変換（互換性レイヤー）
-      const folders = foldersV2.map(f => folderV2ToV1(f, '/'));
-      const files = filesV2.map(f => fileV2ToV1(f, '/'));
-
-      logger.debug('file', `refreshData: Fetched ${folders.length} folders and ${files.length} files (V2).`);
+      logger.debug('file', `refreshData: Fetched ${folders.length} folders and ${files.length} files.`);
 
       dispatch({ type: 'REFRESH_COMPLETE', payload: { folders, files } });
       logger.debug('file', 'refreshData: Dispatched REFRESH_COMPLETE.');
@@ -111,10 +105,9 @@ export const FileListProvider: React.FC<FileListProviderProps> = ({ children }) 
    */
   const createFolder = useCallback(
     async (name: string, parentPath: string) => {
-      const folderV2 = await FileListUseCasesV2.createFolder(name, parentPath);
+      const folder = await FileListUseCasesV2.createFolder(name, parentPath);
       await refreshData();
-      // V2型からV1型に変換して返す（互換性レイヤー）
-      return folderV2ToV1(folderV2, parentPath);
+      return folder;
     },
     [refreshData]
   );
@@ -124,17 +117,13 @@ export const FileListProvider: React.FC<FileListProviderProps> = ({ children }) 
    */
   const createFileWithPath = useCallback(
     async (inputPath: string, content?: string, tags?: string[]) => {
-      const fileV2 = await FileListUseCasesV2.createFileWithPath(
+      const file = await FileListUseCasesV2.createFileWithPath(
         inputPath,
         content,
         tags
       );
       await refreshData();
-      // V2型からV1型に変換して返す（互換性レイヤー）
-      // inputPathから親パスを抽出
-      const parts = inputPath.split('/').filter(Boolean);
-      const parentPath = parts.length > 1 ? `/${parts.slice(0, -1).join('/')}/` : '/';
-      return fileV2ToV1(fileV2, parentPath);
+      return file;
     },
     [refreshData]
   );
@@ -144,11 +133,9 @@ export const FileListProvider: React.FC<FileListProviderProps> = ({ children }) 
    */
   const copySelectedFiles = useCallback(
     async (fileIds: string[]) => {
-      const copiedFilesV2 = await FileListUseCasesV2.copyFiles(fileIds);
+      const copiedFiles = await FileListUseCasesV2.copyFiles(fileIds);
       await refreshData();
-      // V2型からV1型に変換して返す（互換性レイヤー）
-      // TODO: 正確な親パスを取得する必要がある場合は、FileRepositoryV2から取得
-      return copiedFilesV2.map(f => fileV2ToV1(f, '/'));
+      return copiedFiles;
     },
     [refreshData]
   );

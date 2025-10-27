@@ -1,7 +1,6 @@
 import { TreeNode } from '../screen/file-list/utils/treeUtils';
 import { FileRepositoryV2 } from '@data/fileRepositoryV2';
 import { FolderRepositoryV2 } from '@data/folderRepositoryV2';
-import { fileV2ToV1, folderV2ToV1 } from '@data/typeConversion';
 import { logger } from './logger';
 
 /**
@@ -31,17 +30,13 @@ const collectAllNodes = (nodes: TreeNode[]): TreeNode[] => {
 export const checkTreeConsistency = async (treeNodes: TreeNode[]): Promise<void> => {
   try {
 
-    // 1. Get the source of truth from storage (V2)
-    // V2では全件取得パターンが排除されているため、ここでは簡易的にルートレベルのみ取得
+    // 1. Get the source of truth from storage
+    // ルートレベルのみ取得（簡易的なデバッグ）
     // 本格的なデバッグには、再帰的に全アイテムを収集する必要があります
-    const [allFilesV2, allFoldersV2] = await Promise.all([
+    const [allFiles, allFolders] = await Promise.all([
       FileRepositoryV2.getByFolderPath('/'),
       FolderRepositoryV2.getByParentPath('/'),
     ]);
-
-    // V2型からV1型に変換（互換性レイヤー）
-    const allFiles = allFilesV2.map(f => fileV2ToV1(f, '/'));
-    const allFolders = allFoldersV2.map(f => folderV2ToV1(f, '/'));
 
     // 2. Get the UI data - collect ALL nodes including those in collapsed folders
     const allUiNodes = collectAllNodes(treeNodes);
@@ -60,7 +55,7 @@ export const checkTreeConsistency = async (treeNodes: TreeNode[]): Promise<void>
         `Storage: ${allFiles.length} files, UI: ${uiFiles.length} files.\n` +
         `Missing in UI: ${JSON.stringify(missingInUi)}\n` +
         `Extra in UI: ${JSON.stringify(extraInUi)}\n` +
-        `Storage files:\n${JSON.stringify(allFiles.map(n => ({ id: n.id, title: n.title, path: n.path })), null, 2)}`
+        `Storage files:\n${JSON.stringify(allFiles.map(n => ({ id: n.id, title: n.title })), null, 2)}`
       );
     }
 
@@ -75,7 +70,7 @@ export const checkTreeConsistency = async (treeNodes: TreeNode[]): Promise<void>
         `Storage: ${allFolders.length} folders, UI: ${uiFolders.length} folders.\n` +
         `Missing in UI: ${JSON.stringify(missingInUi)}\n` +
         `Extra in UI: ${JSON.stringify(extraInUi)}\n` +
-        `Storage folders:\n${JSON.stringify(allFolders.map(f => ({ id: f.id, name: f.name, path: f.path })), null, 2)}`
+        `Storage folders:\n${JSON.stringify(allFolders.map(f => ({ id: f.id, name: f.name, slug: f.slug })), null, 2)}`
       );
     }
 
@@ -119,15 +114,11 @@ export const checkTreeConsistency = async (treeNodes: TreeNode[]): Promise<void>
  */
 export const logStorageState = async (): Promise<void> => {
   try {
-    // V2リポジトリから取得（ルートレベルのみ）
-    const [allFilesV2, allFoldersV2] = await Promise.all([
+    // リポジトリから取得（ルートレベルのみ）
+    const [allFiles, allFolders] = await Promise.all([
       FileRepositoryV2.getByFolderPath('/'),
       FolderRepositoryV2.getByParentPath('/'),
     ]);
-
-    // V2型からV1型に変換
-    const allFiles = allFilesV2.map(f => fileV2ToV1(f, '/'));
-    const allFolders = allFoldersV2.map(f => folderV2ToV1(f, '/'));
 
     console.log('📦 Current Storage State:');
     console.log(`  Files: ${allFiles.length}`);
@@ -136,14 +127,14 @@ export const logStorageState = async (): Promise<void> => {
     if (allFolders.length > 0) {
       console.log('  Folder structure:');
       allFolders.forEach(f => {
-        console.log(`    - ${f.name} (path: ${f.path}, id: ${f.id})`);
+        console.log(`    - ${f.name} (slug: ${f.slug}, id: ${f.id})`);
       });
     }
 
     if (allFiles.length > 0) {
       console.log('  File structure:');
       allFiles.forEach(n => {
-        console.log(`    - ${n.title} (path: ${n.path}, id: ${n.id})`);
+        console.log(`    - ${n.title} (id: ${n.id})`);
       });
     }
   } catch (error) {
