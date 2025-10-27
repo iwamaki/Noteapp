@@ -14,13 +14,13 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import {
-  FolderV2,
-  CreateFolderDataV2,
-  UpdateFolderDataV2,
+  Folder,
+  CreateFolderData,
+  UpdateFolderData,
   generateSlug,
-  folderV2ToMetadata,
-  metadataToFolderV2,
-} from './typeV2';
+  folderToMetadata,
+  metadataToFolder,
+} from './types';
 import * as FileSystemUtilsV2 from './fileSystemUtilsV2';
 import { DirectoryResolver } from './directoryResolver';
 import { FileSystemV2Error } from './fileSystemUtilsV2';
@@ -47,14 +47,14 @@ export class FolderRepositoryV2 {
    * @example
    * const folder = await FolderRepositoryV2.getById('folder-uuid-123');
    */
-  static async getById(id: string): Promise<FolderV2 | null> {
+  static async getById(id: string): Promise<Folder | null> {
     try {
       // ルートフォルダの特別処理
       if (id === 'root') {
         const rootDir = DirectoryResolver.getRootDirectory();
         const metadata = await FileSystemUtilsV2.readFolderMetadata(rootDir);
         if (metadata) {
-          return metadataToFolderV2(metadata);
+          return metadataToFolder(metadata);
         }
         return null;
       }
@@ -71,7 +71,7 @@ export class FolderRepositoryV2 {
         return null;
       }
 
-      return metadataToFolderV2(metadata);
+      return metadataToFolder(metadata);
     } catch (e) {
       throw new FileSystemV2Error(
         `Failed to get folder by ID: ${id}`,
@@ -94,7 +94,7 @@ export class FolderRepositoryV2 {
    * // サブフォルダ内のフォルダを取得
    * const subfolders = await FolderRepositoryV2.getByParentPath('/my-folder/');
    */
-  static async getByParentPath(parentPath: string): Promise<FolderV2[]> {
+  static async getByParentPath(parentPath: string): Promise<Folder[]> {
     try {
       // 親フォルダディレクトリを解決
       const parentDir = await DirectoryResolver.resolveFolderDirectory(parentPath);
@@ -105,8 +105,8 @@ export class FolderRepositoryV2 {
       // サブフォルダメタデータを取得
       const metadataList = await FileSystemUtilsV2.listSubfoldersInFolder(parentDir);
 
-      // メタデータをFolderV2に変換
-      return metadataList.map(metadataToFolderV2);
+      // メタデータをFolderに変換
+      return metadataList.map(metadataToFolder);
     } catch (e) {
       throw new FileSystemV2Error(
         `Failed to get folders by parent path: ${parentPath}`,
@@ -122,7 +122,7 @@ export class FolderRepositoryV2 {
    * @param folderIds - フォルダIDの配列
    * @returns フォルダの配列
    */
-  static async getByIds(folderIds: string[]): Promise<FolderV2[]> {
+  static async getByIds(folderIds: string[]): Promise<Folder[]> {
     try {
       // 並行検索
       const results = await Promise.all(
@@ -132,7 +132,7 @@ export class FolderRepositoryV2 {
       );
 
       // nullを除外
-      return results.filter((folder): folder is FolderV2 => folder !== null);
+      return results.filter((folder): folder is Folder => folder !== null);
     } catch (e) {
       throw new FileSystemV2Error(
         `Failed to get folders by IDs`,
@@ -159,7 +159,7 @@ export class FolderRepositoryV2 {
    *   '/'
    * );
    */
-  static async create(data: CreateFolderDataV2, parentPath: string): Promise<FolderV2> {
+  static async create(data: CreateFolderData, parentPath: string): Promise<Folder> {
     try {
       // 親フォルダディレクトリを解決
       const parentDir = await DirectoryResolver.resolveFolderDirectory(parentPath);
@@ -194,7 +194,7 @@ export class FolderRepositoryV2 {
       const now = new Date();
       const folderId = uuidv4();
 
-      const newFolder: FolderV2 = {
+      const newFolder: Folder = {
         id: folderId,
         name: data.name,
         slug: finalSlug,
@@ -202,7 +202,7 @@ export class FolderRepositoryV2 {
         updatedAt: now,
       };
 
-      const metadata = folderV2ToMetadata(newFolder);
+      const metadata = folderToMetadata(newFolder);
 
       // フォルダディレクトリを作成
       await FileSystemUtilsV2.createFolderDirectory(parentDir, finalSlug, metadata);
@@ -231,7 +231,7 @@ export class FolderRepositoryV2 {
    * リネームすると、slugも再生成されディレクトリ名も変更されます。
    * 中身（サブフォルダ・ファイル）は自動的に移動されます。
    */
-  static async rename(id: string, newName: string): Promise<FolderV2> {
+  static async rename(id: string, newName: string): Promise<Folder> {
     try {
       // ルートフォルダはリネーム不可
       if (id === 'root') {
@@ -256,7 +256,7 @@ export class FolderRepositoryV2 {
         );
       }
 
-      const existingFolder = metadataToFolderV2(existingMetadata);
+      const existingFolder = metadataToFolder(existingMetadata);
 
       // 新しいslugを生成
       let newSlug = generateSlug(newName);
@@ -289,14 +289,14 @@ export class FolderRepositoryV2 {
       }
 
       // 更新されたフォルダ
-      const updatedFolder: FolderV2 = {
+      const updatedFolder: Folder = {
         ...existingFolder,
         name: newName,
         slug: finalSlug,
         updatedAt: new Date(),
       };
 
-      const updatedMetadata = folderV2ToMetadata(updatedFolder);
+      const updatedMetadata = folderToMetadata(updatedFolder);
 
       // slugが変わる場合は、ディレクトリを移動
       if (finalSlug !== existingFolder.slug) {
@@ -347,7 +347,7 @@ export class FolderRepositoryV2 {
    * @param data - 更新データ
    * @returns 更新されたフォルダ
    */
-  static async update(id: string, data: UpdateFolderDataV2): Promise<FolderV2> {
+  static async update(id: string, data: UpdateFolderData): Promise<Folder> {
     try {
       // 名前の更新がある場合はrenameを使用
       if (data.name !== undefined) {

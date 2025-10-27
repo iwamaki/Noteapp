@@ -14,7 +14,7 @@ import { FolderRepositoryV2 } from '@data/folderRepositoryV2';
 import { DirectoryResolver } from '@data/directoryResolver';
 import { Directory } from 'expo-file-system';
 import * as FileSystemUtilsV2 from '@data/fileSystemUtilsV2';
-import { metadataToFolderV2 } from '@data/typeV2';
+import { metadataToFolder } from '@data/types';
 
 /**
  * シングルトンクラスとして機能し、アプリケーション全体でチャットの状態を管理します。

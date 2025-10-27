@@ -26,10 +26,10 @@
 
 import { Paths, Directory, File as FSFile } from 'expo-file-system';
 import type {
-  FileMetadataV2,
-  FolderMetadataV2,
-  VersionMetadataV2,
-} from './typeV2';
+  FileMetadata,
+  FolderMetadata,
+  VersionMetadata,
+} from './types';
 
 // =============================================================================
 // Directory Path Definitions
@@ -98,7 +98,7 @@ export const initializeFileSystemV2 = async (): Promise<void> => {
     // ルートフォルダのメタデータを初期化
     const rootMetadataFile = new FSFile(ROOT_DIR, FOLDER_METADATA_FILENAME);
     if (!(await rootMetadataFile.exists)) {
-      const rootMetadata: FolderMetadataV2 = {
+      const rootMetadata: FolderMetadata = {
         id: 'root',
         name: 'Root',
         slug: 'root',
@@ -130,7 +130,7 @@ export const initializeFileSystemV2 = async (): Promise<void> => {
 export const createFolderDirectory = async (
   parentDir: Directory,
   folderSlug: string,
-  metadata: FolderMetadataV2
+  metadata: FolderMetadata
 ): Promise<void> => {
   try {
     const folderDir = new Directory(parentDir, folderSlug);
@@ -168,7 +168,7 @@ export const createFolderDirectory = async (
  */
 export const readFolderMetadata = async (
   folderDir: Directory
-): Promise<FolderMetadataV2 | null> => {
+): Promise<FolderMetadata | null> => {
   try {
     const metadataFile = new FSFile(folderDir, FOLDER_METADATA_FILENAME);
 
@@ -177,7 +177,7 @@ export const readFolderMetadata = async (
     }
 
     const content = await metadataFile.text();
-    return JSON.parse(content) as FolderMetadataV2;
+    return JSON.parse(content) as FolderMetadata;
   } catch (e) {
     throw new FileSystemV2Error(
       `Failed to read folder metadata: ${folderDir.uri}`,
@@ -195,7 +195,7 @@ export const readFolderMetadata = async (
  */
 export const writeFolderMetadata = async (
   folderDir: Directory,
-  metadata: FolderMetadataV2
+  metadata: FolderMetadata
 ): Promise<void> => {
   try {
     const metadataFile = new FSFile(folderDir, FOLDER_METADATA_FILENAME);
@@ -243,7 +243,7 @@ export const deleteFolderDirectory = async (folderDir: Directory): Promise<void>
 export const createFileDirectory = async (
   parentDir: Directory,
   fileId: string,
-  metadata: FileMetadataV2,
+  metadata: FileMetadata,
   content: string
 ): Promise<void> => {
   try {
@@ -286,7 +286,7 @@ export const createFileDirectory = async (
  */
 export const readFileMetadata = async (
   fileDir: Directory
-): Promise<FileMetadataV2 | null> => {
+): Promise<FileMetadata | null> => {
   try {
     const metadataFile = new FSFile(fileDir, FILE_METADATA_FILENAME);
 
@@ -295,7 +295,7 @@ export const readFileMetadata = async (
     }
 
     const content = await metadataFile.text();
-    return JSON.parse(content) as FileMetadataV2;
+    return JSON.parse(content) as FileMetadata;
   } catch (e) {
     throw new FileSystemV2Error(
       `Failed to read file metadata: ${fileDir.uri}`,
@@ -343,7 +343,7 @@ export const readFileContent = async (fileDir: Directory): Promise<string> => {
  */
 export const writeFileMetadata = async (
   fileDir: Directory,
-  metadata: FileMetadataV2
+  metadata: FileMetadata
 ): Promise<void> => {
   try {
     const metadataFile = new FSFile(fileDir, FILE_METADATA_FILENAME);
@@ -410,14 +410,14 @@ export const deleteFileDirectory = async (fileDir: Directory): Promise<void> => 
  */
 export const listFilesInFolder = async (
   folderDir: Directory
-): Promise<FileMetadataV2[]> => {
+): Promise<FileMetadata[]> => {
   try {
     if (!(await folderDir.exists)) {
       return [];
     }
 
     const items = await folderDir.list();
-    const fileMetadataList: FileMetadataV2[] = [];
+    const fileMetadataList: FileMetadata[] = [];
 
     // 各アイテムをチェックして、ファイルディレクトリかどうか判定
     for (const item of items) {
@@ -453,14 +453,14 @@ export const listFilesInFolder = async (
  */
 export const listSubfoldersInFolder = async (
   folderDir: Directory
-): Promise<FolderMetadataV2[]> => {
+): Promise<FolderMetadata[]> => {
   try {
     if (!(await folderDir.exists)) {
       return [];
     }
 
     const items = await folderDir.list();
-    const folderMetadataList: FolderMetadataV2[] = [];
+    const folderMetadataList: FolderMetadata[] = [];
 
     // 各アイテムをチェックして、フォルダディレクトリかどうか判定
     for (const item of items) {

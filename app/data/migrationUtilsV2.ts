@@ -13,7 +13,7 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { File, Folder, FileVersion } from './type';
+import { File as FileV1, Folder as FolderV1, FileVersion as FileVersionV1 } from './typeV1';
 import {
   getAllFilesRawFS,
   getAllFoldersRawFS,
@@ -23,12 +23,12 @@ import * as FileSystemUtilsV2 from './fileSystemUtilsV2';
 import { DirectoryResolver } from './directoryResolver';
 import {
   generateSlug,
-  FolderV2,
-  FileV2,
-  FileVersionV2,
-  folderV2ToMetadata,
-  fileV2ToMetadata,
-} from './typeV2';
+  Folder,
+  File,
+  FileVersion,
+  folderToMetadata,
+  fileToMetadata,
+} from './types';
 import { Directory } from 'expo-file-system';
 
 // =============================================================================
@@ -330,7 +330,7 @@ const migrateFolders = async (
     }
 
     // フォルダメタデータを作成
-    const folderV2: FolderV2 = {
+    const folderV2: Folder = {
       id: folder.id,
       name: folder.name,
       slug: finalSlug,
@@ -338,7 +338,7 @@ const migrateFolders = async (
       updatedAt: folder.updatedAt,
     };
 
-    const metadata = folderV2ToMetadata(folderV2);
+    const metadata = folderToMetadata(folderV2);
 
     // フォルダディレクトリを作成
     await FileSystemUtilsV2.createFolderDirectory(parentDir, finalSlug, metadata);
@@ -419,7 +419,7 @@ const migrateFiles = async (
     }
 
     // ファイルV2データを作成
-    const fileV2: FileV2 = {
+    const fileV2: File = {
       id: file.id,
       title: file.title,
       content: file.content,
@@ -429,7 +429,7 @@ const migrateFiles = async (
       updatedAt: file.updatedAt,
     };
 
-    const metadata = fileV2ToMetadata(fileV2);
+    const metadata = fileToMetadata(fileV2);
 
     // ファイルディレクトリを作成
     await FileSystemUtilsV2.createFileDirectory(folderDir, file.id, metadata, file.content);

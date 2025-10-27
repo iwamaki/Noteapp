@@ -7,7 +7,7 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { File, Folder, FileVersion } from './type';
+import { File, Folder, FileVersion } from './typeV1';
 import {
   getAllFilesRaw,
   getAllFoldersRaw,
@@ -18,7 +18,7 @@ import {
   STORAGE_KEYS,
 } from './storageService';
 import * as FileSystemUtils from './fileSystemUtils';
-import { fileToMetadata, folderToMetadata, versionToMetadata } from './type';
+import { fileToMetadata, folderToMetadata, versionToMetadata } from './typeV1';
 
 // --- Constants ---
 const MIGRATION_STATUS_KEY = '@migration_completed';

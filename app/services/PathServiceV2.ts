@@ -12,7 +12,7 @@
  * - ✅ generateSlug() 追加 → typeV2から移動（中央管理）
  */
 
-import { generateSlug as generateSlugFromType } from '../data/typeV2';
+import { generateSlug as generateSlugFromType } from '../data/types';
 
 /**
  * 最小限のパスユーティリティサービス（V2）
