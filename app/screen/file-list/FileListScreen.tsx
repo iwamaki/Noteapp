@@ -43,7 +43,8 @@ function FileListScreenContent() {
   useEffect(() => {
     logger.info('file', 'FileListScreen: Initial data refresh triggered.');
     actions.refreshData();
-  }, [actions]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // 現在のパス（固定値）
   const currentPath = '/';
