@@ -14,7 +14,7 @@ import { useKeyboardHeight } from '../../contexts/KeyboardHeightContext';
 import { FileListProvider, useFileListContext } from './context';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/types';
-import { FileSystemItem, Folder } from '@data/types';
+import { FileSystemItem, Folder } from '@data/core/types';
 import { logger } from '../../utils/logger';
 import { useSettingsStore } from '../../settings/settingsStore';
 

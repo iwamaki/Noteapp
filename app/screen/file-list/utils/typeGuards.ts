@@ -1,5 +1,5 @@
 // app/screen/file-list/utils/typeGuards.ts
-import { FileSystemItem, Folder, File } from '@data/types';
+import { FileSystemItem, Folder, File } from '@data/core/types';
 import { TreeNode } from './treeUtils';
 
 /**

@@ -11,8 +11,8 @@
  * - ✅ コード量40%以上削減（195行 → ~110行）
  */
 
-import { File } from '@data/types';
-import { FileRepositoryV2 } from '@data/fileRepositoryV2';
+import { File } from '@data/core/types';
+import { FileRepositoryV2 } from '@data/repositories/fileRepositoryV2';
 
 /**
  * バリデーション結果の型

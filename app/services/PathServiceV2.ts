@@ -12,7 +12,7 @@
  * - ✅ generateSlug() 追加 → typeV2から移動（中央管理）
  */
 
-import { generateSlug as generateSlugFromType } from '../data/types';
+import { generateSlug as generateSlugFromCore } from '../data/core/slugUtils';
 
 /**
  * 最小限のパスユーティリティサービス（V2）
@@ -57,6 +57,6 @@ export class PathServiceV2 {
    * generateSlug("日本語フォルダ") → "日本語-フォルダ"
    */
   static generateSlug(name: string): string {
-    return generateSlugFromType(name);
+    return generateSlugFromCore(name);
   }
 }

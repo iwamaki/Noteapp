@@ -11,7 +11,7 @@
 import { LLMCommand } from '../llmService/types/types';
 import { CommandHandler, CommandHandlerContext } from './types';
 import { logger } from '../../../utils/logger';
-import { FolderRepositoryV2 } from '@data/folderRepositoryV2';
+import { FolderRepositoryV2 } from '@data/repositories/folderRepositoryV2';
 
 /**
  * create_directoryコマンドのハンドラ（V2）

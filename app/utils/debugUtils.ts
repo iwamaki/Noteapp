@@ -1,6 +1,6 @@
 import { TreeNode } from '../screen/file-list/utils/treeUtils';
-import { FileRepositoryV2 } from '@data/fileRepositoryV2';
-import { FolderRepositoryV2 } from '@data/folderRepositoryV2';
+import { FileRepositoryV2 } from '@data/repositories/fileRepositoryV2';
+import { FolderRepositoryV2 } from '@data/repositories/folderRepositoryV2';
 import { logger } from './logger';
 
 /**

@@ -17,8 +17,8 @@ import {
   listSubfoldersInFolder,
   listFilesInFolder,
   getContentDirectory,
-  FileSystemV2Error,
 } from './fileSystemUtilsV2';
+import { FileSystemV2Error } from '../core/errors';
 
 // =============================================================================
 // Constants

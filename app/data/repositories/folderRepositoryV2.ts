@@ -13,21 +13,23 @@
  */
 
 import { v4 as uuidv4 } from 'uuid';
-import {
+import type {
   Folder,
   CreateFolderData,
   UpdateFolderData,
-  generateSlug,
+} from '../core/types';
+import {
   folderToMetadata,
   metadataToFolder,
-} from './types';
-import * as FileSystemUtilsV2 from './fileSystemUtilsV2';
-import { DirectoryResolver } from './directoryResolver';
-import { FileSystemV2Error } from './fileSystemUtilsV2';
-import { Directory, File as FSFile } from 'expo-file-system';
+} from '../core/converters';
+import { generateSlug } from '../core/slugUtils';
+import * as FileSystemUtilsV2 from '../infrastructure/fileSystemUtilsV2';
+import { DirectoryResolver } from '../infrastructure/directoryResolver';
+import { FileSystemV2Error, RepositoryError } from '../core/errors';
+import { Directory } from 'expo-file-system';
 
-// Re-export FileSystemV2Error for consumers
-export { FileSystemV2Error };
+// Re-export errors for consumers
+export { FileSystemV2Error, RepositoryError };
 
 /**
  * V2フォルダリポジトリ
@@ -315,7 +317,7 @@ export class FolderRepositoryV2 {
             const targetSubDir = new Directory(newFolderDir, itemName);
 
             // ディレクトリごとコピー（再帰的にコピー）
-            await this.copyDirectoryRecursive(item, targetSubDir);
+            await FileSystemUtilsV2.copyDirectoryRecursive(item, targetSubDir);
           }
           // Fileの場合はcopyDirectoryRecursive内で処理されるのでスキップ
         }
@@ -486,7 +488,7 @@ export class FolderRepositoryV2 {
       const targetFolderDir = new Directory(targetParentDir, metadata.slug);
 
       // ディレクトリごとコピー
-      await this.copyDirectoryRecursive(sourceFolderDir, targetFolderDir);
+      await FileSystemUtilsV2.copyDirectoryRecursive(sourceFolderDir, targetFolderDir);
 
       // ソースフォルダディレクトリを削除
       await FileSystemUtilsV2.deleteFolderDirectory(sourceFolderDir);
@@ -502,44 +504,4 @@ export class FolderRepositoryV2 {
     }
   }
 
-  // =============================================================================
-  // 内部ヘルパーメソッド
-  // =============================================================================
-
-  /**
-   * ディレクトリを再帰的にコピー
-   *
-   * @param sourceDir - コピー元ディレクトリ
-   * @param targetDir - コピー先ディレクトリ
-   * @internal
-   */
-  private static async copyDirectoryRecursive(
-    sourceDir: Directory,
-    targetDir: Directory
-  ): Promise<void> {
-    // ターゲットディレクトリを作成
-    if (!(await targetDir.exists)) {
-      await targetDir.create();
-    }
-
-    // ソースディレクトリの内容をリスト化
-    const items = await sourceDir.list();
-
-    for (const item of items) {
-      const itemName = item.uri.split('/').pop() || '';
-
-      if (item instanceof Directory) {
-        // サブディレクトリを再帰的にコピー
-        const targetSubDir = new Directory(targetDir, itemName);
-        await this.copyDirectoryRecursive(item, targetSubDir);
-      } else if (item instanceof FSFile) {
-        // ファイルをコピー
-        const content = await item.text();
-
-        // ターゲットファイルを作成
-        const targetFile = new FSFile(targetDir, itemName);
-        await targetFile.write(content);
-      }
-    }
-  }
 }

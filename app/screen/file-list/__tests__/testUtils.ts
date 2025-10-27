@@ -1,5 +1,5 @@
 // app/screen/file-list/__tests__/testUtils.ts
-import { File, Folder } from '@data/types';
+import { File, Folder } from '@data/core/types';
 
 /**
  * テスト用のモックデータ生成ユーティリティ
