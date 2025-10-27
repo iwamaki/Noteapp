@@ -28,7 +28,6 @@ import { Paths, Directory, File as FSFile } from 'expo-file-system';
 import type {
   FileMetadata,
   FolderMetadata,
-  VersionMetadata,
 } from './types';
 
 // =============================================================================

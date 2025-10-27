@@ -19,9 +19,7 @@ import {
   CreateFileData,
   UpdateFileData,
   fileToMetadata,
-  versionToMetadata,
   metadataToFile,
-  metadataToVersion,
 } from './types';
 import * as FileSystemUtilsV2 from './fileSystemUtilsV2';
 import { DirectoryResolver } from './directoryResolver';
