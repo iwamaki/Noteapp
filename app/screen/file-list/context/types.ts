@@ -3,7 +3,7 @@
  * @summary FileListContext用の型定義
  */
 
-import { File, Folder, FileSystemItem } from '@data/type';
+import { File, Folder, FileSystemItem } from '@data/types';
 import { TreeNode } from '../utils/treeUtils';
 
 /**

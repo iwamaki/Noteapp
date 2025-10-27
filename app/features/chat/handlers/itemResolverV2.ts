@@ -8,7 +8,7 @@
  * - ✅ シンプルで効率的な実装
  */
 
-import { FileV2, FolderV2, metadataToFolderV2 } from '@data/typeV2';
+import { File, Folder, metadataToFolder } from '@data/types';
 import { FileRepositoryV2 } from '@data/fileRepositoryV2';
 import { DirectoryResolver } from '@data/directoryResolver';
 import * as FileSystemUtilsV2 from '@data/fileSystemUtilsV2';
@@ -21,7 +21,7 @@ import { logger } from '../../../utils/logger';
 export interface ResolvedItemV2 {
   type: 'file' | 'folder';
   id: string;
-  item: FileV2 | FolderV2;
+  item: File | Folder;
   fullPath: string;
 }
 
@@ -72,7 +72,7 @@ export async function findItemByPathV2(
         return null;
       }
 
-      const folder = metadataToFolderV2(metadata);
+      const folder = metadataToFolder(metadata);
 
       logger.debug('itemResolver', 'Found folder by path', {
         path: trimmedPath,

@@ -12,11 +12,11 @@
  */
 
 import {
-  FileV2,
-  FolderV2,
-  CreateFileDataV2,
-  CreateFolderDataV2,
-} from '@data/typeV2';
+  File,
+  Folder,
+  CreateFileData,
+  CreateFolderData,
+} from '@data/types';
 import { FileRepositoryV2 } from '@data/fileRepositoryV2';
 import { FolderRepositoryV2 } from '@data/folderRepositoryV2';
 import { FileDomainServiceV2 } from '../domain/FileDomainServiceV2';
@@ -177,7 +177,7 @@ export class FileListUseCasesV2 {
     inputPath: string,
     content: string = '',
     tags: string[] = []
-  ): Promise<FileV2> {
+  ): Promise<File> {
     // 1. パスをパース
     const trimmed = inputPath.trim();
     const parts = trimmed.split('/').filter(Boolean);
@@ -234,7 +234,7 @@ export class FileListUseCasesV2 {
     }
 
     // 5. ファイルを作成
-    const fileData: CreateFileDataV2 = {
+    const fileData: CreateFileData = {
       title: fileName,
       content,
       tags,
@@ -253,7 +253,7 @@ export class FileListUseCasesV2 {
    * @returns 作成されたフォルダ
    * @throws バリデーションエラー、重複エラー
    */
-  static async createFolder(name: string, parentPath: string): Promise<FolderV2> {
+  static async createFolder(name: string, parentPath: string): Promise<Folder> {
     // 1. バリデーション
     const validation = FolderDomainServiceV2.validateFolderName(name);
     if (!validation.valid) {
@@ -271,7 +271,7 @@ export class FileListUseCasesV2 {
 
     // 3. 作成
     const normalizedParentPath = PathServiceV2.normalizePath(parentPath);
-    const folderData: CreateFolderDataV2 = {
+    const folderData: CreateFolderData = {
       name,
     };
 
@@ -287,7 +287,7 @@ export class FileListUseCasesV2 {
    * @param fileIds コピーするファイルIDの配列
    * @returns コピーされたファイルの配列
    */
-  static async copyFiles(fileIds: string[]): Promise<FileV2[]> {
+  static async copyFiles(fileIds: string[]): Promise<File[]> {
     // バリデーション
     const validation = await FileDomainServiceV2.validateCopyOperation(fileIds);
     if (!validation.valid) {
@@ -296,7 +296,7 @@ export class FileListUseCasesV2 {
 
     // TODO: 各ファイルの親フォルダを取得して、そのフォルダ内にコピーする実装が必要
     // 現時点では簡易実装
-    const copiedFiles: FileV2[] = [];
+    const copiedFiles: File[] = [];
     for (const fileId of fileIds) {
       const file = await FileRepositoryV2.getById(fileId);
       if (!file) continue;

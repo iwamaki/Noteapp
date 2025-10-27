@@ -12,7 +12,7 @@
  * - ✅ コード量50%以上削減（261行 → ~130行）
  */
 
-import { FolderV2 } from '@data/typeV2';
+import { Folder } from '@data/types';
 import { FolderRepositoryV2 } from '@data/folderRepositoryV2';
 import { FileRepositoryV2 } from '@data/fileRepositoryV2';
 import { PathServiceV2 } from '../../../services/PathServiceV2';
@@ -30,7 +30,7 @@ export interface ValidationResult {
  */
 export interface DuplicateCheckResult {
   isDuplicate: boolean;
-  existing?: FolderV2;
+  existing?: Folder;
 }
 
 /**
@@ -119,7 +119,7 @@ export class FolderDomainServiceV2 {
    * @param parentFolderPath 親フォルダパス
    * @returns 子フォルダの配列
    */
-  static async getChildFolders(parentFolderPath: string): Promise<FolderV2[]> {
+  static async getChildFolders(parentFolderPath: string): Promise<Folder[]> {
     return FolderRepositoryV2.getByParentPath(parentFolderPath);
   }
 

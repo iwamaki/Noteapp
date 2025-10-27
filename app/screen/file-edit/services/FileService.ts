@@ -8,8 +8,7 @@ import { FileRepositoryV2 } from '@data/fileRepositoryV2';
 import { ValidationService } from './ValidationService';
 import { ErrorService } from './ErrorService';
 import { File, ErrorCode, EditorError } from '../types';
-import { CreateFileData, UpdateFileData } from '@data/type';
-import { fileV2ToV1, fileV1ToV2 } from '@data/typeConversion';
+import { CreateFileData, UpdateFileData } from '@data/types';
 
 /**
  * ノートサービス
@@ -22,13 +21,13 @@ export class FileService {
   ) {}
 
   /**
-   * ファイルを読み込む（V2）
+   * ファイルを読み込む
    */
   async loadFile(id: string): Promise<File> {
     try {
-      const fileV2 = await FileRepositoryV2.getById(id);
+      const file = await FileRepositoryV2.getById(id);
 
-      if (!fileV2) {
+      if (!file) {
         const error: EditorError = {
           code: ErrorCode.NOT_FOUND,
           message: `ファイル(ID: ${id})が見つかりませんでした。`,
@@ -37,9 +36,7 @@ export class FileService {
         throw error;
       }
 
-      // V2型からV1型に変換（互換性レイヤー）
-      // TODO: 正確な親パスを取得する必要がある場合は、DirectoryResolverから取得
-      return fileV2ToV1(fileV2, '/');
+      return file;
     } catch (error) {
       // EditorErrorの場合はそのまま再スロー
       if ((error as EditorError).code) {
@@ -74,18 +71,18 @@ export class FileService {
 
     try {
       if (data.id) {
-        // 既存ファイルの更新（V2）
-        const fileV2 = await FileRepositoryV2.updateWithVersion(data.id, {
+        // 既存ファイルの更新
+        const file = await FileRepositoryV2.updateWithVersion(data.id, {
           title: data.title,
           content: data.content,
           tags: data.tags,
         });
-        // V2型からV1型に変換
-        return fileV2ToV1(fileV2, data.path || '/');
+        return file;
       } else {
-        // 新規ファイルの作成（V2）
-        const folderPath = data.path || '/';
-        const fileV2 = await FileRepositoryV2.createWithVersion(
+        // 新規ファイルの作成
+        // TODO: 親フォルダパスを引数として受け取る必要がある
+        const folderPath = '/'; // デフォルトはルート
+        const file = await FileRepositoryV2.createWithVersion(
           {
             title: data.title || '',
             content: data.content || '',
@@ -93,8 +90,7 @@ export class FileService {
           },
           folderPath
         );
-        // V2型からV1型に変換
-        return fileV2ToV1(fileV2, folderPath);
+        return file;
       }
     } catch {
       const editorError: EditorError = {
@@ -142,14 +138,12 @@ export class FileService {
   }
 
   /**
-   * ファイルを特定のバージョンに復元（V2）
+   * ファイルを特定のバージョンに復元
    */
   async restoreVersion(fileId: string, versionId: string): Promise<File> {
     try {
-      const fileV2 = await FileRepositoryV2.restoreVersion(fileId, versionId);
-      // V2型からV1型に変換
-      // TODO: 正確な親パスを取得する必要がある場合は、DirectoryResolverから取得
-      return fileV2ToV1(fileV2, '/');
+      const file = await FileRepositoryV2.restoreVersion(fileId, versionId);
+      return file;
     } catch {
       const editorError: EditorError = {
         code: ErrorCode.STORAGE_ERROR,

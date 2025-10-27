@@ -1,5 +1,5 @@
 // app/screen/file-list/__tests__/testUtils.ts
-import { File, Folder } from '@data/type';
+import { File, Folder } from '@data/types';
 
 /**
  * テスト用のモックデータ生成ユーティリティ
@@ -12,7 +12,6 @@ export const createMockFile = (overrides: Partial<File> = {}): File => {
     title: 'Test File',
     content: 'Test content',
     tags: [],
-    path: '/',
     createdAt: now,
     updatedAt: now,
     version: 1,
@@ -25,7 +24,7 @@ export const createMockFolder = (overrides: Partial<Folder> = {}): Folder => {
   return {
     id: `folder-${Date.now()}-${Math.random()}`,
     name: 'Test Folder',
-    path: '/',
+    slug: 'test-folder',
     createdAt: now,
     updatedAt: now,
     ...overrides,
@@ -37,7 +36,6 @@ export const createMockFiles = (count: number, basePath: string = '/'): File[] =
     createMockFile({
       title: `File ${i + 1}`,
       content: `Content for file ${i + 1}`,
-      path: basePath,
     })
   );
 };
@@ -46,7 +44,7 @@ export const createMockFolders = (count: number, basePath: string = '/'): Folder
   return Array.from({ length: count }, (_, i) =>
     createMockFolder({
       name: `Folder ${i + 1}`,
-      path: basePath,
+      slug: `folder-${i + 1}`,
     })
   );
 };

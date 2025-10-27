@@ -14,7 +14,7 @@ import { useKeyboardHeight } from '../../contexts/KeyboardHeightContext';
 import { FileListProvider, useFileListContext } from './context';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/types';
-import { FileSystemItem, Folder } from '@data/type';
+import { FileSystemItem, Folder } from '@data/types';
 import { logger } from '../../utils/logger';
 import { useSettingsStore } from '../../settings/settingsStore';
 
@@ -70,7 +70,9 @@ function FileListScreenContent() {
       logger.info('file', `Move mode active. Attempting to move item to folder: ${item.item.id}`);
       if (item.type === 'folder') {
         const folder = item.item as Folder;
-        const targetPath = `${folder.path.endsWith('/') ? folder.path.slice(0, -1) : folder.path}/${folder.name}`;
+        // V2型ではslugを使ってパスを構築
+        // TODO: DirectoryResolverを使って正確なパスを取得する
+        const targetPath = `/${folder.slug}`;
         actions.moveSelectedItems(
           Array.from(state.selectedFileIds),
           Array.from(state.selectedFolderIds),
@@ -324,7 +326,8 @@ function FileListScreenContent() {
         onLongPress={() => handleLongPressItem(fileSystemItem)}
         isMoveMode={state.isMoveMode}
         onSelectDestinationFolder={(folder: Folder) => {
-          const targetPath = `${folder.path.endsWith('/') ? folder.path.slice(0, -1) : folder.path}/${folder.name}`;
+          // V2型ではslugを使ってパスを構築
+          const targetPath = `/${folder.slug}`;
           logger.info('file', `TreeListItem: Attempting to move selected items to destination folder: ${targetPath}`);
           actions.moveSelectedItems(
             Array.from(state.selectedFileIds),
