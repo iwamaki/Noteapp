@@ -1,14 +1,13 @@
 /**
- * @file typeV2.ts
- * @summary V2型定義 - expo-file-systemの自然な階層構造を活用
+ * @file types.ts
+ * @summary 型定義 - expo-file-systemの自然な階層構造を活用
  * @description
- * AsyncStorageの名残である`path`フィールドを削除し、
  * ディレクトリ構造がデータ構造を自然に表現する設計。
  *
- * 主な変更点:
- * - File/Folder から path フィールドを削除
- * - Folder に slug フィールドを追加（ディレクトリ名）
- * - メタデータ型を V2 用に刷新
+ * 主な特徴:
+ * - File/Folder に path フィールドなし（ディレクトリ構造が階層を表現）
+ * - Folder に slug フィールド（ディレクトリ名）
+ * - メタデータとコンテンツを分離
  */
 
 // =============================================================================
@@ -16,11 +15,11 @@
 // =============================================================================
 
 /**
- * フォルダ（V2）
- * - path フィールドを削除: ディレクトリ構造が階層を表現
- * - slug フィールドを追加: ファイルシステム上のディレクトリ名
+ * フォルダ
+ * - ディレクトリ構造が階層を表現
+ * - slug フィールド: ファイルシステム上のディレクトリ名
  */
-export interface FolderV2 {
+export interface Folder {
   id: string;
   name: string;           // 表示名（例: "My Folder"）
   slug: string;           // ディレクトリ名（例: "my-folder"、URL-safe）
@@ -29,10 +28,10 @@ export interface FolderV2 {
 }
 
 /**
- * ファイル（V2）
- * - path フィールドを削除: 親ディレクトリが階層を表現
+ * ファイル
+ * - 親ディレクトリが階層を表現
  */
-export interface FileV2 {
+export interface File {
   id: string;
   title: string;
   content: string;        // 実行時のみ保持（保存時は分離）
@@ -43,10 +42,9 @@ export interface FileV2 {
 }
 
 /**
- * バージョン（V2）
- * V1から変更なし
+ * バージョン
  */
-export interface FileVersionV2 {
+export interface FileVersion {
   id: string;
   fileId: string;
   content: string;
@@ -59,10 +57,10 @@ export interface FileVersionV2 {
 // =============================================================================
 
 /**
- * ファイルメタデータ（V2）
+ * ファイルメタデータ
  * {uuid}/meta.json として保存される
  */
-export interface FileMetadataV2 {
+export interface FileMetadata {
   id: string;
   title: string;
   tags: string[];
@@ -72,10 +70,10 @@ export interface FileMetadataV2 {
 }
 
 /**
- * フォルダメタデータ（V2）
+ * フォルダメタデータ
  * .folder.json として各ディレクトリに保存される
  */
-export interface FolderMetadataV2 {
+export interface FolderMetadata {
   id: string;
   name: string;
   slug: string;
@@ -84,10 +82,9 @@ export interface FolderMetadataV2 {
 }
 
 /**
- * バージョンメタデータ（V2）
- * V1から変更なし
+ * バージョンメタデータ
  */
-export interface VersionMetadataV2 {
+export interface VersionMetadata {
   id: string;
   fileId: string;
   version: number;
@@ -99,35 +96,35 @@ export interface VersionMetadataV2 {
 // =============================================================================
 
 /**
- * ファイル作成データ（V2）
+ * ファイル作成データ
  */
-export interface CreateFileDataV2 {
+export interface CreateFileData {
   title: string;
   content: string;
   tags?: string[];
 }
 
 /**
- * ファイル更新データ（V2）
+ * ファイル更新データ
  */
-export interface UpdateFileDataV2 {
+export interface UpdateFileData {
   title?: string;
   content?: string;
   tags?: string[];
 }
 
 /**
- * フォルダ作成データ（V2）
+ * フォルダ作成データ
  */
-export interface CreateFolderDataV2 {
+export interface CreateFolderData {
   name: string;
   // slug は自動生成されるため不要
 }
 
 /**
- * フォルダ更新データ（V2）
+ * フォルダ更新データ
  */
-export interface UpdateFolderDataV2 {
+export interface UpdateFolderData {
   name?: string;
   // nameを変更するとslugも再生成される
 }
@@ -137,11 +134,11 @@ export interface UpdateFolderDataV2 {
 // =============================================================================
 
 /**
- * ファイルシステムアイテムの共用体型（V2）
+ * ファイルシステムアイテムの共用体型
  */
-export type FileSystemItemV2 =
-  | { type: 'file'; item: FileV2 }
-  | { type: 'folder'; item: FolderV2 };
+export type FileSystemItem =
+  | { type: 'file'; item: File }
+  | { type: 'folder'; item: Folder };
 
 // =============================================================================
 // Slug Generation Utility
@@ -178,9 +175,9 @@ export const generateSlug = (name: string): string => {
 // =============================================================================
 
 /**
- * FileV2 → FileMetadataV2 変換（contentを除外）
+ * File → FileMetadata 変換（contentを除外）
  */
-export const fileV2ToMetadata = (file: FileV2): FileMetadataV2 => ({
+export const fileToMetadata = (file: File): FileMetadata => ({
   id: file.id,
   title: file.title,
   tags: file.tags,
@@ -190,9 +187,9 @@ export const fileV2ToMetadata = (file: FileV2): FileMetadataV2 => ({
 });
 
 /**
- * FileMetadataV2 + content → FileV2 変換
+ * FileMetadata + content → File 変換
  */
-export const metadataToFileV2 = (metadata: FileMetadataV2, content: string): FileV2 => ({
+export const metadataToFile = (metadata: FileMetadata, content: string): File => ({
   id: metadata.id,
   title: metadata.title,
   content,
@@ -203,9 +200,9 @@ export const metadataToFileV2 = (metadata: FileMetadataV2, content: string): Fil
 });
 
 /**
- * FolderV2 → FolderMetadataV2 変換
+ * Folder → FolderMetadata 変換
  */
-export const folderV2ToMetadata = (folder: FolderV2): FolderMetadataV2 => ({
+export const folderToMetadata = (folder: Folder): FolderMetadata => ({
   id: folder.id,
   name: folder.name,
   slug: folder.slug,
@@ -214,9 +211,9 @@ export const folderV2ToMetadata = (folder: FolderV2): FolderMetadataV2 => ({
 });
 
 /**
- * FolderMetadataV2 → FolderV2 変換
+ * FolderMetadata → Folder 変換
  */
-export const metadataToFolderV2 = (metadata: FolderMetadataV2): FolderV2 => ({
+export const metadataToFolder = (metadata: FolderMetadata): Folder => ({
   id: metadata.id,
   name: metadata.name,
   slug: metadata.slug,
@@ -225,9 +222,9 @@ export const metadataToFolderV2 = (metadata: FolderMetadataV2): FolderV2 => ({
 });
 
 /**
- * FileVersionV2 → VersionMetadataV2 変換（contentを除外）
+ * FileVersion → VersionMetadata 変換（contentを除外）
  */
-export const versionV2ToMetadata = (version: FileVersionV2): VersionMetadataV2 => ({
+export const versionToMetadata = (version: FileVersion): VersionMetadata => ({
   id: version.id,
   fileId: version.fileId,
   version: version.version,
@@ -235,9 +232,9 @@ export const versionV2ToMetadata = (version: FileVersionV2): VersionMetadataV2 =
 });
 
 /**
- * VersionMetadataV2 + content → FileVersionV2 変換
+ * VersionMetadata + content → FileVersion 変換
  */
-export const metadataToVersionV2 = (metadata: VersionMetadataV2, content: string): FileVersionV2 => ({
+export const metadataToVersion = (metadata: VersionMetadata, content: string): FileVersion => ({
   id: metadata.id,
   fileId: metadata.fileId,
   content,

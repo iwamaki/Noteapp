@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { File, Folder, FileVersion, FileMetadata, FolderMetadata, VersionMetadata, fileToMetadata, metadataToFile, folderToMetadata, metadataToFolder, versionToMetadata, metadataToVersion } from './type';
+import { File, Folder, FileVersion, FileMetadata, FolderMetadata, VersionMetadata, fileToMetadata, metadataToFile, folderToMetadata, metadataToFolder, versionToMetadata, metadataToVersion } from './typeV1';
 import StorageUtils from './asyncStorageUtils';
 import * as FileSystemUtils from './fileSystemUtils';
 

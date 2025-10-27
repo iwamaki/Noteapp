@@ -14,15 +14,15 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import {
-  FileV2,
-  FileVersionV2,
-  CreateFileDataV2,
-  UpdateFileDataV2,
-  fileV2ToMetadata,
-  versionV2ToMetadata,
-  metadataToFileV2,
-  metadataToVersionV2,
-} from './typeV2';
+  File,
+  FileVersion,
+  CreateFileData,
+  UpdateFileData,
+  fileToMetadata,
+  versionToMetadata,
+  metadataToFile,
+  metadataToVersion,
+} from './types';
 import * as FileSystemUtilsV2 from './fileSystemUtilsV2';
 import { DirectoryResolver } from './directoryResolver';
 import { FileSystemV2Error } from './fileSystemUtilsV2';
@@ -49,7 +49,7 @@ export class FileRepositoryV2 {
    * @example
    * const file = await FileRepositoryV2.getById('file-uuid-123');
    */
-  static async getById(id: string): Promise<FileV2 | null> {
+  static async getById(id: string): Promise<File | null> {
     try {
       // DirectoryResolverでファイルディレクトリを検索
       const fileDir = await DirectoryResolver.findFileDirectoryById(id);
@@ -64,7 +64,7 @@ export class FileRepositoryV2 {
       }
 
       const content = await FileSystemUtilsV2.readFileContent(fileDir);
-      return metadataToFileV2(metadata, content);
+      return metadataToFile(metadata, content);
     } catch (e) {
       throw new FileSystemV2Error(
         `Failed to get file by ID: ${id}`,
@@ -87,7 +87,7 @@ export class FileRepositoryV2 {
    * // サブフォルダのファイルを取得
    * const files = await FileRepositoryV2.getByFolderPath('/my-folder/');
    */
-  static async getByFolderPath(folderPath: string): Promise<FileV2[]> {
+  static async getByFolderPath(folderPath: string): Promise<File[]> {
     try {
       // フォルダディレクトリを解決
       const folderDir = await DirectoryResolver.resolveFolderDirectory(folderPath);
@@ -103,7 +103,7 @@ export class FileRepositoryV2 {
         metadataList.map(async (metadata) => {
           const fileDir = new Directory(folderDir, metadata.id);
           const content = await FileSystemUtilsV2.readFileContent(fileDir);
-          return metadataToFileV2(metadata, content);
+          return metadataToFile(metadata, content);
         })
       );
 
@@ -124,7 +124,7 @@ export class FileRepositoryV2 {
    * @param fileIds - ファイルIDの配列
    * @returns ファイルの配列
    */
-  static async getByIds(fileIds: string[]): Promise<FileV2[]> {
+  static async getByIds(fileIds: string[]): Promise<File[]> {
     try {
       // 並行検索
       const results = await Promise.all(
@@ -134,7 +134,7 @@ export class FileRepositoryV2 {
       );
 
       // nullを除外
-      return results.filter((file): file is FileV2 => file !== null);
+      return results.filter((file): file is File => file !== null);
     } catch (e) {
       throw new FileSystemV2Error(
         `Failed to get files by IDs`,
@@ -161,7 +161,7 @@ export class FileRepositoryV2 {
    *   '/'
    * );
    */
-  static async create(data: CreateFileDataV2, folderPath: string): Promise<FileV2> {
+  static async create(data: CreateFileData, folderPath: string): Promise<File> {
     try {
       // フォルダディレクトリを解決
       const folderDir = await DirectoryResolver.resolveFolderDirectory(folderPath);
@@ -175,7 +175,7 @@ export class FileRepositoryV2 {
       const now = new Date();
       const fileId = uuidv4();
 
-      const newFile: FileV2 = {
+      const newFile: File = {
         id: fileId,
         title: data.title,
         content: data.content,
@@ -185,7 +185,7 @@ export class FileRepositoryV2 {
         updatedAt: now,
       };
 
-      const metadata = fileV2ToMetadata(newFile);
+      const metadata = fileToMetadata(newFile);
 
       // ファイルディレクトリを作成
       await FileSystemUtilsV2.createFileDirectory(
@@ -216,15 +216,15 @@ export class FileRepositoryV2 {
    * @returns 作成されたファイル
    */
   static async createWithVersion(
-    data: CreateFileDataV2,
+    data: CreateFileData,
     folderPath: string
-  ): Promise<FileV2> {
+  ): Promise<File> {
     try {
       // ファイルを作成
       const newFile = await this.create(data, folderPath);
 
       // 初期バージョンを作成
-      const initialVersion: FileVersionV2 = {
+      const initialVersion: FileVersion = {
         id: uuidv4(),
         fileId: newFile.id,
         content: newFile.content,
@@ -258,7 +258,7 @@ export class FileRepositoryV2 {
    * @param data - 更新データ
    * @returns 更新されたファイル
    */
-  static async update(id: string, data: UpdateFileDataV2): Promise<FileV2> {
+  static async update(id: string, data: UpdateFileData): Promise<File> {
     try {
       // ファイルディレクトリを検索
       const fileDir = await DirectoryResolver.findFileDirectoryById(id);
@@ -276,10 +276,10 @@ export class FileRepositoryV2 {
       }
 
       const existingContent = await FileSystemUtilsV2.readFileContent(fileDir);
-      const existingFile = metadataToFileV2(existingMetadata, existingContent);
+      const existingFile = metadataToFile(existingMetadata, existingContent);
 
       // 更新されたファイルを構築
-      const updatedFile: FileV2 = {
+      const updatedFile: File = {
         ...existingFile,
         title: data.title !== undefined ? data.title : existingFile.title,
         content: data.content !== undefined ? data.content : existingFile.content,
@@ -288,7 +288,7 @@ export class FileRepositoryV2 {
       };
 
       // メタデータとコンテンツを保存
-      const updatedMetadata = fileV2ToMetadata(updatedFile);
+      const updatedMetadata = fileToMetadata(updatedFile);
       await FileSystemUtilsV2.writeFileMetadata(fileDir, updatedMetadata);
 
       if (data.content !== undefined) {
@@ -315,7 +315,7 @@ export class FileRepositoryV2 {
    * @param data - 更新データ
    * @returns 更新されたファイル
    */
-  static async updateWithVersion(id: string, data: UpdateFileDataV2): Promise<FileV2> {
+  static async updateWithVersion(id: string, data: UpdateFileData): Promise<File> {
     try {
       // 既存ファイルを取得
       const existingFile = await this.getById(id);
@@ -324,7 +324,7 @@ export class FileRepositoryV2 {
       }
 
       // 現在の状態を新しいバージョンとして保存
-      const newVersionForOldState: FileVersionV2 = {
+      const newVersionForOldState: FileVersion = {
         id: uuidv4(),
         fileId: existingFile.id,
         content: existingFile.content,
@@ -345,7 +345,7 @@ export class FileRepositoryV2 {
       }
 
       // 更新されたファイルを構築（バージョン番号をインクリメント）
-      const updatedFile: FileV2 = {
+      const updatedFile: File = {
         ...existingFile,
         title: data.title !== undefined ? data.title : existingFile.title,
         content: data.content !== undefined ? data.content : existingFile.content,
@@ -355,7 +355,7 @@ export class FileRepositoryV2 {
       };
 
       // メタデータとコンテンツを保存
-      const updatedMetadata = fileV2ToMetadata(updatedFile);
+      const updatedMetadata = fileToMetadata(updatedFile);
       await FileSystemUtilsV2.writeFileMetadata(fileDir, updatedMetadata);
 
       if (data.content !== undefined) {
@@ -433,9 +433,9 @@ export class FileRepositoryV2 {
    * @param targetFolderPath - コピー先フォルダパス
    * @returns コピーされたファイルの配列
    */
-  static async copy(sourceIds: string[], targetFolderPath: string): Promise<FileV2[]> {
+  static async copy(sourceIds: string[], targetFolderPath: string): Promise<File[]> {
     try {
-      const copiedFiles: FileV2[] = [];
+      const copiedFiles: File[] = [];
       const now = new Date();
 
       // ターゲットフォルダを解決
@@ -466,7 +466,7 @@ export class FileRepositoryV2 {
           counter++;
         }
 
-        const newFile: FileV2 = {
+        const newFile: File = {
           ...fileToCopy,
           id: uuidv4(),
           title: newTitle,
@@ -476,7 +476,7 @@ export class FileRepositoryV2 {
         };
 
         // ファイルを作成
-        const metadata = fileV2ToMetadata(newFile);
+        const metadata = fileToMetadata(newFile);
         await FileSystemUtilsV2.createFileDirectory(
           targetFolderDir,
           newFile.id,
@@ -534,7 +534,7 @@ export class FileRepositoryV2 {
       }
 
       // ターゲットフォルダに新しいファイルディレクトリを作成
-      const metadata = fileV2ToMetadata(sourceFile);
+      const metadata = fileToMetadata(sourceFile);
       await FileSystemUtilsV2.createFileDirectory(
         targetFolderDir,
         fileId,
@@ -566,7 +566,7 @@ export class FileRepositoryV2 {
    * @param fileId - ファイルID
    * @returns バージョンの配列
    */
-  static async getVersions(fileId: string): Promise<FileVersionV2[]> {
+  static async getVersions(fileId: string): Promise<FileVersion[]> {
     try {
       // バージョンIDのリストを取得
       const versionIds = await FileSystemUtilsV2.listVersions(fileId);
@@ -578,7 +578,7 @@ export class FileRepositoryV2 {
 
           // バージョンメタデータを構築（versionIdから情報を推測）
           // ※実際にはメタデータファイルがないため、最小限の情報のみ
-          const version: FileVersionV2 = {
+          const version: FileVersion = {
             id: versionId,
             fileId,
             content,
@@ -607,11 +607,11 @@ export class FileRepositoryV2 {
    * @param versionId - バージョンID
    * @returns バージョン、存在しない場合はnull
    */
-  static async getVersion(fileId: string, versionId: string): Promise<FileVersionV2 | null> {
+  static async getVersion(fileId: string, versionId: string): Promise<FileVersion | null> {
     try {
       const content = await FileSystemUtilsV2.readVersion(fileId, versionId);
 
-      const version: FileVersionV2 = {
+      const version: FileVersion = {
         id: versionId,
         fileId,
         content,
@@ -639,7 +639,7 @@ export class FileRepositoryV2 {
    * @param versionId - バージョンID
    * @returns 復元されたファイル
    */
-  static async restoreVersion(fileId: string, versionId: string): Promise<FileV2> {
+  static async restoreVersion(fileId: string, versionId: string): Promise<File> {
     try {
       const versionToRestore = await this.getVersion(fileId, versionId);
       if (!versionToRestore) {

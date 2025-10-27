@@ -6,45 +6,45 @@
  * 将来的にV1が完全に削除されたら、このファイルも削除されます。
  */
 
-import { File, Folder } from './type';
-import { FileV2, FolderV2 } from './typeV2';
+import { File as FileV1, Folder as FolderV1 } from './typeV1';
+import { File, Folder } from './types';
 
 /**
- * FolderV2からV1 Folderに変換
- * V2にはpathフィールドがないため、親パスを明示的に渡す必要があります
+ * 新型（slug-based）から旧V1型（path-based）に変換
+ * 旧型にはpathフィールドがあるため、親パスを明示的に渡す必要があります
  */
-export function folderV2ToV1(folderV2: FolderV2, parentPath: string = '/'): Folder {
+export function folderV2ToV1(folder: Folder, parentPath: string = '/'): FolderV1 {
   return {
-    id: folderV2.id,
-    name: folderV2.name,
+    id: folder.id,
+    name: folder.name,
     path: parentPath,
-    createdAt: folderV2.createdAt,
-    updatedAt: folderV2.updatedAt,
+    createdAt: folder.createdAt,
+    updatedAt: folder.updatedAt,
   };
 }
 
 /**
- * FileV2からV1 Fileに変換
- * V2にはpathフィールドがないため、親パスを明示的に渡す必要があります
+ * 新型（slug-based）から旧V1型（path-based）に変換
+ * 旧型にはpathフィールドがあるため、親パスを明示的に渡す必要があります
  */
-export function fileV2ToV1(fileV2: FileV2, parentPath: string = '/'): File {
+export function fileV2ToV1(file: File, parentPath: string = '/'): FileV1 {
   return {
-    id: fileV2.id,
-    title: fileV2.title,
-    content: fileV2.content,
+    id: file.id,
+    title: file.title,
+    content: file.content,
     path: parentPath,
-    tags: fileV2.tags,
-    version: fileV2.version,
-    createdAt: fileV2.createdAt,
-    updatedAt: fileV2.updatedAt,
+    tags: file.tags,
+    version: file.version,
+    createdAt: file.createdAt,
+    updatedAt: file.updatedAt,
   };
 }
 
 /**
- * V1 FolderからFolderV2に変換
+ * 旧V1型（path-based）から新型（slug-based）に変換
  * pathフィールドは削除され、slugが生成されます
  */
-export function folderV1ToV2(folder: Folder): FolderV2 {
+export function folderV1ToV2(folder: FolderV1): Folder {
   return {
     id: folder.id,
     name: folder.name,
@@ -55,10 +55,10 @@ export function folderV1ToV2(folder: Folder): FolderV2 {
 }
 
 /**
- * V1 FileからFileV2に変換
+ * 旧V1型（path-based）から新型（slug-based）に変換
  * pathフィールドは削除されます
  */
-export function fileV1ToV2(file: File): FileV2 {
+export function fileV1ToV2(file: FileV1): File {
   return {
     id: file.id,
     title: file.title,

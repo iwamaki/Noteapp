@@ -20,7 +20,7 @@ import {
   getContentDirectory,
   FileSystemV2Error,
 } from './fileSystemUtilsV2';
-import type { FolderMetadataV2, FileMetadataV2 } from './typeV2';
+import type { FolderMetadata, FileMetadata } from './types';
 
 // =============================================================================
 // Constants
