@@ -9,10 +9,10 @@
 import React, { useReducer, useCallback, useMemo } from 'react';
 import { FileListContext, FileListActions } from './FileListContext';
 import { fileListReducer, createInitialState } from './fileListReducer';
-import { FileRepositoryV2 } from '@data/fileRepositoryV2';
-import { FolderRepositoryV2 } from '@data/folderRepositoryV2';
+import { FileRepositoryV2 } from '@data/repositories/fileRepositoryV2';
+import { FolderRepositoryV2 } from '@data/repositories/folderRepositoryV2';
 import { FileListUseCasesV2 } from '../application/FileListUseCasesV2';
-import { FileSystemItem } from '@data/types';
+import { FileSystemItem } from '@data/core/types';
 import { logger } from '@utils/logger';
 
 interface FileListProviderProps {

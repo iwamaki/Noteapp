@@ -4,7 +4,7 @@
  * @description データアクセス層とバリデーションを組み合わせたビジネスロジック
  */
 
-import { FileRepositoryV2 } from '@data/fileRepositoryV2';
+import { FileRepositoryV2 } from '@data/repositories/fileRepositoryV2';
 import { ValidationService } from './ValidationService';
 import { ErrorService } from './ErrorService';
 import { File, ErrorCode, EditorError } from '../types';

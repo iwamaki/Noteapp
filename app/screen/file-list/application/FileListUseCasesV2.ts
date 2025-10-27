@@ -16,9 +16,9 @@ import {
   Folder,
   CreateFileData,
   CreateFolderData,
-} from '@data/types';
-import { FileRepositoryV2 } from '@data/fileRepositoryV2';
-import { FolderRepositoryV2 } from '@data/folderRepositoryV2';
+} from '@data/core/types';
+import { FileRepositoryV2 } from '@data/repositories/fileRepositoryV2';
+import { FolderRepositoryV2 } from '@data/repositories/folderRepositoryV2';
 import { FileDomainServiceV2 } from '../domain/FileDomainServiceV2';
 import { FolderDomainServiceV2 } from '../domain/FolderDomainServiceV2';
 import { PathServiceV2 } from '../../../services/PathServiceV2';

@@ -12,9 +12,9 @@
  * - ✅ コード量50%以上削減（261行 → ~130行）
  */
 
-import { Folder } from '@data/types';
-import { FolderRepositoryV2 } from '@data/folderRepositoryV2';
-import { FileRepositoryV2 } from '@data/fileRepositoryV2';
+import { Folder } from '@data/core/types';
+import { FolderRepositoryV2 } from '@data/repositories/folderRepositoryV2';
+import { FileRepositoryV2 } from '@data/repositories/fileRepositoryV2';
 import { PathServiceV2 } from '../../../services/PathServiceV2';
 
 /**

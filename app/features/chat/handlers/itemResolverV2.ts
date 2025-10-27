@@ -8,10 +8,11 @@
  * - ✅ シンプルで効率的な実装
  */
 
-import { File, Folder, metadataToFolder } from '@data/types';
-import { FileRepositoryV2 } from '@data/fileRepositoryV2';
-import { DirectoryResolver } from '@data/directoryResolver';
-import * as FileSystemUtilsV2 from '@data/fileSystemUtilsV2';
+import type { File, Folder } from '@data/core/types';
+import { metadataToFolder } from '@data/core/converters';
+import { FileRepositoryV2 } from '@data/repositories/fileRepositoryV2';
+import { DirectoryResolver } from '@data/infrastructure/directoryResolver';
+import * as FileSystemUtilsV2 from '@data/infrastructure/fileSystemUtilsV2';
 import { PathServiceV2 } from '../../../services/PathServiceV2';
 import { logger } from '../../../utils/logger';
 

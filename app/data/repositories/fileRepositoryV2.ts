@@ -13,25 +13,28 @@
  */
 
 import { v4 as uuidv4 } from 'uuid';
-import {
+import type {
   File,
   FileVersion,
   CreateFileData,
   UpdateFileData,
+} from '../core/types';
+import {
   fileToMetadata,
   metadataToFile,
-} from './types';
-import * as FileSystemUtilsV2 from './fileSystemUtilsV2';
-import { DirectoryResolver } from './directoryResolver';
-import { FileSystemV2Error } from './fileSystemUtilsV2';
+} from '../core/converters';
+import * as FileSystemUtilsV2 from '../infrastructure/fileSystemUtilsV2';
+import { DirectoryResolver } from '../infrastructure/directoryResolver';
+import { FileSystemV2Error, RepositoryError } from '../core/errors';
 import { Directory } from 'expo-file-system';
+import { VersionRepositoryV2 } from './versionRepositoryV2';
 
-// Re-export FileSystemV2Error for consumers
-export { FileSystemV2Error };
+// Re-export errors for consumers
+export { FileSystemV2Error, RepositoryError };
 
 /**
  * V2ファイルリポジトリ
- * ファイルとファイルバージョンのすべてのCRUD操作を提供
+ * ファイルのCRUD操作を提供（バージョン管理はVersionRepositoryV2に委譲）
  */
 export class FileRepositoryV2 {
   // =============================================================================
@@ -221,19 +224,11 @@ export class FileRepositoryV2 {
       // ファイルを作成
       const newFile = await this.create(data, folderPath);
 
-      // 初期バージョンを作成
-      const initialVersion: FileVersion = {
-        id: uuidv4(),
-        fileId: newFile.id,
-        content: newFile.content,
-        version: newFile.version,
-        createdAt: newFile.createdAt,
-      };
-
-      await FileSystemUtilsV2.saveVersion(
+      // 初期バージョンを作成（VersionRepositoryV2に委譲）
+      await VersionRepositoryV2.createVersion(
         newFile.id,
-        initialVersion.id,
-        initialVersion.content
+        newFile.content,
+        newFile.version
       );
 
       return newFile;
@@ -321,19 +316,11 @@ export class FileRepositoryV2 {
         throw new FileSystemV2Error(`File not found: ${id}`, 'FILE_NOT_FOUND');
       }
 
-      // 現在の状態を新しいバージョンとして保存
-      const newVersionForOldState: FileVersion = {
-        id: uuidv4(),
-        fileId: existingFile.id,
-        content: existingFile.content,
-        version: existingFile.version,
-        createdAt: existingFile.updatedAt,
-      };
-
-      await FileSystemUtilsV2.saveVersion(
+      // 現在の状態を新しいバージョンとして保存（VersionRepositoryV2に委譲）
+      await VersionRepositoryV2.createVersion(
         existingFile.id,
-        newVersionForOldState.id,
-        newVersionForOldState.content
+        existingFile.content,
+        existingFile.version
       );
 
       // ファイルディレクトリを検索
@@ -555,7 +542,7 @@ export class FileRepositoryV2 {
   }
 
   // =============================================================================
-  // バージョン管理操作
+  // バージョン管理操作（VersionRepositoryV2に委譲）
   // =============================================================================
 
   /**
@@ -563,39 +550,12 @@ export class FileRepositoryV2 {
    *
    * @param fileId - ファイルID
    * @returns バージョンの配列
+   *
+   * @remarks
+   * バージョン管理はVersionRepositoryV2に委譲されています。
    */
   static async getVersions(fileId: string): Promise<FileVersion[]> {
-    try {
-      // バージョンIDのリストを取得
-      const versionIds = await FileSystemUtilsV2.listVersions(fileId);
-
-      // 各バージョンのコンテンツを並行読み込み
-      const versions = await Promise.all(
-        versionIds.map(async (versionId) => {
-          const content = await FileSystemUtilsV2.readVersion(fileId, versionId);
-
-          // バージョンメタデータを構築（versionIdから情報を推測）
-          // ※実際にはメタデータファイルがないため、最小限の情報のみ
-          const version: FileVersion = {
-            id: versionId,
-            fileId,
-            content,
-            version: 1, // 実際のバージョン番号は取得できない
-            createdAt: new Date(), // 実際の作成日時は取得できない
-          };
-
-          return version;
-        })
-      );
-
-      return versions;
-    } catch (e) {
-      throw new FileSystemV2Error(
-        `Failed to get versions for file: ${fileId}`,
-        'GET_VERSIONS_ERROR',
-        e
-      );
-    }
+    return await VersionRepositoryV2.getVersions(fileId);
   }
 
   /**
@@ -604,30 +564,12 @@ export class FileRepositoryV2 {
    * @param fileId - ファイルID
    * @param versionId - バージョンID
    * @returns バージョン、存在しない場合はnull
+   *
+   * @remarks
+   * バージョン管理はVersionRepositoryV2に委譲されています。
    */
   static async getVersion(fileId: string, versionId: string): Promise<FileVersion | null> {
-    try {
-      const content = await FileSystemUtilsV2.readVersion(fileId, versionId);
-
-      const version: FileVersion = {
-        id: versionId,
-        fileId,
-        content,
-        version: 1,
-        createdAt: new Date(),
-      };
-
-      return version;
-    } catch (e) {
-      if (e instanceof FileSystemV2Error && e.code === 'VERSION_NOT_FOUND') {
-        return null;
-      }
-      throw new FileSystemV2Error(
-        `Failed to get version: ${fileId}/${versionId}`,
-        'GET_VERSION_ERROR',
-        e
-      );
-    }
+    return await VersionRepositoryV2.getVersionById(fileId, versionId);
   }
 
   /**
@@ -636,26 +578,36 @@ export class FileRepositoryV2 {
    * @param fileId - ファイルID
    * @param versionId - バージョンID
    * @returns 復元されたファイル
+   *
+   * @remarks
+   * バージョン管理はVersionRepositoryV2に委譲されています。
    */
   static async restoreVersion(fileId: string, versionId: string): Promise<File> {
     try {
-      const versionToRestore = await this.getVersion(fileId, versionId);
-      if (!versionToRestore) {
-        throw new FileSystemV2Error(
-          `Version not found: ${fileId}/${versionId}`,
-          'VERSION_NOT_FOUND'
+      // VersionRepositoryV2を使用してバージョンを復元
+      await VersionRepositoryV2.restoreVersion(
+        fileId,
+        versionId,
+        async (content) => {
+          await this.updateWithVersion(fileId, { content });
+        }
+      );
+
+      // 更新されたファイルを取得
+      const updatedFile = await this.getById(fileId);
+      if (!updatedFile) {
+        throw new RepositoryError(
+          `File not found after restore: ${fileId}`,
+          'FILE_NOT_FOUND_AFTER_RESTORE'
         );
       }
 
-      // ファイルをバージョンのコンテンツで更新
-      return await this.updateWithVersion(fileId, {
-        content: versionToRestore.content,
-      });
+      return updatedFile;
     } catch (e) {
-      if (e instanceof FileSystemV2Error) {
+      if (e instanceof RepositoryError) {
         throw e;
       }
-      throw new FileSystemV2Error(
+      throw new RepositoryError(
         `Failed to restore version: ${fileId}/${versionId}`,
         'RESTORE_VERSION_ERROR',
         e

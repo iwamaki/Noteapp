@@ -28,7 +28,8 @@ import { Paths, Directory, File as FSFile } from 'expo-file-system';
 import type {
   FileMetadata,
   FolderMetadata,
-} from './types';
+} from '../core/types';
+import { FileSystemV2Error } from '../core/errors';
 
 // =============================================================================
 // Directory Path Definitions
@@ -48,17 +49,6 @@ const ROOT_DIR = new Directory(CONTENT_DIR, 'root');
 const FOLDER_METADATA_FILENAME = '.folder.json';
 const FILE_METADATA_FILENAME = 'meta.json';
 const FILE_CONTENT_FILENAME = 'content.md';
-
-// =============================================================================
-// Error Class
-// =============================================================================
-
-export class FileSystemV2Error extends Error {
-  constructor(message: string, public code: string, public originalError?: any) {
-    super(message);
-    this.name = 'FileSystemV2Error';
-  }
-}
 
 // =============================================================================
 // Directory Initialization
@@ -612,4 +602,56 @@ export const getRootDirectory = (): Directory => {
  */
 export const getContentDirectory = (): Directory => {
   return CONTENT_DIR;
+};
+
+// =============================================================================
+// Directory Copy Operations
+// =============================================================================
+
+/**
+ * ディレクトリを再帰的にコピー
+ *
+ * @param sourceDir - コピー元ディレクトリ
+ * @param targetDir - コピー先ディレクトリ
+ *
+ * @remarks
+ * フォルダのリネームや移動時に使用されます。
+ * サブディレクトリとファイルを再帰的にコピーします。
+ */
+export const copyDirectoryRecursive = async (
+  sourceDir: Directory,
+  targetDir: Directory
+): Promise<void> => {
+  try {
+    // ターゲットディレクトリを作成
+    if (!(await targetDir.exists)) {
+      await targetDir.create();
+    }
+
+    // ソースディレクトリの内容をリスト化
+    const items = await sourceDir.list();
+
+    for (const item of items) {
+      const itemName = item.uri.split('/').pop() || '';
+
+      if (item instanceof Directory) {
+        // サブディレクトリを再帰的にコピー
+        const targetSubDir = new Directory(targetDir, itemName);
+        await copyDirectoryRecursive(item, targetSubDir);
+      } else if (item instanceof FSFile) {
+        // ファイルをコピー
+        const content = await item.text();
+
+        // ターゲットファイルを作成
+        const targetFile = new FSFile(targetDir, itemName);
+        await targetFile.write(content);
+      }
+    }
+  } catch (e) {
+    throw new FileSystemV2Error(
+      `Failed to copy directory: ${sourceDir.uri} to ${targetDir.uri}`,
+      'COPY_DIRECTORY_ERROR',
+      e
+    );
+  }
 };

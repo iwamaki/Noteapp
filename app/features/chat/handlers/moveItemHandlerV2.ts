@@ -12,8 +12,8 @@
 import { LLMCommand } from '../llmService/types/types';
 import { CommandHandler, CommandHandlerContext } from './types';
 import { logger } from '../../../utils/logger';
-import { FileRepositoryV2 } from '@data/fileRepositoryV2';
-import { FolderRepositoryV2 } from '@data/folderRepositoryV2';
+import { FileRepositoryV2 } from '@data/repositories/fileRepositoryV2';
+import { FolderRepositoryV2 } from '@data/repositories/folderRepositoryV2';
 import { PathServiceV2 } from '../../../services/PathServiceV2';
 import {
   findItemByPathV2,

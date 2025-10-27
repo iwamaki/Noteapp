@@ -5,7 +5,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useLayoutEffect, useMemo, useCallback } from 'react';
 import { Alert, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { FileRepositoryV2, FileSystemV2Error } from '@data/fileRepositoryV2';
+import { FileRepositoryV2, FileSystemV2Error } from '@data/repositories/fileRepositoryV2';
 import { RootStackParamList } from '../../../navigation/types';
 import { useCustomHeader, HeaderConfig } from '../../../components/CustomHeader';
 import { generateDiff } from '../services/diffService';

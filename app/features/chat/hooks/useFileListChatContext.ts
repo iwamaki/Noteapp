@@ -9,7 +9,7 @@ import { useEffect, useRef } from 'react';
 import { ActiveScreenContextProvider, ActiveScreenContext } from '../types';
 import ChatService from '../index';
 import { logger } from '../../../utils/logger';
-import { FileSystemItem } from '@data/types';
+import type { FileSystemItem } from '@data/core/types';
 import { createDirectoryHandlerV2 } from '../handlers/createDirectoryHandlerV2';
 import { deleteItemHandlerV2 } from '../handlers/deleteItemHandlerV2';
 import { moveItemHandlerV2 } from '../handlers/moveItemHandlerV2';

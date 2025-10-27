@@ -5,7 +5,7 @@
  *
  * V2型に対応。pathフィールドは使用せず、slug-based階層構造を使用します。
  */
-import { FileSystemItem, Folder, File } from '@data/types';
+import { FileSystemItem, Folder, File } from '@data/core/types';
 import { logger } from '../../../utils/logger';
 
 
