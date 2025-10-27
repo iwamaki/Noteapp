@@ -8,7 +8,6 @@ import { FileRepositoryV2 } from '@data/fileRepositoryV2';
 import { ValidationService } from './ValidationService';
 import { ErrorService } from './ErrorService';
 import { File, ErrorCode, EditorError } from '../types';
-import { CreateFileData, UpdateFileData } from '@data/types';
 
 /**
  * ノートサービス

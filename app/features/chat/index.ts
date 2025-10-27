@@ -9,12 +9,9 @@ import APIService, { ChatContext } from './llmService/api';
 import { ChatMessage, LLMCommand } from './llmService/types/types';
 import { logger } from '../../utils/logger';
 import { ActiveScreenContextProvider, ActiveScreenContext, ChatServiceListener } from './types';
-import { FileRepositoryV2 } from '@data/fileRepositoryV2';
-import { FolderRepositoryV2 } from '@data/folderRepositoryV2';
 import { DirectoryResolver } from '@data/directoryResolver';
 import { Directory } from 'expo-file-system';
 import * as FileSystemUtilsV2 from '@data/fileSystemUtilsV2';
-import { metadataToFolder } from '@data/types';
 
 /**
  * シングルトンクラスとして機能し、アプリケーション全体でチャットの状態を管理します。

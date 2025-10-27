@@ -11,16 +11,14 @@
  * - ファイルID → Directory検索（再帰探索）
  */
 
-import { Paths, Directory, File as FSFile } from 'expo-file-system';
+import { Paths, Directory } from 'expo-file-system';
 import {
   readFolderMetadata,
-  readFileMetadata,
   listSubfoldersInFolder,
   listFilesInFolder,
   getContentDirectory,
   FileSystemV2Error,
 } from './fileSystemUtilsV2';
-import type { FolderMetadata, FileMetadata } from './types';
 
 // =============================================================================
 // Constants
