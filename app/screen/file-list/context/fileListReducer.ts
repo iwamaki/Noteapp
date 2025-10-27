@@ -17,6 +17,11 @@ export const createInitialState = (): FileListState => ({
   files: [],
   treeNodes: [],
 
+  // パス管理
+  folderPaths: new Map(),
+  filePaths: new Map(),
+  loadedPaths: new Set(),
+
   // UI状態
   expandedFolderIds: new Set(),
   loading: false,
@@ -65,7 +70,50 @@ export function fileListReducer(
         ...state,
         folders,
         files,
-        treeNodes: buildTree(folders, files, state.expandedFolderIds),
+        treeNodes: buildTree(folders, files, state.expandedFolderIds, state.folderPaths, state.filePaths),
+      };
+    }
+
+    case 'ADD_FOLDER_CHILDREN': {
+      const { parentPath, folders: newFolders, files: newFiles } = action.payload;
+
+      // 新しいフォルダとファイルのパス情報を作成
+      const newFolderPaths = new Map(state.folderPaths);
+      const newFilePaths = new Map(state.filePaths);
+      const newLoadedPaths = new Set(state.loadedPaths);
+
+      // 子フォルダのパスを計算して追加
+      newFolders.forEach(folder => {
+        const folderPath = parentPath === '/' ? `/${folder.slug}/` : `${parentPath}${folder.slug}/`;
+        newFolderPaths.set(folder.id, folderPath);
+      });
+
+      // 子ファイルの親パスを追加
+      newFiles.forEach(file => {
+        newFilePaths.set(file.id, parentPath);
+      });
+
+      // このパスを読み込み済みとしてマーク
+      newLoadedPaths.add(parentPath);
+
+      // 既存のフォルダ・ファイルと重複しないように追加
+      const existingFolderIds = new Set(state.folders.map(f => f.id));
+      const existingFileIds = new Set(state.files.map(f => f.id));
+
+      const foldersToAdd = newFolders.filter(f => !existingFolderIds.has(f.id));
+      const filesToAdd = newFiles.filter(f => !existingFileIds.has(f.id));
+
+      const allFolders = [...state.folders, ...foldersToAdd];
+      const allFiles = [...state.files, ...filesToAdd];
+
+      return {
+        ...state,
+        folders: allFolders,
+        files: allFiles,
+        folderPaths: newFolderPaths,
+        filePaths: newFilePaths,
+        loadedPaths: newLoadedPaths,
+        treeNodes: buildTree(allFolders, allFiles, state.expandedFolderIds, newFolderPaths, newFilePaths),
       };
     }
 
@@ -88,7 +136,7 @@ export function fileListReducer(
       return {
         ...state,
         expandedFolderIds: newExpanded,
-        treeNodes: buildTree(state.folders, state.files, newExpanded),
+        treeNodes: buildTree(state.folders, state.files, newExpanded, state.folderPaths, state.filePaths),
       };
     }
 
@@ -98,7 +146,7 @@ export function fileListReducer(
       return {
         ...state,
         expandedFolderIds: newExpanded,
-        treeNodes: buildTree(state.folders, state.files, newExpanded),
+        treeNodes: buildTree(state.folders, state.files, newExpanded, state.folderPaths, state.filePaths),
       };
     }
 
@@ -108,7 +156,7 @@ export function fileListReducer(
       return {
         ...state,
         expandedFolderIds: newExpanded,
-        treeNodes: buildTree(state.folders, state.files, newExpanded),
+        treeNodes: buildTree(state.folders, state.files, newExpanded, state.folderPaths, state.filePaths),
       };
     }
 
@@ -116,7 +164,7 @@ export function fileListReducer(
       return {
         ...state,
         expandedFolderIds: new Set(),
-        treeNodes: buildTree(state.folders, state.files, new Set()),
+        treeNodes: buildTree(state.folders, state.files, new Set(), state.folderPaths, state.filePaths),
       };
 
     // ======================================
@@ -302,13 +350,16 @@ export function fileListReducer(
     // 複合操作
     // ======================================
     case 'REFRESH_COMPLETE': {
-      const { folders, files } = action.payload;
+      const { folders, files, folderPaths, filePaths, loadedPaths } = action.payload;
       // 全状態をリセットしながら、データのみ更新
       return {
         ...state,
         folders,
         files,
-        treeNodes: buildTree(folders, files, state.expandedFolderIds),
+        folderPaths,
+        filePaths,
+        loadedPaths,
+        treeNodes: buildTree(folders, files, state.expandedFolderIds, folderPaths, filePaths),
         loading: false,
 
         // 選択状態はクリア

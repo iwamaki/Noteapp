@@ -42,7 +42,28 @@ export const FileListProvider: React.FC<FileListProviderProps> = ({ children }) 
 
       logger.debug('file', `refreshData: Fetched ${folders.length} folders and ${files.length} files.`);
 
-      dispatch({ type: 'REFRESH_COMPLETE', payload: { folders, files } });
+      // パス情報を構築
+      const folderPaths = new Map<string, string>();
+      const filePaths = new Map<string, string>();
+      const loadedPaths = new Set<string>();
+
+      // ルートフォルダのパスを設定
+      folders.forEach(folder => {
+        folderPaths.set(folder.id, `/${folder.slug}/`);
+      });
+
+      // ルートファイルの親パスを設定
+      files.forEach(file => {
+        filePaths.set(file.id, '/');
+      });
+
+      // ルートパスを読み込み済みとしてマーク
+      loadedPaths.add('/');
+
+      dispatch({
+        type: 'REFRESH_COMPLETE',
+        payload: { folders, files, folderPaths, filePaths, loadedPaths },
+      });
       logger.debug('file', 'refreshData: Dispatched REFRESH_COMPLETE.');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
@@ -51,6 +72,50 @@ export const FileListProvider: React.FC<FileListProviderProps> = ({ children }) 
       throw error;
     }
   }, []);
+
+  /**
+   * フォルダの子アイテムを読み込む
+   * フォルダが展開されたときに呼び出される
+   */
+  const loadFolderChildren = useCallback(
+    async (folderId: string, folderPath: string) => {
+      // 既に読み込み済みの場合はスキップ
+      if (state.loadedPaths.has(folderPath)) {
+        logger.debug('file', `loadFolderChildren: Path ${folderPath} already loaded, skipping.`);
+        return;
+      }
+
+      logger.debug('file', `loadFolderChildren: Loading children for folder ${folderId} at path ${folderPath}`);
+
+      try {
+        // 子フォルダと子ファイルを並行取得
+        const [childFolders, childFiles] = await Promise.all([
+          FolderRepositoryV2.getByParentPath(folderPath),
+          FileRepositoryV2.getByFolderPath(folderPath),
+        ]);
+
+        logger.debug(
+          'file',
+          `loadFolderChildren: Fetched ${childFolders.length} folders and ${childFiles.length} files for ${folderPath}`
+        );
+
+        // ADD_FOLDER_CHILDRENアクションをディスパッチ
+        dispatch({
+          type: 'ADD_FOLDER_CHILDREN',
+          payload: {
+            parentPath: folderPath,
+            folders: childFolders,
+            files: childFiles,
+          },
+        });
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+        logger.error('file', `loadFolderChildren: Error loading children for ${folderPath}: ${errorMessage}`, error);
+        throw error;
+      }
+    },
+    [state.loadedPaths, dispatch]
+  );
 
   /**
    * フォルダをリネーム
@@ -146,6 +211,7 @@ export const FileListProvider: React.FC<FileListProviderProps> = ({ children }) 
   const actions: FileListActions = useMemo(
     () => ({
       refreshData,
+      loadFolderChildren,
       renameFolder,
       renameFile,
       deleteSelectedItems,
@@ -156,7 +222,9 @@ export const FileListProvider: React.FC<FileListProviderProps> = ({ children }) 
     }),
     [
       refreshData,
+      loadFolderChildren,
       renameFolder,
+      renameFile,
       deleteSelectedItems,
       moveSelectedItems,
       createFolder,

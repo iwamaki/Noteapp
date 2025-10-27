@@ -23,12 +23,16 @@ export interface TreeNode {
  * @param allFolders すべてのフォルダ
  * @param allFiles すべてのノート
  * @param expandedFolderIds 展開中のフォルダID（Set）
+ * @param folderPaths フォルダID → 仮想パスのマップ
+ * @param filePaths ファイルID → 親フォルダパスのマップ
  * @returns ルートレベルのTreeNode配列
  */
 export function buildTree(
   allFolders: Folder[],
   allFiles: File[],
-  expandedFolderIds: Set<string>
+  expandedFolderIds: Set<string>,
+  folderPaths: Map<string, string>,
+  filePaths: Map<string, string>
 ): TreeNode[] {
   logger.debug('tree', '🌲 buildTree: Starting.', { totalFolders: allFolders.length, totalFiles: allFiles.length });
   if (__DEV__) {
@@ -40,11 +44,11 @@ export function buildTree(
   }
 
   // ルートレベルのアイテムを取得
-  const rootItems = getRootItems(allFolders, allFiles);
+  const rootItems = getRootItems(allFolders, allFiles, folderPaths, filePaths);
   logger.debug('tree', `🌲 buildTree: Found ${rootItems.length} root items.`);
 
   // ツリーを構築
-  const tree = rootItems.map(item => buildTreeNode(item, allFolders, allFiles, expandedFolderIds, 0));
+  const tree = rootItems.map(item => buildTreeNode(item, allFolders, allFiles, expandedFolderIds, folderPaths, filePaths, 0));
 
   if (__DEV__) {
     logger.debug('tree', `🌲 Tree built: ${tree.length} root items`);
@@ -55,35 +59,89 @@ export function buildTree(
 
 /**
  * ルートレベルのアイテムを取得
- * V2型では、FileListProviderから渡されるfoldersとfilesはすでに
- * 特定のパスのアイテムなので、そのまま使用します
+ * パス情報を使って、ルートパス ('/') に属するアイテムのみをフィルタリング
  */
-function getRootItems(allFolders: Folder[], allFiles: File[]): FileSystemItem[] {
-  const rootFolders = allFolders.map(f => ({ type: 'folder' as const, item: f }));
-  const rootFiles = allFiles.map(n => ({ type: 'file' as const, item: n }));
+function getRootItems(
+  allFolders: Folder[],
+  allFiles: File[],
+  folderPaths: Map<string, string>,
+  filePaths: Map<string, string>
+): FileSystemItem[] {
+  // ルートパス "/" に属するフォルダをフィルタ
+  const rootFolders = allFolders
+    .filter(f => {
+      const path = folderPaths.get(f.id);
+      // ルートフォルダは /slug/ の形式（スラッシュが2つ）
+      return path && path.split('/').filter(Boolean).length === 1;
+    })
+    .map(f => ({ type: 'folder' as const, item: f }));
+
+  // ルートパス "/" に属するファイルをフィルタ
+  const rootFiles = allFiles
+    .filter(f => {
+      const path = filePaths.get(f.id);
+      return path === '/';
+    })
+    .map(n => ({ type: 'file' as const, item: n }));
 
   return [...rootFolders, ...rootFiles];
 }
 
 /**
  * TreeNodeを構築
- * V2型では階層構造はFileSystemで管理されているため、
- * 渡されたアイテムをそのままTreeNodeに変換します（子の再帰検索なし）
+ * パス情報を使って親子関係を解決し、階層的なツリーを構築
  */
 function buildTreeNode(
   item: FileSystemItem,
   allFolders: Folder[],
   allFiles: File[],
   expandedFolderIds: Set<string>,
+  folderPaths: Map<string, string>,
+  filePaths: Map<string, string>,
   depth: number
 ): TreeNode {
   if (item.type === 'folder') {
     const folder = item.item;
     const isExpanded = expandedFolderIds.has(folder.id);
+    const folderPath = folderPaths.get(folder.id) || '/';
 
-    // V2型では、子アイテムはFileListProviderから
-    // 明示的に取得する必要があるため、ここでは空配列
+    // このフォルダの子アイテムを取得
     const children: TreeNode[] = [];
+
+    if (isExpanded) {
+      // 子フォルダを検索（このフォルダのパスを親として持つフォルダ）
+      const childFolders = allFolders
+        .filter(f => {
+          const childPath = folderPaths.get(f.id);
+          if (!childPath) return false;
+
+          // 子フォルダのパスは親フォルダパス + slug + / の形式
+          // 例: 親が /parent/ なら、子は /parent/child/
+          // 子のパスから最後のslugを除去すると親のパスになるはず
+          const parts = childPath.split('/').filter(Boolean);
+          if (parts.length === 0) return false;
+
+          const parentPath = parts.length === 1
+            ? '/'
+            : `/${parts.slice(0, -1).join('/')}/`;
+
+          return parentPath === folderPath;
+        })
+        .map(f => ({ type: 'folder' as const, item: f }));
+
+      // 子ファイルを検索（このフォルダのパスを親パスとして持つファイル）
+      const childFiles = allFiles
+        .filter(f => filePaths.get(f.id) === folderPath)
+        .map(f => ({ type: 'file' as const, item: f }));
+
+      // 子ノードを再帰的に構築
+      const childItems = [...childFolders, ...childFiles];
+      children.push(
+        ...childItems.map(child =>
+          buildTreeNode(child, allFolders, allFiles, expandedFolderIds, folderPaths, filePaths, depth + 1)
+        )
+      );
+    }
 
     return {
       id: folder.id,

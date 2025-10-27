@@ -34,6 +34,11 @@ export interface FileListState {
   files: File[];
   treeNodes: TreeNode[];
 
+  // パス管理（V2では階層情報を保持するために必要）
+  folderPaths: Map<string, string>; // フォルダID → 仮想パス（例: "/" or "/my-folder/"）
+  filePaths: Map<string, string>;   // ファイルID → 親フォルダパス
+  loadedPaths: Set<string>;         // ロード済みのフォルダパス
+
   // UI状態
   expandedFolderIds: Set<string>;
   loading: boolean;
@@ -67,6 +72,14 @@ export type FileListAction =
   // データ更新
   | { type: 'SET_DATA'; payload: { folders: Folder[]; files: File[] } }
   | { type: 'SET_LOADING'; payload: boolean }
+  | {
+      type: 'ADD_FOLDER_CHILDREN';
+      payload: {
+        parentPath: string;
+        folders: Folder[];
+        files: File[];
+      };
+    }
 
   // ツリー操作
   | { type: 'TOGGLE_FOLDER'; payload: string }
@@ -102,4 +115,13 @@ export type FileListAction =
   | { type: 'EXIT_MOVE_MODE' }
 
   // 複合操作
-  | { type: 'REFRESH_COMPLETE'; payload: { folders: Folder[]; files: File[] } };
+  | {
+      type: 'REFRESH_COMPLETE';
+      payload: {
+        folders: Folder[];
+        files: File[];
+        folderPaths: Map<string, string>;
+        filePaths: Map<string, string>;
+        loadedPaths: Set<string>;
+      };
+    };

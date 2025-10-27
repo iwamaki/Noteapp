@@ -39,11 +39,12 @@ function FileListScreenContent() {
   // 削除確認モーダルの状態
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
 
-  // データ初期読み込み
+  // データ初期読み込み（初回のみ）
   useEffect(() => {
     logger.info('file', 'FileListScreen: Initial data refresh triggered.');
     actions.refreshData();
-  }, [actions]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // 現在のパス（固定値）
   const currentPath = '/';
@@ -99,7 +100,21 @@ function FileListScreenContent() {
       // 通常モード
       logger.debug('file', `Normal mode. Handling item: ${item.item.id}`);
       if (item.type === 'folder') {
-        dispatch({ type: 'TOGGLE_FOLDER', payload: item.item.id });
+        const folder = item.item as Folder;
+        const isCurrentlyExpanded = state.expandedFolderIds.has(folder.id);
+
+        // フォルダを展開する場合、子アイテムを読み込む
+        if (!isCurrentlyExpanded) {
+          const folderPath = state.folderPaths.get(folder.id);
+          if (folderPath) {
+            logger.debug('file', `Expanding folder ${folder.id} at path ${folderPath}. Loading children...`);
+            actions.loadFolderChildren(folder.id, folderPath).catch(error => {
+              logger.error('file', `Failed to load children for folder ${folder.id}: ${error.message}`, error);
+            });
+          }
+        }
+
+        dispatch({ type: 'TOGGLE_FOLDER', payload: folder.id });
       } else {
         logger.info('file', `Navigating to FileEdit for file: ${item.item.id} with initialViewMode: ${settings.defaultFileViewScreen}`);
         navigation.navigate('FileEdit', {
@@ -113,6 +128,8 @@ function FileListScreenContent() {
     state.isSelectionMode,
     state.selectedFileIds,
     state.selectedFolderIds,
+    state.expandedFolderIds,
+    state.folderPaths,
     settings.defaultFileViewScreen,
     actions,
     dispatch,

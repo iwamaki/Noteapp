@@ -17,6 +17,11 @@ export interface FileListActions {
   refreshData: () => Promise<void>;
 
   /**
+   * フォルダの子アイテムを読み込む（遅延読み込み）
+   */
+  loadFolderChildren: (folderId: string, folderPath: string) => Promise<void>;
+
+  /**
    * フォルダをリネーム
    */
   renameFolder: (folderId: string, newName: string) => Promise<void>;
