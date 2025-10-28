@@ -1,89 +1,74 @@
 /**
  * @file useFileListChatContext.ts
- * @summary FileListScreen用のチャットコンテキストプロバイダーフック
+ * @summary FileListScreenFlat用のチャットコンテキストプロバイダーフック
  * @responsibility ファイル一覧画面のコンテキストをChatServiceに提供し、
- *                 コンテキスト依存のコマンドハンドラを登録する
+ *                 コンテキスト依存のコマンドハンドラを登録する（フラット構造版）
  */
 
-// TODO: Update for flat structure migration
-// This hook is disabled as it depends on deleted V2 handlers and old file-list context
-// import { useEffect, useRef } from 'react';
-// import { ActiveScreenContextProvider, ActiveScreenContext } from '../types';
-// import ChatService from '../index';
+import { useEffect, useRef } from 'react';
+import { ActiveScreenContextProvider, ActiveScreenContext, FileListItem } from '../types';
+import ChatService from '../index';
 import { logger } from '../../../utils/logger';
-// import type { FileSystemItem } from '@data/core/types';
-// import { createDirectoryHandlerV2 } from '../handlers/createDirectoryHandlerV2';
-// import { deleteItemHandlerV2 } from '../handlers/deleteItemHandlerV2';
-// import { moveItemHandlerV2 } from '../handlers/moveItemHandlerV2';
-// import { CommandHandlerContext } from '../handlers/types';
-// import { useFileListContext } from '../../../screen/file-list/context/useFileListContext';
+import { CommandHandlerContext } from '../handlers/types';
+import { createFileHandlerFlat } from '../handlers/createFileHandlerFlat';
+import { deleteFileHandlerFlat } from '../handlers/deleteFileHandlerFlat';
+import { renameFileHandlerFlat } from '../handlers/renameFileHandlerFlat';
+import type { FileFlat } from '@data/core/typesFlat';
 
 interface UseFileListChatContextParams {
-  items: any[]; // TODO: Update to use flat structure types
-  currentPath: string;
+  files: FileFlat[];
+  refreshData: () => Promise<void>;
 }
 
 /**
- * ファイル一覧画面用のチャットコンテキストプロバイダーフック
+ * ファイル一覧画面用のチャットコンテキストプロバイダーフック（フラット構造版）
  *
  * このフックは、ファイル一覧画面のコンテキストをChatServiceに登録します。
- * LLMには、現在表示されているファイルとフォルダのリストを提供します。
+ * LLMには、現在表示されているファイルのリストを提供します。
+ * フラット構造では、パスやフォルダの概念がなく、titleのみでファイルを識別します。
  */
 export const useFileListChatContext = ({
-  items,
-  currentPath,
+  files,
+  refreshData,
 }: UseFileListChatContextParams): void => {
-  // TODO: Re-implement for flat structure
-  // This hook is disabled as it depends on deleted V2 handlers and old file-list context
-  logger.warn('chatService', 'useFileListChatContext is disabled for flat structure migration');
+  const filesRef = useRef(files);
 
-  /* Old implementation - disabled
-  const { actions } = useFileListContext();
-  const itemsRef = useRef(items);
-  const currentPathRef = useRef(currentPath);
-
+  // filesが更新されたらrefを更新
   useEffect(() => {
-    itemsRef.current = items;
-    currentPathRef.current = currentPath;
-  }, [items, currentPath]);
+    filesRef.current = files;
+  }, [files]);
 
   useEffect(() => {
     const contextProvider: ActiveScreenContextProvider = {
       getScreenContext: async (): Promise<ActiveScreenContext> => {
         logger.debug('chatService', '[useFileListChatContext] Getting screen context', {
-          itemsCount: itemsRef.current.length,
-          currentPath: currentPathRef.current,
+          filesCount: filesRef.current.length,
         });
 
-        const visibleFileList = itemsRef.current
-          .map(item => {
-            const name = item.type === 'file' ? item.item.title : (item.item as any).name;
-            const type = item.type === 'file' ? 'file' : 'directory';
-            const filePath = `/${name}`;
-            return {
-              filePath,
-              name,
-              type,
-              tags: item.type === 'file' ? item.item.tags : undefined,
-            };
-          });
+        // FileFlatをFileListItemに変換
+        const visibleFileList: FileListItem[] = filesRef.current.map(file => ({
+          title: file.title,
+          type: 'file' as const,
+          categories: file.categories,
+          tags: file.tags,
+        }));
 
         return {
           name: 'filelist',
-          currentPath: currentPathRef.current,
           visibleFileList,
         };
       },
     };
 
     const handlerContext: CommandHandlerContext = {
-      refreshData: actions.refreshData,
+      refreshData,
     };
 
+    // フラット構造用のコマンドハンドラを登録
     const commandHandlers = {
-      create_directory: (command: any) => createDirectoryHandlerV2(command, handlerContext),
-      move_item: (command: any) => moveItemHandlerV2(command, handlerContext),
-      delete_item: (command: any) => deleteItemHandlerV2(command, handlerContext),
+      create_file: (command: any) => createFileHandlerFlat(command, handlerContext),
+      delete_file: (command: any) => deleteFileHandlerFlat(command, handlerContext),
+      rename_file: (command: any) => renameFileHandlerFlat(command, handlerContext),
     };
 
     logger.debug('chatService', '[useFileListChatContext] Registering context provider and handlers');
@@ -94,6 +79,5 @@ export const useFileListChatContext = ({
       logger.debug('chatService', '[useFileListChatContext] Unregistering context provider');
       ChatService.unregisterActiveContextProvider();
     };
-  }, [actions.refreshData]);
-  */
+  }, [refreshData]);
 };

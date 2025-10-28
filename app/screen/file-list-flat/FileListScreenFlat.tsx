@@ -34,7 +34,7 @@ import { FlatListItem } from './components/FlatListItem';
 import { CreateFileModal } from './components/CreateFileModal';
 import { RenameItemModal } from './components/RenameItemModal';
 import { useFileListHeader } from './hooks/useFileListHeader';
-// import { useFileListChatContext } from '../../features/chat/hooks/useFileListChatContext';
+import { useFileListChatContext } from '../../features/chat/hooks/useFileListChatContext';
 import { OverflowMenu } from './components/OverflowMenu';
 
 function FileListScreenFlatContent() {
@@ -243,12 +243,11 @@ function FileListScreenFlatContent() {
     ],
   });
 
-  // チャットコンテキスト
-  // TODO: useFileListChatContextを新しいFlatListContext対応版に更新
-  // useFileListChatContext({
-  //   items: state.files.map((f) => ({ type: 'file' as const, item: f })),
-  //   currentPath: '/', // フラット構造では常に"/"
-  // });
+  // チャットコンテキスト（フラット構造版）
+  useFileListChatContext({
+    files: state.files,
+    refreshData: actions.refreshData,
+  });
 
   // レンダリングアイテム
   const renderFileItem = useCallback(
