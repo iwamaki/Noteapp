@@ -1,22 +1,32 @@
 from langchain.tools import tool
-from src.llm.tools.context_manager import get_file_context, get_all_files_context
+from src.llm.tools.context_manager import get_file_context, get_all_files_context, get_client_id
+from src.api.websocket import manager
+from src.core.logger import logger
 
 @tool
-def read_file(title: str) -> str:
+async def read_file(title: str) -> str:
     """
-    指定されたファイルの内容を読み取ります（フラット構造）。
+    指定されたファイルの内容を読み取ります（フラット構造、WebSocket経由）。
 
-    このツールは、ファイル名（title）を指定してファイルの内容を取得します。
-    現在開いているファイルの場合は、その内容を直接返します。
-    それ以外の場合は、allFilesコンテキストから検索します。
+    このツールは、ファイル名（title）を指定してファイルの内容を動的に取得します。
+
+    動作フロー:
+    1. まず、現在開いているファイルかチェック（編集画面のコンテキスト）
+    2. そうでない場合、WebSocket経由でフロントエンドにファイル内容をリクエスト
+    3. フロントエンドはExpo FileSystemからファイルを読み取り、レスポンスを返す
+    4. バックエンドはレスポンスを受け取り、LLMに内容を返す
+
+    これにより、LLMが必要なファイルだけを動的に取得できます（効率的）。
 
     Args:
         title: 読み取るファイルの名前（例: "会議メモ", "新しいドキュメント"）
 
     Returns:
-        ファイルの内容、またはファイルが見つからない場合はエラーメッセージ
+        ファイルの内容、またはファイルが見つからない/取得できない場合はエラーメッセージ
     """
-    # まず、現在開いているファイルかチェック
+    logger.info(f"read_file tool called: title={title}")
+
+    # 1. まず、現在開いているファイルかチェック（編集画面）
     current_file_context = get_file_context()
     if current_file_context:
         current_filename = current_file_context.get('filename') or ''
@@ -24,34 +34,61 @@ def read_file(title: str) -> str:
 
         # ファイル名の比較
         if title.strip() == current_filename.strip():
+            logger.info(f"File content found in current context: {title}")
             if current_content:
                 return f"ファイル '{current_filename}' の内容:\n\n{current_content}"
             else:
                 return f"ファイル '{current_filename}' は空です。"
 
-    # allFilesコンテキストから検索
+    # 2. allFilesコンテキストからファイルの存在を確認
     all_files = get_all_files_context()
     if not all_files:
         return f"エラー: ファイルシステム情報が利用できません。ファイル '{title}' を読み取れません。"
 
     # titleで検索
-    for file_info in all_files:
-        if file_info.get('type') == 'file':
-            file_title = file_info.get('title', '')
+    file_exists = False
+    file_info = None
+    for f in all_files:
+        if f.get('type') == 'file' and f.get('title', '').strip() == title.strip():
+            file_exists = True
+            file_info = f
+            break
 
-            # titleで一致するか確認
-            if file_title == title.strip():
-                # ファイルが見つかったが、内容は取得できない（AsyncStorageはフロントエンド側にある）
-                categories = file_info.get('categories', [])
-                tags = file_info.get('tags', [])
-                info_parts = [f"ファイル '{file_title}' が見つかりました"]
-                if categories:
-                    info_parts.append(f"（カテゴリー: {', '.join(categories)}）")
-                if tags:
-                    info_parts.append(f"（タグ: {', '.join(tags)}）")
+    if not file_exists:
+        # ファイルが見つからない
+        available_files = [f.get('title', '') for f in all_files if f.get('type') == 'file']
+        return f"エラー: ファイル '{title}' が見つかりませんでした。\n\n利用可能なファイル:\n" + "\n".join(available_files[:10])
 
-                return "".join(info_parts) + "が、内容を読み取るにはファイルを開いてから再度お試しください。\n\n現在開いているファイルのみ内容を読み取ることができます。"
+    # 3. WebSocket経由でフロントエンドにファイル内容をリクエスト
+    client_id = get_client_id()
+    if not client_id:
+        logger.error("No client_id available for WebSocket request")
+        return f"エラー: WebSocket接続が確立されていません。ファイル '{title}' を読み取れません。"
 
-    # ファイルが見つからない
-    available_files = [f.get('title', '') for f in all_files if f.get('type') == 'file']
-    return f"エラー: ファイル '{title}' が見つかりませんでした。\n\n利用可能なファイル:\n" + "\n".join(available_files[:10])
+    try:
+        logger.info(f"Requesting file content via WebSocket: title={title}, client_id={client_id}")
+
+        # フロントエンドにリクエスト（30秒タイムアウト）
+        content = await manager.request_file_content(client_id, title, timeout=30)
+
+        if content is None or content == "":
+            return f"ファイル '{title}' は空です。"
+
+        # メタデータも含めて返す（LLMが理解しやすいように）
+        result_parts = [f"ファイル '{title}' の内容:"]
+        if file_info:
+            categories = file_info.get('categories', [])
+            tags = file_info.get('tags', [])
+            if categories:
+                result_parts.append(f"\nカテゴリー: {', '.join(categories)}")
+            if tags:
+                result_parts.append(f"\nタグ: {', '.join(tags)}")
+
+        result_parts.append(f"\n\n{content}")
+
+        logger.info(f"File content successfully retrieved: title={title}, length={len(content)}")
+        return "".join(result_parts)
+
+    except Exception as e:
+        logger.error(f"Error requesting file content: title={title}, error={str(e)}")
+        return f"エラー: ファイル '{title}' の取得に失敗しました: {str(e)}"

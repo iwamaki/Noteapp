@@ -58,6 +58,7 @@ class ChatRequest(BaseModel):
     provider: str = "openai"
     model: str = "gpt-3.5-turbo"
     context: Optional[ChatContext] = None
+    client_id: Optional[str] = None  # WebSocket接続のクライアントID
 
 
 class LLMCommand(BaseModel):
