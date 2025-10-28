@@ -43,7 +43,7 @@ export const FlatListItem: React.FC<FlatListItemProps> = ({
         styles.container,
         {
           backgroundColor: isSelected
-            ? colors.primaryLight
+            ? colors.border
             : colors.secondary,
           paddingVertical: spacing.sm,
           paddingHorizontal: spacing.md,
@@ -97,7 +97,7 @@ export const FlatListItem: React.FC<FlatListItemProps> = ({
                   style={[
                     styles.badge,
                     {
-                      backgroundColor: colors.primaryLight,
+                      backgroundColor: colors.border,
                       marginRight: spacing.xs,
                     },
                   ]}
