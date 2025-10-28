@@ -20,12 +20,15 @@ class AgentCommandExtractor:
         """コンストラクタ
 
         ツールタイプごとの変換ハンドラーを登録します。
+        フラット構造用のツールハンドラーを含みます。
         """
         self._handlers: Dict[str, Callable[[Dict[str, Any]], Optional[LLMCommand]]] = {
+            # フラット構造用ツール
+            'create_file': self._handle_create_file,
+            'delete_file': self._handle_delete_file,
+            'rename_file': self._handle_rename_file,
             'edit_file': self._handle_edit_file,
-            'create_directory': self._handle_create_directory,
-            'move_item': self._handle_move_item,
-            'delete_item': self._handle_delete_item,
+            'read_file': self._handle_read_file,
         }
 
     def extract_commands(self, agent_result: Dict[str, Any]) -> Optional[List[LLMCommand]]:
@@ -82,8 +85,8 @@ class AgentCommandExtractor:
             logger.error(f"Error processing {tool_name}: {e}")
             return None
 
-    def _handle_edit_file(self, tool_input: Dict[str, Any]) -> Optional[LLMCommand]:
-        """edit_fileツールの処理
+    def _handle_create_file(self, tool_input: Dict[str, Any]) -> Optional[LLMCommand]:
+        """create_fileツールの処理（フラット構造）
 
         Args:
             tool_input: ツールの入力パラメータ
@@ -91,82 +94,107 @@ class AgentCommandExtractor:
         Returns:
             LLMCommand
         """
-        filename = tool_input.get('filename')
+        title = tool_input.get('title')
+        content = tool_input.get('content', '')
+        categories = tool_input.get('categories', '')
+        tags = tool_input.get('tags', '')
+
+        if not title:
+            logger.warning("create_file: title is missing")
+            return None
+
+        # カンマ区切り文字列を配列に変換
+        categories_list = [c.strip() for c in categories.split(',')] if categories else []
+        tags_list = [t.strip() for t in tags.split(',')] if tags else []
+
+        return LLMCommand(
+            action='create_file',
+            title=title,
+            content=content,
+            categories=categories_list if categories_list else None,
+            tags=tags_list if tags_list else None
+        )
+
+    def _handle_delete_file(self, tool_input: Dict[str, Any]) -> Optional[LLMCommand]:
+        """delete_fileツールの処理（フラット構造）
+
+        Args:
+            tool_input: ツールの入力パラメータ
+
+        Returns:
+            LLMCommand
+        """
+        title = tool_input.get('title')
+
+        if not title:
+            logger.warning("delete_file: title is missing")
+            return None
+
+        return LLMCommand(
+            action='delete_file',
+            title=title
+        )
+
+    def _handle_rename_file(self, tool_input: Dict[str, Any]) -> Optional[LLMCommand]:
+        """rename_fileツールの処理（フラット構造）
+
+        Args:
+            tool_input: ツールの入力パラメータ
+
+        Returns:
+            LLMCommand
+        """
+        title = tool_input.get('title')
+        new_title = tool_input.get('new_title')
+
+        if not title or not new_title:
+            logger.warning("rename_file: title or new_title is missing")
+            return None
+
+        return LLMCommand(
+            action='rename_file',
+            title=title,
+            new_title=new_title
+        )
+
+    def _handle_edit_file(self, tool_input: Dict[str, Any]) -> Optional[LLMCommand]:
+        """edit_fileツールの処理（フラット構造）
+
+        Args:
+            tool_input: ツールの入力パラメータ
+
+        Returns:
+            LLMCommand
+        """
+        title = tool_input.get('title')
         content = tool_input.get('content')
 
-        if not filename:
-            logger.warning("edit_file: filename is missing")
+        if not title:
+            logger.warning("edit_file: title is missing")
             return None
 
         return LLMCommand(
             action='edit_file',
-            path=filename,
+            title=title,
             content=content
         )
 
-    def _handle_create_directory(self, tool_input: Dict[str, Any]) -> Optional[LLMCommand]:
-        """create_directoryツールの処理
+    def _handle_read_file(self, tool_input: Dict[str, Any]) -> Optional[LLMCommand]:
+        """read_fileツールの処理（フラット構造）
+
+        Note:
+            read_fileはフロントエンドでの実行が不要なため、
+            コマンドは生成しません（Noneを返す）。
 
         Args:
             tool_input: ツールの入力パラメータ
 
         Returns:
-            LLMCommand
+            None（read_fileはコマンド生成不要）
         """
-        path = tool_input.get('path', '/')
-        name = tool_input.get('name')
+        # read_fileはバックエンド内で完結するため、コマンド生成不要
+        return None
 
-        if not name:
-            logger.warning("create_directory: name is missing")
-            return None
-
-        return LLMCommand(
-            action='create_directory',
-            path=path,
-            content=name
-        )
-
-    def _handle_move_item(self, tool_input: Dict[str, Any]) -> Optional[LLMCommand]:
-        """move_itemツールの処理
-
-        Args:
-            tool_input: ツールの入力パラメータ
-
-        Returns:
-            LLMCommand
-        """
-        source_path = tool_input.get('source_path')
-        dest_path = tool_input.get('dest_path')
-
-        if not source_path or not dest_path:
-            logger.warning("move_item: source_path or dest_path is missing")
-            return None
-
-        return LLMCommand(
-            action='move_item',
-            source_path=source_path,
-            dest_path=dest_path
-        )
-
-    def _handle_delete_item(self, tool_input: Dict[str, Any]) -> Optional[LLMCommand]:
-        """delete_itemツールの処理
-
-        Args:
-            tool_input: ツールの入力パラメータ
-
-        Returns:
-            LLMCommand
-        """
-        path = tool_input.get('path')
-
-        if not path:
-            logger.warning("delete_item: path is missing")
-            return None
-
-        return LLMCommand(
-            action='delete_item',
-            path=path
-        )
 
     def register_handler(
         self,

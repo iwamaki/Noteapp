@@ -125,36 +125,36 @@ class ChatContextBuilder:
             )
 
     def _setup_filelist_screen_context(self, screen: FilelistScreenContext) -> None:
-        """ファイルリスト画面のコンテキストを設定
+        """ファイルリスト画面のコンテキストを設定（フラット構造）
 
         Args:
             screen: ファイルリスト画面のコンテキスト
         """
-        # ファイルリストの処理
+        # ファイルリストの処理（フラット構造ではディレクトリ概念なし）
         processed_file_list = self._process_visible_file_list(screen.visibleFileList)
 
-        # ツール用のディレクトリコンテキスト設定
+        # ツール用のディレクトリコンテキスト設定（フラット構造では空）
+        # 注: ツールとの互換性のため残すが、currentPathは使用しない
         set_directory_context({
-            'currentPath': screen.currentPath,
+            'currentPath': '/',  # フラット構造では常にルート
             'fileList': processed_file_list
         })
         logger.info(
-            f"Directory context set from FilelistScreen: {screen.currentPath} "
-            f"with {len(processed_file_list)} items"
+            f"File list context set from FilelistScreen (flat structure) "
+            f"with {len(processed_file_list)} files"
         )
 
-        # LLMに渡すコンテキストメッセージ生成
+        # LLMに渡すコンテキストメッセージ生成（フラット構造版）
         if screen.visibleFileList:
             file_list_str = "\n".join([
-                f"- {item.filePath}" for item in screen.visibleFileList
+                self._format_file_item(item) for item in screen.visibleFileList
             ])
             self._context_msg = CONTEXT_MSG_FILELIST_SCREEN.format(
-                current_path=screen.currentPath,
                 file_list=file_list_str
             )
 
     def _process_visible_file_list(self, visible_file_list: List[Any]) -> List[Dict[str, str]]:
-        """表示中のファイルリストを処理
+        """表示中のファイルリストを処理（フラット構造）
 
         Args:
             visible_file_list: 表示中のファイルリスト
@@ -164,12 +164,28 @@ class ChatContextBuilder:
         """
         processed_list = []
         for item in visible_file_list:
-            if hasattr(item, 'name') and hasattr(item, 'type') and item.name and item.type:
+            if hasattr(item, 'title') and hasattr(item, 'type'):
                 processed_list.append({
-                    'name': item.name,
+                    'title': item.title,
                     'type': item.type
                 })
         return processed_list
+
+    def _format_file_item(self, item: Any) -> str:
+        """ファイルアイテムをLLM用に整形（フラット構造）
+
+        Args:
+            item: FileListItemオブジェクト
+
+        Returns:
+            整形された文字列
+        """
+        parts = [f"- {item.title}"]
+        if hasattr(item, 'categories') and item.categories:
+            parts.append(f" [カテゴリー: {', '.join(item.categories)}]")
+        if hasattr(item, 'tags') and item.tags:
+            parts.append(f" [タグ: {', '.join(item.tags)}]")
+        return "".join(parts)
 
     def _process_fallback_file_context(self, context: ChatContext) -> None:
         """フォールバック用のファイルコンテキストを処理（古い形式のサポート）
