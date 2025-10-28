@@ -4,7 +4,8 @@
  * @description データアクセス層とバリデーションを組み合わせたビジネスロジック
  */
 
-import { FileRepositoryV2 } from '@data/repositories/fileRepositoryV2';
+// import { FileRepositoryV2 } from '@data/repositories/fileRepositoryV2';
+import { FileRepositoryFlat } from '@data/repositories/fileRepositoryFlat';
 import { ValidationService } from './ValidationService';
 import { ErrorService } from './ErrorService';
 import { File, ErrorCode, EditorError } from '../types';
@@ -24,7 +25,7 @@ export class FileService {
    */
   async loadFile(id: string): Promise<File> {
     try {
-      const file = await FileRepositoryV2.getById(id);
+      const file = await FileRepositoryFlat.getById(id);
 
       if (!file) {
         const error: EditorError = {
@@ -71,24 +72,19 @@ export class FileService {
     try {
       if (data.id) {
         // 既存ファイルの更新
-        const file = await FileRepositoryV2.updateWithVersion(data.id, {
+        const file = await FileRepositoryFlat.update(data.id, {
           title: data.title,
           content: data.content,
           tags: data.tags,
         });
         return file;
       } else {
-        // 新規ファイルの作成
-        // TODO: 親フォルダパスを引数として受け取る必要がある
-        const folderPath = '/'; // デフォルトはルート
-        const file = await FileRepositoryV2.createWithVersion(
-          {
-            title: data.title || '',
-            content: data.content || '',
-            tags: data.tags || [],
-          },
-          folderPath
-        );
+        // 新規ファイルの作成（フラット構造なのでパス不要）
+        const file = await FileRepositoryFlat.create({
+          title: data.title || '',
+          content: data.content || '',
+          tags: data.tags || [],
+        });
         return file;
       }
     } catch {
@@ -107,7 +103,7 @@ export class FileService {
    */
   async deleteFile(id: string): Promise<void> {
     try {
-      await FileRepositoryV2.delete(id);
+      await FileRepositoryFlat.delete(id);
     } catch {
       const editorError: EditorError = {
         code: ErrorCode.STORAGE_ERROR,
@@ -121,37 +117,51 @@ export class FileService {
 
   /**
    * ファイルのバージョン履歴を取得（V2）
+   * TODO: FileRepositoryFlatにバージョン機能を実装後に有効化
    */
   async getVersionHistory(fileId: string) {
-    try {
-      return await FileRepositoryV2.getVersions(fileId);
-    } catch {
-      const editorError: EditorError = {
-        code: ErrorCode.STORAGE_ERROR,
-        message: 'バージョン履歴の取得に失敗しました。',
-        recoverable: true,
-        retry: () => this.getVersionHistory(fileId),
-      };
-      throw editorError;
-    }
+    // try {
+    //   return await FileRepositoryFlat.getVersions(fileId);
+    // } catch {
+    //   const editorError: EditorError = {
+    //     code: ErrorCode.STORAGE_ERROR,
+    //     message: 'バージョン履歴の取得に失敗しました。',
+    //     recoverable: true,
+    //     retry: () => this.getVersionHistory(fileId),
+    //   };
+    //   throw editorError;
+    // }
+    const editorError: EditorError = {
+      code: ErrorCode.STORAGE_ERROR,
+      message: 'バージョン履歴機能は現在実装中です。',
+      recoverable: false,
+    };
+    throw editorError;
   }
 
   /**
    * ファイルを特定のバージョンに復元
+   * TODO: FileRepositoryFlatにバージョン機能を実装後に有効化
    */
   async restoreVersion(fileId: string, versionId: string): Promise<File> {
-    try {
-      const file = await FileRepositoryV2.restoreVersion(fileId, versionId);
-      return file;
-    } catch {
-      const editorError: EditorError = {
-        code: ErrorCode.STORAGE_ERROR,
-        message: 'バージョンの復元に失敗しました。',
-        recoverable: true,
-        retry: () => this.restoreVersion(fileId, versionId),
-      };
-      throw editorError;
-    }
+    // try {
+    //   const file = await FileRepositoryFlat.restoreVersion(fileId, versionId);
+    //   return file;
+    // } catch {
+    //   const editorError: EditorError = {
+    //     code: ErrorCode.STORAGE_ERROR,
+    //     message: 'バージョンの復元に失敗しました。',
+    //     recoverable: true,
+    //     retry: () => this.restoreVersion(fileId, versionId),
+    //   };
+    //   throw editorError;
+    // }
+    const editorError: EditorError = {
+      code: ErrorCode.STORAGE_ERROR,
+      message: 'バージョン復元機能は現在実装中です。',
+      recoverable: false,
+    };
+    throw editorError;
   }
 }
 
