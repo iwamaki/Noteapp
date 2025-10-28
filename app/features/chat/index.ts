@@ -58,21 +58,27 @@ class ChatService {
   /**
    * アクティブなコンテキストプロバイダーを登録
    * @param provider 登録するコンテキストプロバイダー
+   * @param clearHandlers コンテキストハンドラをクリアするかどうか（デフォルト: false）
    */
-  public registerActiveContextProvider(provider: ActiveScreenContextProvider): void {
-    logger.debug('chatService', 'Registering active context provider');
+  public registerActiveContextProvider(provider: ActiveScreenContextProvider, clearHandlers: boolean = false): void {
+    logger.debug('chatService', 'Registering active context provider', { clearHandlers });
     this.currentProvider = provider;
-    // コンテキストハンドラのみをクリア（グローバルハンドラは維持）
-    this.contextHandlers = {};
+    // clearHandlers=trueの場合のみコンテキストハンドラをクリア
+    // これにより、画面間でハンドラが保持される（デフォルト動作）
+    if (clearHandlers) {
+      this.contextHandlers = {};
+    }
   }
 
   /**
    * アクティブなコンテキストプロバイダーを解除
+   * Note: コンテキストハンドラはクリアしません。
+   * ハンドラは画面間で共有され、各画面が必要なハンドラを上書きします。
    */
   public unregisterActiveContextProvider(): void {
     logger.debug('chatService', 'Unregistering active context provider');
     this.currentProvider = null;
-    this.contextHandlers = {};
+    // コンテキストハンドラはクリアしない - 次の画面で使用される可能性がある
   }
 
   /**
