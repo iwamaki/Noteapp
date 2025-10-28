@@ -10,6 +10,8 @@ import { ChatMessage, LLMCommand } from './llmService/types/types';
 import { logger } from '../../utils/logger';
 import { ActiveScreenContextProvider, ActiveScreenContext, ChatServiceListener } from './types';
 import { FileRepositoryFlat } from '@data/repositories/fileRepositoryFlat';
+import WebSocketService from './services/websocketService';
+import { getOrCreateClientId } from './utils/clientId';
 
 /**
  * シングルトンクラスとして機能し、アプリケーション全体でチャットの状態を管理します。
@@ -40,6 +42,11 @@ class ChatService {
   // LLMプロバイダーとモデル
   private llmProvider: string = 'anthropic';
   private llmModel: string = 'claude-3-5-sonnet-20241022';
+
+  // WebSocketサービス
+  private wsService: WebSocketService | null = null;
+  private clientId: string | null = null;
+  private isWebSocketInitialized: boolean = false;
 
   private constructor() {
     // プライベートコンストラクタでシングルトンを保証
@@ -109,6 +116,58 @@ class ChatService {
   }
 
   /**
+   * WebSocket接続を初期化
+   *
+   * アプリ起動時に一度だけ呼び出されます（初期化タスクから）。
+   * client_idを生成し、WebSocketサービスを初期化してバックエンドに接続します。
+   *
+   * @param backendUrl バックエンドのURL（例: "https://xxxxx.ngrok-free.app"）
+   */
+  public async initializeWebSocket(backendUrl: string): Promise<void> {
+    if (this.isWebSocketInitialized) {
+      logger.debug('chatService', 'WebSocket already initialized');
+      return;
+    }
+
+    try {
+      // client_idを取得または生成
+      this.clientId = await getOrCreateClientId();
+      logger.info('chatService', `WebSocket client_id: ${this.clientId}`);
+
+      // WebSocketサービスを初期化
+      this.wsService = WebSocketService.getInstance(this.clientId);
+
+      // WebSocket接続を確立
+      this.wsService.connect(backendUrl);
+
+      this.isWebSocketInitialized = true;
+      logger.info('chatService', 'WebSocket initialization completed');
+
+    } catch (error) {
+      logger.error('chatService', 'Failed to initialize WebSocket:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * WebSocket接続を切断
+   */
+  public disconnectWebSocket(): void {
+    if (this.wsService) {
+      this.wsService.disconnect();
+      this.isWebSocketInitialized = false;
+      logger.info('chatService', 'WebSocket disconnected');
+    }
+  }
+
+  /**
+   * client_idを取得
+   */
+  public getClientId(): string | null {
+    return this.clientId;
+  }
+
+  /**
    * チャットメッセージを送信
    * @param message 送信するメッセージ
    */
@@ -143,9 +202,9 @@ class ChatService {
       APIService.setLLMProvider(this.llmProvider);
       APIService.setLLMModel(this.llmModel);
 
-      // APIにメッセージを送信
+      // APIにメッセージを送信（client_idも含める）
       logger.debug('chatService', 'Sending message to LLM with context:', chatContext);
-      const response = await APIService.sendChatMessage(trimmedMessage, chatContext);
+      const response = await APIService.sendChatMessage(trimmedMessage, chatContext, this.clientId);
 
       // AIメッセージを追加
       const aiMessage: ChatMessage = {
