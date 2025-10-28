@@ -13,7 +13,7 @@ import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/nativ
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
 // import { FileRepositoryV2 } from '@data/repositories/fileRepositoryV2';
-import { FileVersion, File } from '@data/core/types';
+import { FileVersionFlat, FileFlat } from '@data/core/typesFlat';
 import { format } from 'date-fns';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { useCustomHeader } from '../../components/CustomHeader';
@@ -31,10 +31,10 @@ function VersionHistoryScreen() {
   const { colors, typography, spacing } = useTheme();
   const { createHeaderConfig } = useCustomHeader();
 
-  const [versions, setVersions] = useState<FileVersion[]>([]);
+  const [versions, setVersions] = useState<FileVersionFlat[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentFile, setCurrentFile] = useState<File | null>(null);
+  const [currentFile, setCurrentFile] = useState<FileFlat | null>(null);
 
   useLayoutEffect(() => {
     navigation.setOptions(
@@ -96,7 +96,7 @@ function VersionHistoryScreen() {
     }, [fetchVersions])
   );
 
-  const handleSelectVersion = (selectedVersion: FileVersion) => {
+  const handleSelectVersion = (selectedVersion: FileVersionFlat) => {
     if (!currentFile || selectedVersion.id === 'current') {
       // Cannot compare the current version with itself
       return;
@@ -130,7 +130,7 @@ function VersionHistoryScreen() {
     },
   });
 
-  const renderItem = ({ item }: { item: FileVersion }) => {
+  const renderItem = ({ item }: { item: FileVersionFlat }) => {
     const versionLabel = `Version ${item.version}${item.id === 'current' ? ' (Current)' : ''}`;
     return (
       <ListItem.Container

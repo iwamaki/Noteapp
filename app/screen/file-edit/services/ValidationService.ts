@@ -5,7 +5,7 @@
  */
 
 import { ValidationRule, ValidationResult } from '../types';
-import { File } from '@data/core/types';
+import { FileFlat } from '@data/core/typesFlat';
 
 /**
  * バリデーションサービス
@@ -33,11 +33,11 @@ export class ValidationService {
   /**
    * ファイル全体をバリデーション
    */
-  validateFile(data: Partial<File>): ValidationResult {
+  validateFile(data: Partial<FileFlat>): ValidationResult {
     const errors: string[] = [];
 
     for (const rule of this.rules) {
-      const value = data[rule.field as keyof File];
+      const value = data[rule.field as keyof FileFlat];
       if (!rule.validate(value)) {
         errors.push(rule.message);
       }

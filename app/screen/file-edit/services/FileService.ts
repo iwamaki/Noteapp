@@ -8,7 +8,7 @@
 import { FileRepositoryFlat } from '@data/repositories/fileRepositoryFlat';
 import { ValidationService } from './ValidationService';
 import { ErrorService } from './ErrorService';
-import { File, ErrorCode, EditorError } from '../types';
+import { FileFlat, ErrorCode, EditorError } from '../types';
 
 /**
  * ノートサービス
@@ -23,7 +23,7 @@ export class FileService {
   /**
    * ファイルを読み込む
    */
-  async loadFile(id: string): Promise<File> {
+  async loadFile(id: string): Promise<FileFlat> {
     try {
       const file = await FileRepositoryFlat.getById(id);
 
@@ -57,7 +57,7 @@ export class FileService {
   /**
    * ファイルを保存（新規作成または更新）（V2）
    */
-  async save(data: Partial<File & { id?: string }>): Promise<File> {
+  async save(data: Partial<FileFlat & { id?: string }>): Promise<FileFlat> {
     // バリデーション
     const validationResult = this.validator.validateFile(data);
     if (!validationResult.isValid) {
@@ -143,7 +143,7 @@ export class FileService {
    * ファイルを特定のバージョンに復元
    * TODO: FileRepositoryFlatにバージョン機能を実装後に有効化
    */
-  async restoreVersion(fileId: string, versionId: string): Promise<File> {
+  async restoreVersion(fileId: string, versionId: string): Promise<FileFlat> {
     // try {
     //   const file = await FileRepositoryFlat.restoreVersion(fileId, versionId);
     //   return file;
