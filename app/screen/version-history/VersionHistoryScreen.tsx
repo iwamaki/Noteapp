@@ -2,6 +2,9 @@
  * @file VersionHistoryScreen.tsx
  * @summary このファイルは、アプリケーションのファイルのバージョン履歴画面をレンダリングします。
  * @responsibility 特定のファイルの過去のバージョンを一覧表示し、選択したバージョンと現在のファイルの差分を表示する機能を提供します。
+ *
+ * TODO: Update to use FileRepositoryFlat for flat structure migration
+ * This screen is temporarily disabled as it depends on deleted FileRepositoryV2
  */
 
 import React, { useState, useCallback, useLayoutEffect } from 'react';
@@ -9,7 +12,7 @@ import { View, Text, StyleSheet, FlatList, Alert } from 'react-native';
 import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
-import { FileRepositoryV2 } from '@data/repositories/fileRepositoryV2';
+// import { FileRepositoryV2 } from '@data/repositories/fileRepositoryV2';
 import { FileVersion, File } from '@data/core/types';
 import { format } from 'date-fns';
 import { useTheme } from '../../design/theme/ThemeContext';
@@ -48,17 +51,20 @@ function VersionHistoryScreen() {
   }, [navigation, colors, typography]);
 
   const fetchVersions = useCallback(async () => {
+    // TODO: Re-implement with FileRepositoryFlat
+    setLoading(false);
+    setError('バージョン履歴機能は現在利用できません。フラット構造への移行後に再実装されます。');
+
+    /* Old implementation - disabled
     try {
       setLoading(true);
       setError(null);
       if (fileId) {
-        // リポジトリからデータ取得
         const fetchedVersions = await FileRepositoryV2.getVersions(fileId);
         const fetchedCurrentFile = await FileRepositoryV2.getById(fileId);
 
         setCurrentFile(fetchedCurrentFile);
 
-        // Also add the current version to the list for context, but designate it
         if (fetchedCurrentFile) {
           const currentVersion: FileVersion = {
             id: 'current',
@@ -67,12 +73,10 @@ function VersionHistoryScreen() {
             version: fetchedCurrentFile.version,
             createdAt: fetchedCurrentFile.updatedAt,
           };
-          // Sort historical versions by createdAt in descending order (newest first)
-          const sortedFetchedVersions = fetchedVersions.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+          const sortedFetchedVersions = fetchedVersions.sort((a: FileVersion, b: FileVersion) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
           setVersions([currentVersion, ...sortedFetchedVersions]);
         } else {
-          // Sort historical versions by createdAt in descending order (newest first)
-          const sortedFetchedVersions = fetchedVersions.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+          const sortedFetchedVersions = fetchedVersions.sort((a: FileVersion, b: FileVersion) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
           setVersions(sortedFetchedVersions);
         }
       }
@@ -83,6 +87,7 @@ function VersionHistoryScreen() {
     } finally {
       setLoading(false);
     }
+    */
   }, [fileId]);
 
   useFocusEffect(

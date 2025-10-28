@@ -1,7 +1,11 @@
-import { TreeNode } from '../screen/file-list/utils/treeUtils';
-import { FileRepositoryV2 } from '@data/repositories/fileRepositoryV2';
-import { FolderRepositoryV2 } from '@data/repositories/folderRepositoryV2';
+// TODO: Update for flat structure or remove
+// import { TreeNode } from '../screen/file-list/utils/treeUtils';
+// import { FileRepositoryV2 } from '@data/repositories/fileRepositoryV2';
+// import { FolderRepositoryV2 } from '@data/repositories/folderRepositoryV2';
 import { logger } from './logger';
+
+// Placeholder types for now
+type TreeNode = any;
 
 /**
  * A debug utility to ensure consistency between the data in storage and the data in the UI tree.
@@ -28,6 +32,11 @@ const collectAllNodes = (nodes: TreeNode[]): TreeNode[] => {
 };
 
 export const checkTreeConsistency = async (treeNodes: TreeNode[]): Promise<void> => {
+  // TODO: Re-implement for flat structure
+  logger.warn('system', 'checkTreeConsistency is disabled for flat structure migration');
+  return;
+
+  /* Old implementation - disabled
   try {
 
     // 1. Get the source of truth from storage
@@ -37,8 +46,9 @@ export const checkTreeConsistency = async (treeNodes: TreeNode[]): Promise<void>
       FileRepositoryV2.getByFolderPath('/'),
       FolderRepositoryV2.getByParentPath('/'),
     ]);
+  */
 
-    // 2. Get the UI data - collect ALL nodes including those in collapsed folders
+    /* // 2. Get the UI data - collect ALL nodes including those in collapsed folders
     const allUiNodes = collectAllNodes(treeNodes);
     const uiFiles = allUiNodes.filter(node => node.type === 'file');
     const uiFolders = allUiNodes.filter(node => node.type === 'folder');
@@ -107,12 +117,18 @@ export const checkTreeConsistency = async (treeNodes: TreeNode[]): Promise<void>
     // Re-throw the error to make it visible
     throw error;
   }
+  */
 };
 
 /**
  * Logs the current state of storage for debugging purposes
  */
 export const logStorageState = async (): Promise<void> => {
+  // TODO: Re-implement for flat structure
+  logger.warn('system', 'logStorageState is disabled for flat structure migration');
+  return;
+
+  /* Old implementation - disabled
   try {
     // リポジトリから取得（ルートレベルのみ）
     const [allFiles, allFolders] = await Promise.all([
@@ -140,4 +156,5 @@ export const logStorageState = async (): Promise<void> => {
   } catch (error) {
     console.error('Failed to log storage state:', error);
   }
+  */
 };

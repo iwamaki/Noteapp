@@ -32,10 +32,10 @@ import { useSettingsStore } from '../../settings/settingsStore';
 import { Ionicons } from '@expo/vector-icons';
 import { FlatListItem } from './components/FlatListItem';
 import { CreateFileModal } from './components/CreateFileModal';
-import { RenameItemModal } from '../file-list/components/RenameItemModal';
-import { useFileListHeader } from '../file-list/hooks/useFileListHeader';
+import { RenameItemModal } from './components/RenameItemModal';
+import { useFileListHeader } from './hooks/useFileListHeader';
 // import { useFileListChatContext } from '../../features/chat/hooks/useFileListChatContext';
-import { OverflowMenu } from '../file-list/components/OverflowMenu';
+import { OverflowMenu } from './components/OverflowMenu';
 
 function FileListScreenFlatContent() {
   const { colors, spacing } = useTheme();
