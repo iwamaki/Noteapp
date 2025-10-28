@@ -9,9 +9,10 @@ import APIService, { ChatContext } from './llmService/api';
 import { ChatMessage, LLMCommand } from './llmService/types/types';
 import { logger } from '../../utils/logger';
 import { ActiveScreenContextProvider, ActiveScreenContext, ChatServiceListener } from './types';
-import { DirectoryResolver } from '@data/infrastructure/directoryResolver';
-import { Directory } from 'expo-file-system';
-import * as FileSystemUtilsV2 from '@data/infrastructure/fileSystemUtilsV2';
+// TODO: Update to use FileRepositoryFlat
+// import { DirectoryResolver } from '@data/infrastructure/directoryResolver';
+// import { Directory } from 'expo-file-system';
+// import * as FileSystemUtilsV2 from '@data/infrastructure/fileSystemUtilsV2';
 
 /**
  * シングルトンクラスとして機能し、アプリケーション全体でチャットの状態を管理します。
@@ -249,76 +250,24 @@ class ChatService {
   }
 
   /**
-   * LLMコンテキスト用に全ファイル・フォルダ情報を取得（V2）
-   *
-   * V2では全件取得パターンが排除されているため、再帰的に全アイテムを収集します。
-   * これはLLMコンテキスト用の正当なユースケースです。
+   * LLMコンテキスト用に全ファイル情報を取得（Flat構造版）
+   * TODO: Update to use FileRepositoryFlat.getAll()
    */
   private async getAllFilesForContext(): Promise<Array<{ title: string; path: string; type: 'file' | 'folder' }>> {
     try {
-      const allItems: Array<{ title: string; path: string; type: 'file' | 'folder' }> = [];
+      // TODO: Implement with FileRepositoryFlat
+      // const files = await FileRepositoryFlat.getAll();
+      // return files.map(file => ({
+      //   title: file.title,
+      //   path: `/${file.title}`, // Flat structure
+      //   type: 'file' as const,
+      // }));
 
-      // ルートディレクトリから再帰的に全アイテムを収集
-      await this.collectAllItemsRecursively(DirectoryResolver.getRootDirectory(), '/', allItems);
-
-      const fileCount = allItems.filter(item => item.type === 'file').length;
-      const folderCount = allItems.filter(item => item.type === 'folder').length;
-      logger.debug('chatService', `Retrieved ${fileCount} files and ${folderCount} folders for LLM context (V2)`);
-
-      return allItems;
-    } catch (error) {
-      logger.error('chatService', 'Error getting all files for context (V2):', error);
+      logger.warn('chatService', 'getAllFilesForContext not yet implemented for flat structure');
       return [];
-    }
-  }
-
-  /**
-   * 再帰的に全フォルダと全ファイルを収集するヘルパー関数（V2）
-   *
-   * @param folderDir - 現在のフォルダディレクトリ
-   * @param currentPath - 現在の仮想パス（例: "/folder1/"）
-   * @param allItems - 収集結果を格納する配列
-   */
-  private async collectAllItemsRecursively(
-    folderDir: Directory,
-    currentPath: string,
-    allItems: Array<{ title: string; path: string; type: 'file' | 'folder' }>
-  ): Promise<void> {
-    try {
-      // 現在のフォルダ内のサブフォルダを取得
-      const subfolders = await FileSystemUtilsV2.listSubfoldersInFolder(folderDir);
-
-      // 各サブフォルダをアイテムリストに追加し、再帰的に探索
-      for (const subfolder of subfolders) {
-        const subfolderPath = currentPath === '/' ? `/${subfolder.slug}/` : `${currentPath}${subfolder.slug}/`;
-
-        allItems.push({
-          title: subfolder.name,
-          path: subfolderPath,
-          type: 'folder',
-        });
-
-        // サブフォルダを再帰的に探索
-        const subfolderDir = new Directory(folderDir, subfolder.slug);
-        await this.collectAllItemsRecursively(subfolderDir, subfolderPath, allItems);
-      }
-
-      // 現在のフォルダ内のファイルを取得
-      const files = await FileSystemUtilsV2.listFilesInFolder(folderDir);
-
-      // 各ファイルをアイテムリストに追加
-      for (const file of files) {
-        const filePath = currentPath === '/' ? `/${file.title}` : `${currentPath}${file.title}`;
-
-        allItems.push({
-          title: file.title,
-          path: filePath,
-          type: 'file',
-        });
-      }
     } catch (error) {
-      logger.error('chatService', `Error collecting items from ${currentPath}:`, error);
-      // エラーが発生しても処理を続行（部分的な結果を返す）
+      logger.error('chatService', 'Error getting all files for context:', error);
+      return [];
     }
   }
 

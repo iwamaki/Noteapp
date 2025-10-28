@@ -1,11 +1,13 @@
 // useDiffView.ts
+// TODO: Update to use FileRepositoryFlat for flat structure migration
+// This file is temporarily disabled as it depends on deleted FileRepositoryV2
 
 import React from 'react';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useLayoutEffect, useMemo, useCallback } from 'react';
 import { Alert, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { FileRepositoryV2, FileSystemV2Error } from '@data/repositories/fileRepositoryV2';
+// import { FileRepositoryV2, FileSystemV2Error } from '@data/repositories/fileRepositoryV2';
 import { RootStackParamList } from '../../../navigation/types';
 import { useCustomHeader, HeaderConfig } from '../../../components/CustomHeader';
 import { generateDiff } from '../services/diffService';
@@ -36,6 +38,10 @@ export const useDiffView = () => {
   }, [navigation]);
 
   const handleRestore = useCallback(async () => {
+    // TODO: Re-implement with FileRepositoryFlat
+    Alert.alert('未実装', 'バージョン復元機能は現在利用できません。フラット構造への移行後に再実装されます。');
+
+    /* Old implementation - disabled
     Alert.alert(
       '復元確認',
       'このバージョンにファイルを復元しますか？現在の内容は上書きされます。',
@@ -46,10 +52,9 @@ export const useDiffView = () => {
           onPress: async () => {
             try {
               if (mode === 'restore' && fileId && versionId) {
-                // V2リポジトリを使用してバージョン復元
                 await FileRepositoryV2.restoreVersion(fileId, versionId);
                 Alert.alert('成功', 'ノートが正常に復元されました。');
-                navigation.goBack(); // 復元後、前の画面に戻る
+                navigation.goBack();
               } else if (mode !== 'restore') {
                 throw new Error('復元モードではありません。');
               } else {
@@ -68,6 +73,7 @@ export const useDiffView = () => {
       ],
       { cancelable: true }
     );
+    */
   }, [mode, fileId, versionId, navigation]);
 
   useLayoutEffect(() => {
