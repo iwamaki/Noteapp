@@ -2,11 +2,10 @@
 # @summary WebSocket接続とファイル内容取得リクエストを管理します
 # @responsibility WebSocket接続の管理、フロントエンドへのファイル内容リクエスト、レスポンスの待機処理
 
-from fastapi import WebSocket, WebSocketDisconnect
+from fastapi import WebSocket
 from typing import Dict, Optional
 import asyncio
 import uuid
-import json
 from src.core.logger import logger
 
 

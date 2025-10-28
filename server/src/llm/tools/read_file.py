@@ -1,3 +1,4 @@
+from typing import Any, cast
 from langchain.tools import tool
 from src.llm.tools.context_manager import get_file_context, get_all_files_context, get_client_id
 from src.api.websocket import manager
@@ -77,8 +78,8 @@ async def read_file(title: str) -> str:
         # メタデータも含めて返す（LLMが理解しやすいように）
         result_parts = [f"ファイル '{title}' の内容:"]
         if file_info:
-            categories = file_info.get('categories', [])
-            tags = file_info.get('tags', [])
+            categories: list[Any] = cast(list[Any], file_info.get('categories', []))
+            tags: list[Any] = cast(list[Any], file_info.get('tags', []))
             if categories:
                 result_parts.append(f"\nカテゴリー: {', '.join(categories)}")
             if tags:
