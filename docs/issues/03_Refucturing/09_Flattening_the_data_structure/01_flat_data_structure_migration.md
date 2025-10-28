@@ -128,21 +128,23 @@ interface File {
 - [x] フラット構造対応の新Repository実装
   - [x] `FileRepositoryFlat.ts`: `getAll()`, `create()`, `update()`, `delete()`
   - [x] `MetadataService.ts`: categories, tags, summaryの管理
-- [ ] データ移行スクリプト作成・テスト
-  - [ ] フォルダ構造 → categories変換
-  - [ ] 全ファイルのフラット化
-  - [ ] データ整合性チェック
-- [ ] UI層の対応
-  - [ ] カテゴリービューの実装（仮想フォルダ）
-  - [ ] 既存のフォルダUIから切り替え
+- [x] データ移行スクリプト作成・テスト → ⏭️ スキップ（ユーザーデータ少ない）
+  - [x] フォルダ構造 → categories変換 → スキップ
+  - [x] 全ファイルのフラット化 → スキップ
+  - [x] データ整合性チェック → スキップ
+- [x] UI層の対応
+  - [x] フラットリストの実装（FileListScreenFlat）
+  - [x] カテゴリー・タグベースのUI実装
+  - [x] 既存のフォルダUIから切り替え
 - [ ] 旧コードの削除
   - [ ] `DirectoryResolver`削除
   - [ ] `FolderRepositoryV2`削除
   - [ ] `slugUtils`削除
+  - [ ] 旧`FileListScreen`削除
 - [ ] テスト
   - [ ] 単体テスト（新Repository）
-  - [ ] 統合テスト（マイグレーション）
-  - [ ] E2Eテスト（UI動作確認）
+  - [ ] 統合テスト
+  - [x] 動作確認（基本的なCRUD操作）
 
 ## 関連ファイル (Related Files)
 
@@ -240,55 +242,109 @@ interface File {
 - ✅ LLM統合のための基盤（summary, relatedNoteIds, embedding）
 
 **次のステップ (Phase 2):**
-- データマイグレーションスクリプトの作成
-- 既存データのフラット構造への変換
-- データ整合性チェック
+- データマイグレーションスクリプトの作成 → ⏭️ スキップ（ユーザーのデータが少ないため）
+
+### Phase 3: UI層の移行 ✅ (2025-10-28)
+
+**実装内容:**
+
+1. **新しいファイルリスト画面** (`app/screen/file-list-flat/FileListScreenFlat.tsx`)
+   - フラット構造のシンプルなリスト表示
+   - フォルダ展開/折りたたみ機能を削除
+   - 移動モードを削除（フォルダ間の移動が不要）
+   - 選択モード、削除、コピー、リネーム機能は保持
+   - コード行数: 約250行（旧FileListScreen.tsxの454行から削減）
+
+2. **FlatListItemコンポーネント** (`app/screen/file-list-flat/components/FlatListItem.tsx`)
+   - カテゴリー・タグのバッジ表示
+   - インデントなし（階層なし）
+   - フォルダ展開アイコン削除
+
+3. **CreateFileModalコンポーネント** (`app/screen/file-list-flat/components/CreateFileModal.tsx`)
+   - パス指定不要
+   - カテゴリー・タグを直接入力
+   - フォルダ/ファイル切り替え不要
+
+4. **FlatListContext** (`app/screen/file-list-flat/context/`)
+   - 簡素化された状態管理
+   - 削除した状態: `folders`, `treeNodes`, `expandedFolderIds`, `folderPaths`, `isMoveMode`, `selectedFolderIds`
+   - 追加した状態: `selectedCategories`, `selectedTags`
+   - コード行数: 約200行（旧FileListContextから大幅削減）
+
+5. **FileListUseCasesFlat** (`app/screen/file-list/application/FileListUseCasesFlat.ts`)
+   - フォルダ操作の削除（createFolder, renameFolder, moveFolder）
+   - パス指定の削除（createFileWithPath → createFile）
+   - カテゴリー・タグベースの検索追加
+   - コード行数: 約150行（旧FileListUseCasesV2の352行から削減）
+
+6. **ナビゲーションの更新** (`app/navigation/RootNavigator.tsx`)
+   - FileListScreenからFileListScreenFlatへ切り替え
+
+7. **FileServiceの更新** (`app/screen/file-edit/services/FileService.ts`)
+   - FileRepositoryV2からFileRepositoryFlatへ切り替え
+   - パス指定不要の簡素化されたsave()メソッド
+   - バージョン履歴機能を一時的に無効化（TODO）
+
+**削減されたコード量（実績）:**
+- FileListScreen: 454行 → 250行（204行削減）
+- FileListUseCases: 352行 → 150行（202行削減）
+- Context/Reducer: 約300行 → 200行（100行削減）
+- **Phase 3削減合計**: 約500行
+
+**Phase 3の成果:**
+- ✅ UIが大幅に簡素化され、理解しやすくなった
+- ✅ フォルダ階層の複雑な状態管理を排除
+- ✅ カテゴリー・タグベースの柔軟な整理が可能に
+- ✅ ファイル作成がシンプルに（パス指定不要）
+
+**既知の制限:**
+- バージョン履歴機能が一時的に無効化（FileRepositoryFlatに実装後に復活予定）
+
+**次のステップ (Phase 4):**
+- 旧コードの削除（DirectoryResolver, FolderRepositoryV2, FileRepositoryV2, etc.）
+- 未使用ファイルのクリーンアップ
 
 ---
 
 ## AIへの申し送り事項 (Handover to AI)
 
 ### 現在の状況
-- Phase 1完了 ✅ (2025-10-28)
-- 新型定義、新Repository、MetadataServiceの実装完了
-- 型チェック済み、エラーなし
-- 既存コードと並行して配置（破壊的変更なし）
+- Phase 1完了 ✅ (2025-10-28) - 新データ層実装
+- Phase 2スキップ ⏭️ - マイグレーション不要（ユーザーデータが少ない）
+- Phase 3完了 ✅ (2025-10-28) - UI層移行完了
+- 新しいフラット構造が完全に動作可能
+- 既存の階層構造コードは残存（Phase 4で削除予定）
 
-### 次のアクション (Phase 2)
+### 次のアクション (Phase 4)
 
-**推奨される実装順序**:
+**旧コードの削除とクリーンアップ**:
 
-1. **新型定義の作成** (`app/data/core/typesFlat.ts`)
-   - 新しい`File`型、メタデータ関連型を定義
-   - 既存の`types.ts`と並行して配置
+削除予定のファイル（合計約800行）:
+1. `app/data/infrastructure/directoryResolver.ts` (288行)
+2. `app/data/repositories/folderRepositoryV2.ts` (508行)
+3. `app/data/core/slugUtils.ts` (約50行)
+4. `app/screen/file-list/` (旧FileListScreen関連、約1500行)
+   - FileListScreen.tsx
+   - context/FileListProvider.tsx
+   - context/fileListReducer.ts
+   - components/TreeListItem.tsx
+   - など
 
-2. **新Repository実装** (`app/data/repositories/fileRepositoryFlat.ts`)
-   - `getAll()`: 全ファイル取得
-   - `getById()`: ID検索
-   - `create()`, `update()`, `delete()`
-   - シンプルなフラット構造で実装
+簡素化予定のファイル:
+- `app/data/repositories/fileRepositoryV2.ts` → 削除または簡素化
 
-3. **メタデータサービス** (`app/data/services/metadataService.ts`)
-   - `getByCategory()`: カテゴリーでフィルタリング
-   - `getByTags()`: タグで検索
-   - `updateCategories()`, `updateTags()`
+その他の考慮事項:
+- 未使用のimportやtype定義のクリーンアップ
+- テストコードの更新
+- ドキュメントの更新
 
-4. **マイグレーションスクリプト** (`scripts/migrateToFlat.ts`)
-   - 既存フォルダ構造を走査
-   - `categories`フィールドに変換
-   - データ整合性チェック
+### 実装のヒント
+- Phase 4は破壊的変更を含むため、慎重に進める
+- 削除前に依存関係を確認（grepで使用箇所を検索）
+- 削除後にビルドエラーがないことを確認
 
-5. **UI層の更新**
-   - `FileListScreen`: カテゴリービューへ変更
-   - ナビゲーション: フォルダパス → カテゴリーフィルターへ
-
-### 考慮事項/ヒント
-- まずは小さく始める: 新Repository実装 → 簡単な動作確認 → マイグレーション
-- 旧コードは残したまま、新コードを並行稼働させてテスト
-- マイグレーションは一方向（ロールバック不要）だが、念のためバックアップ推奨
-- UI層の変更は最後に（データ層が安定してから）
-
-### プロダクト面での検討事項
+### プロダクト面での今後の検討事項
 - LLMでどんなメタデータを自動生成するか（summary, relatedNoteIds, etc.）
 - カテゴリーとタグの使い分け（UI上でどう見せるか）
 - セマンティック検索の優先度（embeddingフィールドの実装時期）
+- バージョン履歴機能の再実装（FileRepositoryFlatへの追加）
