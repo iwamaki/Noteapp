@@ -11,7 +11,8 @@ import {
 } from '@react-navigation/native';
 import { createStackNavigator, CardStyleInterpolators } from '@react-navigation/stack';
 import { RootStackParamList } from './types';
-import FileListScreen from '../screen/file-list/FileListScreen';
+// import FileListScreen from '../screen/file-list/FileListScreen';
+import FileListScreen from '../screen/file-list-flat/FileListScreenFlat';
 import FileEditScreen from '../screen/file-edit/FileEditScreen';
 import DiffViewScreen from '../screen/diff-view/DiffViewScreen';
 import VersionHistoryScreen from '../screen/version-history/VersionHistoryScreen';
