@@ -9,10 +9,7 @@ import APIService, { ChatContext } from './llmService/api';
 import { ChatMessage, LLMCommand } from './llmService/types/types';
 import { logger } from '../../utils/logger';
 import { ActiveScreenContextProvider, ActiveScreenContext, ChatServiceListener } from './types';
-// TODO: Update to use FileRepositoryFlat
-// import { DirectoryResolver } from '@data/infrastructure/directoryResolver';
-// import { Directory } from 'expo-file-system';
-// import * as FileSystemUtilsV2 from '@data/infrastructure/fileSystemUtilsV2';
+import { FileRepositoryFlat } from '@data/repositories/fileRepositoryFlat';
 
 /**
  * シングルトンクラスとして機能し、アプリケーション全体でチャットの状態を管理します。
@@ -251,20 +248,22 @@ class ChatService {
 
   /**
    * LLMコンテキスト用に全ファイル情報を取得（Flat構造版）
-   * TODO: Update to use FileRepositoryFlat.getAll()
+   * フラット構造: パス不要、titleのみでファイルを識別
    */
-  private async getAllFilesForContext(): Promise<Array<{ title: string; path: string; type: 'file' | 'folder' }>> {
+  private async getAllFilesForContext(): Promise<Array<{
+    title: string;
+    type: 'file';
+    categories?: string[];
+    tags?: string[];
+  }>> {
     try {
-      // TODO: Implement with FileRepositoryFlat
-      // const files = await FileRepositoryFlat.getAll();
-      // return files.map(file => ({
-      //   title: file.title,
-      //   path: `/${file.title}`, // Flat structure
-      //   type: 'file' as const,
-      // }));
-
-      logger.warn('chatService', 'getAllFilesForContext not yet implemented for flat structure');
-      return [];
+      const files = await FileRepositoryFlat.getAll();
+      return files.map(file => ({
+        title: file.title,
+        type: 'file' as const,
+        categories: file.categories,
+        tags: file.tags,
+      }));
     } catch (error) {
       logger.error('chatService', 'Error getting all files for context:', error);
       return [];
