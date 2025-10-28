@@ -219,7 +219,7 @@ export const CreateFileModal: React.FC<CreateFileModalProps> = ({
                     styles.buttonText,
                     {
                       color: title.trim()
-                        ? colors.buttonText
+                        ? colors.white
                         : colors.textSecondary,
                     },
                   ]}
