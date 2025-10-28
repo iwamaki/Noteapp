@@ -80,6 +80,8 @@ export const useFileEditChatContext = ({
     };
 
     // コマンドハンドラの定義（新しいハンドラ構造を使用）
+    // Note: このハンドラは他の画面のハンドラと共存します
+    // FileListScreen の create_file/delete_file/rename_file ハンドラは保持されます
     const commandHandlers = {
       edit_file: (command: any) => editFileHandler(command, handlerContext),
       // read_fileはサーバーサイドで処理されるため、フロントエンドハンドラは不要

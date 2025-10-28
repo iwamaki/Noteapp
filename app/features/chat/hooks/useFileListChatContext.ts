@@ -65,6 +65,8 @@ export const useFileListChatContext = ({
     };
 
     // フラット構造用のコマンドハンドラを登録
+    // Note: これらのハンドラは画面遷移後も保持されます（ChatServiceの仕様変更により）
+    // 他の画面（例: FileEdit）が独自のハンドラを登録しても、これらは上書きされず共存します
     const commandHandlers = {
       create_file: (command: any) => createFileHandlerFlat(command, handlerContext),
       delete_file: (command: any) => deleteFileHandlerFlat(command, handlerContext),
