@@ -11,6 +11,7 @@ import { loadSettingsTask } from './loadSettings';
 import { configureLLMServiceTask } from './configureLLMService';
 import { preloadLLMProvidersTask } from './preloadLLMProviders';
 import { configureChatServiceTask } from './configureChatService';
+import { initializeWebSocketTask } from './initializeWebSocket';
 import { verifyAppReadyTask } from './verifyAppReady';
 import { loadIconFontsTask } from './loadIconFonts';
 import { loadToolDefinitionsTask } from './loadToolDefinitions';
@@ -36,6 +37,7 @@ export const allInitializationTasks: InitializationTask[] = [
   configureLLMServiceTask,
   preloadLLMProvidersTask,
   configureChatServiceTask,
+  initializeWebSocketTask,  // WebSocket接続の初期化
   loadToolDefinitionsTask,
 
   // Stage 4: READY - UI表示準備完了
@@ -50,6 +52,7 @@ export {
   configureLLMServiceTask,
   preloadLLMProvidersTask,
   configureChatServiceTask,
+  initializeWebSocketTask,
   loadToolDefinitionsTask,
   verifyAppReadyTask,
 };
