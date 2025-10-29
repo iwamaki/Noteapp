@@ -14,9 +14,6 @@ interface UseFileListHeaderProps {
   handleDeleteSelected: () => Promise<void>;
   handleCopySelected: () => Promise<void>;
   handleOpenRenameModal: (id: string, type: 'file' | 'folder') => void;
-  startMoveMode: () => void;
-  isMoveMode: boolean;
-  cancelMoveMode: () => void;
   rightButtons?: HeaderConfig['rightButtons'];
   leftButtons?: HeaderConfig['leftButtons'];
   title?: React.ReactNode;
@@ -30,9 +27,6 @@ export const useFileListHeader = ({
   handleDeleteSelected,
   handleCopySelected,
   handleOpenRenameModal,
-  startMoveMode,
-  isMoveMode,
-  cancelMoveMode,
   rightButtons,
   leftButtons,
   title,
@@ -42,18 +36,7 @@ export const useFileListHeader = ({
   const { colors, typography } = useTheme();
 
   useLayoutEffect(() => {
-    if (isMoveMode) {
-      navigation.setOptions(
-        createHeaderConfig({
-          title: <Text style={{ color: colors.text, fontSize: typography.subtitle.fontSize }}>移動先を選択</Text>,
-          leftButtons: [
-            { icon: <Ionicons name="arrow-back" size={24} color={colors.text} />, onPress: cancelMoveMode },
-          ],
-          rightButtons: [],
-        })
-      );
-    } else if (isSelectionMode) {
-      const selectedCount = selectedFileIds.size + selectedFolderIds.size;
+    if (isSelectionMode) {
       const selectionRightButtons: HeaderConfig['rightButtons'] = [
         {
           title: 'コピー',
@@ -83,14 +66,6 @@ export const useFileListHeader = ({
         });
       }
 
-      if (selectedCount > 0) {
-        selectionRightButtons.unshift({
-          title: '移動',
-          onPress: startMoveMode,
-          variant: 'secondary'
-        });
-      }
-
       navigation.setOptions(
         createHeaderConfig({
           title: undefined,
@@ -112,7 +87,6 @@ export const useFileListHeader = ({
   }, [
     navigation, createHeaderConfig, isSelectionMode, selectedFileIds.size,
     selectedFolderIds.size, handleCancelSelection, handleCopySelected,
-    handleDeleteSelected, handleOpenRenameModal, startMoveMode, isMoveMode,
-    cancelMoveMode, colors, typography, rightButtons, title, leftButtons
+    handleDeleteSelected, handleOpenRenameModal, colors, rightButtons, title, leftButtons
   ]);
 };
