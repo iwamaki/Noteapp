@@ -232,9 +232,6 @@ function FileListScreenFlatContent() {
     handleDeleteSelected,
     handleCopySelected,
     handleOpenRenameModal,
-    startMoveMode: () => {}, // 移動モードなし
-    isMoveMode: false,
-    cancelMoveMode: () => {},
     rightButtons: [
       {
         icon: <OverflowMenu onCreateNew={() => dispatch({ type: 'OPEN_CREATE_MODAL' })} />,
