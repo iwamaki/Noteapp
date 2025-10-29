@@ -88,8 +88,6 @@ function FileEditScreen() {
     onRedo: redo,
     canUndo,
     canRedo,
-    originalFileContent: file?.content ?? '',
-    currentContent: content,
   });
 
   useFileEditChatContext({

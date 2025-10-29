@@ -6,7 +6,6 @@
 
 // import { FileRepositoryV2 } from '@data/repositories/fileRepositoryV2';
 import { FileRepository } from '@data/repositories/fileRepository';
-import { getVersions, restoreVersion } from '@data/repositories/fileVersionRepository';
 import { ValidationService } from './ValidationService';
 import { ErrorService } from './ErrorService';
 import { FileFlat, ErrorCode, EditorError } from '../types';
@@ -111,41 +110,6 @@ export class FileService {
         message: 'ファイルの削除に失敗しました。',
         recoverable: true,
         retry: () => this.deleteFile(id),
-      };
-      throw editorError;
-    }
-  }
-
-  /**
-   * ファイルのバージョン履歴を取得
-   */
-  async getVersionHistory(fileId: string) {
-    try {
-      return await getVersions(fileId);
-    } catch {
-      const editorError: EditorError = {
-        code: ErrorCode.STORAGE_ERROR,
-        message: 'バージョン履歴の取得に失敗しました。',
-        recoverable: true,
-        retry: () => this.getVersionHistory(fileId),
-      };
-      throw editorError;
-    }
-  }
-
-  /**
-   * ファイルを特定のバージョンに復元
-   */
-  async restoreVersion(fileId: string, versionId: string): Promise<FileFlat> {
-    try {
-      const file = await restoreVersion(fileId, versionId);
-      return file;
-    } catch {
-      const editorError: EditorError = {
-        code: ErrorCode.STORAGE_ERROR,
-        message: 'バージョンの復元に失敗しました。',
-        recoverable: true,
-        retry: () => this.restoreVersion(fileId, versionId),
       };
       throw editorError;
     }

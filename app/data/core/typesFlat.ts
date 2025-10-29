@@ -36,20 +36,8 @@ export interface FileFlat {
   embedding?: number[];       // セマンティック検索用（将来実装）
 
   // システムフィールド
-  version: number;        // バージョン番号
   createdAt: Date;
   updatedAt: Date;
-}
-
-/**
- * バージョン（変更なし）
- */
-export interface FileVersionFlat {
-  id: string;
-  fileId: string;
-  content: string;
-  version: number;
-  createdAt: Date;
 }
 
 // =============================================================================
@@ -68,19 +56,8 @@ export interface FileMetadataFlat {
   summary?: string;
   relatedNoteIds?: string[];
   embedding?: number[];
-  version: number;
   createdAt: string;      // ISO string for JSON serialization
   updatedAt: string;      // ISO string
-}
-
-/**
- * バージョンメタデータ（変更なし）
- */
-export interface VersionMetadataFlat {
-  id: string;
-  fileId: string;
-  version: number;
-  createdAt: string;      // ISO string
 }
 
 // =============================================================================

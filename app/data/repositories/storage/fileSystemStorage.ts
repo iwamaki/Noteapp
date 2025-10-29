@@ -7,15 +7,13 @@
  */
 
 import { Directory, File as FSFile } from 'expo-file-system';
-import type { FileMetadataFlat, VersionMetadataFlat } from '../../core/typesFlat';
+import type { FileMetadataFlat } from '../../core/typesFlat';
 import { FileSystemV2Error } from '../../core/errors';
 import {
   BASE_DIR,
   CONTENT_DIR,
   FILE_METADATA_FILENAME,
   FILE_CONTENT_FILENAME,
-  VERSION_METADATA_FILENAME,
-  VERSION_CONTENT_FILENAME,
 } from './fileSystemPaths';
 
 // =============================================================================
@@ -126,99 +124,6 @@ export const deleteFileDirectory = async (fileDir: Directory): Promise<void> => 
     throw new FileSystemV2Error(
       'Failed to delete file directory',
       'DELETE_FILE_DIR_ERROR',
-      e
-    );
-  }
-};
-
-// =============================================================================
-// Version Metadata Operations
-// =============================================================================
-
-/**
- * Reads version metadata from disk
- *
- * @param versionDir - Version directory
- * @returns Version metadata or null if not found
- */
-export const readVersionMetadata = async (
-  versionDir: Directory
-): Promise<VersionMetadataFlat | null> => {
-  try {
-    const metadataFile = new FSFile(versionDir, VERSION_METADATA_FILENAME);
-    if (!(await metadataFile.exists)) {
-      return null;
-    }
-    const text = await metadataFile.text();
-    return JSON.parse(text) as VersionMetadataFlat;
-  } catch (e) {
-    console.error('Failed to read version metadata:', e);
-    return null;
-  }
-};
-
-/**
- * Writes version metadata to disk
- *
- * @param versionDir - Version directory
- * @param metadata - Version metadata to write
- */
-export const writeVersionMetadata = async (
-  versionDir: Directory,
-  metadata: VersionMetadataFlat
-): Promise<void> => {
-  try {
-    const metadataFile = new FSFile(versionDir, VERSION_METADATA_FILENAME);
-    await metadataFile.write(JSON.stringify(metadata, null, 2));
-  } catch (e) {
-    throw new FileSystemV2Error(
-      'Failed to write version metadata',
-      'WRITE_VERSION_METADATA_ERROR',
-      e
-    );
-  }
-};
-
-// =============================================================================
-// Version Content Operations
-// =============================================================================
-
-/**
- * Reads version content from disk
- *
- * @param versionDir - Version directory
- * @returns Version content or null if not found
- */
-export const readVersionContent = async (versionDir: Directory): Promise<string | null> => {
-  try {
-    const contentFile = new FSFile(versionDir, VERSION_CONTENT_FILENAME);
-    if (!(await contentFile.exists)) {
-      return null;
-    }
-    return await contentFile.text();
-  } catch (e) {
-    console.error('Failed to read version content:', e);
-    return null;
-  }
-};
-
-/**
- * Writes version content to disk
- *
- * @param versionDir - Version directory
- * @param content - Version content to write
- */
-export const writeVersionContent = async (
-  versionDir: Directory,
-  content: string
-): Promise<void> => {
-  try {
-    const contentFile = new FSFile(versionDir, VERSION_CONTENT_FILENAME);
-    await contentFile.write(content);
-  } catch (e) {
-    throw new FileSystemV2Error(
-      'Failed to write version content',
-      'WRITE_VERSION_CONTENT_ERROR',
       e
     );
   }

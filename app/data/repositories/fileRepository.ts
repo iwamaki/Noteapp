@@ -24,7 +24,6 @@ import {
   initializeFileSystemFlat,
 } from './storage/fileSystemStorage';
 import { metadataToFile, fileToMetadata } from './storage/fileMetadataMapper';
-import { saveVersion } from './fileVersionRepository';
 
 // Re-export errors for consumers
 export { FileSystemV2Error, RepositoryError };
@@ -197,7 +196,6 @@ export class FileRepository {
         categories: data.categories || [],
         summary: data.summary,
         relatedNoteIds: data.relatedNoteIds,
-        version: 1,
         createdAt: now,
         updatedAt: now,
       };
@@ -236,29 +234,17 @@ export class FileRepository {
    *
    * @param id - File ID
    * @param data - Update data
-   * @param options - Options (skipVersionSave: skip version saving)
    * @returns Updated file
    */
   static async update(
     id: string,
-    data: UpdateFileDataFlat,
-    options: { skipVersionSave?: boolean } = {}
+    data: UpdateFileDataFlat
   ): Promise<FileFlat> {
     try {
       // Get existing file
       const existingFile = await this.getById(id);
       if (!existingFile) {
         throw new FileSystemV2Error(`File not found: ${id}`, 'FILE_NOT_FOUND');
-      }
-
-      // Save current version to history if content changed
-      // Skip if skipVersionSave option is specified
-      if (
-        !options.skipVersionSave &&
-        data.content !== undefined &&
-        data.content !== existingFile.content
-      ) {
-        await saveVersion(id, existingFile.content, existingFile.version);
       }
 
       // Create updated file
@@ -271,7 +257,6 @@ export class FileRepository {
         summary: data.summary ?? existingFile.summary,
         relatedNoteIds: data.relatedNoteIds ?? existingFile.relatedNoteIds,
         embedding: data.embedding ?? existingFile.embedding,
-        version: existingFile.version + 1,
         updatedAt: new Date(),
       };
 

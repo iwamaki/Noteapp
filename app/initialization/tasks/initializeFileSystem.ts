@@ -5,7 +5,7 @@
  */
 
 import { InitializationTask, InitializationStage, TaskPriority } from '../types';
-import { initializeFileSystemFlat } from '../../data/repositories/fileRepositoryFlat';
+import { initializeFileSystemFlat } from '../../data/repositories/fileRepository';
 
 /**
  * FileSystem初期化タスク (Flat)

@@ -29,8 +29,6 @@ interface UseFileEditHeaderProps {
   onRedo: () => void;
   canUndo: boolean;
   canRedo: boolean;
-  originalFileContent: string;
-  currentContent: string;
 }
 
 export const useFileEditHeader = ({
@@ -47,8 +45,6 @@ export const useFileEditHeader = ({
   onRedo,
   canUndo,
   canRedo,
-  originalFileContent,
-  currentContent,
 }: UseFileEditHeaderProps) => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { createHeaderConfig } = useCustomHeader();
@@ -58,20 +54,6 @@ export const useFileEditHeader = ({
   const handleToggleViewMode = useCallback(() => {
     onViewModeChange(viewMode === 'edit' ? 'preview' : 'edit');
   }, [viewMode, onViewModeChange]);
-
-  // バージョン履歴表示ハンドラをメモ化
-  const handleShowVersionHistory = useCallback(() => {
-    navigation.navigate('VersionHistory', { fileId: activeFileId || '' });
-  }, [navigation, activeFileId]);
-
-  // Diff表示ハンドラをメモ化（originalFileContentとcurrentContentはここでのみ使用）
-  const handleShowDiffView = useCallback(() => {
-    navigation.navigate('DiffView', {
-      mode: 'readonly',
-      originalContent: originalFileContent,
-      newContent: currentContent,
-    });
-  }, [navigation, originalFileContent, currentContent]);
 
   // 右側のボタン群をメモ化
   const rightButtons = useMemo(() => {
@@ -92,14 +74,12 @@ export const useFileEditHeader = ({
       buttons.push(
         <FileEditOverflowMenu
           onToggleViewMode={handleToggleViewMode}
-          onShowVersionHistory={handleShowVersionHistory}
-          onShowDiffView={handleShowDiffView}
         />
       );
     }
 
     return buttons;
-  }, [isLoading, isDirty, colors.primary, colors.textSecondary, onSave, handleToggleViewMode, handleShowVersionHistory, handleShowDiffView]);
+  }, [isLoading, isDirty, colors.primary, colors.textSecondary, onSave, handleToggleViewMode]);
 
   // ヘッダー設定を更新（依存配列を最小化）
   useLayoutEffect(() => {

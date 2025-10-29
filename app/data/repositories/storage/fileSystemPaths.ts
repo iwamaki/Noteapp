@@ -21,11 +21,6 @@ export const BASE_DIR = new Directory(Paths.document, 'noteapp');
  */
 export const CONTENT_DIR = new Directory(BASE_DIR, 'content');
 
-/**
- * Subdirectory name for version history: versions
- */
-export const VERSIONS_DIR_NAME = 'versions';
-
 // =============================================================================
 // File Names
 // =============================================================================
@@ -39,13 +34,3 @@ export const FILE_METADATA_FILENAME = 'meta.json';
  * Content filename: content.md
  */
 export const FILE_CONTENT_FILENAME = 'content.md';
-
-/**
- * Version metadata filename: version_meta.json
- */
-export const VERSION_METADATA_FILENAME = 'version_meta.json';
-
-/**
- * Version content filename: version_content.md
- */
-export const VERSION_CONTENT_FILENAME = 'version_content.md';
