@@ -119,3 +119,13 @@ export interface MetadataSearchOptions {
   tags?: string[];        // 指定されたタグのいずれかを持つ
   searchText?: string;    // タイトルや内容でテキスト検索
 }
+
+/**
+ * カテゴリーでグループ化されたファイルセクション
+ * UI表示用（SectionListのデータ構造）
+ */
+export interface FileCategorySection {
+  category: string;       // カテゴリー名（"未分類"を含む）
+  fileCount: number;      // このセクション内のファイル数
+  files: FileFlat[];      // セクション内のファイル配列
+}
