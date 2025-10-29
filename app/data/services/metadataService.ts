@@ -18,7 +18,7 @@ import type {
   TagInfo,
   MetadataSearchOptions,
 } from '../core/typesFlat';
-import { FileRepositoryFlat } from '../repositories/fileRepositoryFlat';
+import { FileRepository } from '../repositories/fileRepository';
 
 // =============================================================================
 // MetadataService Class
@@ -46,7 +46,7 @@ export class MetadataService {
    * categoriesフィールドに含まれているファイルを返す。
    */
   static async getByCategory(categoryName: string): Promise<FileFlat[]> {
-    const allFiles = await FileRepositoryFlat.getAll();
+    const allFiles = await FileRepository.getAll();
     return allFiles.filter((file) =>
       file.categories.includes(categoryName)
     );
@@ -62,7 +62,7 @@ export class MetadataService {
    * const files = await MetadataService.getByCategoriesOr(['研究', '論文メモ']);
    */
   static async getByCategoriesOr(categoryNames: string[]): Promise<FileFlat[]> {
-    const allFiles = await FileRepositoryFlat.getAll();
+    const allFiles = await FileRepository.getAll();
     return allFiles.filter((file) =>
       file.categories.some((cat) => categoryNames.includes(cat))
     );
@@ -81,7 +81,7 @@ export class MetadataService {
    * UI表示用（カテゴリービュー、サイドバーなど）
    */
   static async getAllCategories(): Promise<CategoryInfo[]> {
-    const allFiles = await FileRepositoryFlat.getAll();
+    const allFiles = await FileRepository.getAll();
 
     // カテゴリーごとのファイル数をカウント
     const categoryMap = new Map<string, number>();
@@ -119,7 +119,7 @@ export class MetadataService {
    * const files = await MetadataService.getByTag('重要');
    */
   static async getByTag(tagName: string): Promise<FileFlat[]> {
-    const allFiles = await FileRepositoryFlat.getAll();
+    const allFiles = await FileRepository.getAll();
     return allFiles.filter((file) => file.tags.includes(tagName));
   }
 
@@ -133,7 +133,7 @@ export class MetadataService {
    * const files = await MetadataService.getByTagsOr(['重要', 'TODO']);
    */
   static async getByTagsOr(tagNames: string[]): Promise<FileFlat[]> {
-    const allFiles = await FileRepositoryFlat.getAll();
+    const allFiles = await FileRepository.getAll();
     return allFiles.filter((file) =>
       file.tags.some((tag) => tagNames.includes(tag))
     );
@@ -149,7 +149,7 @@ export class MetadataService {
    * const files = await MetadataService.getByTagsAnd(['重要', 'TODO']);
    */
   static async getByTagsAnd(tagNames: string[]): Promise<FileFlat[]> {
-    const allFiles = await FileRepositoryFlat.getAll();
+    const allFiles = await FileRepository.getAll();
     return allFiles.filter((file) =>
       tagNames.every((tag) => file.tags.includes(tag))
     );
@@ -168,7 +168,7 @@ export class MetadataService {
    * UI表示用（タグクラウド、タグ一覧など）
    */
   static async getAllTags(): Promise<TagInfo[]> {
-    const allFiles = await FileRepositoryFlat.getAll();
+    const allFiles = await FileRepository.getAll();
 
     // タグごとのファイル数をカウント
     const tagMap = new Map<string, number>();
@@ -224,7 +224,7 @@ export class MetadataService {
   static async searchByMetadata(
     options: MetadataSearchOptions
   ): Promise<FileFlat[]> {
-    let results = await FileRepositoryFlat.getAll();
+    let results = await FileRepository.getAll();
 
     // カテゴリーフィルター（OR検索）
     if (options.categories && options.categories.length > 0) {
@@ -271,7 +271,7 @@ export class MetadataService {
     fileId: string,
     categories: string[]
   ): Promise<FileFlat> {
-    return await FileRepositoryFlat.update(fileId, { categories });
+    return await FileRepository.update(fileId, { categories });
   }
 
   /**
@@ -285,7 +285,7 @@ export class MetadataService {
    * await MetadataService.updateTags('file-uuid-123', ['重要', 'TODO']);
    */
   static async updateTags(fileId: string, tags: string[]): Promise<FileFlat> {
-    return await FileRepositoryFlat.update(fileId, { tags });
+    return await FileRepository.update(fileId, { tags });
   }
 
   /**
@@ -299,7 +299,7 @@ export class MetadataService {
     fileId: string,
     categoryName: string
   ): Promise<FileFlat> {
-    const file = await FileRepositoryFlat.getById(fileId);
+    const file = await FileRepository.getById(fileId);
     if (!file) {
       throw new Error(`File not found: ${fileId}`);
     }
@@ -310,7 +310,7 @@ export class MetadataService {
     }
 
     const updatedCategories = [...file.categories, categoryName];
-    return await FileRepositoryFlat.update(fileId, {
+    return await FileRepository.update(fileId, {
       categories: updatedCategories,
     });
   }
@@ -326,7 +326,7 @@ export class MetadataService {
     fileId: string,
     categoryName: string
   ): Promise<FileFlat> {
-    const file = await FileRepositoryFlat.getById(fileId);
+    const file = await FileRepository.getById(fileId);
     if (!file) {
       throw new Error(`File not found: ${fileId}`);
     }
@@ -334,7 +334,7 @@ export class MetadataService {
     const updatedCategories = file.categories.filter(
       (cat) => cat !== categoryName
     );
-    return await FileRepositoryFlat.update(fileId, {
+    return await FileRepository.update(fileId, {
       categories: updatedCategories,
     });
   }
@@ -347,7 +347,7 @@ export class MetadataService {
    * @returns 更新されたファイル
    */
   static async addTag(fileId: string, tagName: string): Promise<FileFlat> {
-    const file = await FileRepositoryFlat.getById(fileId);
+    const file = await FileRepository.getById(fileId);
     if (!file) {
       throw new Error(`File not found: ${fileId}`);
     }
@@ -358,7 +358,7 @@ export class MetadataService {
     }
 
     const updatedTags = [...file.tags, tagName];
-    return await FileRepositoryFlat.update(fileId, { tags: updatedTags });
+    return await FileRepository.update(fileId, { tags: updatedTags });
   }
 
   /**
@@ -369,13 +369,13 @@ export class MetadataService {
    * @returns 更新されたファイル
    */
   static async removeTag(fileId: string, tagName: string): Promise<FileFlat> {
-    const file = await FileRepositoryFlat.getById(fileId);
+    const file = await FileRepository.getById(fileId);
     if (!file) {
       throw new Error(`File not found: ${fileId}`);
     }
 
     const updatedTags = file.tags.filter((tag) => tag !== tagName);
-    return await FileRepositoryFlat.update(fileId, { tags: updatedTags });
+    return await FileRepository.update(fileId, { tags: updatedTags });
   }
 
   // =============================================================================
@@ -396,7 +396,7 @@ export class MetadataService {
     fileId: string,
     summary: string
   ): Promise<FileFlat> {
-    return await FileRepositoryFlat.update(fileId, { summary });
+    return await FileRepository.update(fileId, { summary });
   }
 
   /**
@@ -413,7 +413,7 @@ export class MetadataService {
     fileId: string,
     relatedNoteIds: string[]
   ): Promise<FileFlat> {
-    return await FileRepositoryFlat.update(fileId, { relatedNoteIds });
+    return await FileRepository.update(fileId, { relatedNoteIds });
   }
 
   /**
@@ -433,6 +433,6 @@ export class MetadataService {
     fileId: string,
     embedding: number[]
   ): Promise<FileFlat> {
-    return await FileRepositoryFlat.update(fileId, { embedding });
+    return await FileRepository.update(fileId, { embedding });
   }
 }

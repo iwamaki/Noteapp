@@ -14,7 +14,7 @@
  */
 
 import { FileFlat, CreateFileDataFlat, UpdateFileDataFlat } from '@data/core/typesFlat';
-import { FileRepositoryFlat } from '@data/repositories/fileRepositoryFlat';
+import { FileRepository } from '@data/repositories/fileRepository';
 import { MetadataService } from '@data/services/metadataService';
 
 /**
@@ -40,7 +40,7 @@ export class FileListUseCasesFlat {
    * const files = await FileListUseCasesFlat.getAllFiles();
    */
   static async getAllFiles(): Promise<FileFlat[]> {
-    return await FileRepositoryFlat.getAll();
+    return await FileRepository.getAll();
   }
 
   /**
@@ -137,7 +137,7 @@ export class FileListUseCasesFlat {
     };
 
     // 3. 作成
-    return await FileRepositoryFlat.create(fileData);
+    return await FileRepository.create(fileData);
   }
 
   // =============================================================================
@@ -165,7 +165,7 @@ export class FileListUseCasesFlat {
     }
 
     // 2. 更新
-    return await FileRepositoryFlat.update(fileId, { title: newTitle });
+    return await FileRepository.update(fileId, { title: newTitle });
   }
 
   /**
@@ -207,7 +207,7 @@ export class FileListUseCasesFlat {
    * @param fileIds - 削除するファイルIDの配列
    */
   static async deleteSelectedFiles(fileIds: string[]): Promise<void> {
-    await FileRepositoryFlat.batchDelete(fileIds);
+    await FileRepository.batchDelete(fileIds);
   }
 
   // =============================================================================
@@ -228,14 +228,14 @@ export class FileListUseCasesFlat {
     const copiedFiles: FileFlat[] = [];
 
     for (const fileId of fileIds) {
-      const file = await FileRepositoryFlat.getById(fileId);
+      const file = await FileRepository.getById(fileId);
       if (!file) continue;
 
       // タイトルに"- コピー"を追加
       const newTitle = `${file.title} - コピー`;
 
       // コピーを作成
-      const copied = await FileRepositoryFlat.create({
+      const copied = await FileRepository.create({
         title: newTitle,
         content: file.content,
         categories: file.categories,
@@ -292,7 +292,7 @@ export class FileListUseCasesFlat {
     const errors: string[] = [];
 
     for (const fileId of fileIds) {
-      const file = await FileRepositoryFlat.getById(fileId);
+      const file = await FileRepository.getById(fileId);
       if (!file) {
         errors.push(`ファイル ${fileId} が見つかりません`);
       }

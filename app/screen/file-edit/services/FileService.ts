@@ -5,7 +5,8 @@
  */
 
 // import { FileRepositoryV2 } from '@data/repositories/fileRepositoryV2';
-import { FileRepositoryFlat } from '@data/repositories/fileRepositoryFlat';
+import { FileRepository } from '@data/repositories/fileRepository';
+import { getVersions, restoreVersion } from '@data/repositories/fileVersionRepository';
 import { ValidationService } from './ValidationService';
 import { ErrorService } from './ErrorService';
 import { FileFlat, ErrorCode, EditorError } from '../types';
@@ -25,7 +26,7 @@ export class FileService {
    */
   async loadFile(id: string): Promise<FileFlat> {
     try {
-      const file = await FileRepositoryFlat.getById(id);
+      const file = await FileRepository.getById(id);
 
       if (!file) {
         const error: EditorError = {
@@ -72,7 +73,7 @@ export class FileService {
     try {
       if (data.id) {
         // 既存ファイルの更新
-        const file = await FileRepositoryFlat.update(data.id, {
+        const file = await FileRepository.update(data.id, {
           title: data.title,
           content: data.content,
           tags: data.tags,
@@ -80,7 +81,7 @@ export class FileService {
         return file;
       } else {
         // 新規ファイルの作成（フラット構造なのでパス不要）
-        const file = await FileRepositoryFlat.create({
+        const file = await FileRepository.create({
           title: data.title || '',
           content: data.content || '',
           tags: data.tags || [],
@@ -103,7 +104,7 @@ export class FileService {
    */
   async deleteFile(id: string): Promise<void> {
     try {
-      await FileRepositoryFlat.delete(id);
+      await FileRepository.delete(id);
     } catch {
       const editorError: EditorError = {
         code: ErrorCode.STORAGE_ERROR,
@@ -120,7 +121,7 @@ export class FileService {
    */
   async getVersionHistory(fileId: string) {
     try {
-      return await FileRepositoryFlat.getVersions(fileId);
+      return await getVersions(fileId);
     } catch {
       const editorError: EditorError = {
         code: ErrorCode.STORAGE_ERROR,
@@ -137,7 +138,7 @@ export class FileService {
    */
   async restoreVersion(fileId: string, versionId: string): Promise<FileFlat> {
     try {
-      const file = await FileRepositoryFlat.restoreVersion(fileId, versionId);
+      const file = await restoreVersion(fileId, versionId);
       return file;
     } catch {
       const editorError: EditorError = {

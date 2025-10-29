@@ -7,7 +7,7 @@
 import { LLMCommand } from '../llmService/types/types';
 import { CommandHandler } from './types';
 import { logger } from '../../../utils/logger';
-import { FileRepositoryFlat } from '@data/repositories/fileRepositoryFlat';
+import { FileRepository } from '@data/repositories/fileRepository';
 
 /**
  * create_fileコマンドのハンドラ（フラット構造版）
@@ -36,7 +36,7 @@ export const createFileHandlerFlat: CommandHandler = async (command: LLMCommand,
 
   try {
     // ファイルを作成
-    const newFile = await FileRepositoryFlat.create({
+    const newFile = await FileRepository.create({
       title: command.title,
       content: typeof command.content === 'string' ? command.content : '',
       categories: Array.isArray(command.categories) ? command.categories : [],

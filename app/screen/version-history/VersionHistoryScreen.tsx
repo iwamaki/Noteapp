@@ -9,7 +9,8 @@ import { View, Text, StyleSheet, FlatList, Alert } from 'react-native';
 import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
-import { FileRepositoryFlat } from '@data/repositories/fileRepositoryFlat';
+import { FileRepository } from '@data/repositories/fileRepository';
+import { getVersions } from '@data/repositories/fileVersionRepository';
 import { FileVersionFlat, FileFlat } from '@data/core/typesFlat';
 import { format } from 'date-fns';
 import { useTheme } from '../../design/theme/ThemeContext';
@@ -52,8 +53,8 @@ function VersionHistoryScreen() {
       setLoading(true);
       setError(null);
       if (fileId) {
-        const fetchedVersions = await FileRepositoryFlat.getVersions(fileId);
-        const fetchedCurrentFile = await FileRepositoryFlat.getById(fileId);
+        const fetchedVersions = await getVersions(fileId);
+        const fetchedCurrentFile = await FileRepository.getById(fileId);
 
         setCurrentFile(fetchedCurrentFile);
 
