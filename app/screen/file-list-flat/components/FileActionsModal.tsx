@@ -27,6 +27,8 @@ interface FileActionsModalProps {
   onDelete: (file: FileFlat) => void;
   onCopy: (file: FileFlat) => void;
   onRename: (file: FileFlat) => void;
+  onEditCategories: (file: FileFlat) => void;
+  onEditTags: (file: FileFlat) => void;
 }
 
 interface ActionItem {
@@ -43,6 +45,8 @@ export const FileActionsModal: React.FC<FileActionsModalProps> = ({
   onDelete,
   onCopy,
   onRename,
+  onEditCategories,
+  onEditTags,
 }) => {
   const { colors, typography, spacing } = useTheme();
 
@@ -54,6 +58,22 @@ export const FileActionsModal: React.FC<FileActionsModalProps> = ({
       label: '名前を変更',
       onPress: () => {
         onRename(file);
+        onClose();
+      },
+    },
+    {
+      icon: 'folder-outline',
+      label: 'カテゴリーを編集',
+      onPress: () => {
+        onEditCategories(file);
+        onClose();
+      },
+    },
+    {
+      icon: 'pricetag-outline',
+      label: 'タグを編集',
+      onPress: () => {
+        onEditTags(file);
         onClose();
       },
     },
