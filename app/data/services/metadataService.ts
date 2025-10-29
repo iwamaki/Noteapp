@@ -18,6 +18,7 @@ import type {
   TagInfo,
   MetadataSearchOptions,
   FileCategorySection,
+  FileCategorySectionHierarchical,
 } from '../core/typesFlat';
 import { FileRepository } from '../repositories/fileRepository';
 
@@ -36,36 +37,35 @@ export class MetadataService {
   /**
    * 指定されたカテゴリーに属するファイルを取得
    *
-   * @param categoryName - カテゴリー名
+   * @param categoryPath - カテゴリーパス（例: "研究/AI"）
    * @returns カテゴリーに属するファイルの配列
    *
    * @example
-   * const files = await MetadataService.getByCategory('研究');
+   * const files = await MetadataService.getByCategory('研究/AI');
    *
    * @remarks
-   * カテゴリーは複数持てるため、指定されたカテゴリーが
-   * categoriesフィールドに含まれているファイルを返す。
+   * 完全一致で検索。階層の途中まで（例: "研究"）を指定した場合は、
+   * そのカテゴリー直属のファイルのみが返される。
    */
-  static async getByCategory(categoryName: string): Promise<FileFlat[]> {
+  static async getByCategory(categoryPath: string): Promise<FileFlat[]> {
     const allFiles = await FileRepository.getAll();
-    return allFiles.filter((file) =>
-      file.categories.includes(categoryName)
-    );
+    return allFiles.filter((file) => file.category === categoryPath);
   }
 
   /**
-   * 複数のカテゴリーのいずれかに属するファイルを取得（OR検索）
+   * 指定されたカテゴリー配下のファイルをすべて取得（サブカテゴリーも含む）
    *
-   * @param categoryNames - カテゴリー名の配列
-   * @returns いずれかのカテゴリーに属するファイルの配列
+   * @param categoryPath - カテゴリーパス（例: "研究"）
+   * @returns カテゴリー配下のすべてのファイルの配列
    *
    * @example
-   * const files = await MetadataService.getByCategoriesOr(['研究', '論文メモ']);
+   * const files = await MetadataService.getByCategoryRecursive('研究');
+   * // "研究", "研究/AI", "研究/AI/深層学習" などすべてを含む
    */
-  static async getByCategoriesOr(categoryNames: string[]): Promise<FileFlat[]> {
+  static async getByCategoryRecursive(categoryPath: string): Promise<FileFlat[]> {
     const allFiles = await FileRepository.getAll();
     return allFiles.filter((file) =>
-      file.categories.some((cat) => categoryNames.includes(cat))
+      file.category === categoryPath || file.category.startsWith(categoryPath + '/')
     );
   }
 
@@ -76,10 +76,11 @@ export class MetadataService {
    *
    * @example
    * const categories = await MetadataService.getAllCategories();
-   * // => [{ name: '研究', fileCount: 15 }, { name: '個人', fileCount: 8 }, ...]
+   * // => [{ name: '研究/AI', fileCount: 15 }, { name: '個人', fileCount: 8 }, ...]
    *
    * @remarks
    * UI表示用（カテゴリービュー、サイドバーなど）
+   * 階層パス全体をカテゴリー名として返す
    */
   static async getAllCategories(): Promise<CategoryInfo[]> {
     const allFiles = await FileRepository.getAll();
@@ -88,9 +89,9 @@ export class MetadataService {
     const categoryMap = new Map<string, number>();
 
     for (const file of allFiles) {
-      for (const category of file.categories) {
-        const count = categoryMap.get(category) || 0;
-        categoryMap.set(category, count + 1);
+      if (file.category) {
+        const count = categoryMap.get(file.category) || 0;
+        categoryMap.set(file.category, count + 1);
       }
     }
 
@@ -114,13 +115,12 @@ export class MetadataService {
    * @example
    * const sections = await MetadataService.groupFilesByCategory();
    * // => [
-   * //   { category: '研究', fileCount: 5, files: [...] },
+   * //   { category: '研究/AI', fileCount: 5, files: [...] },
    * //   { category: '個人', fileCount: 3, files: [...] },
    * //   { category: '未分類', fileCount: 2, files: [...] }
    * // ]
    *
    * @remarks
-   * - 複数カテゴリーを持つファイルは、各カテゴリーに重複して表示
    * - カテゴリーを持たないファイルは「未分類」セクションに表示
    * - セクションはファイル数の多い順にソート（「未分類」は常に最後）
    * - Phase 1実装：フラットなグルーピングのみ（階層構造なし）
@@ -133,19 +133,10 @@ export class MetadataService {
     const uncategorizedKey = '未分類';
 
     for (const file of allFiles) {
-      if (file.categories.length === 0) {
-        // カテゴリーを持たないファイルは「未分類」に追加
-        const files = categoryMap.get(uncategorizedKey) || [];
-        files.push(file);
-        categoryMap.set(uncategorizedKey, files);
-      } else {
-        // 各カテゴリーに重複して追加
-        for (const category of file.categories) {
-          const files = categoryMap.get(category) || [];
-          files.push(file);
-          categoryMap.set(category, files);
-        }
-      }
+      const category = file.category || uncategorizedKey;
+      const files = categoryMap.get(category) || [];
+      files.push(file);
+      categoryMap.set(category, files);
     }
 
     // FileCategorySection配列に変換
@@ -163,6 +154,156 @@ export class MetadataService {
       if (b.category === uncategorizedKey) return -1;
       return b.fileCount - a.fileCount;
     });
+  }
+
+  /**
+   * ファイルをカテゴリーでグループ化（階層構造対応）
+   *
+   * @returns 階層構造を持つカテゴリー別のファイルセクション配列
+   *
+   * @example
+   * const sections = await MetadataService.groupFilesByCategoryHierarchical();
+   * // => [
+   * //   { category: '研究', fullPath: '研究', level: 0, parent: null, fileCount: 5, directFiles: [研究プロジェクト概要] },
+   * //   { category: 'AI', fullPath: '研究/AI', level: 1, parent: '研究', fileCount: 2, directFiles: [機械学習論文メモ, AI倫理] },
+   * //   { category: 'データ分析', fullPath: '研究/データ分析', level: 1, parent: '研究', fileCount: 2, directFiles: [...] },
+   * //   { category: '個人', fullPath: '個人', level: 0, parent: null, fileCount: 1, directFiles: [...] },
+   * //   { category: '未分類', fullPath: '未分類', level: 0, parent: null, fileCount: 1, directFiles: [...] }
+   * // ]
+   *
+   * @remarks
+   * - カテゴリー名に "/" を含む場合、階層構造として解釈（例: "研究/AI"）
+   * - 親カテゴリーは自動生成（"研究/AI" があれば "研究" も存在）
+   * - fileCount は直接属するファイル + 子孫カテゴリーのファイル総数
+   * - directFiles は直接そのカテゴリーに属するファイルのみ
+   * - ソート順: 親カテゴリー → サブカテゴリー（各階層内でfileCount降順）
+   * - 「未分類」は常に最後
+   * - Phase 2A実装：階層表示（展開固定）
+   */
+  static async groupFilesByCategoryHierarchical(): Promise<FileCategorySectionHierarchical[]> {
+    const allFiles = await FileRepository.getAll();
+    const uncategorizedKey = '未分類';
+
+    // Step 1: カテゴリー情報を収集・解析
+    interface CategoryNode {
+      fullPath: string;
+      level: number;
+      parent: string | null;
+      directFileIds: Set<string>;
+      childPaths: Set<string>;
+    }
+
+    const categoryNodes = new Map<string, CategoryNode>();
+
+    // カテゴリーノードを作成（親カテゴリーも自動生成）
+    const ensureCategoryNode = (fullPath: string) => {
+      if (categoryNodes.has(fullPath)) return;
+
+      const parts = fullPath.split('/');
+      const level = parts.length - 1;
+      const parent = level > 0 ? parts.slice(0, -1).join('/') : null;
+
+      categoryNodes.set(fullPath, {
+        fullPath,
+        level,
+        parent,
+        directFileIds: new Set(),
+        childPaths: new Set(),
+      });
+
+      // 親カテゴリーも再帰的に作成
+      if (parent) {
+        ensureCategoryNode(parent);
+        const parentNode = categoryNodes.get(parent)!;
+        parentNode.childPaths.add(fullPath);
+      }
+    };
+
+    // Step 2: ファイルをカテゴリーに振り分け
+    const fileMap = new Map<string, FileFlat>();
+    for (const file of allFiles) {
+      fileMap.set(file.id, file);
+
+      const category = file.category || uncategorizedKey;
+      ensureCategoryNode(category);
+      categoryNodes.get(category)!.directFileIds.add(file.id);
+    }
+
+    // Step 3: 各カテゴリーの総ファイル数を計算（子孫も含む）
+    const calculateTotalFileCount = (fullPath: string): number => {
+      const node = categoryNodes.get(fullPath);
+      if (!node) return 0;
+
+      let total = node.directFileIds.size;
+      for (const childPath of node.childPaths) {
+        total += calculateTotalFileCount(childPath);
+      }
+      return total;
+    };
+
+    // Step 4: FileCategorySectionHierarchical配列に変換
+    const sections: FileCategorySectionHierarchical[] = [];
+
+    for (const [fullPath, node] of categoryNodes.entries()) {
+      const parts = fullPath.split('/');
+      const category = parts[parts.length - 1];
+      const fileCount = calculateTotalFileCount(fullPath);
+      const directFiles = Array.from(node.directFileIds)
+        .map(id => fileMap.get(id)!)
+        .filter(Boolean);
+
+      sections.push({
+        category,
+        fullPath,
+        level: node.level,
+        parent: node.parent,
+        fileCount,
+        directFiles,
+      });
+    }
+
+    // Step 5: ソート
+    // - 未分類は最後
+    // - 同じ親を持つカテゴリー同士でfileCount降順
+    // - 親カテゴリーの直後にその子カテゴリーが続く
+    const sortedSections: FileCategorySectionHierarchical[] = [];
+    const added = new Set<string>();
+
+    const addCategoryAndChildren = (fullPath: string) => {
+      if (added.has(fullPath)) return;
+
+      const section = sections.find(s => s.fullPath === fullPath);
+      if (!section) return;
+
+      sortedSections.push(section);
+      added.add(fullPath);
+
+      // 子カテゴリーを取得してソート（fileCount降順）
+      const children = sections
+        .filter(s => s.parent === fullPath)
+        .sort((a, b) => b.fileCount - a.fileCount);
+
+      for (const child of children) {
+        addCategoryAndChildren(child.fullPath);
+      }
+    };
+
+    // ルートカテゴリー（parent === null）から開始
+    const rootCategories = sections
+      .filter(s => s.parent === null && s.fullPath !== uncategorizedKey)
+      .sort((a, b) => b.fileCount - a.fileCount);
+
+    for (const root of rootCategories) {
+      addCategoryAndChildren(root.fullPath);
+    }
+
+    // 未分類を最後に追加
+    const uncategorizedSection = sections.find(s => s.fullPath === uncategorizedKey);
+    if (uncategorizedSection) {
+      sortedSections.push(uncategorizedSection);
+    }
+
+    return sortedSections;
   }
 
   // =============================================================================
@@ -263,20 +404,20 @@ export class MetadataService {
    * @returns 検索条件に一致するファイルの配列
    *
    * @example
-   * // カテゴリー「研究」かつタグ「重要」を持つファイル
+   * // カテゴリー「研究/AI」かつタグ「重要」を持つファイル
    * const files = await MetadataService.searchByMetadata({
-   *   categories: ['研究'],
+   *   category: '研究/AI',
    *   tags: ['重要'],
    * });
    *
    * // テキスト検索も含む
    * const files2 = await MetadataService.searchByMetadata({
-   *   categories: ['研究'],
+   *   category: '研究',
    *   searchText: 'machine learning',
    * });
    *
    * @remarks
-   * - categories: OR検索（いずれかのカテゴリーに属する）
+   * - category: 完全一致検索（指定されたカテゴリーに属する）
    * - tags: OR検索（いずれかのタグを持つ）
    * - searchText: タイトルと内容で部分一致検索
    * - 各条件はANDで結合される
@@ -286,11 +427,9 @@ export class MetadataService {
   ): Promise<FileFlat[]> {
     let results = await FileRepository.getAll();
 
-    // カテゴリーフィルター（OR検索）
-    if (options.categories && options.categories.length > 0) {
-      results = results.filter((file) =>
-        file.categories.some((cat) => options.categories?.includes(cat))
-      );
+    // カテゴリーフィルター（完全一致）
+    if (options.category) {
+      results = results.filter((file) => file.category === options.category);
     }
 
     // タグフィルター（OR検索）
@@ -321,17 +460,17 @@ export class MetadataService {
    * ファイルのカテゴリーを更新
    *
    * @param fileId - ファイルID
-   * @param categories - 新しいカテゴリーの配列
+   * @param category - 新しいカテゴリーパス（例: "研究/AI"）
    * @returns 更新されたファイル
    *
    * @example
-   * await MetadataService.updateCategories('file-uuid-123', ['研究', '論文メモ']);
+   * await MetadataService.updateCategory('file-uuid-123', '研究/AI');
    */
-  static async updateCategories(
+  static async updateCategory(
     fileId: string,
-    categories: string[]
+    category: string
   ): Promise<FileFlat> {
-    return await FileRepository.update(fileId, { categories });
+    return await FileRepository.update(fileId, { category });
   }
 
   /**
@@ -346,57 +485,6 @@ export class MetadataService {
    */
   static async updateTags(fileId: string, tags: string[]): Promise<FileFlat> {
     return await FileRepository.update(fileId, { tags });
-  }
-
-  /**
-   * ファイルにカテゴリーを追加
-   *
-   * @param fileId - ファイルID
-   * @param categoryName - 追加するカテゴリー名
-   * @returns 更新されたファイル
-   */
-  static async addCategory(
-    fileId: string,
-    categoryName: string
-  ): Promise<FileFlat> {
-    const file = await FileRepository.getById(fileId);
-    if (!file) {
-      throw new Error(`File not found: ${fileId}`);
-    }
-
-    // 既に存在する場合は何もしない
-    if (file.categories.includes(categoryName)) {
-      return file;
-    }
-
-    const updatedCategories = [...file.categories, categoryName];
-    return await FileRepository.update(fileId, {
-      categories: updatedCategories,
-    });
-  }
-
-  /**
-   * ファイルからカテゴリーを削除
-   *
-   * @param fileId - ファイルID
-   * @param categoryName - 削除するカテゴリー名
-   * @returns 更新されたファイル
-   */
-  static async removeCategory(
-    fileId: string,
-    categoryName: string
-  ): Promise<FileFlat> {
-    const file = await FileRepository.getById(fileId);
-    if (!file) {
-      throw new Error(`File not found: ${fileId}`);
-    }
-
-    const updatedCategories = file.categories.filter(
-      (cat) => cat !== categoryName
-    );
-    return await FileRepository.update(fileId, {
-      categories: updatedCategories,
-    });
   }
 
   /**

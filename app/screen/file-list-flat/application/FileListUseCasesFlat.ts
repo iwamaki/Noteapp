@@ -77,13 +77,13 @@ export class FileListUseCasesFlat {
    *
    * @example
    * const files = await FileListUseCasesFlat.searchFiles({
-   *   categories: ['研究'],
+   *   category: '研究/AI',
    *   tags: ['重要'],
    *   searchText: 'machine learning',
    * });
    */
   static async searchFiles(options: {
-    categories?: string[];
+    category?: string;
     tags?: string[];
     searchText?: string;
   }): Promise<FileFlat[]> {
@@ -99,12 +99,12 @@ export class FileListUseCasesFlat {
    *
    * V2との違い:
    * - ❌ パス指定不要（createFileWithPath → createFile）
-   * - ✅ カテゴリー・タグを直接指定
+   * - ✅ カテゴリーパス・タグを直接指定
    * - ✅ 超シンプル！
    *
    * @param title - ファイルタイトル
    * @param content - ファイル内容
-   * @param categories - カテゴリーの配列
+   * @param category - カテゴリーパス（例: "研究/AI"）
    * @param tags - タグの配列
    * @returns 作成されたファイル
    *
@@ -112,14 +112,14 @@ export class FileListUseCasesFlat {
    * const file = await FileListUseCasesFlat.createFile(
    *   'My Note',
    *   'Content...',
-   *   ['研究', '論文メモ'],
+   *   '研究/論文メモ',
    *   ['重要']
    * );
    */
   static async createFile(
     title: string,
     content: string = '',
-    categories: string[] = [],
+    category: string = '',
     tags: string[] = []
   ): Promise<FileFlat> {
     // 1. バリデーション
@@ -132,7 +132,7 @@ export class FileListUseCasesFlat {
     const fileData: CreateFileDataFlat = {
       title,
       content,
-      categories,
+      category,
       tags,
     };
 
@@ -172,14 +172,14 @@ export class FileListUseCasesFlat {
    * ファイルのカテゴリーを更新
    *
    * @param fileId - ファイルID
-   * @param categories - 新しいカテゴリーの配列
+   * @param category - 新しいカテゴリーパス
    * @returns 更新されたファイル
    */
-  static async updateFileCategories(
+  static async updateFileCategory(
     fileId: string,
-    categories: string[]
+    category: string
   ): Promise<FileFlat> {
-    return await MetadataService.updateCategories(fileId, categories);
+    return await MetadataService.updateCategory(fileId, category);
   }
 
   /**
@@ -238,7 +238,7 @@ export class FileListUseCasesFlat {
       const copied = await FileRepository.create({
         title: newTitle,
         content: file.content,
-        categories: file.categories,
+        category: file.category,
         tags: file.tags,
         summary: file.summary,
         relatedNoteIds: file.relatedNoteIds,

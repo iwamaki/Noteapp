@@ -58,12 +58,11 @@ export const FlatListItem: React.FC<FlatListItemProps> = ({
       <ListItem.Title>{file.title}</ListItem.Title>
 
       {/* カテゴリー・タグ表示 */}
-      {(file.categories.length > 0 || file.tags.length > 0) && (
+      {(file.category || file.tags.length > 0) && (
         <View style={styles.metadataContainer}>
           {/* カテゴリー */}
-          {file.categories.map((category, index) => (
+          {file.category && (
             <View
-              key={`cat-${index}`}
               style={[
                 styles.badge,
                 {
@@ -78,10 +77,10 @@ export const FlatListItem: React.FC<FlatListItemProps> = ({
                   { color: colors.primary, fontSize: 12 },
                 ]}
               >
-                {category}
+                {file.category}
               </Text>
             </View>
-          ))}
+          )}
 
           {/* タグ */}
           {file.tags.map((tag, index) => (

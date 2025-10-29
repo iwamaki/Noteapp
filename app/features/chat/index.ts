@@ -318,7 +318,7 @@ class ChatService {
   private async getAllFilesForContext(): Promise<Array<{
     title: string;
     type: 'file';
-    categories?: string[];
+    category?: string;
     tags?: string[];
   }>> {
     try {
@@ -326,7 +326,7 @@ class ChatService {
       return files.map(file => ({
         title: file.title,
         type: 'file' as const,
-        categories: file.categories,
+        category: file.category,
         tags: file.tags,
       }));
     } catch (error) {

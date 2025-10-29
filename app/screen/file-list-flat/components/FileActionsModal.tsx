@@ -147,8 +147,8 @@ export const FileActionsModal: React.FC<FileActionsModalProps> = ({
   // メタデータ表示用のテキスト
   const getMetadataText = () => {
     const parts = [];
-    if (file.categories.length > 0) {
-      parts.push(file.categories.join(', '));
+    if (file.category) {
+      parts.push(file.category);
     }
     if (file.tags.length > 0) {
       parts.push(file.tags.map(tag => `#${tag}`).join(' '));

@@ -28,7 +28,7 @@ export interface FileFlat {
 
   // ユーザー管理のメタデータ
   tags: string[];         // ユーザー指定のタグ（例: ["重要", "TODO"]）
-  categories: string[];   // 仮想フォルダとして使用（例: ["研究", "論文メモ"]）
+  category: string;       // 階層パス形式のカテゴリー（例: "研究/AI/深層学習"）
 
   // LLM生成のメタデータ
   summary?: string;           // LLM生成の要約（短い概要）
@@ -52,7 +52,7 @@ export interface FileMetadataFlat {
   id: string;
   title: string;
   tags: string[];
-  categories: string[];
+  category: string;
   summary?: string;
   relatedNoteIds?: string[];
   embedding?: number[];
@@ -71,7 +71,7 @@ export interface CreateFileDataFlat {
   title: string;
   content: string;
   tags?: string[];
-  categories?: string[];
+  category?: string;
   summary?: string;           // 手動指定も可能（LLM生成を上書き）
   relatedNoteIds?: string[];  // 手動指定も可能
 }
@@ -83,7 +83,7 @@ export interface UpdateFileDataFlat {
   title?: string;
   content?: string;
   tags?: string[];
-  categories?: string[];
+  category?: string;
   summary?: string;
   relatedNoteIds?: string[];
   embedding?: number[];
@@ -115,7 +115,7 @@ export interface TagInfo {
  * メタデータ検索オプション
  */
 export interface MetadataSearchOptions {
-  categories?: string[];  // 指定されたカテゴリーのいずれかに属する
+  category?: string;      // 指定されたカテゴリーに属する（階層パス）
   tags?: string[];        // 指定されたタグのいずれかを持つ
   searchText?: string;    // タイトルや内容でテキスト検索
 }
@@ -123,9 +123,31 @@ export interface MetadataSearchOptions {
 /**
  * カテゴリーでグループ化されたファイルセクション
  * UI表示用（SectionListのデータ構造）
+ * Phase 1: フラットなグルーピング
  */
 export interface FileCategorySection {
   category: string;       // カテゴリー名（"未分類"を含む）
   fileCount: number;      // このセクション内のファイル数
   files: FileFlat[];      // セクション内のファイル配列
+}
+
+/**
+ * カテゴリーでグループ化されたファイルセクション（階層構造対応）
+ * UI表示用（SectionListのデータ構造）
+ * Phase 2: 階層的グルーピング
+ *
+ * @example
+ * // 親カテゴリー
+ * { category: "研究", fullPath: "研究", level: 0, parent: null, fileCount: 5, directFiles: [...] }
+ *
+ * // サブカテゴリー
+ * { category: "AI", fullPath: "研究/AI", level: 1, parent: "研究", fileCount: 2, directFiles: [...] }
+ */
+export interface FileCategorySectionHierarchical {
+  category: string;          // 表示用カテゴリー名: "研究" or "AI"
+  fullPath: string;          // 完全パス: "研究" or "研究/AI"
+  level: number;             // 0=親, 1=サブ, 2=サブサブ...
+  parent: string | null;     // 親カテゴリーの完全パス: null or "研究"
+  fileCount: number;         // このカテゴリー配下の総ファイル数
+  directFiles: FileFlat[];   // 直接このカテゴリーに属するファイル
 }
