@@ -13,12 +13,15 @@ chat_service = ChatService()
 async def chat_post(request: ChatRequest):
     """チャットメッセージを処理（POST）"""
     logger.info(f"Received chat request context: {request.context.model_dump_json(indent=2) if request.context else 'None'}")
+    if request.client_id:
+        logger.info(f"Client ID: {request.client_id}")
     try:
         response = await chat_service.process_chat(
             message=request.message,
             provider=request.provider,
             model=request.model,
-            context=request.context
+            context=request.context,
+            client_id=request.client_id
         )
         return response
     except Exception as e:

@@ -4,7 +4,7 @@
  * @description エディタの状態、エラー、アクションなどの型を一元管理
  */
 
-import { File, FileVersion } from '@data/type';
+import { FileFlat } from '@data/core/typesFlat';
 
 // ============================================
 // エディタの状態型
@@ -19,7 +19,7 @@ export type ViewMode = 'edit' | 'preview' | 'diff';
  * エディタの状態を表す型
  */
 export interface EditorState {
-  file: File | null;
+  file: FileFlat | null;
   content: string;
   title: string;
   isDirty: boolean;
@@ -138,4 +138,4 @@ export interface DiffChange {
 // Re-export shared types
 // ============================================
 
-export type { File, FileVersion };
+export type { FileFlat };

@@ -1,0 +1,8 @@
+# 一時ファイルやキャッシュを除外
+.ruff_cache
+node_modules
+.git
+ios/build
+android/build
+dist
+.env

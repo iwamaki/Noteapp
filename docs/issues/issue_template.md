@@ -1,10 +1,11 @@
 ---
-filename:  01_example_issue # "[id]_[issueのタイトル]"
+filename:  date_example_issue # "[作成日時]_[issueのタイトル]"
 id: 0 # issueのユニークID
 status: new # new | in-progress | blocked | pending-review | done
 priority: medium # A:high | B:medium | C:low
 attempt_count: 0 # このissueへの挑戦回数。失敗のたびにインクリメントする
 tags: [] # 例: [UI, navigation, bug]
+date: 2025/xx/yy # issue作成日時
 ---
 
 ## 概要 (Overview)

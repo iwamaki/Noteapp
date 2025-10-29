@@ -5,8 +5,7 @@
  */
 
 import { create } from 'zustand';
-import { EditorState, EditorActions, ViewMode, EditorError } from '../types';
-import { File } from '@data/type';
+import { EditorState, EditorActions, ViewMode, EditorError, FileFlat } from '../types';
 import { fileService } from '../services/FileService';
 import { HistoryManager } from './HistoryManager';
 
@@ -16,7 +15,7 @@ import { HistoryManager } from './HistoryManager';
 interface FileEditorStore extends EditorState, EditorActions {
   // 追加の状態
   fileId: string | null;
-  originalFile: File | null;
+  originalFile: FileFlat | null;
   history: HistoryManager;
 
   // 追加のアクション
