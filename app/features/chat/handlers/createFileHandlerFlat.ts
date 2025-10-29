@@ -18,7 +18,7 @@ import { FileRepository } from '@data/repositories/fileRepository';
  * @param command create_fileコマンド
  *   - title: ファイル名
  *   - content: ファイルの内容（オプション）
- *   - categories: カテゴリー（オプション）
+ *   - category: カテゴリーパス（オプション）
  *   - tags: タグ（オプション）
  * @param context refreshData関数を含むコンテキスト
  */
@@ -39,7 +39,7 @@ export const createFileHandlerFlat: CommandHandler = async (command: LLMCommand,
     const newFile = await FileRepository.create({
       title: command.title,
       content: typeof command.content === 'string' ? command.content : '',
-      categories: Array.isArray(command.categories) ? command.categories : [],
+      category: typeof command.category === 'string' ? command.category : '',
       tags: Array.isArray(command.tags) ? command.tags : [],
     });
 

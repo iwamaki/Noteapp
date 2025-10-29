@@ -177,7 +177,7 @@ export class FileRepository {
    *   title: 'My Note',
    *   content: 'Note content...',
    *   tags: ['important'],
-   *   categories: ['研究'],
+   *   category: '研究/AI',
    * });
    */
   static async create(data: CreateFileDataFlat): Promise<FileFlat> {
@@ -193,7 +193,7 @@ export class FileRepository {
         title: data.title,
         content: data.content,
         tags: data.tags || [],
-        categories: data.categories || [],
+        category: data.category || '',
         summary: data.summary,
         relatedNoteIds: data.relatedNoteIds,
         createdAt: now,
@@ -253,7 +253,7 @@ export class FileRepository {
         title: data.title ?? existingFile.title,
         content: data.content ?? existingFile.content,
         tags: data.tags ?? existingFile.tags,
-        categories: data.categories ?? existingFile.categories,
+        category: data.category ?? existingFile.category,
         summary: data.summary ?? existingFile.summary,
         relatedNoteIds: data.relatedNoteIds ?? existingFile.relatedNoteIds,
         embedding: data.embedding ?? existingFile.embedding,

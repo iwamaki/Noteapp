@@ -44,7 +44,7 @@ export interface ChatContext {
   allFiles?: Array<{
     title: string;         // ファイル名（LLMが理解できる）
     type: 'file';         // フラット構造では常にfile（フォルダなし）
-    categories?: string[]; // カテゴリー（仮想フォルダとして機能）
+    category?: string;     // カテゴリー（階層パス形式: "研究/AI"）
     tags?: string[];       // タグ（柔軟な分類）
   }>;
 }
@@ -77,7 +77,7 @@ export interface LLMCommand {
   // フラット構造用フィールド
   title?: string;         // ファイル名（フラット構造では title で識別）
   new_title?: string;     // リネーム時の新しいファイル名
-  categories?: string[];  // カテゴリー
+  category?: string;      // カテゴリー（階層パス形式: "研究/AI"）
   tags?: string[];        // タグ
 }
 

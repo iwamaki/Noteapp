@@ -3,7 +3,7 @@
  * @summary ファイルのカテゴリー編集モーダル
  * @description
  * ファイルに紐づくカテゴリーを編集するモーダル。
- * カンマ区切りで複数のカテゴリーを入力可能。
+ * 階層パス形式で単一のカテゴリーを入力可能（例: "研究/AI/深層学習"）。
  * CustomModalを活用してUI統一。
  */
 
@@ -15,15 +15,15 @@ import { CustomModal } from '../../../components/CustomModal';
 
 interface CategoryEditModalProps {
   visible: boolean;
-  initialCategories: string[];
+  initialCategory: string;
   fileName: string;
   onClose: () => void;
-  onSave: (categories: string[]) => void;
+  onSave: (category: string) => void;
 }
 
 export const CategoryEditModal: React.FC<CategoryEditModalProps> = ({
   visible,
-  initialCategories,
+  initialCategory,
   fileName,
   onClose,
   onSave,
@@ -46,19 +46,13 @@ export const CategoryEditModal: React.FC<CategoryEditModalProps> = ({
 
   useEffect(() => {
     if (visible) {
-      // カンマ区切りで表示
-      setInputValue(initialCategories.join(', '));
+      setInputValue(initialCategory);
     }
-  }, [visible, initialCategories]);
+  }, [visible, initialCategory]);
 
   const handleSave = () => {
-    // カンマ区切りで分割し、空白を削除してフィルタリング
-    const categories = inputValue
-      .split(',')
-      .map((cat) => cat.trim())
-      .filter((cat) => cat.length > 0);
-
-    onSave(categories);
+    const category = inputValue.trim();
+    onSave(category);
     onClose();
   };
 
@@ -92,16 +86,15 @@ export const CategoryEditModal: React.FC<CategoryEditModalProps> = ({
             backgroundColor: colors.background,
           },
         ]}
-        placeholder="例: 研究, 論文メモ, プロジェクトA"
+        placeholder="例: 研究/AI/深層学習"
         placeholderTextColor={colors.textSecondary}
         value={inputValue}
         onChangeText={setInputValue}
         autoFocus
         onSubmitEditing={handleSave}
-        multiline
       />
       <Text style={styles.hint}>
-        複数のカテゴリーはカンマ（,）で区切って入力してください
+        階層構造を表すには「/」で区切ってください（例: 研究/AI）
       </Text>
     </CustomModal>
   );

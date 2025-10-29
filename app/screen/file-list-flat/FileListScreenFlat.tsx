@@ -26,7 +26,7 @@ import { useKeyboardHeight } from '../../contexts/KeyboardHeightContext';
 import { FlatListProvider, useFlatListContext } from './context';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/types';
-import { FileFlat, FileCategorySection } from '@data/core/typesFlat';
+import { FileFlat, FileCategorySectionHierarchical } from '@data/core/typesFlat';
 import { logger } from '../../utils/logger';
 import { useSettingsStore } from '../../settings/settingsStore';
 import { Ionicons } from '@expo/vector-icons';
@@ -185,19 +185,19 @@ function FileListScreenFlatContent() {
   /**
    * カテゴリー保存
    */
-  const handleSaveCategories = useCallback(
-    async (categories: string[]) => {
+  const handleSaveCategory = useCallback(
+    async (category: string) => {
       if (!fileForCategoryEdit) return;
 
-      logger.info('file', `Attempting to update categories for file: ${fileForCategoryEdit.id}`);
+      logger.info('file', `Attempting to update category for file: ${fileForCategoryEdit.id}`);
       try {
-        await actions.updateFileCategories(fileForCategoryEdit.id, categories);
-        logger.info('file', 'Successfully updated categories');
+        await actions.updateFileCategory(fileForCategoryEdit.id, category);
+        logger.info('file', 'Successfully updated category');
         setShowCategoryEditModal(false);
         setFileForCategoryEdit(null);
         Alert.alert('成功', 'カテゴリーを更新しました');
       } catch (error: any) {
-        logger.error('file', `Failed to update categories: ${error.message}`, error);
+        logger.error('file', `Failed to update category: ${error.message}`, error);
         Alert.alert('エラー', error.message);
       }
     },
@@ -239,10 +239,10 @@ function FileListScreenFlatContent() {
    * 作成実行
    */
   const handleCreate = useCallback(
-    async (title: string, categories: string[], tags: string[]) => {
+    async (title: string, category: string, tags: string[]) => {
       logger.info('file', `Attempting to create new file: ${title}`);
       try {
-        const file = await actions.createFile(title, '', categories, tags);
+        const file = await actions.createFile(title, '', category, tags);
         logger.info('file', `Successfully created file: ${file.id}`);
         dispatch({ type: 'CLOSE_CREATE_MODAL' });
         navigation.navigate('FileEdit', {
@@ -260,44 +260,132 @@ function FileListScreenFlatContent() {
   // === セクションデータの計算 ===
 
   /**
-   * ファイルをカテゴリーでグループ化
-   * Phase 1: フラットなグルーピング（階層構造なし）
+   * ファイルをカテゴリーでグループ化（階層構造対応）
+   * Phase 2A: 階層的グルーピング（展開固定）
    */
-  const sections = useMemo<FileCategorySection[]>(() => {
-    const categoryMap = new Map<string, FileFlat[]>();
+  const sections = useMemo<FileCategorySectionHierarchical[]>(() => {
     const uncategorizedKey = '未分類';
 
-    for (const file of state.files) {
-      if (file.categories.length === 0) {
-        // カテゴリーを持たないファイルは「未分類」に追加
-        const files = categoryMap.get(uncategorizedKey) || [];
-        files.push(file);
-        categoryMap.set(uncategorizedKey, files);
-      } else {
-        // 各カテゴリーに重複して追加
-        for (const category of file.categories) {
-          const files = categoryMap.get(category) || [];
-          files.push(file);
-          categoryMap.set(category, files);
-        }
-      }
+    // Step 1: カテゴリー情報を収集・解析
+    interface CategoryNode {
+      fullPath: string;
+      level: number;
+      parent: string | null;
+      directFileIds: Set<string>;
+      childPaths: Set<string>;
     }
 
-    // FileCategorySection配列に変換
-    const sectionArray: FileCategorySection[] = Array.from(
-      categoryMap.entries()
-    ).map(([category, files]) => ({
-      category,
-      fileCount: files.length,
-      files,
-    }));
+    const categoryNodes = new Map<string, CategoryNode>();
 
-    // ソート：「未分類」以外はファイル数の多い順、「未分類」は常に最後
-    return sectionArray.sort((a, b) => {
-      if (a.category === uncategorizedKey) return 1;
-      if (b.category === uncategorizedKey) return -1;
-      return b.fileCount - a.fileCount;
-    });
+    // カテゴリーノードを作成（親カテゴリーも自動生成）
+    const ensureCategoryNode = (fullPath: string) => {
+      if (categoryNodes.has(fullPath)) return;
+
+      const parts = fullPath.split('/');
+      const level = parts.length - 1;
+      const parent = level > 0 ? parts.slice(0, -1).join('/') : null;
+
+      categoryNodes.set(fullPath, {
+        fullPath,
+        level,
+        parent,
+        directFileIds: new Set(),
+        childPaths: new Set(),
+      });
+
+      // 親カテゴリーも再帰的に作成
+      if (parent) {
+        ensureCategoryNode(parent);
+        const parentNode = categoryNodes.get(parent)!;
+        parentNode.childPaths.add(fullPath);
+      }
+    };
+
+    // Step 2: ファイルをカテゴリーに振り分け
+    const fileMap = new Map<string, FileFlat>();
+    for (const file of state.files) {
+      fileMap.set(file.id, file);
+
+      const category = file.category || uncategorizedKey;
+      ensureCategoryNode(category);
+      categoryNodes.get(category)!.directFileIds.add(file.id);
+    }
+
+    // Step 3: 各カテゴリーの総ファイル数を計算（子孫も含む）
+    const calculateTotalFileCount = (fullPath: string): number => {
+      const node = categoryNodes.get(fullPath);
+      if (!node) return 0;
+
+      let total = node.directFileIds.size;
+      for (const childPath of node.childPaths) {
+        total += calculateTotalFileCount(childPath);
+      }
+      return total;
+    };
+
+    // Step 4: FileCategorySectionHierarchical配列に変換
+    const sectionsArray: FileCategorySectionHierarchical[] = [];
+
+    for (const [fullPath, node] of categoryNodes.entries()) {
+      const parts = fullPath.split('/');
+      const category = parts[parts.length - 1];
+      const fileCount = calculateTotalFileCount(fullPath);
+      const directFiles = Array.from(node.directFileIds)
+        .map(id => fileMap.get(id)!)
+        .filter(Boolean);
+
+      sectionsArray.push({
+        category,
+        fullPath,
+        level: node.level,
+        parent: node.parent,
+        fileCount,
+        directFiles,
+      });
+    }
+
+    // Step 5: ソート
+    // - 未分類は最後
+    // - 同じ親を持つカテゴリー同士でfileCount降順
+    // - 親カテゴリーの直後にその子カテゴリーが続く
+    const sortedSections: FileCategorySectionHierarchical[] = [];
+    const added = new Set<string>();
+
+    const addCategoryAndChildren = (fullPath: string) => {
+      if (added.has(fullPath)) return;
+
+      const section = sectionsArray.find(s => s.fullPath === fullPath);
+      if (!section) return;
+
+      sortedSections.push(section);
+      added.add(fullPath);
+
+      // 子カテゴリーを取得してソート（fileCount降順）
+      const children = sectionsArray
+        .filter(s => s.parent === fullPath)
+        .sort((a, b) => b.fileCount - a.fileCount);
+
+      for (const child of children) {
+        addCategoryAndChildren(child.fullPath);
+      }
+    };
+
+    // ルートカテゴリー（parent === null）から開始
+    const rootCategories = sectionsArray
+      .filter(s => s.parent === null && s.fullPath !== uncategorizedKey)
+      .sort((a, b) => b.fileCount - a.fileCount);
+
+    for (const root of rootCategories) {
+      addCategoryAndChildren(root.fullPath);
+    }
+
+    // 未分類を最後に追加
+    const uncategorizedSection = sectionsArray.find(s => s.fullPath === uncategorizedKey);
+    if (uncategorizedSection) {
+      sortedSections.push(uncategorizedSection);
+    }
+
+    return sortedSections;
   }, [state.files]);
 
   // キーボード + ChatInputBarの高さを計算してコンテンツが隠れないようにする
@@ -340,17 +428,32 @@ function FileListScreenFlatContent() {
   // === レンダリング関数 ===
 
   /**
-   * セクションヘッダーのレンダリング
+   * セクションヘッダーのレンダリング（階層構造対応）
    */
   const renderSectionHeader = useCallback(
-    ({ section }: { section: { category: string; fileCount: number; data: FileFlat[] } }) => {
+    ({ section }: { section: { category: string; level: number; fileCount: number; data: FileFlat[] } }) => {
+      // 階層レベルに応じたパディング（24pxずつ増加）
+      const paddingLeft = 16 + (section.level * 24);
+
+      // 階層レベルに応じた背景色（段階的に薄くなる）
+      const getBackgroundColor = (level: number): string => {
+        const baseValue = 0xD0; // 208 (濃いグレー)
+        const increment = 0x0A; // 10 (段階的に明るくする増分)
+        const colorValue = Math.min(0xF0, baseValue + (level * increment));
+        const hex = colorValue.toString(16).toUpperCase();
+        return `#${hex}${hex}${hex}`;
+      };
+
+      const headerBackgroundColor = getBackgroundColor(section.level);
+
       return (
         <View
           style={[
             styles.sectionHeader,
             {
-              backgroundColor: colors.background,
+              backgroundColor: headerBackgroundColor,
               borderBottomColor: colors.border,
+              paddingLeft,
             },
           ]}
         >
@@ -419,8 +522,10 @@ function FileListScreenFlatContent() {
         <SectionList
           sections={sections.map((section) => ({
             category: section.category,
+            fullPath: section.fullPath,
+            level: section.level,
             fileCount: section.fileCount,
-            data: section.files,
+            data: section.directFiles,
           }))}
           renderItem={renderFileItem}
           renderSectionHeader={renderSectionHeader}
@@ -486,13 +591,13 @@ function FileListScreenFlatContent() {
       {fileForCategoryEdit && (
         <CategoryEditModal
           visible={showCategoryEditModal}
-          initialCategories={fileForCategoryEdit.categories}
+          initialCategory={fileForCategoryEdit.category}
           fileName={fileForCategoryEdit.title}
           onClose={() => {
             setShowCategoryEditModal(false);
             setFileForCategoryEdit(null);
           }}
-          onSave={handleSaveCategories}
+          onSave={handleSaveCategory}
         />
       )}
 

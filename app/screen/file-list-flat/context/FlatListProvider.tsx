@@ -65,7 +65,7 @@ export const FlatListProvider: React.FC<{ children: React.ReactNode }> = ({
     async (
       title: string,
       content: string = '',
-      categories: string[] = [],
+      category: string = '',
       tags: string[] = []
     ): Promise<FileFlat> => {
       try {
@@ -74,7 +74,7 @@ export const FlatListProvider: React.FC<{ children: React.ReactNode }> = ({
         const file = await FileListUseCasesFlat.createFile(
           title,
           content,
-          categories,
+          category,
           tags
         );
 
@@ -162,24 +162,24 @@ export const FlatListProvider: React.FC<{ children: React.ReactNode }> = ({
   /**
    * ファイルのカテゴリーを更新
    */
-  const updateFileCategories = useCallback(
-    async (fileId: string, categories: string[]) => {
+  const updateFileCategory = useCallback(
+    async (fileId: string, category: string) => {
       try {
-        logger.info('file', `Updating categories for file ${fileId}`);
+        logger.info('file', `Updating category for file ${fileId}`);
 
-        const updatedFile = await FileListUseCasesFlat.updateFileCategories(
+        const updatedFile = await FileListUseCasesFlat.updateFileCategory(
           fileId,
-          categories
+          category
         );
 
-        logger.info('file', `Categories updated for file ${fileId}`);
+        logger.info('file', `Category updated for file ${fileId}`);
 
         // 状態を更新
         dispatch({ type: 'UPDATE_FILE', payload: updatedFile });
       } catch (error: any) {
         logger.error(
           'file',
-          `Failed to update categories: ${error.message}`,
+          `Failed to update category: ${error.message}`,
           error
         );
         throw error;
@@ -285,7 +285,7 @@ export const FlatListProvider: React.FC<{ children: React.ReactNode }> = ({
       renameFile,
       deleteSelectedFiles,
       copySelectedFiles,
-      updateFileCategories,
+      updateFileCategory,
       updateFileTags,
       filterByCategory,
       filterByTag,
@@ -298,7 +298,7 @@ export const FlatListProvider: React.FC<{ children: React.ReactNode }> = ({
       renameFile,
       deleteSelectedFiles,
       copySelectedFiles,
-      updateFileCategories,
+      updateFileCategory,
       updateFileTags,
       filterByCategory,
       filterByTag,

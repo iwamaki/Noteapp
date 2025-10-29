@@ -103,13 +103,13 @@ export interface FlatListContextType {
 export interface FlatListActions {
   // データ操作
   refreshData: () => Promise<void>;
-  createFile: (title: string, content?: string, categories?: string[], tags?: string[]) => Promise<FileFlat>;
+  createFile: (title: string, content?: string, category?: string, tags?: string[]) => Promise<FileFlat>;
   renameFile: (fileId: string, newTitle: string) => Promise<void>;
   deleteSelectedFiles: (fileIds: string[]) => Promise<void>;
   copySelectedFiles: (fileIds: string[]) => Promise<void>;
 
   // メタデータ操作
-  updateFileCategories: (fileId: string, categories: string[]) => Promise<void>;
+  updateFileCategory: (fileId: string, category: string) => Promise<void>;
   updateFileTags: (fileId: string, tags: string[]) => Promise<void>;
 
   // フィルタリング

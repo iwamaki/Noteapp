@@ -19,7 +19,7 @@ import { CustomModal } from '../../../components/CustomModal';
 interface CreateFileModalProps {
   visible: boolean;
   onClose: () => void;
-  onCreate: (title: string, categories: string[], tags: string[]) => void;
+  onCreate: (title: string, category: string, tags: string[]) => void;
 }
 
 /**
@@ -35,7 +35,7 @@ export const CreateFileModal: React.FC<CreateFileModalProps> = ({
 }) => {
   const { colors, spacing } = useTheme();
   const [title, setTitle] = useState('');
-  const [categoriesText, setCategoriesText] = useState('');
+  const [categoryText, setCategoryText] = useState('');
   const [tagsText, setTagsText] = useState('');
 
   const handleCreate = () => {
@@ -43,27 +43,24 @@ export const CreateFileModal: React.FC<CreateFileModalProps> = ({
       return;
     }
 
-    // カンマ区切りで分割してトリム
-    const categories = categoriesText
-      .split(',')
-      .map((c) => c.trim())
-      .filter(Boolean);
+    // カンマ区切りで分割してトリム（タグのみ）
+    const category = categoryText.trim();
     const tags = tagsText
       .split(',')
       .map((t) => t.trim())
       .filter(Boolean);
 
-    onCreate(title.trim(), categories, tags);
+    onCreate(title.trim(), category, tags);
 
     // リセット
     setTitle('');
-    setCategoriesText('');
+    setCategoryText('');
     setTagsText('');
   };
 
   const handleCancel = () => {
     setTitle('');
-    setCategoriesText('');
+    setCategoryText('');
     setTagsText('');
     onClose();
   };
@@ -121,7 +118,7 @@ export const CreateFileModal: React.FC<CreateFileModalProps> = ({
             { color: colors.textSecondary, marginBottom: spacing.xs },
           ]}
         >
-          カテゴリー（カンマ区切り）
+          カテゴリー（階層パス）
         </Text>
         <TextInput
           style={[
@@ -134,10 +131,10 @@ export const CreateFileModal: React.FC<CreateFileModalProps> = ({
               marginBottom: spacing.md,
             },
           ]}
-          placeholder="例: 研究, 論文メモ"
+          placeholder="例: 研究/AI/深層学習"
           placeholderTextColor={colors.textSecondary}
-          value={categoriesText}
-          onChangeText={setCategoriesText}
+          value={categoryText}
+          onChangeText={setCategoryText}
         />
 
         {/* タグ入力 */}

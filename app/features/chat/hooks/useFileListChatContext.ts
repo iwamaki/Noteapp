@@ -49,7 +49,7 @@ export const useFileListChatContext = ({
         const visibleFileList: FileListItem[] = filesRef.current.map(file => ({
           title: file.title,
           type: 'file' as const,
-          categories: file.categories,
+          category: file.category,
           tags: file.tags,
         }));
 
