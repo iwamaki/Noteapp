@@ -475,9 +475,14 @@ export class FileRepositoryFlat {
    *
    * @param id - ファイルID
    * @param data - 更新データ
+   * @param options - オプション（skipVersionSave: バージョン保存をスキップ）
    * @returns 更新されたファイル
    */
-  static async update(id: string, data: UpdateFileDataFlat): Promise<FileFlat> {
+  static async update(
+    id: string,
+    data: UpdateFileDataFlat,
+    options: { skipVersionSave?: boolean } = {}
+  ): Promise<FileFlat> {
     try {
       // 既存のファイルを取得
       const existingFile = await this.getById(id);
@@ -486,7 +491,12 @@ export class FileRepositoryFlat {
       }
 
       // コンテンツが更新された場合、現在のバージョンを履歴として保存
-      if (data.content !== undefined && data.content !== existingFile.content) {
+      // ただし、skipVersionSaveオプションが指定されている場合はスキップ
+      if (
+        !options.skipVersionSave &&
+        data.content !== undefined &&
+        data.content !== existingFile.content
+      ) {
         await this.saveVersion(id, existingFile.content, existingFile.version);
       }
 
@@ -747,9 +757,14 @@ export class FileRepositoryFlat {
       await this.saveVersion(fileId, currentFile.content, currentFile.version);
 
       // ファイルを更新（復元）
-      const restoredFile = await this.update(fileId, {
-        content: versionContent,
-      });
+      // skipVersionSaveオプションを指定して、update内での自動バージョン保存を防ぐ
+      const restoredFile = await this.update(
+        fileId,
+        {
+          content: versionContent,
+        },
+        { skipVersionSave: true }
+      );
 
       return restoredFile;
     } catch (e) {
