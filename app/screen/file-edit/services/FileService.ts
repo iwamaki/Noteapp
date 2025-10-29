@@ -116,52 +116,38 @@ export class FileService {
   }
 
   /**
-   * ファイルのバージョン履歴を取得（V2）
-   * TODO: FileRepositoryFlatにバージョン機能を実装後に有効化
+   * ファイルのバージョン履歴を取得
    */
   async getVersionHistory(fileId: string) {
-    // try {
-    //   return await FileRepositoryFlat.getVersions(fileId);
-    // } catch {
-    //   const editorError: EditorError = {
-    //     code: ErrorCode.STORAGE_ERROR,
-    //     message: 'バージョン履歴の取得に失敗しました。',
-    //     recoverable: true,
-    //     retry: () => this.getVersionHistory(fileId),
-    //   };
-    //   throw editorError;
-    // }
-    const editorError: EditorError = {
-      code: ErrorCode.STORAGE_ERROR,
-      message: 'バージョン履歴機能は現在実装中です。',
-      recoverable: false,
-    };
-    throw editorError;
+    try {
+      return await FileRepositoryFlat.getVersions(fileId);
+    } catch {
+      const editorError: EditorError = {
+        code: ErrorCode.STORAGE_ERROR,
+        message: 'バージョン履歴の取得に失敗しました。',
+        recoverable: true,
+        retry: () => this.getVersionHistory(fileId),
+      };
+      throw editorError;
+    }
   }
 
   /**
    * ファイルを特定のバージョンに復元
-   * TODO: FileRepositoryFlatにバージョン機能を実装後に有効化
    */
   async restoreVersion(fileId: string, versionId: string): Promise<FileFlat> {
-    // try {
-    //   const file = await FileRepositoryFlat.restoreVersion(fileId, versionId);
-    //   return file;
-    // } catch {
-    //   const editorError: EditorError = {
-    //     code: ErrorCode.STORAGE_ERROR,
-    //     message: 'バージョンの復元に失敗しました。',
-    //     recoverable: true,
-    //     retry: () => this.restoreVersion(fileId, versionId),
-    //   };
-    //   throw editorError;
-    // }
-    const editorError: EditorError = {
-      code: ErrorCode.STORAGE_ERROR,
-      message: 'バージョン復元機能は現在実装中です。',
-      recoverable: false,
-    };
-    throw editorError;
+    try {
+      const file = await FileRepositoryFlat.restoreVersion(fileId, versionId);
+      return file;
+    } catch {
+      const editorError: EditorError = {
+        code: ErrorCode.STORAGE_ERROR,
+        message: 'バージョンの復元に失敗しました。',
+        recoverable: true,
+        retry: () => this.restoreVersion(fileId, versionId),
+      };
+      throw editorError;
+    }
   }
 }
 

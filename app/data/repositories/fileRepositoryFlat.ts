@@ -29,6 +29,8 @@ import type {
   FileMetadataFlat,
   CreateFileDataFlat,
   UpdateFileDataFlat,
+  FileVersionFlat,
+  VersionMetadataFlat,
 } from '../core/typesFlat';
 import { FileSystemV2Error, RepositoryError } from '../core/errors';
 
@@ -41,8 +43,11 @@ export { FileSystemV2Error, RepositoryError };
 
 const BASE_DIR = new Directory(Paths.document, 'noteapp');
 const CONTENT_DIR = new Directory(BASE_DIR, 'content');
+const VERSIONS_DIR_NAME = 'versions';
 const FILE_METADATA_FILENAME = 'meta.json';
 const FILE_CONTENT_FILENAME = 'content.md';
+const VERSION_METADATA_FILENAME = 'version_meta.json';
+const VERSION_CONTENT_FILENAME = 'version_content.md';
 
 // =============================================================================
 // Helper Functions
@@ -165,6 +170,74 @@ const deleteFileDirectory = async (fileDir: Directory): Promise<void> => {
     throw new FileSystemV2Error(
       'Failed to delete file directory',
       'DELETE_FILE_DIR_ERROR',
+      e
+    );
+  }
+};
+
+/**
+ * バージョンメタデータを読み込み
+ */
+const readVersionMetadata = async (versionDir: Directory): Promise<VersionMetadataFlat | null> => {
+  try {
+    const metadataFile = new FSFile(versionDir, VERSION_METADATA_FILENAME);
+    if (!(await metadataFile.exists)) {
+      return null;
+    }
+    const text = await metadataFile.text();
+    return JSON.parse(text) as VersionMetadataFlat;
+  } catch (e) {
+    console.error('Failed to read version metadata:', e);
+    return null;
+  }
+};
+
+/**
+ * バージョンコンテンツを読み込み
+ */
+const readVersionContent = async (versionDir: Directory): Promise<string | null> => {
+  try {
+    const contentFile = new FSFile(versionDir, VERSION_CONTENT_FILENAME);
+    if (!(await contentFile.exists)) {
+      return null;
+    }
+    return await contentFile.text();
+  } catch (e) {
+    console.error('Failed to read version content:', e);
+    return null;
+  }
+};
+
+/**
+ * バージョンメタデータを書き込み
+ */
+const writeVersionMetadata = async (
+  versionDir: Directory,
+  metadata: VersionMetadataFlat
+): Promise<void> => {
+  try {
+    const metadataFile = new FSFile(versionDir, VERSION_METADATA_FILENAME);
+    await metadataFile.write(JSON.stringify(metadata, null, 2));
+  } catch (e) {
+    throw new FileSystemV2Error(
+      'Failed to write version metadata',
+      'WRITE_VERSION_METADATA_ERROR',
+      e
+    );
+  }
+};
+
+/**
+ * バージョンコンテンツを書き込み
+ */
+const writeVersionContent = async (versionDir: Directory, content: string): Promise<void> => {
+  try {
+    const contentFile = new FSFile(versionDir, VERSION_CONTENT_FILENAME);
+    await contentFile.write(content);
+  } catch (e) {
+    throw new FileSystemV2Error(
+      'Failed to write version content',
+      'WRITE_VERSION_CONTENT_ERROR',
       e
     );
   }
@@ -412,6 +485,11 @@ export class FileRepositoryFlat {
         throw new FileSystemV2Error(`File not found: ${id}`, 'FILE_NOT_FOUND');
       }
 
+      // コンテンツが更新された場合、現在のバージョンを履歴として保存
+      if (data.content !== undefined && data.content !== existingFile.content) {
+        await this.saveVersion(id, existingFile.content, existingFile.version);
+      }
+
       // 更新されたファイル
       const updatedFile: FileFlat = {
         ...existingFile,
@@ -497,6 +575,190 @@ export class FileRepositoryFlat {
       throw new FileSystemV2Error(
         'Failed to batch delete files',
         'BATCH_DELETE_FILES_ERROR',
+        e
+      );
+    }
+  }
+
+  // =============================================================================
+  // バージョン管理操作
+  // =============================================================================
+
+  /**
+   * バージョン履歴を保存
+   * updateメソッドから呼び出される内部メソッド
+   *
+   * @param fileId - ファイルID
+   * @param content - 保存するコンテンツ
+   * @param version - バージョン番号
+   */
+  private static async saveVersion(
+    fileId: string,
+    content: string,
+    version: number
+  ): Promise<void> {
+    try {
+      const versionId = uuidv4();
+      const fileDir = new Directory(CONTENT_DIR, fileId);
+      const versionsDir = new Directory(fileDir, VERSIONS_DIR_NAME);
+
+      // versionsディレクトリが存在しない場合は作成
+      if (!(await versionsDir.exists)) {
+        await versionsDir.create();
+      }
+
+      // バージョンディレクトリを作成
+      const versionDir = new Directory(versionsDir, versionId);
+      if (!(await versionDir.exists)) {
+        await versionDir.create();
+      }
+
+      // バージョンメタデータを作成
+      const versionMetadata: VersionMetadataFlat = {
+        id: versionId,
+        fileId,
+        version,
+        createdAt: new Date().toISOString(),
+      };
+
+      // メタデータとコンテンツを書き込み
+      await writeVersionMetadata(versionDir, versionMetadata);
+      await writeVersionContent(versionDir, content);
+    } catch (e) {
+      throw new FileSystemV2Error(
+        `Failed to save version for file: ${fileId}`,
+        'SAVE_VERSION_ERROR',
+        e
+      );
+    }
+  }
+
+  /**
+   * ファイルのバージョン履歴を取得
+   *
+   * @param fileId - ファイルID
+   * @returns バージョン履歴の配列
+   *
+   * @example
+   * const versions = await FileRepositoryFlat.getVersions('file-uuid-123');
+   */
+  static async getVersions(fileId: string): Promise<FileVersionFlat[]> {
+    try {
+      const fileDir = new Directory(CONTENT_DIR, fileId);
+
+      // ファイルが存在しない場合は空配列を返す
+      if (!(await fileDir.exists)) {
+        return [];
+      }
+
+      const versionsDir = new Directory(fileDir, VERSIONS_DIR_NAME);
+
+      // versionsディレクトリが存在しない場合は空配列を返す
+      if (!(await versionsDir.exists)) {
+        return [];
+      }
+
+      // versionsディレクトリ内の全アイテムを取得
+      const items = await versionsDir.list();
+
+      // バージョンディレクトリのみをフィルタリング
+      const versionPromises = items
+        .filter((item) => item instanceof Directory)
+        .map(async (item) => {
+          const versionDir = item as Directory;
+
+          // メタデータを読み込み
+          const metadata = await readVersionMetadata(versionDir);
+          if (!metadata) {
+            return null;
+          }
+
+          // コンテンツを読み込み
+          const content = await readVersionContent(versionDir);
+          if (content === null) {
+            return null;
+          }
+
+          const version: FileVersionFlat = {
+            id: metadata.id,
+            fileId: metadata.fileId,
+            content,
+            version: metadata.version,
+            createdAt: new Date(metadata.createdAt),
+          };
+
+          return version;
+        });
+
+      // 並行処理して結果を取得
+      const results = await Promise.all(versionPromises);
+
+      // nullを除外して返す
+      return results.filter((version): version is FileVersionFlat => version !== null);
+    } catch (e) {
+      throw new FileSystemV2Error(
+        `Failed to get versions for file: ${fileId}`,
+        'GET_VERSIONS_ERROR',
+        e
+      );
+    }
+  }
+
+  /**
+   * バージョンを復元
+   *
+   * @param fileId - ファイルID
+   * @param versionId - バージョンID
+   * @returns 復元されたファイル
+   *
+   * @example
+   * await FileRepositoryFlat.restoreVersion('file-uuid-123', 'version-uuid-456');
+   */
+  static async restoreVersion(fileId: string, versionId: string): Promise<FileFlat> {
+    try {
+      // 現在のファイルを取得
+      const currentFile = await this.getById(fileId);
+      if (!currentFile) {
+        throw new FileSystemV2Error(`File not found: ${fileId}`, 'FILE_NOT_FOUND');
+      }
+
+      // 指定されたバージョンを取得
+      const fileDir = new Directory(CONTENT_DIR, fileId);
+      const versionsDir = new Directory(fileDir, VERSIONS_DIR_NAME);
+      const versionDir = new Directory(versionsDir, versionId);
+
+      if (!(await versionDir.exists)) {
+        throw new FileSystemV2Error(
+          `Version not found: ${versionId}`,
+          'VERSION_NOT_FOUND'
+        );
+      }
+
+      // バージョンのコンテンツを読み込み
+      const versionContent = await readVersionContent(versionDir);
+      if (versionContent === null) {
+        throw new FileSystemV2Error(
+          `Version content not found: ${versionId}`,
+          'VERSION_CONTENT_NOT_FOUND'
+        );
+      }
+
+      // 現在のファイルをバージョン履歴として保存（復元前の状態を保存）
+      await this.saveVersion(fileId, currentFile.content, currentFile.version);
+
+      // ファイルを更新（復元）
+      const restoredFile = await this.update(fileId, {
+        content: versionContent,
+      });
+
+      return restoredFile;
+    } catch (e) {
+      if (e instanceof FileSystemV2Error) {
+        throw e;
+      }
+      throw new FileSystemV2Error(
+        `Failed to restore version: ${versionId}`,
+        'RESTORE_VERSION_ERROR',
         e
       );
     }
