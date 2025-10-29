@@ -9,8 +9,9 @@ import APIService, { ChatContext } from './llmService/api';
 import { ChatMessage, LLMCommand } from './llmService/types/types';
 import { logger } from '../../utils/logger';
 import { ActiveScreenContextProvider, ActiveScreenContext, ChatServiceListener } from './types';
-import { FileRepository } from '@data/fileRepository';
-import { FolderRepository } from '@data/folderRepository';
+import { FileRepository } from '@data/repositories/fileRepository';
+import WebSocketService from './services/websocketService';
+import { getOrCreateClientId } from './utils/clientId';
 
 /**
  * シングルトンクラスとして機能し、アプリケーション全体でチャットの状態を管理します。
@@ -42,6 +43,11 @@ class ChatService {
   private llmProvider: string = 'anthropic';
   private llmModel: string = 'claude-3-5-sonnet-20241022';
 
+  // WebSocketサービス
+  private wsService: WebSocketService | null = null;
+  private clientId: string | null = null;
+  private isWebSocketInitialized: boolean = false;
+
   private constructor() {
     // プライベートコンストラクタでシングルトンを保証
   }
@@ -59,21 +65,27 @@ class ChatService {
   /**
    * アクティブなコンテキストプロバイダーを登録
    * @param provider 登録するコンテキストプロバイダー
+   * @param clearHandlers コンテキストハンドラをクリアするかどうか（デフォルト: false）
    */
-  public registerActiveContextProvider(provider: ActiveScreenContextProvider): void {
-    logger.debug('chatService', 'Registering active context provider');
+  public registerActiveContextProvider(provider: ActiveScreenContextProvider, clearHandlers: boolean = false): void {
+    logger.debug('chatService', 'Registering active context provider', { clearHandlers });
     this.currentProvider = provider;
-    // コンテキストハンドラのみをクリア（グローバルハンドラは維持）
-    this.contextHandlers = {};
+    // clearHandlers=trueの場合のみコンテキストハンドラをクリア
+    // これにより、画面間でハンドラが保持される（デフォルト動作）
+    if (clearHandlers) {
+      this.contextHandlers = {};
+    }
   }
 
   /**
    * アクティブなコンテキストプロバイダーを解除
+   * Note: コンテキストハンドラはクリアしません。
+   * ハンドラは画面間で共有され、各画面が必要なハンドラを上書きします。
    */
   public unregisterActiveContextProvider(): void {
     logger.debug('chatService', 'Unregistering active context provider');
     this.currentProvider = null;
-    this.contextHandlers = {};
+    // コンテキストハンドラはクリアしない - 次の画面で使用される可能性がある
   }
 
   /**
@@ -101,6 +113,58 @@ class ChatService {
   public setLLMConfig(provider: string, model: string): void {
     this.llmProvider = provider;
     this.llmModel = model;
+  }
+
+  /**
+   * WebSocket接続を初期化
+   *
+   * アプリ起動時に一度だけ呼び出されます（初期化タスクから）。
+   * client_idを生成し、WebSocketサービスを初期化してバックエンドに接続します。
+   *
+   * @param backendUrl バックエンドのURL（例: "https://xxxxx.ngrok-free.app"）
+   */
+  public async initializeWebSocket(backendUrl: string): Promise<void> {
+    if (this.isWebSocketInitialized) {
+      logger.debug('chatService', 'WebSocket already initialized');
+      return;
+    }
+
+    try {
+      // client_idを取得または生成
+      this.clientId = await getOrCreateClientId();
+      logger.info('chatService', `WebSocket client_id: ${this.clientId}`);
+
+      // WebSocketサービスを初期化
+      this.wsService = WebSocketService.getInstance(this.clientId);
+
+      // WebSocket接続を確立
+      this.wsService.connect(backendUrl);
+
+      this.isWebSocketInitialized = true;
+      logger.info('chatService', 'WebSocket initialization completed');
+
+    } catch (error) {
+      logger.error('chatService', 'Failed to initialize WebSocket:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * WebSocket接続を切断
+   */
+  public disconnectWebSocket(): void {
+    if (this.wsService) {
+      this.wsService.disconnect();
+      this.isWebSocketInitialized = false;
+      logger.info('chatService', 'WebSocket disconnected');
+    }
+  }
+
+  /**
+   * client_idを取得
+   */
+  public getClientId(): string | null {
+    return this.clientId;
   }
 
   /**
@@ -138,9 +202,9 @@ class ChatService {
       APIService.setLLMProvider(this.llmProvider);
       APIService.setLLMModel(this.llmModel);
 
-      // APIにメッセージを送信
+      // APIにメッセージを送信（client_idも含める）
       logger.debug('chatService', 'Sending message to LLM with context:', chatContext);
-      const response = await APIService.sendChatMessage(trimmedMessage, chatContext);
+      const response = await APIService.sendChatMessage(trimmedMessage, chatContext, this.clientId);
 
       // AIメッセージを追加
       const aiMessage: ChatMessage = {
@@ -248,30 +312,23 @@ class ChatService {
   }
 
   /**
-   * LLMコンテキスト用に全ファイル・フォルダ情報を取得
+   * LLMコンテキスト用に全ファイル情報を取得（Flat構造版）
+   * フラット構造: パス不要、titleのみでファイルを識別
    */
-  private async getAllFilesForContext(): Promise<Array<{ title: string; path: string; type: 'file' | 'folder' }>> {
+  private async getAllFilesForContext(): Promise<Array<{
+    title: string;
+    type: 'file';
+    categories?: string[];
+    tags?: string[];
+  }>> {
     try {
-      const [files, folders] = await Promise.all([
-        FileRepository.getAll(),
-        FolderRepository.getAll(),
-      ]);
-
-      const allItems = [
-        ...files.map(file => ({
-          title: file.title,
-          path: file.path,
-          type: 'file' as const,
-        })),
-        ...folders.map(folder => ({
-          title: folder.name, // フォルダはnameフィールドを使用
-          path: folder.path,
-          type: 'folder' as const,
-        })),
-      ];
-
-      logger.debug('chatService', `Retrieved ${files.length} files and ${folders.length} folders for LLM context`);
-      return allItems;
+      const files = await FileRepository.getAll();
+      return files.map(file => ({
+        title: file.title,
+        type: 'file' as const,
+        categories: file.categories,
+        tags: file.tags,
+      }));
     } catch (error) {
       logger.error('chatService', 'Error getting all files for context:', error);
       return [];

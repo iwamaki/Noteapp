@@ -4,11 +4,11 @@
  * @description データアクセス層とバリデーションを組み合わせたビジネスロジック
  */
 
-import { FileRepository } from '@data/fileRepository';
+// import { FileRepositoryV2 } from '@data/repositories/fileRepositoryV2';
+import { FileRepository } from '@data/repositories/fileRepository';
 import { ValidationService } from './ValidationService';
 import { ErrorService } from './ErrorService';
-import { File, ErrorCode, EditorError } from '../types';
-import { CreateFileData, UpdateFileData } from '@data/type';
+import { FileFlat, ErrorCode, EditorError } from '../types';
 
 /**
  * ノートサービス
@@ -23,7 +23,7 @@ export class FileService {
   /**
    * ファイルを読み込む
    */
-  async loadFile(id: string): Promise<File> {
+  async loadFile(id: string): Promise<FileFlat> {
     try {
       const file = await FileRepository.getById(id);
 
@@ -55,9 +55,9 @@ export class FileService {
   }
 
   /**
-   * ファイルを保存（新規作成または更新）
+   * ファイルを保存（新規作成または更新）（V2）
    */
-  async save(data: Partial<File & { id?: string }>): Promise<File> {
+  async save(data: Partial<FileFlat & { id?: string }>): Promise<FileFlat> {
     // バリデーション
     const validationResult = this.validator.validateFile(data);
     if (!validationResult.isValid) {
@@ -72,13 +72,20 @@ export class FileService {
     try {
       if (data.id) {
         // 既存ファイルの更新
-        return await FileRepository.updateWithVersion({
-          id: data.id,
-          ...data,
-        } as UpdateFileData);
+        const file = await FileRepository.update(data.id, {
+          title: data.title,
+          content: data.content,
+          tags: data.tags,
+        });
+        return file;
       } else {
-        // 新規ファイルの作成
-        return await FileRepository.createWithVersion(data as CreateFileData);
+        // 新規ファイルの作成（フラット構造なのでパス不要）
+        const file = await FileRepository.create({
+          title: data.title || '',
+          content: data.content || '',
+          tags: data.tags || [],
+        });
+        return file;
       }
     } catch {
       const editorError: EditorError = {
@@ -92,7 +99,7 @@ export class FileService {
   }
 
   /**
-   * ファイルを削除
+   * ファイルを削除（V2）
    */
   async deleteFile(id: string): Promise<void> {
     try {
@@ -103,40 +110,6 @@ export class FileService {
         message: 'ファイルの削除に失敗しました。',
         recoverable: true,
         retry: () => this.deleteFile(id),
-      };
-      throw editorError;
-    }
-  }
-
-  /**
-   * ファイルのバージョン履歴を取得
-   */
-  async getVersionHistory(fileId: string) {
-    try {
-      return await FileRepository.getVersions(fileId);
-    } catch {
-      const editorError: EditorError = {
-        code: ErrorCode.STORAGE_ERROR,
-        message: 'バージョン履歴の取得に失敗しました。',
-        recoverable: true,
-        retry: () => this.getVersionHistory(fileId),
-      };
-      throw editorError;
-    }
-  }
-
-  /**
-   * ファイルを特定のバージョンに復元
-   */
-  async restoreVersion(fileId: string, versionId: string): Promise<File> {
-    try {
-      return await FileRepository.restoreVersion(fileId, versionId);
-    } catch {
-      const editorError: EditorError = {
-        code: ErrorCode.STORAGE_ERROR,
-        message: 'バージョンの復元に失敗しました。',
-        recoverable: true,
-        retry: () => this.restoreVersion(fileId, versionId),
       };
       throw editorError;
     }

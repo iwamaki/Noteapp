@@ -1,11 +1,18 @@
-import { TreeNode } from '../screen/file-list/utils/treeUtils';
-import { FileRepository } from '@data/fileRepository';
-import { FolderRepository } from '@data/folderRepository';
+// TODO: Update for flat structure or remove
+// import { TreeNode } from '../screen/file-list/utils/treeUtils';
+// import { FileRepositoryV2 } from '@data/repositories/fileRepositoryV2';
+// import { FolderRepositoryV2 } from '@data/repositories/folderRepositoryV2';
 import { logger } from './logger';
+
+// Placeholder types for now
+type TreeNode = any;
 
 /**
  * A debug utility to ensure consistency between the data in storage and the data in the UI tree.
  * This function should only be called in development mode (__DEV__ === true).
+ *
+ * V2リポジトリを使用してデータ整合性をチェックします。
+ * V2型からV1型に変換して、既存のUIツリー（V1型ベース）と比較します。
  *
  * @param treeNodes The tree structure from the UI state.
  * @throws An error if an inconsistency is detected.
@@ -25,13 +32,23 @@ const collectAllNodes = (nodes: TreeNode[]): TreeNode[] => {
 };
 
 export const checkTreeConsistency = async (treeNodes: TreeNode[]): Promise<void> => {
+  // TODO: Re-implement for flat structure
+  logger.warn('system', 'checkTreeConsistency is disabled for flat structure migration');
+  return;
+
+  /* Old implementation - disabled
   try {
 
     // 1. Get the source of truth from storage
-    const allFiles = await FileRepository.getAll();
-    const allFolders = await FolderRepository.getAll();
+    // ルートレベルのみ取得（簡易的なデバッグ）
+    // 本格的なデバッグには、再帰的に全アイテムを収集する必要があります
+    const [allFiles, allFolders] = await Promise.all([
+      FileRepositoryV2.getByFolderPath('/'),
+      FolderRepositoryV2.getByParentPath('/'),
+    ]);
+  */
 
-    // 2. Get the UI data - collect ALL nodes including those in collapsed folders
+    /* // 2. Get the UI data - collect ALL nodes including those in collapsed folders
     const allUiNodes = collectAllNodes(treeNodes);
     const uiFiles = allUiNodes.filter(node => node.type === 'file');
     const uiFolders = allUiNodes.filter(node => node.type === 'folder');
@@ -48,7 +65,7 @@ export const checkTreeConsistency = async (treeNodes: TreeNode[]): Promise<void>
         `Storage: ${allFiles.length} files, UI: ${uiFiles.length} files.\n` +
         `Missing in UI: ${JSON.stringify(missingInUi)}\n` +
         `Extra in UI: ${JSON.stringify(extraInUi)}\n` +
-        `Storage files:\n${JSON.stringify(allFiles.map(n => ({ id: n.id, title: n.title, path: n.path })), null, 2)}`
+        `Storage files:\n${JSON.stringify(allFiles.map(n => ({ id: n.id, title: n.title })), null, 2)}`
       );
     }
 
@@ -63,7 +80,7 @@ export const checkTreeConsistency = async (treeNodes: TreeNode[]): Promise<void>
         `Storage: ${allFolders.length} folders, UI: ${uiFolders.length} folders.\n` +
         `Missing in UI: ${JSON.stringify(missingInUi)}\n` +
         `Extra in UI: ${JSON.stringify(extraInUi)}\n` +
-        `Storage folders:\n${JSON.stringify(allFolders.map(f => ({ id: f.id, name: f.name, path: f.path })), null, 2)}`
+        `Storage folders:\n${JSON.stringify(allFolders.map(f => ({ id: f.id, name: f.name, slug: f.slug })), null, 2)}`
       );
     }
 
@@ -100,15 +117,24 @@ export const checkTreeConsistency = async (treeNodes: TreeNode[]): Promise<void>
     // Re-throw the error to make it visible
     throw error;
   }
+  */
 };
 
 /**
  * Logs the current state of storage for debugging purposes
  */
 export const logStorageState = async (): Promise<void> => {
+  // TODO: Re-implement for flat structure
+  logger.warn('system', 'logStorageState is disabled for flat structure migration');
+  return;
+
+  /* Old implementation - disabled
   try {
-    const allFiles = await FileRepository.getAll();
-    const allFolders = await FolderRepository.getAll();
+    // リポジトリから取得（ルートレベルのみ）
+    const [allFiles, allFolders] = await Promise.all([
+      FileRepositoryV2.getByFolderPath('/'),
+      FolderRepositoryV2.getByParentPath('/'),
+    ]);
 
     console.log('📦 Current Storage State:');
     console.log(`  Files: ${allFiles.length}`);
@@ -117,17 +143,18 @@ export const logStorageState = async (): Promise<void> => {
     if (allFolders.length > 0) {
       console.log('  Folder structure:');
       allFolders.forEach(f => {
-        console.log(`    - ${f.name} (path: ${f.path}, id: ${f.id})`);
+        console.log(`    - ${f.name} (slug: ${f.slug}, id: ${f.id})`);
       });
     }
 
     if (allFiles.length > 0) {
       console.log('  File structure:');
       allFiles.forEach(n => {
-        console.log(`    - ${n.title} (path: ${n.path}, id: ${n.id})`);
+        console.log(`    - ${n.title} (id: ${n.id})`);
       });
     }
   } catch (error) {
     console.error('Failed to log storage state:', error);
   }
+  */
 };

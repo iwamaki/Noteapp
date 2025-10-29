@@ -302,7 +302,13 @@ class BaseAgentLLMProvider(BaseLLMProvider):
             provider_name: プロバイダー名
             commands: 抽出されたコマンドリスト
         """
+        # フラット構造ではtitleを使用、旧階層構造ではpathを使用
+        actions = []
+        for cmd in commands:
+            target = getattr(cmd, 'title', getattr(cmd, 'path', 'N/A'))
+            actions.append(f"{cmd.action}:{target}")
+
         log_llm_raw(provider_name, "agent_commands", {
             "count": len(commands),
-            "actions": [f"{cmd.action}:{cmd.path}" for cmd in commands]
+            "actions": actions
         }, {})

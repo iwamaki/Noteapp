@@ -40,10 +40,12 @@ export interface ChatContext {
   };
   conversationHistory?: ChatMessage[];
   activeScreen?: FilelistScreenContext | EditScreenContext;
+  // フラット構造最適化: LLMには人間が読める情報のみを提供
   allFiles?: Array<{
-    path: string;
-    title: string;
-    type: 'file' | 'folder';
+    title: string;         // ファイル名（LLMが理解できる）
+    type: 'file';         // フラット構造では常にfile（フォルダなし）
+    categories?: string[]; // カテゴリー（仮想フォルダとして機能）
+    tags?: string[];       // タグ（柔軟な分類）
   }>;
 }
 
@@ -58,15 +60,25 @@ export interface LLMProvider {
 // LLMコマンド
 export interface LLMCommand {
   action: string;
+
+  // 旧階層構造用フィールド（互換性のため残す）
   path?: string;
-  content?: string;
-  description?: string;
   source?: string;
   destination?: string;
   source_path?: string;
   dest_path?: string;
   paths?: string[];
   sources?: string[];
+
+  // 共通フィールド
+  content?: string;
+  description?: string;
+
+  // フラット構造用フィールド
+  title?: string;         // ファイル名（フラット構造では title で識別）
+  new_title?: string;     // リネーム時の新しいファイル名
+  categories?: string[];  // カテゴリー
+  tags?: string[];        // タグ
 }
 
 // LLMレスポンス

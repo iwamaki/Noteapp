@@ -7,6 +7,7 @@ from src.llm.models import ChatResponse, ChatContext
 from src.llm.providers.base import BaseLLMProvider
 from src.llm.providers.openai import OpenAIProvider
 from src.llm.providers.gemini import GeminiProvider
+from src.llm.tools.context_manager import set_client_id
 from src.core.logger import logger
 
 class ChatService:
@@ -28,9 +29,15 @@ class ChatService:
         message: str,
         provider: str,
         model: str,
-        context: Optional[ChatContext] = None
+        context: Optional[ChatContext] = None,
+        client_id: Optional[str] = None
     ) -> ChatResponse:
         """チャットメッセージを処理"""
+        # WebSocket接続のクライアントIDを設定（read_fileツールで使用）
+        if client_id:
+            set_client_id(client_id)
+            logger.debug(f"Client ID set for this request: {client_id}")
+
         llm_provider = self.get_provider(provider, model)
 
         if not llm_provider:

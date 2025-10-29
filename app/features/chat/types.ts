@@ -12,13 +12,14 @@ import { LLMCommand } from './llmService/types/types';
  * LLMに共有したい画面固有の情報を保持します
  */
 export interface FileListItem {
-  filePath: string;
-  tags?: string[];
+  title: string;         // ファイル名（フラット構造: パス不要）
+  type: 'file';         // フラット構造では常にfile
+  categories?: string[]; // カテゴリー（仮想フォルダ）
+  tags?: string[];       // タグ
 }
 
 export interface FilelistScreenContext {
   name: 'filelist';
-  currentPath: string;
   visibleFileList: FileListItem[];
   selectedFileList?: FileListItem[];
 }

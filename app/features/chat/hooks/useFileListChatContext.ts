@@ -1,102 +1,85 @@
 /**
  * @file useFileListChatContext.ts
- * @summary FileListScreen用のチャットコンテキストプロバイダーフック
+ * @summary FileListScreenFlat用のチャットコンテキストプロバイダーフック
  * @responsibility ファイル一覧画面のコンテキストをChatServiceに提供し、
- *                 コンテキスト依存のコマンドハンドラを登録する
+ *                 コンテキスト依存のコマンドハンドラを登録する（フラット構造版）
  */
 
 import { useEffect, useRef } from 'react';
-import { ActiveScreenContextProvider, ActiveScreenContext } from '../types';
+import { ActiveScreenContextProvider, ActiveScreenContext, FileListItem } from '../types';
 import ChatService from '../index';
 import { logger } from '../../../utils/logger';
-import { FileSystemItem } from '@data/type';
-import { PathService } from '../../../services/PathService';
-import { createDirectoryHandler } from '../handlers/createDirectoryHandler';
-import { deleteItemHandler } from '../handlers/deleteItemHandler';
-import { moveItemHandler } from '../handlers/moveItemHandler';
 import { CommandHandlerContext } from '../handlers/types';
-import { useFileListContext } from '../../../screen/file-list/context/useFileListContext';
+import { createFileHandlerFlat } from '../handlers/createFileHandlerFlat';
+import { deleteFileHandlerFlat } from '../handlers/deleteFileHandlerFlat';
+import { renameFileHandlerFlat } from '../handlers/renameFileHandlerFlat';
+import type { FileFlat } from '@data/core/typesFlat';
 
 interface UseFileListChatContextParams {
-  items: FileSystemItem[];
-  currentPath: string;
+  files: FileFlat[];
+  refreshData: () => Promise<void>;
 }
 
 /**
- * ファイル一覧画面用のチャットコンテキストプロバイダーフック
+ * ファイル一覧画面用のチャットコンテキストプロバイダーフック（フラット構造版）
  *
  * このフックは、ファイル一覧画面のコンテキストをChatServiceに登録します。
- * LLMには、現在表示されているファイルとフォルダのリストを提供します。
+ * LLMには、現在表示されているファイルのリストを提供します。
+ * フラット構造では、パスやフォルダの概念がなく、titleのみでファイルを識別します。
  */
 export const useFileListChatContext = ({
-  items,
-  currentPath,
+  files,
+  refreshData,
 }: UseFileListChatContextParams): void => {
-  // FileListContextから actions を取得
-  const { actions } = useFileListContext();
+  const filesRef = useRef(files);
 
-  // 最新のitemsとcurrentPathを参照するためのref
-  const itemsRef = useRef(items);
-  const currentPathRef = useRef(currentPath);
-
-  // refを更新
+  // filesが更新されたらrefを更新
   useEffect(() => {
-    itemsRef.current = items;
-    currentPathRef.current = currentPath;
-  }, [items, currentPath]);
+    filesRef.current = files;
+  }, [files]);
 
   useEffect(() => {
-    // ActiveScreenContextProviderの実装
     const contextProvider: ActiveScreenContextProvider = {
       getScreenContext: async (): Promise<ActiveScreenContext> => {
         logger.debug('chatService', '[useFileListChatContext] Getting screen context', {
-          itemsCount: itemsRef.current.length,
-          currentPath: currentPathRef.current,
+          filesCount: filesRef.current.length,
         });
 
-        const visibleFileList = itemsRef.current
-          .map(item => {
-            const path = item.item.path;
-            const name = item.type === 'file' ? item.item.title : (item.item as any).name;
-            const type = item.type === 'file' ? 'file' : 'directory';
-            const filePath = PathService.getFullPath(path, name, item.type);
-            return {
-              filePath,
-              name,
-              type,
-              tags: item.type === 'file' ? item.item.tags : undefined,
-            };
-          });
+        // FileFlatをFileListItemに変換
+        const visibleFileList: FileListItem[] = filesRef.current.map(file => ({
+          title: file.title,
+          type: 'file' as const,
+          categories: file.categories,
+          tags: file.tags,
+        }));
 
         return {
           name: 'filelist',
-          currentPath: currentPathRef.current,
           visibleFileList,
         };
       },
     };
 
-    // ハンドラのコンテキストを作成し、refreshData を含める
     const handlerContext: CommandHandlerContext = {
-      refreshData: actions.refreshData,
+      refreshData,
     };
 
-    // コマンドハンドラの定義（新しいハンドラ構造を使用）
+    // フラット構造用のコマンドハンドラを登録
+    // Note: これらのハンドラは画面遷移後も保持されます（ChatServiceの仕様変更により）
+    // 他の画面（例: FileEdit）が独自のハンドラを登録しても、これらは上書きされず共存します
     const commandHandlers = {
-      create_directory: (command: any) => createDirectoryHandler(command, handlerContext),
-      move_item: (command: any) => moveItemHandler(command, handlerContext),
-      delete_item: (command: any) => deleteItemHandler(command, handlerContext),
+      create_file: (command: any) => createFileHandlerFlat(command, handlerContext),
+      delete_file: (command: any) => deleteFileHandlerFlat(command, handlerContext),
+      rename_file: (command: any) => renameFileHandlerFlat(command, handlerContext),
     };
 
-    // ChatServiceにプロバイダーとハンドラを登録
     logger.debug('chatService', '[useFileListChatContext] Registering context provider and handlers');
     ChatService.registerActiveContextProvider(contextProvider);
     ChatService.registerCommandHandlers(commandHandlers);
 
-    // クリーンアップ: アンマウント時にプロバイダーを解除
     return () => {
       logger.debug('chatService', '[useFileListChatContext] Unregistering context provider');
       ChatService.unregisterActiveContextProvider();
     };
-  }, [actions.refreshData]);
+  }, [refreshData]);
 };

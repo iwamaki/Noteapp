@@ -1,18 +1,15 @@
 from langchain.tools import BaseTool
 from .edit_file import edit_file
 from .read_file import read_file
-from .search_files import search_files
-from .list_directory import list_directory
-from .create_directory import create_directory
-from .move_item import move_item
-from .delete_item import delete_item
+from .create_file import create_file
+from .delete_file import delete_file
+from .rename_file import rename_file
 
 AVAILABLE_TOOLS: list[BaseTool] = [
+    # フラット構造用ツール
+    create_file, # type: ignore
     edit_file, # type: ignore
     read_file, # type: ignore
-    search_files, # type: ignore
-    list_directory, # type: ignore
-    create_directory, # type: ignore
-    move_item, # type: ignore
-    delete_item, # type: ignore
+    delete_file, # type: ignore
+    rename_file, # type: ignore
 ]

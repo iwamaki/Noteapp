@@ -60,7 +60,8 @@ export class LLMService {
 
   async sendChatMessage(
     message: string,
-    context: ChatContext = {}
+    context: ChatContext = {},
+    clientId?: string | null
   ): Promise<LLMResponse> {
     // リクエストを開始（レート制限を適用）
     const requestId = await this.requestManager.startRequest();
@@ -85,15 +86,23 @@ export class LLMService {
         model: this.providerManager.getCurrentModel(),
         contextKeys: Object.keys(enrichedContext),
         historyLength: history.length,
+        clientId: clientId || 'none',
       });
 
-      // HTTPリクエストを送信
-      const response = await this.httpClient.post(`/api/chat`, {
+      // HTTPリクエストを送信（client_idを含める）
+      const payload: any = {
         message,
         provider: this.providerManager.getCurrentProvider(),
         model: this.providerManager.getCurrentModel(),
         context: enrichedContext,
-      });
+      };
+
+      // client_idがある場合は含める
+      if (clientId) {
+        payload.client_id = clientId;
+      }
+
+      const response = await this.httpClient.post(`/api/chat`, payload);
 
       logger.info('llm', `Request #${requestId} - Request completed, status: ${response.status}`);
 

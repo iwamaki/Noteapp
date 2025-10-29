@@ -14,13 +14,24 @@ class ChatMessage(BaseModel):
 
 
 class FileListItem(BaseModel):
-    filePath: str
+    """フラット構造のファイルリストアイテム
+
+    フラット構造では、ファイルはtitleのみで識別され、
+    パスやディレクトリの概念はありません。
+    """
+    title: str
+    type: Literal["file"] = "file"
+    categories: Optional[List[str]] = None
     tags: Optional[List[str]] = None
 
 
 class FilelistScreenContext(BaseModel):
+    """ファイルリスト画面のコンテキスト（フラット構造）
+
+    フラット構造では、currentPathは不要です。
+    すべてのファイルは単一の平坦なリストとして表示されます。
+    """
     name: Literal["filelist"] = "filelist"
-    currentPath: str
     visibleFileList: List[FileListItem]
     selectedFileList: Optional[List[FileListItem]] = None
 
@@ -47,16 +58,20 @@ class ChatRequest(BaseModel):
     provider: str = "openai"
     model: str = "gpt-3.5-turbo"
     context: Optional[ChatContext] = None
+    client_id: Optional[str] = None  # WebSocket接続のクライアントID
 
 
 class LLMCommand(BaseModel):
+    """LLMが生成するコマンド（フラット構造）
+
+    フラット構造では、titleベースでファイルを識別します。
+    """
     action: str
-    path: Optional[str] = None
-    content: Optional[str] = None
-    source: Optional[str] = None
-    destination: Optional[str] = None
-    source_path: Optional[str] = None
-    dest_path: Optional[str] = None
+    title: Optional[str] = None  # ファイル名（フラット構造では title で識別）
+    new_title: Optional[str] = None  # リネーム時の新しいファイル名
+    content: Optional[str] = None  # ファイルの内容
+    categories: Optional[List[str]] = None  # カテゴリー
+    tags: Optional[List[str]] = None  # タグ
 
 
 class ChatResponse(BaseModel):

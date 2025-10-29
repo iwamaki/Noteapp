@@ -88,14 +88,12 @@ function FileEditScreen() {
     onRedo: redo,
     canUndo,
     canRedo,
-    originalFileContent: file?.content ?? '',
-    currentContent: content,
   });
 
   useFileEditChatContext({
     title,
     content,
-    path: file?.path || '', // Pass file.path
+    path: '', // V2型にはpathフィールドがない
     setContent,
   });
 
