@@ -17,6 +17,7 @@ import type {
   CategoryInfo,
   TagInfo,
   MetadataSearchOptions,
+  FileCategorySection,
 } from '../core/typesFlat';
 import { FileRepository } from '../repositories/fileRepository';
 
@@ -103,6 +104,65 @@ export class MetadataService {
 
     // ファイル数の多い順にソート
     return categories.sort((a, b) => b.fileCount - a.fileCount);
+  }
+
+  /**
+   * ファイルをカテゴリーでグループ化（フラット構造）
+   *
+   * @returns カテゴリー別のファイルセクション配列
+   *
+   * @example
+   * const sections = await MetadataService.groupFilesByCategory();
+   * // => [
+   * //   { category: '研究', fileCount: 5, files: [...] },
+   * //   { category: '個人', fileCount: 3, files: [...] },
+   * //   { category: '未分類', fileCount: 2, files: [...] }
+   * // ]
+   *
+   * @remarks
+   * - 複数カテゴリーを持つファイルは、各カテゴリーに重複して表示
+   * - カテゴリーを持たないファイルは「未分類」セクションに表示
+   * - セクションはファイル数の多い順にソート（「未分類」は常に最後）
+   * - Phase 1実装：フラットなグルーピングのみ（階層構造なし）
+   */
+  static async groupFilesByCategory(): Promise<FileCategorySection[]> {
+    const allFiles = await FileRepository.getAll();
+
+    // カテゴリーごとにファイルをグループ化
+    const categoryMap = new Map<string, FileFlat[]>();
+    const uncategorizedKey = '未分類';
+
+    for (const file of allFiles) {
+      if (file.categories.length === 0) {
+        // カテゴリーを持たないファイルは「未分類」に追加
+        const files = categoryMap.get(uncategorizedKey) || [];
+        files.push(file);
+        categoryMap.set(uncategorizedKey, files);
+      } else {
+        // 各カテゴリーに重複して追加
+        for (const category of file.categories) {
+          const files = categoryMap.get(category) || [];
+          files.push(file);
+          categoryMap.set(category, files);
+        }
+      }
+    }
+
+    // FileCategorySection配列に変換
+    const sections: FileCategorySection[] = Array.from(
+      categoryMap.entries()
+    ).map(([category, files]) => ({
+      category,
+      fileCount: files.length,
+      files,
+    }));
+
+    // ソート：「未分類」以外はファイル数の多い順、「未分類」は常に最後
+    return sections.sort((a, b) => {
+      if (a.category === uncategorizedKey) return 1;
+      if (b.category === uncategorizedKey) return -1;
+      return b.fileCount - a.fileCount;
+    });
   }
 
   // =============================================================================

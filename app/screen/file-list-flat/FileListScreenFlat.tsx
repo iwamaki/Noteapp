@@ -18,7 +18,7 @@
  */
 
 import React, { useCallback, useMemo, useEffect, useState } from 'react';
-import { StyleSheet, FlatList, Alert, View, Text } from 'react-native';
+import { StyleSheet, SectionList, Alert, View, Text } from 'react-native';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { MainContainer } from '../../components/MainContainer';
 import { CustomModal } from '../../components/CustomModal';
@@ -26,7 +26,7 @@ import { useKeyboardHeight } from '../../contexts/KeyboardHeightContext';
 import { FlatListProvider, useFlatListContext } from './context';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/types';
-import { FileFlat } from '@data/core/typesFlat';
+import { FileFlat, FileCategorySection } from '@data/core/typesFlat';
 import { logger } from '../../utils/logger';
 import { useSettingsStore } from '../../settings/settingsStore';
 import { Ionicons } from '@expo/vector-icons';
@@ -257,6 +257,49 @@ function FileListScreenFlatContent() {
     [actions, dispatch, navigation, settings.defaultFileViewScreen]
   );
 
+  // === セクションデータの計算 ===
+
+  /**
+   * ファイルをカテゴリーでグループ化
+   * Phase 1: フラットなグルーピング（階層構造なし）
+   */
+  const sections = useMemo<FileCategorySection[]>(() => {
+    const categoryMap = new Map<string, FileFlat[]>();
+    const uncategorizedKey = '未分類';
+
+    for (const file of state.files) {
+      if (file.categories.length === 0) {
+        // カテゴリーを持たないファイルは「未分類」に追加
+        const files = categoryMap.get(uncategorizedKey) || [];
+        files.push(file);
+        categoryMap.set(uncategorizedKey, files);
+      } else {
+        // 各カテゴリーに重複して追加
+        for (const category of file.categories) {
+          const files = categoryMap.get(category) || [];
+          files.push(file);
+          categoryMap.set(category, files);
+        }
+      }
+    }
+
+    // FileCategorySection配列に変換
+    const sectionArray: FileCategorySection[] = Array.from(
+      categoryMap.entries()
+    ).map(([category, files]) => ({
+      category,
+      fileCount: files.length,
+      files,
+    }));
+
+    // ソート：「未分類」以外はファイル数の多い順、「未分類」は常に最後
+    return sectionArray.sort((a, b) => {
+      if (a.category === uncategorizedKey) return 1;
+      if (b.category === uncategorizedKey) return -1;
+      return b.fileCount - a.fileCount;
+    });
+  }, [state.files]);
+
   // キーボード + ChatInputBarの高さを計算してコンテンツが隠れないようにする
   const chatBarOffset = chatInputBarHeight + keyboardHeight;
 
@@ -294,7 +337,42 @@ function FileListScreenFlatContent() {
     refreshData: actions.refreshData,
   });
 
-  // レンダリングアイテム
+  // === レンダリング関数 ===
+
+  /**
+   * セクションヘッダーのレンダリング
+   */
+  const renderSectionHeader = useCallback(
+    ({ section }: { section: { category: string; fileCount: number; data: FileFlat[] } }) => {
+      return (
+        <View
+          style={[
+            styles.sectionHeader,
+            {
+              backgroundColor: colors.background,
+              borderBottomColor: colors.border,
+            },
+          ]}
+        >
+          <Text
+            style={[
+              styles.sectionHeaderText,
+              {
+                color: colors.text,
+              },
+            ]}
+          >
+            {section.category} ({section.fileCount})
+          </Text>
+        </View>
+      );
+    },
+    [colors]
+  );
+
+  /**
+   * ファイルアイテムのレンダリング
+   */
   const renderFileItem = useCallback(
     ({ item: file }: { item: FileFlat }) => {
       return (
@@ -338,12 +416,18 @@ function FileListScreenFlatContent() {
           </Text>
         </View>
       ) : (
-        <FlatList
-          data={state.files}
+        <SectionList
+          sections={sections.map((section) => ({
+            category: section.category,
+            fileCount: section.fileCount,
+            data: section.files,
+          }))}
           renderItem={renderFileItem}
+          renderSectionHeader={renderSectionHeader}
           keyExtractor={(file) => file.id}
           contentContainerStyle={contentContainerStyle}
           keyboardShouldPersistTaps="handled"
+          stickySectionHeadersEnabled={true}
         />
       )}
 
@@ -444,6 +528,15 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  sectionHeader: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+  },
+  sectionHeaderText: {
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 
