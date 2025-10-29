@@ -18,7 +18,7 @@
  */
 
 import React, { useCallback, useMemo, useEffect, useState } from 'react';
-import { StyleSheet, FlatList, Alert, View, Text } from 'react-native';
+import { StyleSheet, FlatList, Alert, View, Text, BackHandler } from 'react-native';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { MainContainer } from '../../components/MainContainer';
 import { CustomModal } from '../../components/CustomModal';
@@ -102,6 +102,18 @@ function FileListScreenFlatContent() {
     logger.info('file', 'Cancelling selection mode.');
     dispatch({ type: 'EXIT_SELECTION_MODE' });
   }, [dispatch]);
+
+  // 選択モード中のAndroidバックボタン・iOSスワイプジェスチャーハンドリング
+  useEffect(() => {
+    if (state.isSelectionMode) {
+      const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+        handleCancelSelection();
+        return true; // デフォルトの動作を防ぐ
+      });
+
+      return () => backHandler.remove();
+    }
+  }, [state.isSelectionMode, handleCancelSelection]);
 
   /**
    * 削除確認モーダルを開く

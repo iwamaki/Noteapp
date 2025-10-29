@@ -70,7 +70,7 @@ export const useFileListHeader = ({
         createHeaderConfig({
           title: undefined,
           leftButtons: [
-            { icon: <Ionicons name="arrow-back" size={24} color={colors.text} />, onPress: handleCancelSelection },
+            { icon: <Ionicons name="close" size={24} color={colors.text} />, onPress: handleCancelSelection },
           ],
           rightButtons: selectionRightButtons,
         })
