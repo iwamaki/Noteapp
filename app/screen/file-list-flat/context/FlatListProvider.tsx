@@ -129,8 +129,6 @@ export const FlatListProvider: React.FC<{ children: React.ReactNode }> = ({
 
       // 選択モードを終了
       dispatch({ type: 'EXIT_SELECTION_MODE' });
-
-      Alert.alert('成功', `${fileIds.length}件のファイルを削除しました`);
     } catch (error: any) {
       logger.error('file', `Failed to delete files: ${error.message}`, error);
       throw error;
@@ -155,8 +153,6 @@ export const FlatListProvider: React.FC<{ children: React.ReactNode }> = ({
 
       // 選択モードを終了
       dispatch({ type: 'EXIT_SELECTION_MODE' });
-
-      Alert.alert('成功', `${copiedFiles.length}件のファイルをコピーしました`);
     } catch (error: any) {
       logger.error('file', `Failed to copy files: ${error.message}`, error);
       throw error;

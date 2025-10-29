@@ -15,6 +15,7 @@ import { useTheme } from '../design/theme/ThemeContext';
 interface ListItemContainerProps {
   onPress?: () => void;
   onLongPress?: () => void;
+  leftElement?: React.ReactNode;
   rightElement?: React.ReactNode;
   disabled?: boolean;
   isSelected?: boolean;
@@ -25,6 +26,7 @@ interface ListItemContainerProps {
 const ListItemContainer: React.FC<ListItemContainerProps> = ({
   onPress,
   onLongPress,
+  leftElement,
   rightElement,
   disabled = false,
   isSelected = false,
@@ -41,6 +43,10 @@ const ListItemContainer: React.FC<ListItemContainerProps> = ({
       padding: responsive.getResponsiveSize(spacing.sm, spacing.md, spacing.lg),
       flexDirection: 'row',
       alignItems: 'center',
+    },
+    leftContainer: {
+      marginRight: spacing.md,
+      justifyContent: 'center',
     },
     content: {
       flex: 1,
@@ -80,6 +86,12 @@ const ListItemContainer: React.FC<ListItemContainerProps> = ({
       onLongPress={onLongPress}
       disabled={disabled || !onPress}
     >
+      {leftElement && (
+        <View style={styles.leftContainer}>
+          {leftElement}
+        </View>
+      )}
+
       <View style={styles.content}>
         {children}
       </View>
