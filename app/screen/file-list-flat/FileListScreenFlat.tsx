@@ -34,6 +34,8 @@ import { FlatListItem } from './components/FlatListItem';
 import { CreateFileModal } from './components/CreateFileModal';
 import { RenameItemModal } from './components/RenameItemModal';
 import { FileActionsModal } from './components/FileActionsModal';
+import { CategoryEditModal } from './components/CategoryEditModal';
+import { TagEditModal } from './components/TagEditModal';
 import { useFileListHeader } from './hooks/useFileListHeader';
 import { useFileListChatContext } from '../../features/chat/hooks/useFileListChatContext';
 import { OverflowMenu } from './components/OverflowMenu';
@@ -51,6 +53,12 @@ function FileListScreenFlatContent() {
   // 削除確認モーダルの状態
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [fileToDelete, setFileToDelete] = useState<FileFlat | null>(null);
+  // カテゴリー編集モーダルの状態
+  const [showCategoryEditModal, setShowCategoryEditModal] = useState(false);
+  const [fileForCategoryEdit, setFileForCategoryEdit] = useState<FileFlat | null>(null);
+  // タグ編集モーダルの状態
+  const [showTagEditModal, setShowTagEditModal] = useState(false);
+  const [fileForTagEdit, setFileForTagEdit] = useState<FileFlat | null>(null);
 
   // データ初期読み込み（初回のみ）
   useEffect(() => {
@@ -163,6 +171,68 @@ function FileListScreenFlatContent() {
       }
     },
     [state.modals.rename.file, actions, dispatch]
+  );
+
+  /**
+   * カテゴリー編集モーダルを開く
+   */
+  const handleOpenCategoryEditModal = useCallback((file: FileFlat) => {
+    logger.info('file', `Opening category edit modal for file: ${file.id}`);
+    setFileForCategoryEdit(file);
+    setShowCategoryEditModal(true);
+  }, []);
+
+  /**
+   * カテゴリー保存
+   */
+  const handleSaveCategories = useCallback(
+    async (categories: string[]) => {
+      if (!fileForCategoryEdit) return;
+
+      logger.info('file', `Attempting to update categories for file: ${fileForCategoryEdit.id}`);
+      try {
+        await actions.updateFileCategories(fileForCategoryEdit.id, categories);
+        logger.info('file', 'Successfully updated categories');
+        setShowCategoryEditModal(false);
+        setFileForCategoryEdit(null);
+        Alert.alert('成功', 'カテゴリーを更新しました');
+      } catch (error: any) {
+        logger.error('file', `Failed to update categories: ${error.message}`, error);
+        Alert.alert('エラー', error.message);
+      }
+    },
+    [fileForCategoryEdit, actions]
+  );
+
+  /**
+   * タグ編集モーダルを開く
+   */
+  const handleOpenTagEditModal = useCallback((file: FileFlat) => {
+    logger.info('file', `Opening tag edit modal for file: ${file.id}`);
+    setFileForTagEdit(file);
+    setShowTagEditModal(true);
+  }, []);
+
+  /**
+   * タグ保存
+   */
+  const handleSaveTags = useCallback(
+    async (tags: string[]) => {
+      if (!fileForTagEdit) return;
+
+      logger.info('file', `Attempting to update tags for file: ${fileForTagEdit.id}`);
+      try {
+        await actions.updateFileTags(fileForTagEdit.id, tags);
+        logger.info('file', 'Successfully updated tags');
+        setShowTagEditModal(false);
+        setFileForTagEdit(null);
+        Alert.alert('成功', 'タグを更新しました');
+      } catch (error: any) {
+        logger.error('file', `Failed to update tags: ${error.message}`, error);
+        Alert.alert('エラー', error.message);
+      }
+    },
+    [fileForTagEdit, actions]
   );
 
   /**
@@ -300,6 +370,8 @@ function FileListScreenFlatContent() {
         onDelete={handleDeleteFile}
         onCopy={handleCopyFile}
         onRename={handleOpenRenameModal}
+        onEditCategories={handleOpenCategoryEditModal}
+        onEditTags={handleOpenTagEditModal}
       />
 
       <CustomModal
@@ -326,6 +398,32 @@ function FileListScreenFlatContent() {
           setFileToDelete(null);
         }}
       />
+
+      {fileForCategoryEdit && (
+        <CategoryEditModal
+          visible={showCategoryEditModal}
+          initialCategories={fileForCategoryEdit.categories}
+          fileName={fileForCategoryEdit.title}
+          onClose={() => {
+            setShowCategoryEditModal(false);
+            setFileForCategoryEdit(null);
+          }}
+          onSave={handleSaveCategories}
+        />
+      )}
+
+      {fileForTagEdit && (
+        <TagEditModal
+          visible={showTagEditModal}
+          initialTags={fileForTagEdit.tags}
+          fileName={fileForTagEdit.title}
+          onClose={() => {
+            setShowTagEditModal(false);
+            setFileForTagEdit(null);
+          }}
+          onSave={handleSaveTags}
+        />
+      )}
     </MainContainer>
   );
 }
