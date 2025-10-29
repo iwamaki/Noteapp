@@ -9,7 +9,7 @@ import APIService, { ChatContext } from './llmService/api';
 import { ChatMessage, LLMCommand } from './llmService/types/types';
 import { logger } from '../../utils/logger';
 import { ActiveScreenContextProvider, ActiveScreenContext, ChatServiceListener } from './types';
-import { FileRepositoryFlat } from '@data/repositories/fileRepositoryFlat';
+import { FileRepository } from '@data/repositories/fileRepository';
 import WebSocketService from './services/websocketService';
 import { getOrCreateClientId } from './utils/clientId';
 
@@ -322,7 +322,7 @@ class ChatService {
     tags?: string[];
   }>> {
     try {
-      const files = await FileRepositoryFlat.getAll();
+      const files = await FileRepository.getAll();
       return files.map(file => ({
         title: file.title,
         type: 'file' as const,

@@ -7,7 +7,7 @@
 import { LLMCommand } from '../llmService/types/types';
 import { CommandHandler } from './types';
 import { logger } from '../../../utils/logger';
-import { FileRepositoryFlat } from '@data/repositories/fileRepositoryFlat';
+import { FileRepository } from '@data/repositories/fileRepository';
 
 /**
  * delete_fileコマンドのハンドラ（フラット構造版）
@@ -32,7 +32,7 @@ export const deleteFileHandlerFlat: CommandHandler = async (command: LLMCommand,
 
   try {
     // 全ファイルを取得してtitleで検索
-    const allFiles = await FileRepositoryFlat.getAll();
+    const allFiles = await FileRepository.getAll();
     const fileToDelete = allFiles.find(f => f.title === command.title);
 
     if (!fileToDelete) {
@@ -41,7 +41,7 @@ export const deleteFileHandlerFlat: CommandHandler = async (command: LLMCommand,
     }
 
     // ファイルを削除
-    await FileRepositoryFlat.delete(fileToDelete.id);
+    await FileRepository.delete(fileToDelete.id);
 
     logger.info('chatService', `File deleted successfully: ${fileToDelete.title} (ID: ${fileToDelete.id})`);
 

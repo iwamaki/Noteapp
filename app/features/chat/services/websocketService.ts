@@ -5,7 +5,7 @@
  */
 
 import { logger } from '../../../utils/logger';
-import { FileRepositoryFlat } from '@data/repositories/fileRepositoryFlat';
+import { FileRepository } from '@data/repositories/fileRepository';
 
 /**
  * WebSocketメッセージの型定義
@@ -220,7 +220,7 @@ class WebSocketService {
 
     try {
       // Expo FileSystemからファイルを取得
-      const files = await FileRepositoryFlat.getAll();
+      const files = await FileRepository.getAll();
       const file = files.find(f => f.title === title);
 
       if (!file) {

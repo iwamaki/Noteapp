@@ -7,7 +7,7 @@
 import { LLMCommand } from '../llmService/types/types';
 import { CommandHandler } from './types';
 import { logger } from '../../../utils/logger';
-import { FileRepositoryFlat } from '@data/repositories/fileRepositoryFlat';
+import { FileRepository } from '@data/repositories/fileRepository';
 
 /**
  * rename_fileコマンドのハンドラ（フラット構造版）
@@ -39,7 +39,7 @@ export const renameFileHandlerFlat: CommandHandler = async (command: LLMCommand,
 
   try {
     // 全ファイルを取得してtitleで検索
-    const allFiles = await FileRepositoryFlat.getAll();
+    const allFiles = await FileRepository.getAll();
     const fileToRename = allFiles.find(f => f.title === command.title);
 
     if (!fileToRename) {
@@ -48,7 +48,7 @@ export const renameFileHandlerFlat: CommandHandler = async (command: LLMCommand,
     }
 
     // ファイル名を変更
-    await FileRepositoryFlat.update(fileToRename.id, {
+    await FileRepository.update(fileToRename.id, {
       title: command.new_title,
     });
 

@@ -5,7 +5,8 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { useLayoutEffect, useMemo, useCallback } from 'react';
 import { Alert, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { FileRepositoryFlat, FileSystemV2Error } from '@data/repositories/fileRepositoryFlat';
+import { FileSystemV2Error } from '@data/repositories/fileRepository';
+import { restoreVersion } from '@data/repositories/fileVersionRepository';
 import { RootStackParamList } from '../../../navigation/types';
 import { useCustomHeader, HeaderConfig } from '../../../components/CustomHeader';
 import { generateDiff } from '../services/diffService';
@@ -46,7 +47,7 @@ export const useDiffView = () => {
           onPress: async () => {
             try {
               if (mode === 'restore' && fileId && versionId) {
-                await FileRepositoryFlat.restoreVersion(fileId, versionId);
+                await restoreVersion(fileId, versionId);
                 Alert.alert('成功', 'ノートが正常に復元されました。');
                 navigation.goBack();
               } else if (mode !== 'restore') {
