@@ -4,7 +4,7 @@
  * @description エディタの状態、エラー、アクションなどの型を一元管理
  */
 
-import { FileFlat, FileVersionFlat } from '@data/core/typesFlat';
+import { FileFlat } from '@data/core/typesFlat';
 
 // ============================================
 // エディタの状態型
@@ -138,4 +138,4 @@ export interface DiffChange {
 // Re-export shared types
 // ============================================
 
-export type { FileFlat, FileVersionFlat };
+export type { FileFlat };

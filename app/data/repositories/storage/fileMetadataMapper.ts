@@ -25,7 +25,6 @@ export const metadataToFile = (metadata: FileMetadataFlat, content: string): Fil
     summary: metadata.summary,
     relatedNoteIds: metadata.relatedNoteIds,
     embedding: metadata.embedding,
-    version: metadata.version,
     createdAt: new Date(metadata.createdAt),
     updatedAt: new Date(metadata.updatedAt),
   };
@@ -46,7 +45,6 @@ export const fileToMetadata = (file: FileFlat): FileMetadataFlat => {
     summary: file.summary,
     relatedNoteIds: file.relatedNoteIds,
     embedding: file.embedding,
-    version: file.version,
     createdAt: file.createdAt.toISOString(),
     updatedAt: file.updatedAt.toISOString(),
   };

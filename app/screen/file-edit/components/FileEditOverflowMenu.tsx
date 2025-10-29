@@ -6,14 +6,10 @@ import { HeaderButton } from '../../../components/HeaderButton';
 
 interface FileEditOverflowMenuProps {
   onToggleViewMode: () => void;
-  onShowVersionHistory: () => void;
-  onShowDiffView: () => void;
 }
 
 export const FileEditOverflowMenu: React.FC<FileEditOverflowMenuProps> = ({
   onToggleViewMode,
-  onShowVersionHistory,
-  onShowDiffView,
 }) => {
   const { colors, spacing } = useTheme();
   const [modalVisible, setModalVisible] = useState(false);
@@ -80,20 +76,6 @@ export const FileEditOverflowMenu: React.FC<FileEditOverflowMenuProps> = ({
             >
               <Ionicons name="eye-outline" size={24} color={colors.text} />
               <Text style={styles.menuItemText}>ビューモード切替</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => handleMenuItemPress(onShowVersionHistory)}
-            >
-              <Ionicons name="time-outline" size={24} color={colors.text} />
-              <Text style={styles.menuItemText}>バージョン履歴</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => handleMenuItemPress(onShowDiffView)}
-            >
-              <Ionicons name="git-compare-outline" size={24} color={colors.text} />
-              <Text style={styles.menuItemText}>差分表示</Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>

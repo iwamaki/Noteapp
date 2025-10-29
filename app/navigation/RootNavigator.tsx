@@ -14,8 +14,6 @@ import { RootStackParamList } from './types';
 // import FileListScreen from '../screen/file-list/FileListScreen';
 import FileListScreen from '../screen/file-list-flat/FileListScreenFlat';
 import FileEditScreen from '../screen/file-edit/FileEditScreen';
-import DiffViewScreen from '../screen/diff-view/DiffViewScreen';
-import VersionHistoryScreen from '../screen/version-history/VersionHistoryScreen';
 import SettingsScreen from '../settings/SettingsScreen';
 
 import { useTheme } from '../design/theme/ThemeContext';
@@ -89,8 +87,6 @@ function RootNavigatorContent() {
         >
           <Stack.Screen name="FileList" component={FileListScreen} options={{ title: 'Files' }} />
           <Stack.Screen name="FileEdit" component={FileEditScreen} options={{ title: 'Edit File' }} />
-          <Stack.Screen name="DiffView" component={DiffViewScreen} options={{ title: 'View Diff' }} />
-          <Stack.Screen name="VersionHistory" component={VersionHistoryScreen} options={{ title: 'Version History' }} />
           <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
         </Stack.Navigator>
       </NavigationContainer>
