@@ -18,7 +18,7 @@
  */
 
 import React, { useCallback, useMemo, useEffect, useState } from 'react';
-import { StyleSheet, FlatList, Alert, View, Text, BackHandler } from 'react-native';
+import { StyleSheet, FlatList, Alert, View, Text } from 'react-native';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { MainContainer } from '../../components/MainContainer';
 import { CustomModal } from '../../components/CustomModal';
@@ -33,6 +33,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { FlatListItem } from './components/FlatListItem';
 import { CreateFileModal } from './components/CreateFileModal';
 import { RenameItemModal } from './components/RenameItemModal';
+import { FileActionsModal } from './components/FileActionsModal';
 import { useFileListHeader } from './hooks/useFileListHeader';
 import { useFileListChatContext } from '../../features/chat/hooks/useFileListChatContext';
 import { OverflowMenu } from './components/OverflowMenu';
@@ -45,8 +46,11 @@ function FileListScreenFlatContent() {
 
   const { state, dispatch, actions } = useFlatListContext();
 
+  // アクションモーダルの状態
+  const [selectedFileForActions, setSelectedFileForActions] = useState<FileFlat | null>(null);
   // 削除確認モーダルの状態
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+  const [fileToDelete, setFileToDelete] = useState<FileFlat | null>(null);
 
   // データ初期読み込み（初回のみ）
   useEffect(() => {
@@ -58,68 +62,42 @@ function FileListScreenFlatContent() {
   // === ハンドラの実装 ===
 
   /**
-   * ファイル選択ハンドラ
+   * ファイル選択ハンドラ（タップ）
    */
   const handleSelectFile = useCallback(
     (file: FileFlat) => {
       logger.debug('file', `handleSelectFile called for file: ${file.id}`);
 
-      // 選択モード中
-      if (state.isSelectionMode) {
-        logger.debug('file', `Selection mode active. Toggling file: ${file.id}`);
-        dispatch({ type: 'TOGGLE_SELECT_FILE', payload: file.id });
-      } else {
-        // 通常モード：ファイル編集画面へ遷移
-        logger.info(
-          'file',
-          `Navigating to FileEdit for file: ${file.id} with initialViewMode: ${settings.defaultFileViewScreen}`
-        );
-        navigation.navigate('FileEdit', {
-          fileId: file.id,
-          initialViewMode: settings.defaultFileViewScreen,
-        });
-      }
+      // ファイル編集画面へ遷移
+      logger.info(
+        'file',
+        `Navigating to FileEdit for file: ${file.id} with initialViewMode: ${settings.defaultFileViewScreen}`
+      );
+      navigation.navigate('FileEdit', {
+        fileId: file.id,
+        initialViewMode: settings.defaultFileViewScreen,
+      });
     },
-    [state.isSelectionMode, settings.defaultFileViewScreen, dispatch, navigation]
+    [settings.defaultFileViewScreen, navigation]
   );
 
   /**
-   * 長押しハンドラ（選択モード開始）
+   * 長押しハンドラ（アクションモーダル表示）
    */
   const handleLongPressFile = useCallback(
     (file: FileFlat) => {
-      logger.info('file', `Long press on file: ${file.id}. Entering selection mode.`);
-      dispatch({ type: 'ENTER_SELECTION_MODE' });
-      dispatch({ type: 'TOGGLE_SELECT_FILE', payload: file.id });
+      logger.info('file', `Long press on file: ${file.id}. Opening actions modal.`);
+      setSelectedFileForActions(file);
     },
-    [dispatch]
+    []
   );
-
-  /**
-   * 選択解除ハンドラ
-   */
-  const handleCancelSelection = useCallback(() => {
-    logger.info('file', 'Cancelling selection mode.');
-    dispatch({ type: 'EXIT_SELECTION_MODE' });
-  }, [dispatch]);
-
-  // 選択モード中のAndroidバックボタン・iOSスワイプジェスチャーハンドリング
-  useEffect(() => {
-    if (state.isSelectionMode) {
-      const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-        handleCancelSelection();
-        return true; // デフォルトの動作を防ぐ
-      });
-
-      return () => backHandler.remove();
-    }
-  }, [state.isSelectionMode, handleCancelSelection]);
 
   /**
    * 削除確認モーダルを開く
    */
-  const handleDeleteSelected = useCallback(async () => {
-    logger.info('file', 'Opening delete confirmation modal');
+  const handleDeleteFile = useCallback((file: FileFlat) => {
+    logger.info('file', `Opening delete confirmation modal for file: ${file.id}`);
+    setFileToDelete(file);
     setShowDeleteConfirmModal(true);
   }, []);
 
@@ -127,54 +105,42 @@ function FileListScreenFlatContent() {
    * 削除実行
    */
   const handleConfirmDelete = useCallback(async () => {
-    logger.info(
-      'file',
-      `Attempting to delete selected files. Files: ${Array.from(
-        state.selectedFileIds
-      ).join(', ')}`
-    );
+    if (!fileToDelete) return;
+
+    logger.info('file', `Attempting to delete file: ${fileToDelete.id}`);
     setShowDeleteConfirmModal(false);
     try {
-      await actions.deleteSelectedFiles(Array.from(state.selectedFileIds));
-      logger.info('file', 'Successfully deleted selected files.');
+      await actions.deleteSelectedFiles([fileToDelete.id]);
+      logger.info('file', 'Successfully deleted file.');
+      setFileToDelete(null);
     } catch (error: any) {
-      logger.error('file', `Failed to delete selected files: ${error.message}`, error);
+      logger.error('file', `Failed to delete file: ${error.message}`, error);
+      setFileToDelete(null);
     }
-  }, [actions, state.selectedFileIds]);
+  }, [actions, fileToDelete]);
 
   /**
    * コピーハンドラ
    */
-  const handleCopySelected = useCallback(async () => {
-    logger.info(
-      'file',
-      `Attempting to copy selected files: ${Array.from(state.selectedFileIds).join(
-        ', '
-      )}`
-    );
+  const handleCopyFile = useCallback(async (file: FileFlat) => {
+    logger.info('file', `Attempting to copy file: ${file.id}`);
     try {
-      await actions.copySelectedFiles(Array.from(state.selectedFileIds));
-      logger.info('file', 'Successfully copied selected files.');
+      await actions.copySelectedFiles([file.id]);
+      logger.info('file', 'Successfully copied file.');
     } catch (error: any) {
-      logger.error('file', `Failed to copy selected files: ${error.message}`, error);
+      logger.error('file', `Failed to copy file: ${error.message}`, error);
     }
-  }, [actions, state.selectedFileIds]);
+  }, [actions]);
 
   /**
    * リネームモーダルを開く
    */
   const handleOpenRenameModal = useCallback(
-    (id: string) => {
-      logger.info('file', `Opening rename modal for file with ID: ${id}`);
-      const file = state.files.find((f) => f.id === id);
-
-      if (file) {
-        dispatch({ type: 'OPEN_RENAME_MODAL', payload: file });
-      } else {
-        logger.warn('file', `File not found for rename modal: ID ${id}`);
-      }
+    (file: FileFlat) => {
+      logger.info('file', `Opening rename modal for file: ${file.id}`);
+      dispatch({ type: 'OPEN_RENAME_MODAL', payload: file });
     },
-    [state.files, dispatch]
+    [dispatch]
   );
 
   /**
@@ -235,15 +201,15 @@ function FileListScreenFlatContent() {
     [chatBarOffset, spacing.md]
   );
 
-  // ヘッダー設定
+  // ヘッダー設定（シンプル化：作成ボタンのみ）
   useFileListHeader({
-    isSelectionMode: state.isSelectionMode,
-    selectedFileIds: state.selectedFileIds,
-    selectedFolderIds: new Set(), // フォルダなし
-    handleCancelSelection,
-    handleDeleteSelected,
-    handleCopySelected,
-    handleOpenRenameModal,
+    isSelectionMode: false,
+    selectedFileIds: new Set(),
+    selectedFolderIds: new Set(),
+    handleCancelSelection: () => {},
+    handleDeleteSelected: async () => {},
+    handleCopySelected: async () => {},
+    handleOpenRenameModal: () => {},
     rightButtons: [
       {
         icon: <OverflowMenu onCreateNew={() => dispatch({ type: 'OPEN_CREATE_MODAL' })} />,
@@ -261,19 +227,17 @@ function FileListScreenFlatContent() {
   // レンダリングアイテム
   const renderFileItem = useCallback(
     ({ item: file }: { item: FileFlat }) => {
-      const isSelected = state.selectedFileIds.has(file.id);
-
       return (
         <FlatListItem
           file={file}
-          isSelected={isSelected}
-          isSelectionMode={state.isSelectionMode}
+          isSelected={false}
+          isSelectionMode={false}
           onPress={() => handleSelectFile(file)}
           onLongPress={() => handleLongPressFile(file)}
         />
       );
     },
-    [state.selectedFileIds, state.isSelectionMode, handleSelectFile, handleLongPressFile]
+    [handleSelectFile, handleLongPressFile]
   );
 
   // レンダリング時のデバッグログ
@@ -329,15 +293,27 @@ function FileListScreenFlatContent() {
         />
       )}
 
+      <FileActionsModal
+        visible={selectedFileForActions !== null}
+        file={selectedFileForActions}
+        onClose={() => setSelectedFileForActions(null)}
+        onDelete={handleDeleteFile}
+        onCopy={handleCopyFile}
+        onRename={handleOpenRenameModal}
+      />
+
       <CustomModal
         isVisible={showDeleteConfirmModal}
         title="削除確認"
-        message={`選択したファイル（${state.selectedFileIds.size}件）を削除しますか？この操作は取り消せません。`}
+        message={`「${fileToDelete?.title}」を削除しますか？この操作は取り消せません。`}
         buttons={[
           {
             text: 'キャンセル',
             style: 'cancel',
-            onPress: () => setShowDeleteConfirmModal(false),
+            onPress: () => {
+              setShowDeleteConfirmModal(false);
+              setFileToDelete(null);
+            },
           },
           {
             text: '削除',
@@ -345,7 +321,10 @@ function FileListScreenFlatContent() {
             onPress: handleConfirmDelete,
           },
         ]}
-        onClose={() => setShowDeleteConfirmModal(false)}
+        onClose={() => {
+          setShowDeleteConfirmModal(false);
+          setFileToDelete(null);
+        }}
       />
     </MainContainer>
   );
