@@ -44,10 +44,10 @@ export const CategorySectionHeader: React.FC<CategorySectionHeaderProps> = ({
   hasChildren,
   onToggle,
 }) => {
-  const { colors, spacing } = useTheme();
+  const { colors, spacing, typography } = useTheme();
 
-  // 階層レベルに応じたパディング（24pxずつ増加）
-  const paddingLeft = 16 + (section.level * 24);
+  // 階層レベルに応じたパディング（ベースオフセット8px + 階層インデント15px）
+  const paddingLeft = 8 + (section.level * 15);
 
   /**
    * 階層レベルに応じた背景色を計算
@@ -89,6 +89,7 @@ export const CategorySectionHeader: React.FC<CategorySectionHeaderProps> = ({
         style={[
           styles.sectionHeaderText,
           {
+            ...typography.title,
             color: colors.text,
           },
         ]}
@@ -108,7 +109,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   sectionHeaderText: {
-    fontSize: 16,
     fontWeight: 'bold',
   },
 });

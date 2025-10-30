@@ -75,28 +75,41 @@ export const useCategoryCollapse = ({
 
   /**
    * 表示するセクションのフィルタリング（折りたたみ対応）
-   * 親が折りたたまれている場合、その子カテゴリーは非表示にする
+   * - 親が折りたたまれている場合、その子カテゴリーは非表示にする
+   * - カテゴリーが折りたたまれている場合、そのdirectFilesを空にする
    */
   const visibleSections = useMemo(() => {
-    return sections.filter(section => {
-      // ルートカテゴリーは常に表示
-      if (section.parent === null) {
-        return true;
-      }
-
-      // 親が展開されているかチェック（再帰的に全ての祖先をチェック）
-      let currentParent: string | null = section.parent;
-      while (currentParent !== null) {
-        if (!expandedCategories.has(currentParent)) {
-          return false; // 親が折りたたまれているので非表示
+    return sections
+      .filter(section => {
+        // ルートカテゴリーは常に表示
+        if (section.parent === null) {
+          return true;
         }
-        // さらに上の親をチェック
-        const parentSection = sections.find(s => s.fullPath === currentParent);
-        currentParent = parentSection ? parentSection.parent : null;
-      }
 
-      return true;
-    });
+        // 親が展開されているかチェック（再帰的に全ての祖先をチェック）
+        let currentParent: string | null = section.parent;
+        while (currentParent !== null) {
+          if (!expandedCategories.has(currentParent)) {
+            return false; // 親が折りたたまれているので非表示
+          }
+          // さらに上の親をチェック
+          const parentSection = sections.find(s => s.fullPath === currentParent);
+          currentParent = parentSection ? parentSection.parent : null;
+        }
+
+        return true;
+      })
+      .map(section => {
+        // セクションが折りたたまれている場合、directFilesを空にする
+        // これにより、カテゴリーヘッダーは表示されるが、配下のファイルは非表示になる
+        if (!expandedCategories.has(section.fullPath)) {
+          return {
+            ...section,
+            directFiles: [],
+          };
+        }
+        return section;
+      });
   }, [sections, expandedCategories]);
 
   return {

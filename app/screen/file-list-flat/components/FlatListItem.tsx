@@ -40,8 +40,8 @@ export const FlatListItem: React.FC<FlatListItemProps> = ({
 }) => {
   const { colors, spacing } = useTheme();
 
-  // 階層インデント計算: ファイルはカテゴリーの1階層下なので +1
-  const itemPaddingLeft = 16 + ((level + 1) * 24);
+  // 階層インデント計算
+  const itemPaddingLeft = level * 15;
 
   // 左側要素：ファイルアイコン
   const leftElement = (
