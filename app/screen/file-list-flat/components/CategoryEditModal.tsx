@@ -76,18 +76,7 @@ export const CategoryEditModal: React.FC<CategoryEditModalProps> = ({
       ]}
     >
       <CustomInlineInput
-        style={[
-          typography.body,
-          styles.inputBorder,
-          {
-            borderColor: colors.border,
-            padding: spacing.md,
-            color: colors.text,
-            backgroundColor: colors.background,
-          },
-        ]}
         placeholder="例: 研究/AI/深層学習"
-        placeholderTextColor={colors.textSecondary}
         value={inputValue}
         onChangeText={setInputValue}
         onClear={() => setInputValue('')}

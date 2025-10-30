@@ -82,18 +82,7 @@ export const TagEditModal: React.FC<TagEditModalProps> = ({
       ]}
     >
       <CustomInlineInput
-        style={[
-          typography.body,
-          styles.inputBorder,
-          {
-            borderColor: colors.border,
-            padding: spacing.md,
-            color: colors.text,
-            backgroundColor: colors.background,
-          },
-        ]}
         placeholder="例: 重要, todo, アイデア"
-        placeholderTextColor={colors.textSecondary}
         value={inputValue}
         onChangeText={setInputValue}
         onClear={() => setInputValue('')}

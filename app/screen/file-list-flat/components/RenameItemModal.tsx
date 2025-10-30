@@ -66,18 +66,7 @@ export const RenameItemModal: React.FC<RenameItemModalProps> = ({
       ]}
     >
       <CustomInlineInput
-        style={[
-          typography.body,
-          styles.inputBorder,
-          {
-            borderColor: colors.border,
-            padding: spacing.md,
-            color: colors.text,
-            backgroundColor: colors.background,
-          },
-        ]}
         placeholder={itemType === 'folder' ? '新しいフォルダ名' : '新しいノート名'}
-        placeholderTextColor={colors.textSecondary}
         value={inputValue}
         onChangeText={setInputValue}
         onClear={() => setInputValue('')}
