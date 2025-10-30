@@ -64,7 +64,7 @@ async def read_file(title: str) -> str:
     client_id = get_client_id()
     if not client_id:
         logger.error("No client_id available for WebSocket request")
-        return f"エラー: WebSocket接続が確立されていません。ファイル '{title}' を読み取れません。"
+        return f"エラー: WebSocket接続が確立されていません。ファイル '{title}' を読み取れません。アプリを再起動してください。"
 
     try:
         logger.info(f"Requesting file content via WebSocket: title={title}, client_id={client_id}")
@@ -78,10 +78,10 @@ async def read_file(title: str) -> str:
         # メタデータも含めて返す（LLMが理解しやすいように）
         result_parts = [f"ファイル '{title}' の内容:"]
         if file_info:
-            categories: list[Any] = cast(list[Any], file_info.get('categories', []))
+            category = file_info.get('category', '')
             tags: list[Any] = cast(list[Any], file_info.get('tags', []))
-            if categories:
-                result_parts.append(f"\nカテゴリー: {', '.join(categories)}")
+            if category:
+                result_parts.append(f"\nカテゴリー: {category}")
             if tags:
                 result_parts.append(f"\nタグ: {', '.join(tags)}")
 
@@ -91,5 +91,13 @@ async def read_file(title: str) -> str:
         return "".join(result_parts)
 
     except Exception as e:
-        logger.error(f"Error requesting file content: title={title}, error={str(e)}")
-        return f"エラー: ファイル '{title}' の取得に失敗しました: {str(e)}"
+        error_msg = str(e)
+        logger.error(f"Error requesting file content: title={title}, error={error_msg}")
+
+        # エラーメッセージをユーザーフレンドリーに変換
+        if "is not connected" in error_msg:
+            return f"エラー: サーバーとの接続が切断されています。ファイル '{title}' を読み取れません。\n\nアプリを再起動するか、しばらく待ってから再試行してください。"
+        elif "タイムアウト" in error_msg or "Timeout" in error_msg:
+            return f"エラー: ファイル '{title}' の取得がタイムアウトしました。ネットワーク接続を確認してください。"
+        else:
+            return f"エラー: ファイル '{title}' の取得に失敗しました: {error_msg}"
