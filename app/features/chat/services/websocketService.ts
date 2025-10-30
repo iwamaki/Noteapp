@@ -36,6 +36,27 @@ interface FileContentResponse extends WebSocketMessage {
 }
 
 /**
+ * fetch_search_resultsリクエスト
+ */
+interface FetchSearchResultsRequest extends WebSocketMessage {
+  type: 'fetch_search_results';
+  request_id: string;
+  query: string;
+  search_type: 'title' | 'content' | 'tag' | 'category';
+}
+
+/**
+ * search_results_responseレスポンス
+ */
+interface SearchResultsResponse extends WebSocketMessage {
+  type: 'search_results_response';
+  request_id: string;
+  query: string;
+  results: any[];
+  error?: string;
+}
+
+/**
  * WebSocket接続状態
  */
 export enum WebSocketState {
@@ -215,6 +236,10 @@ class WebSocketService {
           await this.handleFetchFileContent(data as FetchFileContentRequest);
           break;
 
+        case 'fetch_search_results':
+          await this.handleFetchSearchResults(data as FetchSearchResultsRequest);
+          break;
+
         case 'pong':
           this.handlePong();
           break;
@@ -276,6 +301,111 @@ class WebSocketService {
         request_id,
         title,
         content: null,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+
+      this.sendMessage(response);
+    }
+  }
+
+  /**
+   * fetch_search_resultsリクエストを処理
+   */
+  private async handleFetchSearchResults(request: FetchSearchResultsRequest): Promise<void> {
+    const { request_id, query, search_type } = request;
+
+    logger.info('websocket', `Searching files: query=${query}, search_type=${search_type}, request_id=${request_id}`);
+
+    try {
+      // Expo FileSystemから全ファイルを取得
+      const files = await FileRepository.getAll();
+      let results: any[] = [];
+
+      // 検索タイプに応じた検索処理
+      const lowerQuery = query.toLowerCase();
+
+      switch (search_type) {
+        case 'title':
+          // タイトル検索
+          results = files.filter(file =>
+            file.title?.toLowerCase().includes(lowerQuery)
+          );
+          break;
+
+        case 'content':
+          // 内容検索（マッチしたスニペットも含める）
+          results = files
+            .filter(file => file.content?.toLowerCase().includes(lowerQuery))
+            .map(file => {
+              // マッチした部分のスニペットを抽出（前後50文字）
+              const content = file.content || '';
+              const lowerContent = content.toLowerCase();
+              const matchIndex = lowerContent.indexOf(lowerQuery);
+
+              let snippet = '';
+              if (matchIndex !== -1) {
+                const start = Math.max(0, matchIndex - 50);
+                const end = Math.min(content.length, matchIndex + query.length + 50);
+                snippet = (start > 0 ? '...' : '') +
+                  content.substring(start, end) +
+                  (end < content.length ? '...' : '');
+              }
+
+              return {
+                ...file,
+                match_snippet: snippet,
+              };
+            });
+          break;
+
+        case 'tag':
+          // タグ検索
+          results = files.filter(file =>
+            file.tags?.some((tag: string) =>
+              tag.toLowerCase().includes(lowerQuery)
+            )
+          );
+          break;
+
+        case 'category':
+          // カテゴリー検索
+          results = files.filter(file =>
+            file.category?.toLowerCase().includes(lowerQuery)
+          );
+          break;
+
+        default:
+          logger.warn('websocket', `Unknown search_type: ${search_type}`);
+          results = [];
+      }
+
+      // 検索結果を返す（必要な情報だけに絞る）
+      const resultData = results.map(file => ({
+        title: file.title,
+        category: file.category,
+        tags: file.tags,
+        match_snippet: file.match_snippet, // content検索の場合のみ
+      }));
+
+      const response: SearchResultsResponse = {
+        type: 'search_results_response',
+        request_id,
+        query,
+        results: resultData,
+      };
+
+      this.sendMessage(response);
+      logger.info('websocket', `Search results sent: query=${query}, results_count=${results.length}`);
+
+    } catch (error) {
+      logger.error('websocket', `Failed to search files: ${query}`, error);
+
+      // エラーレスポンス
+      const response: SearchResultsResponse = {
+        type: 'search_results_response',
+        request_id,
+        query,
+        results: [],
         error: error instanceof Error ? error.message : 'Unknown error',
       };
 

@@ -76,6 +76,17 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
                 # 保留中のリクエストを解決
                 manager.resolve_request(request_id, content, error)
 
+            elif data.get("type") == "search_results_response":
+                # 検索結果のレスポンス
+                request_id = data.get("request_id")
+                results = data.get("results")
+                error = data.get("error")
+
+                logger.debug(f"Received search_results_response: request_id={request_id}, results_count={len(results) if results else 0}")
+
+                # 保留中のリクエストを解決
+                manager.resolve_request(request_id, results, error)
+
             elif data.get("type") == "ping":
                 # ピングメッセージ（ハートビート用）
                 manager.handle_ping(client_id)
