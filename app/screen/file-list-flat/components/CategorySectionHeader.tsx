@@ -47,18 +47,18 @@ export const CategorySectionHeader: React.FC<CategorySectionHeaderProps> = ({
   const { colors, spacing, typography } = useTheme();
 
   // 階層レベルに応じたパディング（ベースオフセット8px + 階層インデント15px）
-  const paddingLeft = 8 + (section.level * 15);
+  const paddingLeft = 15 + (section.level * 15);
 
   /**
    * 階層レベルに応じた背景色を計算
-   * レベルが深くなるほど明るくなる（段階的に薄くなる）
+   * tertiary色に透明度を付けて、レベルが深くなるほど透明度を上げる（薄くなる）
    */
   const getBackgroundColor = (level: number): string => {
-    const baseValue = 0xD0; // 208 (濃いグレー)
-    const increment = 0x0A; // 10 (段階的に明るくする増分)
-    const colorValue = Math.min(0xF0, baseValue + (level * increment));
-    const hex = colorValue.toString(16).toUpperCase();
-    return `#${hex}${hex}${hex}`;
+    const baseOpacity = 0.8; // レベル0: 80%の不透明度
+    const decrement = 0.15; // レベルごとに15%薄くする
+    const opacity = Math.max(0.2, baseOpacity - (level * decrement));
+    const opacityHex = Math.round(opacity * 255).toString(16).padStart(2, '0');
+    return colors.tertiary + opacityHex;
   };
 
   const headerBackgroundColor = getBackgroundColor(section.level);

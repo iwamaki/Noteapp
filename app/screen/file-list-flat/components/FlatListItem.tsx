@@ -38,16 +38,19 @@ export const FlatListItem: React.FC<FlatListItemProps> = ({
   onPress,
   onLongPress,
 }) => {
-  const { colors, spacing } = useTheme();
+  const { colors, spacing, typography } = useTheme();
 
   // 階層インデント計算
-  const itemPaddingLeft = level * 15;
+  const itemPaddingLeft = 20 + (level * 15);
+
+  // アイコンサイズをフォントサイズに連動
+  const iconSize = Math.round(typography.body.fontSize * 1.3);
 
   // 左側要素：ファイルアイコン
   const leftElement = (
     <Ionicons
       name="document-text-outline"
-      size={24}
+      size={iconSize}
       color={colors.text}
     />
   );
@@ -63,40 +66,16 @@ export const FlatListItem: React.FC<FlatListItemProps> = ({
       >
       <ListItem.Title>{file.title}</ListItem.Title>
 
-      {/* カテゴリー・タグ表示 */}
-      {(file.category || file.tags.length > 0) && (
+      {/* タグ表示 */}
+      {file.tags.length > 0 && (
         <View style={styles.metadataContainer}>
-          {/* カテゴリー */}
-          {file.category && (
-            <View
-              style={[
-                styles.badge,
-                {
-                  backgroundColor: colors.border,
-                  marginRight: spacing.xs,
-                },
-              ]}
-            >
-              <Text
-                style={[
-                  styles.badgeText,
-                  styles.categoryBadgeText,
-                  { color: colors.primary },
-                ]}
-              >
-                {file.category}
-              </Text>
-            </View>
-          )}
-
-          {/* タグ */}
           {file.tags.map((tag, index) => (
             <View
               key={`tag-${index}`}
               style={[
                 styles.badge,
                 {
-                  backgroundColor: colors.border,
+                  backgroundColor: colors.primary + '70', // 70%の透明度
                   marginRight: spacing.xs,
                 },
               ]}
@@ -105,7 +84,7 @@ export const FlatListItem: React.FC<FlatListItemProps> = ({
                 style={[
                   styles.badgeText,
                   styles.tagBadgeText,
-                  { color: colors.textSecondary },
+                  { color: '#FFFFFF' },
                 ]}
               >
                 #{tag}
@@ -133,9 +112,6 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontWeight: '500',
-  },
-  categoryBadgeText: {
-    fontSize: 12,
   },
   tagBadgeText: {
     fontSize: 12,

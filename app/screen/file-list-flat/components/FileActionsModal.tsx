@@ -141,6 +141,7 @@ export const FileActionsModal: React.FC<FileActionsModalProps> = ({
       ...typography.body,
       fontSize: 16,
       flex: 1,
+      color: colors.text,
     },
   });
 

@@ -12,6 +12,7 @@ import { useSettingsStore } from '../../settings/settingsStore';
 const lightColors = {
   primary: '#007AFF',
   secondary: '#EEEEEE', // Adjusted secondary to a very light grey
+  tertiary: '#D0D0D0', // やや暗めの無彩色（カテゴリー背景などに使用）
   background: '#fff', // Reverted background to white
   text: '#333333', // Softer black for text
   textSecondary: '#666',
@@ -30,6 +31,7 @@ const lightColors = {
 const darkColors = {
   primary: '#0A84FF',
   secondary: '#2C2C2C',
+  tertiary: '#505050', // 明るめの無彩色（カテゴリー背景などに使用）
   background: '#1A1A1A',
   text: '#fff',
   textSecondary: '#888888',
