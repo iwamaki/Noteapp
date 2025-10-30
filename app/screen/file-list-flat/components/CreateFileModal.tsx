@@ -4,17 +4,21 @@
  * @description
  * パス指定なしでファイルを作成。カテゴリー・タグを直接入力。
  * CustomModalを活用してUI統一。
+ * 既存カテゴリーのサジェスト機能付き。
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  TextInput,
   StyleSheet,
+  ScrollView,
+  TouchableOpacity,
 } from 'react-native';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { CustomModal } from '../../../components/CustomModal';
+import { CustomInlineInput } from '../../../components/CustomInlineInput';
+import { FileRepository } from '../../../data/repositories/fileRepository';
 
 interface CreateFileModalProps {
   visible: boolean;
@@ -37,6 +41,28 @@ export const CreateFileModal: React.FC<CreateFileModalProps> = ({
   const [title, setTitle] = useState('');
   const [categoryText, setCategoryText] = useState('');
   const [tagsText, setTagsText] = useState('');
+  const [existingCategories, setExistingCategories] = useState<string[]>([]);
+
+  // 既存カテゴリーを取得
+  useEffect(() => {
+    if (visible) {
+      FileRepository.getAllCategories()
+        .then(setExistingCategories)
+        .catch((error) => {
+          console.error('Failed to load existing categories:', error);
+          setExistingCategories([]);
+        });
+    }
+  }, [visible]);
+
+  // 入力されたカテゴリーパスを解析して、含まれるセグメントを抽出
+  const getConsumedSegments = (): Set<string> => {
+    if (!categoryText.trim()) {
+      return new Set();
+    }
+    const segments = categoryText.split('/').map((s) => s.trim()).filter(Boolean);
+    return new Set(segments);
+  };
 
   const handleCreate = () => {
     if (!title.trim()) {
@@ -63,6 +89,28 @@ export const CreateFileModal: React.FC<CreateFileModalProps> = ({
     setCategoryText('');
     setTagsText('');
     onClose();
+  };
+
+  // カテゴリーボタンをクリックした時の処理
+  const handleCategoryButtonPress = (category: string) => {
+    // カテゴリーを追加（既存パスに続ける or 新規）
+    if (categoryText.trim() === '') {
+      setCategoryText(category);
+    } else {
+      // 既に含まれているかチェック
+      const currentSegments = categoryText.split('/').map((s) => s.trim()).filter(Boolean);
+      const newSegments = category.split('/').map((s) => s.trim()).filter(Boolean);
+
+      // すべてのセグメントが既に含まれている場合は何もしない
+      const allIncluded = newSegments.every((seg) => currentSegments.includes(seg));
+      if (allIncluded) {
+        return;
+      }
+
+      // 末尾にスラッシュを追加してから新しいカテゴリーを追加
+      const separator = categoryText.endsWith('/') ? '' : '/';
+      setCategoryText(categoryText + separator + category);
+    }
   };
 
   return (
@@ -93,22 +141,13 @@ export const CreateFileModal: React.FC<CreateFileModalProps> = ({
         >
           タイトル
         </Text>
-        <TextInput
-          style={[
-            styles.input,
-            {
-              backgroundColor: colors.background,
-              color: colors.text,
-              borderColor: colors.border,
-              padding: spacing.sm,
-              marginBottom: spacing.md,
-            },
-          ]}
+        <CustomInlineInput
           placeholder="ファイルタイトルを入力"
-          placeholderTextColor={colors.textSecondary}
           value={title}
           onChangeText={setTitle}
+          onClear={() => setTitle('')}
           autoFocus
+          style={{ marginBottom: spacing.md }}
         />
 
         {/* カテゴリー入力 */}
@@ -120,22 +159,65 @@ export const CreateFileModal: React.FC<CreateFileModalProps> = ({
         >
           カテゴリー（階層パス）
         </Text>
-        <TextInput
-          style={[
-            styles.input,
-            {
-              backgroundColor: colors.background,
-              color: colors.text,
-              borderColor: colors.border,
-              padding: spacing.sm,
-              marginBottom: spacing.md,
-            },
-          ]}
+        <CustomInlineInput
           placeholder="例: 研究/AI/深層学習"
-          placeholderTextColor={colors.textSecondary}
           value={categoryText}
           onChangeText={setCategoryText}
+          onClear={() => setCategoryText('')}
+          style={{ marginBottom: spacing.xs }}
         />
+
+        {/* 既存のカテゴリー（サジェスト） */}
+        {existingCategories.length > 0 && (
+          <View style={{ marginBottom: spacing.md, marginLeft: spacing.md }}>
+            <Text
+              style={[
+                styles.suggestLabel,
+                { color: colors.textSecondary, marginBottom: spacing.xs },
+              ]}
+            >
+              既存のカテゴリー
+            </Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={true}
+              style={styles.categoryScrollView}
+              contentContainerStyle={styles.categoryScrollContent}
+            >
+              {existingCategories.map((category, index) => {
+                const consumedSegments = getConsumedSegments();
+                const categorySegments = category.split('/').map((s) => s.trim()).filter(Boolean);
+
+                // すべてのセグメントがconsumedされているかチェック
+                const isConsumed = categorySegments.every((seg) => consumedSegments.has(seg));
+
+                return (
+                  <TouchableOpacity
+                    key={index}
+                    style={[
+                      styles.categoryButton,
+                      {
+                        backgroundColor: isConsumed ? colors.tertiary : colors.secondary,
+                        borderColor: isConsumed ? colors.tertiary : colors.border,
+                      },
+                    ]}
+                    onPress={() => handleCategoryButtonPress(category)}
+                  >
+                    <Text
+                      style={[
+                        styles.categoryButtonText,
+                        { color: colors.text },
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {category}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        )}
 
         {/* タグ入力 */}
         <Text
@@ -146,20 +228,11 @@ export const CreateFileModal: React.FC<CreateFileModalProps> = ({
         >
           タグ（カンマ区切り）
         </Text>
-        <TextInput
-          style={[
-            styles.input,
-            {
-              backgroundColor: colors.background,
-              color: colors.text,
-              borderColor: colors.border,
-              padding: spacing.sm,
-            },
-          ]}
+        <CustomInlineInput
           placeholder="例: 重要, TODO"
-          placeholderTextColor={colors.textSecondary}
           value={tagsText}
           onChangeText={setTagsText}
+          onClear={() => setTagsText('')}
         />
       </View>
     </CustomModal>
@@ -171,9 +244,30 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
-  input: {
+  suggestLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  categoryScrollView: {
+    maxHeight: 70, // 2行分の高さ（各ボタン30px + 余白）
+  },
+  categoryScrollContent: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'flex-start',
+    gap: 8,
+  },
+  categoryButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
     borderWidth: 1,
-    borderRadius: 8,
-    fontSize: 16,
+    marginRight: 8,
+    marginBottom: 8,
+    maxWidth: 150,
+  },
+  categoryButtonText: {
+    fontSize: 12,
+    fontWeight: '500',
   },
 });

@@ -80,6 +80,7 @@ export const RenameItemModal: React.FC<RenameItemModalProps> = ({
         placeholderTextColor={colors.textSecondary}
         value={inputValue}
         onChangeText={setInputValue}
+        onClear={() => setInputValue('')}
         autoFocus
         onSubmitEditing={handleRename}
       />

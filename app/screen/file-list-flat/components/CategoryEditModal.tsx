@@ -90,6 +90,7 @@ export const CategoryEditModal: React.FC<CategoryEditModalProps> = ({
         placeholderTextColor={colors.textSecondary}
         value={inputValue}
         onChangeText={setInputValue}
+        onClear={() => setInputValue('')}
         autoFocus
         onSubmitEditing={handleSave}
       />
