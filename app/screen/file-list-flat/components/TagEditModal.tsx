@@ -96,6 +96,7 @@ export const TagEditModal: React.FC<TagEditModalProps> = ({
         placeholderTextColor={colors.textSecondary}
         value={inputValue}
         onChangeText={setInputValue}
+        onClear={() => setInputValue('')}
         autoFocus
         onSubmitEditing={handleSave}
         multiline

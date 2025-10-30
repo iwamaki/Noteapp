@@ -39,7 +39,6 @@ import { CategorySectionHeader } from './components/CategorySectionHeader';
 import { useFileListHeader } from './hooks/useFileListHeader';
 import { useCategoryCollapse } from './hooks/useCategoryCollapse';
 import { useFileListChatContext } from '../../features/chat/hooks/useFileListChatContext';
-import { OverflowMenu } from './components/OverflowMenu';
 import { groupFilesByCategoryHierarchical } from '@data/services/categoryGroupingService';
 
 function FileListScreenFlatContent() {
@@ -291,21 +290,10 @@ function FileListScreenFlatContent() {
     [chatBarOffset, spacing.md]
   );
 
-  // ヘッダー設定（シンプル化：作成ボタンのみ）
+  // ヘッダー設定（新規作成ボタンと設定ボタン）
   useFileListHeader({
-    isSelectionMode: false,
-    selectedFileIds: new Set(),
-    selectedFolderIds: new Set(),
-    handleCancelSelection: () => {},
-    handleDeleteSelected: async () => {},
-    handleCopySelected: async () => {},
-    handleOpenRenameModal: () => {},
-    rightButtons: [
-      {
-        icon: <OverflowMenu onCreateNew={() => dispatch({ type: 'OPEN_CREATE_MODAL' })} />,
-        onPress: () => {}, // Not used
-      },
-    ],
+    onCreateNew: () => dispatch({ type: 'OPEN_CREATE_MODAL' }),
+    onSettings: () => navigation.navigate('Settings'),
   });
 
   // チャットコンテキスト（フラット構造版）

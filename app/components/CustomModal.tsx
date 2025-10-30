@@ -8,6 +8,7 @@ import {
   Pressable,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
 } from 'react-native';
 import { useTheme } from '../design/theme/ThemeContext';
 import { responsive } from '../design/styles/commonStyles';
@@ -77,6 +78,7 @@ export const CustomModal: React.FC<CustomModalProps> = ({
     },
     childrenContainer: {
       marginVertical: spacing.md,
+      maxHeight: 400, // コンテンツの最大高さを制限
     },
     buttonContainer: {
       flexDirection: 'row',
@@ -159,7 +161,11 @@ export const CustomModal: React.FC<CustomModalProps> = ({
           <Pressable style={styles.modalView} onPress={(e) => e.stopPropagation()}>
             <Text style={styles.modalTitle}>{title}</Text>
             {message && <Text style={styles.modalMessage}>{message}</Text>}
-            {children && <View style={styles.childrenContainer}>{children}</View>}
+            {children && (
+              <ScrollView style={styles.childrenContainer} showsVerticalScrollIndicator={true}>
+                {children}
+              </ScrollView>
+            )}
             <View style={styles.buttonContainer}>
               {buttons.map((button, index) => {
                 const { button: buttonStyle, text: textStyle } = getButtonStyles(
