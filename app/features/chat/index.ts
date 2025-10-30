@@ -137,6 +137,11 @@ class ChatService {
       // WebSocketサービスを初期化
       this.wsService = WebSocketService.getInstance(this.clientId);
 
+      // WebSocket状態変更リスナーを追加（デバッグ用）
+      this.wsService.addStateListener((state) => {
+        logger.info('chatService', `WebSocket state changed: ${state}`);
+      });
+
       // WebSocket接続を確立
       this.wsService.connect(backendUrl);
 
@@ -201,6 +206,11 @@ class ChatService {
       // LLMの設定を適用
       APIService.setLLMProvider(this.llmProvider);
       APIService.setLLMModel(this.llmModel);
+
+      // WebSocket接続状態をログに出力（デバッグ用）
+      if (this.wsService) {
+        logger.info('chatService', `WebSocket state before sending message: ${this.wsService.getState()}`);
+      }
 
       // APIにメッセージを送信（client_idも含める）
       logger.debug('chatService', 'Sending message to LLM with context:', chatContext);
