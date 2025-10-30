@@ -323,7 +323,14 @@ function FileListScreenFlatContent() {
   const renderSectionHeader = useCallback(
     ({ section }: { section: { category: string; fullPath: string; level: number; fileCount: number; parent: string | null; data: FileFlat[] } }) => {
       const isExpanded = expandedCategories.has(section.fullPath);
-      const hasChildren = sections.some(s => s.parent === section.fullPath);
+
+      // 元のsectionsデータから直下ファイル数を取得（折りたたみ状態に関わらず）
+      const originalSection = sections.find(s => s.fullPath === section.fullPath);
+      const hasDirectFiles = (originalSection?.directFiles.length ?? 0) > 0;
+      const hasChildCategories = sections.some(s => s.parent === section.fullPath);
+
+      // 子カテゴリーまたは直下ファイルがある場合、開閉アイコンを表示
+      const hasChildren = hasChildCategories || hasDirectFiles;
 
       // SectionList の section から FileCategorySectionHierarchical 形式に変換
       const hierarchicalSection = {
