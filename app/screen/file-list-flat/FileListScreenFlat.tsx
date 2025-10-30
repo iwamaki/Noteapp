@@ -18,7 +18,7 @@
  */
 
 import React, { useCallback, useMemo, useEffect, useState } from 'react';
-import { StyleSheet, SectionList, Alert, View, Text } from 'react-native';
+import { StyleSheet, SectionList, Alert, View, Text, TouchableOpacity } from 'react-native';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { MainContainer } from '../../components/MainContainer';
 import { CustomModal } from '../../components/CustomModal';
@@ -59,6 +59,8 @@ function FileListScreenFlatContent() {
   // タグ編集モーダルの状態
   const [showTagEditModal, setShowTagEditModal] = useState(false);
   const [fileForTagEdit, setFileForTagEdit] = useState<FileFlat | null>(null);
+  // カテゴリー展開状態（折りたたみ機能）
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
   // データ初期読み込み（初回のみ）
   useEffect(() => {
@@ -257,6 +259,22 @@ function FileListScreenFlatContent() {
     [actions, dispatch, navigation, settings.defaultFileViewScreen]
   );
 
+  /**
+   * カテゴリーの展開/折りたたみ切り替え
+   */
+  const handleToggleCategory = useCallback((fullPath: string) => {
+    logger.info('file', `Toggling category: ${fullPath}`);
+    setExpandedCategories(prev => {
+      const next = new Set(prev);
+      if (next.has(fullPath)) {
+        next.delete(fullPath);
+      } else {
+        next.add(fullPath);
+      }
+      return next;
+    });
+  }, []);
+
   // === セクションデータの計算 ===
 
   /**
@@ -388,6 +406,42 @@ function FileListScreenFlatContent() {
     return sortedSections;
   }, [state.files]);
 
+  // 初回データロード時に全ルートカテゴリーを展開状態にする
+  useEffect(() => {
+    if (sections.length > 0 && expandedCategories.size === 0) {
+      const rootCategories = sections
+        .filter(s => s.parent === null)
+        .map(s => s.fullPath);
+      setExpandedCategories(new Set(rootCategories));
+    }
+  }, [sections, expandedCategories.size]);
+
+  /**
+   * 表示するセクションのフィルタリング（折りたたみ対応）
+   * 親が折りたたまれている場合、その子カテゴリーは非表示にする
+   */
+  const visibleSections = useMemo(() => {
+    return sections.filter(section => {
+      // ルートカテゴリーは常に表示
+      if (section.parent === null) {
+        return true;
+      }
+
+      // 親が展開されているかチェック
+      let currentParent: string | null = section.parent;
+      while (currentParent !== null) {
+        if (!expandedCategories.has(currentParent)) {
+          return false; // 親が折りたたまれているので非表示
+        }
+        // さらに上の親をチェック
+        const parentSection = sections.find(s => s.fullPath === currentParent);
+        currentParent = parentSection ? parentSection.parent : null;
+      }
+
+      return true;
+    });
+  }, [sections, expandedCategories]);
+
   // キーボード + ChatInputBarの高さを計算してコンテンツが隠れないようにする
   const chatBarOffset = chatInputBarHeight + keyboardHeight;
 
@@ -428,10 +482,10 @@ function FileListScreenFlatContent() {
   // === レンダリング関数 ===
 
   /**
-   * セクションヘッダーのレンダリング（階層構造対応）
+   * セクションヘッダーのレンダリング（階層構造対応 + 折りたたみ機能）
    */
   const renderSectionHeader = useCallback(
-    ({ section }: { section: { category: string; level: number; fileCount: number; data: FileFlat[] } }) => {
+    ({ section }: { section: { category: string; fullPath: string; level: number; fileCount: number; data: FileFlat[] } }) => {
       // 階層レベルに応じたパディング（24pxずつ増加）
       const paddingLeft = 16 + (section.level * 24);
 
@@ -445,9 +499,11 @@ function FileListScreenFlatContent() {
       };
 
       const headerBackgroundColor = getBackgroundColor(section.level);
+      const isExpanded = expandedCategories.has(section.fullPath);
+      const hasChildren = sections.some(s => s.parent === section.fullPath);
 
       return (
-        <View
+        <TouchableOpacity
           style={[
             styles.sectionHeader,
             {
@@ -456,7 +512,18 @@ function FileListScreenFlatContent() {
               paddingLeft,
             },
           ]}
+          onPress={() => handleToggleCategory(section.fullPath)}
+          activeOpacity={0.7}
         >
+          {/* 展開/折りたたみアイコン（子要素がある場合のみ表示） */}
+          {hasChildren && (
+            <Ionicons
+              name={isExpanded ? 'chevron-down' : 'chevron-forward'}
+              size={20}
+              color={colors.text}
+              style={{ marginRight: spacing.xs }}
+            />
+          )}
           <Text
             style={[
               styles.sectionHeaderText,
@@ -467,20 +534,21 @@ function FileListScreenFlatContent() {
           >
             {section.category} ({section.fileCount})
           </Text>
-        </View>
+        </TouchableOpacity>
       );
     },
-    [colors]
+    [colors, spacing, expandedCategories, handleToggleCategory, sections]
   );
 
   /**
    * ファイルアイテムのレンダリング
    */
   const renderFileItem = useCallback(
-    ({ item: file }: { item: FileFlat }) => {
+    ({ item: file, section }: { item: FileFlat; section: { level: number } }) => {
       return (
         <FlatListItem
           file={file}
+          level={section.level}
           isSelected={false}
           isSelectionMode={false}
           onPress={() => handleSelectFile(file)}
@@ -520,7 +588,7 @@ function FileListScreenFlatContent() {
         </View>
       ) : (
         <SectionList
-          sections={sections.map((section) => ({
+          sections={visibleSections.map((section) => ({
             category: section.category,
             fullPath: section.fullPath,
             level: section.level,
@@ -635,6 +703,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderBottomWidth: 1,

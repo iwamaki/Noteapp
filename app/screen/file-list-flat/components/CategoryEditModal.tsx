@@ -8,7 +8,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 import { CustomInlineInput } from '../../../components/CustomInlineInput';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { CustomModal } from '../../../components/CustomModal';
