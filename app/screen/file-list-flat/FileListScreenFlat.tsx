@@ -24,7 +24,7 @@ import { MainContainer } from '../../components/MainContainer';
 import { CustomModal } from '../../components/CustomModal';
 import { useKeyboardHeight } from '../../contexts/KeyboardHeightContext';
 import { FlatListProvider, useFlatListContext } from './context';
-import { useNavigation, NavigationProp } from '@react-navigation/native';
+import { useNavigation, NavigationProp, useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/types';
 import { FileFlat } from '@data/core/typesFlat';
 import { logger } from '../../utils/logger';
@@ -66,6 +66,14 @@ function FileListScreenFlatContent() {
     logger.info('file', 'FileListScreenFlat: Initial data refresh triggered.');
     actions.refreshData();
   }, []);
+
+  // 画面がフォーカスされた時にデータを再取得（編集画面から戻ってきた時など）
+  useFocusEffect(
+    useCallback(() => {
+      logger.info('file', 'FileListScreenFlat: Screen focused, refreshing data...');
+      actions.refreshData();
+    }, [actions])
+  );
 
   // === ハンドラの実装 ===
 
@@ -245,16 +253,13 @@ function FileListScreenFlatContent() {
         const file = await actions.createFile(title, '', category, tags);
         logger.info('file', `Successfully created file: ${file.id}`);
         dispatch({ type: 'CLOSE_CREATE_MODAL' });
-        navigation.navigate('FileEdit', {
-          fileId: file.id,
-          initialViewMode: settings.defaultFileViewScreen,
-        });
+        // ファイル一覧に留まるため、遷移しない
       } catch (error: any) {
         logger.error('file', `Failed to create file ${title}: ${error.message}`, error);
         Alert.alert('エラー', error.message);
       }
     },
-    [actions, dispatch, navigation, settings.defaultFileViewScreen]
+    [actions, dispatch]
   );
 
   // === セクションデータの計算 ===
