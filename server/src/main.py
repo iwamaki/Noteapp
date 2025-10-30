@@ -77,7 +77,8 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
                 manager.resolve_request(request_id, content, error)
 
             elif data.get("type") == "ping":
-                # ピングメッセージ（接続確認用）
+                # ピングメッセージ（ハートビート用）
+                manager.handle_ping(client_id)
                 await manager.send_message(client_id, {"type": "pong"})
 
             else:
