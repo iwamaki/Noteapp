@@ -15,6 +15,7 @@ import { ListItem } from '../../../components/ListItem';
 
 interface FlatListItemProps {
   file: FileFlat;
+  level: number;
   isSelected: boolean;
   isSelectionMode: boolean;
   onPress: () => void;
@@ -31,12 +32,16 @@ interface FlatListItemProps {
  */
 export const FlatListItem: React.FC<FlatListItemProps> = ({
   file,
+  level,
   isSelected,
   isSelectionMode,
   onPress,
   onLongPress,
 }) => {
   const { colors, spacing } = useTheme();
+
+  // 階層インデント計算: ファイルはカテゴリーの1階層下なので +1
+  const itemPaddingLeft = 16 + ((level + 1) * 24);
 
   // 左側要素：ファイルアイコン
   const leftElement = (
@@ -48,13 +53,14 @@ export const FlatListItem: React.FC<FlatListItemProps> = ({
   );
 
   return (
-    <ListItem.Container
-      onPress={onPress}
-      onLongPress={onLongPress}
-      isSelected={isSelected}
-      isSelectionMode={isSelectionMode}
-      leftElement={leftElement}
-    >
+    <View style={{ paddingLeft: itemPaddingLeft }}>
+      <ListItem.Container
+        onPress={onPress}
+        onLongPress={onLongPress}
+        isSelected={isSelected}
+        isSelectionMode={isSelectionMode}
+        leftElement={leftElement}
+      >
       <ListItem.Title>{file.title}</ListItem.Title>
 
       {/* カテゴリー・タグ表示 */}
@@ -74,7 +80,8 @@ export const FlatListItem: React.FC<FlatListItemProps> = ({
               <Text
                 style={[
                   styles.badgeText,
-                  { color: colors.primary, fontSize: 12 },
+                  styles.categoryBadgeText,
+                  { color: colors.primary },
                 ]}
               >
                 {file.category}
@@ -97,7 +104,8 @@ export const FlatListItem: React.FC<FlatListItemProps> = ({
               <Text
                 style={[
                   styles.badgeText,
-                  { color: colors.textSecondary, fontSize: 12 },
+                  styles.tagBadgeText,
+                  { color: colors.textSecondary },
                 ]}
               >
                 #{tag}
@@ -106,7 +114,8 @@ export const FlatListItem: React.FC<FlatListItemProps> = ({
           ))}
         </View>
       )}
-    </ListItem.Container>
+      </ListItem.Container>
+    </View>
   );
 };
 
@@ -124,5 +133,11 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontWeight: '500',
+  },
+  categoryBadgeText: {
+    fontSize: 12,
+  },
+  tagBadgeText: {
+    fontSize: 12,
   },
 });
