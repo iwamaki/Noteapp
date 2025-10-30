@@ -151,9 +151,9 @@ function FileEditScreen() {
           {
             text: '保存する',
             style: 'default',
-            onPress: () => {
+            onPress: async () => {
               setConfirmModalVisible(false);
-              handleSave();
+              await handleSave();
               if (nextAction) {
                 navigation.dispatch(nextAction);
               }
