@@ -163,6 +163,71 @@ class ConnectionManager:
             if client_id in self.client_requests:
                 self.client_requests[client_id].discard(request_id)
 
+    async def request_search_results(
+        self,
+        client_id: str,
+        query: str,
+        search_type: str,
+        timeout: int = 30
+    ) -> list:
+        """
+        フロントエンドにファイル検索をリクエストする
+
+        このメソッドは、LLMのsearch_filesツールから呼び出されます。
+        フロントエンドに検索リクエストを送信し、検索結果を待機します。
+
+        Args:
+            client_id: クライアントの一意識別子
+            query: 検索クエリ
+            search_type: 検索タイプ（"title", "content", "tag", "category"）
+            timeout: タイムアウト時間（秒）
+
+        Returns:
+            検索結果のリスト（ファイル情報の辞書のリスト）
+
+        Raises:
+            Exception: クライアントが接続されていない場合
+            asyncio.TimeoutError: タイムアウトした場合
+        """
+        if client_id not in self.active_connections:
+            raise Exception(f"Client {client_id} is not connected")
+
+        # 一意のリクエストIDを生成
+        request_id = str(uuid.uuid4())
+
+        # Futureを作成（レスポンスを待つため）
+        future: asyncio.Future = asyncio.Future()
+        self.pending_requests[request_id] = future
+        self.client_requests[client_id].add(request_id)
+
+        logger.info(f"Requesting search: client_id={client_id}, query={query}, search_type={search_type}, request_id={request_id}")
+
+        try:
+            # フロントエンドに検索リクエスト送信
+            await self.send_message(client_id, {
+                "type": "fetch_search_results",
+                "request_id": request_id,
+                "query": query,
+                "search_type": search_type
+            })
+
+            # レスポンスを待つ（タイムアウト付き）
+            results = await asyncio.wait_for(future, timeout=timeout)
+
+            logger.info(f"Search results received: query={query}, results_count={len(results) if results else 0}")
+            return results if results else []
+
+        except asyncio.TimeoutError:
+            logger.error(f"Timeout waiting for search results: query={query}, request_id={request_id}")
+            raise Exception(f"検索 '{query}' がタイムアウトしました（{timeout}秒）")
+
+        finally:
+            # クリーンアップ
+            if request_id in self.pending_requests:
+                del self.pending_requests[request_id]
+            if client_id in self.client_requests:
+                self.client_requests[client_id].discard(request_id)
+
     def resolve_request(self, request_id: str, content: Optional[str], error: Optional[str] = None):
         """
         フロントエンドからのレスポンスを処理する
