@@ -104,7 +104,17 @@ export function groupFilesByCategoryHierarchical(
     const fileCount = calculateTotalFileCount(fullPath);
     const directFiles = Array.from(node.directFileIds)
       .map(id => fileMap.get(id)!)
-      .filter(Boolean);
+      .filter(Boolean)
+      .sort((a, b) => {
+        // orderフィールドが存在する場合はorder順にソート
+        const orderA = a.order ?? Number.MAX_SAFE_INTEGER;
+        const orderB = b.order ?? Number.MAX_SAFE_INTEGER;
+        if (orderA !== orderB) {
+          return orderA - orderB;
+        }
+        // orderが同じ場合は更新日時の新しい順
+        return b.updatedAt.getTime() - a.updatedAt.getTime();
+      });
 
     sectionsArray.push({
       category,

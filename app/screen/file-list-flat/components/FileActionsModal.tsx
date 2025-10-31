@@ -29,6 +29,7 @@ interface FileActionsModalProps {
   onRename: (file: FileFlat) => void;
   onEditCategories: (file: FileFlat) => void;
   onEditTags: (file: FileFlat) => void;
+  onReorder: (file: FileFlat) => void;
 }
 
 interface ActionItem {
@@ -47,6 +48,7 @@ export const FileActionsModal: React.FC<FileActionsModalProps> = ({
   onRename,
   onEditCategories,
   onEditTags,
+  onReorder,
 }) => {
   const { colors, typography, spacing } = useTheme();
 
@@ -74,6 +76,14 @@ export const FileActionsModal: React.FC<FileActionsModalProps> = ({
       label: 'タグを編集',
       onPress: () => {
         onEditTags(file);
+        onClose();
+      },
+    },
+    {
+      icon: 'reorder-four-outline',
+      label: '並び替え',
+      onPress: () => {
+        onReorder(file);
         onClose();
       },
     },

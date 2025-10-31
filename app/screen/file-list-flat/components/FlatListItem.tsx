@@ -20,6 +20,8 @@ interface FlatListItemProps {
   isSelectionMode: boolean;
   onPress: () => void;
   onLongPress: () => void;
+  reorderMode?: boolean;
+  reorderIndex?: number;
 }
 
 /**
@@ -37,6 +39,8 @@ export const FlatListItem: React.FC<FlatListItemProps> = ({
   isSelectionMode,
   onPress,
   onLongPress,
+  reorderMode = false,
+  reorderIndex,
 }) => {
   const { colors, spacing, typography } = useTheme();
 
@@ -46,8 +50,14 @@ export const FlatListItem: React.FC<FlatListItemProps> = ({
   // アイコンサイズをフォントサイズに連動
   const iconSize = Math.round(typography.body.fontSize * 1.3);
 
-  // 左側要素：ファイルアイコン
-  const leftElement = (
+  // 左側要素：並び替えモード時は番号、通常時はファイルアイコン
+  const leftElement = reorderMode && reorderIndex ? (
+    <View style={[styles.orderBadge, { backgroundColor: colors.primary }]}>
+      <Text style={[styles.orderText, { color: colors.white }]}>
+        {reorderIndex}
+      </Text>
+    </View>
+  ) : (
     <Ionicons
       name="document-text-outline"
       size={iconSize}
@@ -115,5 +125,16 @@ const styles = StyleSheet.create({
   },
   tagBadgeText: {
     fontSize: 12,
+  },
+  orderBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  orderText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
