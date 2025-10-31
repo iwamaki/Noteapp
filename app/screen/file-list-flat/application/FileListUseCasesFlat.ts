@@ -193,6 +193,33 @@ export class FileListUseCasesFlat {
     return await MetadataService.updateTags(fileId, tags);
   }
 
+  /**
+   * 複数ファイルの並び順を一括更新
+   *
+   * ドラッグアンドドロップで並び替えた後に呼び出す関数。
+   * カテゴリー内での相対的な位置を保持。
+   *
+   * @param reorderedFiles - 新しい順序のファイル配列（orderフィールド付き）
+   * @returns 更新されたファイルの配列
+   *
+   * @example
+   * // ドラッグ後のファイルリストにorderを付与
+   * const reordered = files.map((file, index) => ({ ...file, order: index }));
+   * await FileListUseCasesFlat.reorderFiles(reordered);
+   */
+  static async reorderFiles(reorderedFiles: FileFlat[]): Promise<FileFlat[]> {
+    const updatedFiles: FileFlat[] = [];
+
+    for (const file of reorderedFiles) {
+      const updated = await FileRepository.update(file.id, {
+        order: file.order,
+      });
+      updatedFiles.push(updated);
+    }
+
+    return updatedFiles;
+  }
+
   // =============================================================================
   // 削除操作
   // =============================================================================

@@ -187,6 +187,16 @@ function SettingsScreen() {
           (value) => updateSettings({ defaultFileViewScreen: value as 'edit' | 'preview' })
         )}
 
+        {renderPicker(
+          'カテゴリーソート方法',
+          settings.categorySortMethod,
+          [
+            { label: '名前順', value: 'name' },
+            { label: 'ファイル数順', value: 'fileCount' },
+          ],
+          (value) => updateSettings({ categorySortMethod: value as 'name' | 'fileCount' })
+        )}
+
         {settings.llmEnabled && (
           <>
             {renderSection('LLM設定')}

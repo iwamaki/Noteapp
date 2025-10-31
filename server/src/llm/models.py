@@ -21,7 +21,7 @@ class FileListItem(BaseModel):
     """
     title: str
     type: Literal["file"] = "file"
-    categories: Optional[List[str]] = None
+    category: Optional[str] = None
     tags: Optional[List[str]] = None
 
 
@@ -70,7 +70,7 @@ class LLMCommand(BaseModel):
     title: Optional[str] = None  # ファイル名（フラット構造では title で識別）
     new_title: Optional[str] = None  # リネーム時の新しいファイル名
     content: Optional[str] = None  # ファイルの内容
-    categories: Optional[List[str]] = None  # カテゴリー
+    category: Optional[str] = None  # カテゴリー（階層パス形式: "研究/AI"）
     tags: Optional[List[str]] = None  # タグ
 
 

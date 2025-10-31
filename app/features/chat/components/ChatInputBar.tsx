@@ -82,7 +82,7 @@ export const ChatInputBar: React.FC = () => {
         zIndex: 1,
         backgroundColor: colors.secondary,
         borderTopWidth: 1,
-        borderTopColor: colors.border,
+        borderTopColor: colors.tertiary,
         paddingBottom: insets.bottom,
         shadowColor: colors.shadow,
         shadowOffset: { width: 0, height: -3 }, // Shadow above

@@ -76,6 +76,9 @@ export interface AppSettings {
   // 7. 開発者設定
   anonymousStatsEnabled: boolean;
   diagnosticDataEnabled: boolean;
+
+  // 8. ファイルリスト表示設定
+  categorySortMethod: 'name' | 'fileCount';
 }
 
 // デフォルト設定値
@@ -144,6 +147,9 @@ const defaultSettings: AppSettings = {
   // 開発者設定
   anonymousStatsEnabled: false,
   diagnosticDataEnabled: false,
+
+  // ファイルリスト表示設定
+  categorySortMethod: 'fileCount',
 };
 
 interface SettingsStore {

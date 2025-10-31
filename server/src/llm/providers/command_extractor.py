@@ -96,22 +96,21 @@ class AgentCommandExtractor:
         """
         title = tool_input.get('title')
         content = tool_input.get('content', '')
-        categories = tool_input.get('categories', '')
+        category = tool_input.get('category', '')
         tags = tool_input.get('tags', '')
 
         if not title:
             logger.warning("create_file: title is missing")
             return None
 
-        # カンマ区切り文字列を配列に変換
-        categories_list = [c.strip() for c in categories.split(',')] if categories else []
+        # カンマ区切り文字列を配列に変換（tagsのみ）
         tags_list = [t.strip() for t in tags.split(',')] if tags else []
 
         return LLMCommand(
             action='create_file',
             title=title,
             content=content,
-            categories=categories_list if categories_list else None,
+            category=category if category else None,
             tags=tags_list if tags_list else None
         )
 

@@ -162,6 +162,72 @@ export class FileRepository {
     }
   }
 
+  /**
+   * Retrieves all unique categories from existing files
+   *
+   * @returns Array of unique category paths, sorted by usage frequency (excluding empty/uncategorized)
+   *
+   * @example
+   * const categories = await FileRepository.getAllCategories();
+   * // Returns: ["研究/AI", "研究/論文", "個人/メモ", "仕事"]
+   *
+   * @remarks
+   * - Only reads metadata files (metadata.json), not content files
+   * - Excludes empty strings and "未分類"
+   * - Returns categories sorted by usage count (most used first)
+   * - Efficient for UI dropdown/autocomplete suggestions
+   */
+  static async getAllCategories(): Promise<string[]> {
+    try {
+      // Return empty array if content directory doesn't exist
+      if (!(await CONTENT_DIR.exists)) {
+        return [];
+      }
+
+      // Get all items in content directory
+      const items = await CONTENT_DIR.list();
+
+      // Category usage counter
+      const categoryCount = new Map<string, number>();
+
+      // Read metadata files in parallel
+      const metadataPromises = items
+        .filter((item) => item instanceof Directory)
+        .map(async (item) => {
+          const fileDir = item as Directory;
+
+          // Read only metadata (not content)
+          const metadata = await readFileMetadata(fileDir);
+          if (!metadata || !metadata.category) {
+            return null;
+          }
+
+          return metadata.category;
+        });
+
+      // Execute in parallel and get results
+      const categories = await Promise.all(metadataPromises);
+
+      // Count category usage
+      for (const category of categories) {
+        if (category && category !== '' && category !== '未分類') {
+          categoryCount.set(category, (categoryCount.get(category) || 0) + 1);
+        }
+      }
+
+      // Sort by usage count (most used first)
+      return Array.from(categoryCount.entries())
+        .sort((a, b) => b[1] - a[1])
+        .map(([category]) => category);
+    } catch (e) {
+      throw new FileSystemV2Error(
+        'Failed to get all categories',
+        'GET_ALL_CATEGORIES_ERROR',
+        e
+      );
+    }
+  }
+
   // =============================================================================
   // Create Operation
   // =============================================================================
@@ -254,6 +320,7 @@ export class FileRepository {
         content: data.content ?? existingFile.content,
         tags: data.tags ?? existingFile.tags,
         category: data.category ?? existingFile.category,
+        order: data.order ?? existingFile.order,
         summary: data.summary ?? existingFile.summary,
         relatedNoteIds: data.relatedNoteIds ?? existingFile.relatedNoteIds,
         embedding: data.embedding ?? existingFile.embedding,

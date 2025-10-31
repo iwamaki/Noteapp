@@ -181,8 +181,8 @@ class ChatContextBuilder:
             整形された文字列
         """
         parts = [f"- {item.title}"]
-        if hasattr(item, 'categories') and item.categories:
-            parts.append(f" [カテゴリー: {', '.join(item.categories)}]")
+        if hasattr(item, 'category') and item.category:
+            parts.append(f" [カテゴリー: {item.category}]")
         if hasattr(item, 'tags') and item.tags:
             parts.append(f" [タグ: {', '.join(item.tags)}]")
         return "".join(parts)

@@ -1,11 +1,9 @@
 /**
- * @file FileActionsModal.tsx
- * @summary ファイルアクション選択モーダル
+ * @file CategoryActionsModal.tsx
+ * @summary カテゴリーアクション選択モーダル
  * @description
- * 長押しされたファイルに対する操作を選択するモーダル。
- * 削除、コピー、名前変更などのアクションを提供。
- * CustomModalを活用してUI統一し、画面中央に表示。
- * 将来的にカテゴリー編集やタグ編集も追加可能。
+ * 長押しされたカテゴリーに対する操作を選択するモーダル。
+ * 削除、名前変更のアクションを提供。
  */
 
 import React from 'react';
@@ -18,18 +16,15 @@ import {
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { CustomModal } from '../../../components/CustomModal';
 import { Ionicons } from '@expo/vector-icons';
-import { FileFlat } from '@data/core/typesFlat';
 
-interface FileActionsModalProps {
+interface CategoryActionsModalProps {
   visible: boolean;
-  file: FileFlat | null;
+  categoryPath: string | null;
+  categoryName: string | null;
+  fileCount: number;
   onClose: () => void;
-  onDelete: (file: FileFlat) => void;
-  onCopy: (file: FileFlat) => void;
-  onRename: (file: FileFlat) => void;
-  onEditCategories: (file: FileFlat) => void;
-  onEditTags: (file: FileFlat) => void;
-  onMove: (file: FileFlat) => void;
+  onDelete: (categoryPath: string) => void;
+  onRename: (categoryPath: string) => void;
 }
 
 interface ActionItem {
@@ -39,59 +34,25 @@ interface ActionItem {
   destructive?: boolean;
 }
 
-export const FileActionsModal: React.FC<FileActionsModalProps> = ({
+export const CategoryActionsModal: React.FC<CategoryActionsModalProps> = ({
   visible,
-  file,
+  categoryPath,
+  categoryName,
+  fileCount,
   onClose,
   onDelete,
-  onCopy,
   onRename,
-  onEditCategories,
-  onEditTags,
-  onMove,
 }) => {
   const { colors, typography, spacing } = useTheme();
 
-  if (!file) return null;
+  if (!categoryPath || !categoryName) return null;
 
   const actions: ActionItem[] = [
     {
       icon: 'create-outline',
       label: '名前を変更',
       onPress: () => {
-        onRename(file);
-        onClose();
-      },
-    },
-    {
-      icon: 'folder-outline',
-      label: 'カテゴリーを編集',
-      onPress: () => {
-        onEditCategories(file);
-        onClose();
-      },
-    },
-    {
-      icon: 'pricetag-outline',
-      label: 'タグを編集',
-      onPress: () => {
-        onEditTags(file);
-        onClose();
-      },
-    },
-    {
-      icon: 'move-outline',
-      label: '移動',
-      onPress: () => {
-        onMove(file);
-        onClose();
-      },
-    },
-    {
-      icon: 'copy-outline',
-      label: 'コピーを作成',
-      onPress: () => {
-        onCopy(file);
+        onRename(categoryPath);
         onClose();
       },
     },
@@ -99,7 +60,7 @@ export const FileActionsModal: React.FC<FileActionsModalProps> = ({
       icon: 'trash-outline',
       label: '削除',
       onPress: () => {
-        onDelete(file);
+        onDelete(categoryPath);
         onClose();
       },
       destructive: true,
@@ -107,7 +68,7 @@ export const FileActionsModal: React.FC<FileActionsModalProps> = ({
   ];
 
   const styles = StyleSheet.create({
-    fileInfo: {
+    categoryInfo: {
       flexDirection: 'row',
       alignItems: 'center',
       paddingVertical: spacing.sm,
@@ -116,19 +77,19 @@ export const FileActionsModal: React.FC<FileActionsModalProps> = ({
       borderRadius: 8,
       marginBottom: spacing.md,
     },
-    fileIcon: {
+    categoryIcon: {
       marginRight: spacing.sm,
     },
-    fileTextContainer: {
+    categoryTextContainer: {
       flex: 1,
     },
-    fileName: {
+    categoryName: {
       ...typography.body,
       color: colors.text,
       fontSize: 14,
       fontWeight: '600',
     },
-    fileMetadata: {
+    categoryMetadata: {
       ...typography.caption,
       color: colors.textSecondary,
       marginTop: 2,
@@ -155,22 +116,10 @@ export const FileActionsModal: React.FC<FileActionsModalProps> = ({
     },
   });
 
-  // メタデータ表示用のテキスト
-  const getMetadataText = () => {
-    const parts = [];
-    if (file.category) {
-      parts.push(file.category);
-    }
-    if (file.tags.length > 0) {
-      parts.push(file.tags.map(tag => `#${tag}`).join(' '));
-    }
-    return parts.length > 0 ? parts.join(' • ') : 'メタデータなし';
-  };
-
   return (
     <CustomModal
       isVisible={visible}
-      title="ファイル操作"
+      title="カテゴリー操作"
       onClose={onClose}
       buttons={[
         {
@@ -180,20 +129,20 @@ export const FileActionsModal: React.FC<FileActionsModalProps> = ({
         },
       ]}
     >
-      {/* ファイル情報 */}
-      <View style={styles.fileInfo}>
+      {/* カテゴリー情報 */}
+      <View style={styles.categoryInfo}>
         <Ionicons
-          name="document-text"
+          name="folder"
           size={24}
           color={colors.primary}
-          style={styles.fileIcon}
+          style={styles.categoryIcon}
         />
-        <View style={styles.fileTextContainer}>
-          <Text style={styles.fileName} numberOfLines={1}>
-            {file.title}
+        <View style={styles.categoryTextContainer}>
+          <Text style={styles.categoryName} numberOfLines={1}>
+            {categoryName}
           </Text>
-          <Text style={styles.fileMetadata} numberOfLines={1}>
-            {getMetadataText()}
+          <Text style={styles.categoryMetadata} numberOfLines={1}>
+            {fileCount}個のファイル
           </Text>
         </View>
       </View>
