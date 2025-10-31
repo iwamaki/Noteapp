@@ -2,14 +2,12 @@
  * @file categoryOperationsService.ts
  * @summary カテゴリー操作サービス
  * @description
- * カテゴリーに対する操作（削除、移動、名前変更、コピー）を提供。
+ * カテゴリーに対する操作（削除、名前変更）を提供。
  * ディレクトリ操作と同様の直感的な動作を実現。
  *
  * 動作仕様:
  * - 削除: カテゴリー配下のファイル・子カテゴリーをすべて削除
- * - 移動: カテゴリー配下のファイル・子カテゴリーをすべて移動
- * - 名前変更: 同じ親内での移動として実装
- * - コピー: カテゴリー配下のファイル・子カテゴリーをすべて複製
+ * - 名前変更: moveCategoryメソッドを使用して実装
  */
 
 import { FileFlat } from '../core/typesFlat';
@@ -196,58 +194,6 @@ export class CategoryOperationsService {
     }
   }
 
-  /**
-   * カテゴリーをコピー（配下のファイル・子カテゴリーもすべて複製）
-   *
-   * @param sourcePath - コピー元カテゴリーパス
-   * @param targetPath - コピー先カテゴリーパス
-   * @param onProgress - 進捗コールバック (current, total) => void
-   *
-   * @example
-   * await CategoryOperationsService.copyCategory(
-   *   '研究/AI',
-   *   '個人/AI学習メモ',
-   *   (current, total) => console.log(`${current}/${total} コピー中...`)
-   * );
-   *
-   * @remarks
-   * - 元のカテゴリーはそのまま残る
-   * - ファイル数が多い場合は時間がかかる
-   * - ストレージ容量を消費するため注意
-   */
-  static async copyCategory(
-    sourcePath: string,
-    targetPath: string,
-    onProgress?: (current: number, total: number) => void
-  ): Promise<void> {
-    // パスの検証
-    if (sourcePath === targetPath) {
-      throw new Error('コピー先が同じです');
-    }
-
-    const affectedFiles = await this.getAffectedFiles(sourcePath);
-
-    // プログレス付きで複製
-    for (let i = 0; i < affectedFiles.length; i++) {
-      const file = affectedFiles[i];
-
-      // パスを置換
-      const newCategory = file.category === sourcePath
-        ? targetPath
-        : file.category.replace(sourcePath + '/', targetPath + '/');
-
-      await FileRepository.create({
-        title: file.title,
-        content: file.content,
-        category: newCategory,
-        tags: file.tags,
-        summary: file.summary,
-        relatedNoteIds: file.relatedNoteIds,
-      });
-
-      onProgress?.(i + 1, affectedFiles.length);
-    }
-  }
 
   // =============================================================================
   // Validation Methods

@@ -38,7 +38,6 @@ import { TagEditModal } from './components/TagEditModal';
 import { CategorySectionHeader } from './components/CategorySectionHeader';
 import { CategoryActionsModal } from './components/CategoryActionsModal';
 import { CategoryRenameModal } from './components/CategoryRenameModal';
-import { CategoryMoveModal } from './components/CategoryMoveModal';
 import { useFileListHeader } from './hooks/useFileListHeader';
 import { useCategoryCollapse } from './hooks/useCategoryCollapse';
 import { useFileListChatContext } from '../../features/chat/hooks/useFileListChatContext';
@@ -75,10 +74,6 @@ function FileListScreenFlatContent() {
   const [showCategoryRenameModal, setShowCategoryRenameModal] = useState(false);
   const [categoryForRename, setCategoryForRename] = useState<{ path: string; name: string } | null>(null);
   const [categoryRenameImpact, setCategoryRenameImpact] = useState<CategoryImpact | null>(null);
-  // カテゴリー移動モーダルの状態
-  const [showCategoryMoveModal, setShowCategoryMoveModal] = useState(false);
-  const [categoryForMove, setCategoryForMove] = useState<{ path: string; name: string } | null>(null);
-  const [categoryMoveImpact, setCategoryMoveImpact] = useState<CategoryImpact | null>(null);
 
   // データ初期読み込み（初回マウント時のみ実行）
   useEffect(() => {
@@ -368,101 +363,6 @@ function FileListScreenFlatContent() {
     [categoryForRename, actions]
   );
 
-  /**
-   * カテゴリー移動モーダルを開く
-   */
-  const handleOpenCategoryMoveModal = useCallback(
-    async (categoryPath: string) => {
-      logger.info('file', `Opening move modal for category: ${categoryPath}`);
-
-      try {
-        const impact = await CategoryOperationsService.getCategoryImpact(categoryPath);
-        const parts = categoryPath.split('/');
-        const categoryName = parts[parts.length - 1];
-
-        setCategoryForMove({ path: categoryPath, name: categoryName });
-        setCategoryMoveImpact(impact);
-        setShowCategoryMoveModal(true);
-      } catch (error: any) {
-        logger.error('file', `Failed to get category impact: ${error.message}`, error);
-        Alert.alert('エラー', error.message);
-      }
-    },
-    []
-  );
-
-  /**
-   * カテゴリー移動実行
-   */
-  const handleMoveCategory = useCallback(
-    async (newPath: string) => {
-      if (!categoryForMove) return;
-
-      logger.info('file', `Attempting to move category from ${categoryForMove.path} to ${newPath}`);
-
-      try {
-        await CategoryOperationsService.moveCategory(categoryForMove.path, newPath);
-        logger.info('file', 'Category moved successfully');
-        setShowCategoryMoveModal(false);
-        setCategoryForMove(null);
-        setCategoryMoveImpact(null);
-        await actions.refreshData();
-        Alert.alert('成功', 'カテゴリーを移動しました');
-      } catch (error: any) {
-        logger.error('file', `Failed to move category: ${error.message}`, error);
-        Alert.alert('エラー', error.message);
-      }
-    },
-    [categoryForMove, actions]
-  );
-
-  /**
-   * カテゴリーコピーハンドラー
-   */
-  const handleCopyCategory = useCallback(
-    async (categoryPath: string) => {
-      logger.info('file', `Opening copy dialog for category: ${categoryPath}`);
-
-      try {
-        const impact = await CategoryOperationsService.getCategoryImpact(categoryPath);
-
-        // コピー先を入力するプロンプト
-        Alert.prompt(
-          'カテゴリーをコピー',
-          `コピー先のカテゴリーパスを入力してください。\n\n${impact.totalFileCount}個のファイルがコピーされます。`,
-          [
-            {
-              text: 'キャンセル',
-              style: 'cancel',
-            },
-            {
-              text: 'コピー',
-              onPress: async (targetPath?: string) => {
-                if (!targetPath || targetPath.trim() === '') return;
-
-                try {
-                  await CategoryOperationsService.copyCategory(categoryPath, targetPath.trim());
-                  logger.info('file', 'Category copied successfully');
-                  await actions.refreshData();
-                  Alert.alert('成功', 'カテゴリーをコピーしました');
-                } catch (error: any) {
-                  logger.error('file', `Failed to copy category: ${error.message}`, error);
-                  Alert.alert('エラー', error.message);
-                }
-              },
-            },
-          ],
-          'plain-text',
-          '',
-          'default'
-        );
-      } catch (error: any) {
-        logger.error('file', `Failed to get category impact: ${error.message}`, error);
-        Alert.alert('エラー', error.message);
-      }
-    },
-    [actions]
-  );
 
   /**
    * 移動モード開始ハンドラ
@@ -823,8 +723,6 @@ function FileListScreenFlatContent() {
         onClose={() => setSelectedCategoryForActions(null)}
         onDelete={handleDeleteCategory}
         onRename={handleOpenCategoryRenameModal}
-        onMove={handleOpenCategoryMoveModal}
-        onCopy={handleCopyCategory}
       />
 
       {/* カテゴリー名変更モーダル */}
@@ -840,22 +738,6 @@ function FileListScreenFlatContent() {
             setCategoryRenameImpact(null);
           }}
           onRename={handleRenameCategory}
-        />
-      )}
-
-      {/* カテゴリー移動モーダル */}
-      {categoryForMove && (
-        <CategoryMoveModal
-          visible={showCategoryMoveModal}
-          categoryPath={categoryForMove.path}
-          categoryName={categoryForMove.name}
-          impact={categoryMoveImpact}
-          onClose={() => {
-            setShowCategoryMoveModal(false);
-            setCategoryForMove(null);
-            setCategoryMoveImpact(null);
-          }}
-          onMove={handleMoveCategory}
         />
       )}
     </MainContainer>
