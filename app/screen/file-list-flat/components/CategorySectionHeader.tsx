@@ -10,7 +10,7 @@
  */
 
 import React from 'react';
-import { StyleSheet, TouchableOpacity, Text } from 'react-native';
+import { StyleSheet, TouchableOpacity, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { FileCategorySectionHierarchical } from '@data/core/typesFlat';
@@ -52,8 +52,8 @@ export const CategorySectionHeader: React.FC<CategorySectionHeaderProps> = ({
 }) => {
   const { colors, spacing, typography } = useTheme();
 
-  // 階層レベルに応じたパディング（ベースオフセット8px + 階層インデント15px）
-  const paddingLeft = 15 + (section.level * 15);
+  // 階層レベルに応じたインデント（レベル0はインデントなし、以降24pxずつ増加）
+  const indentOffset = section.level * 24;
 
   /**
    * 階層レベルに応じた背景色を計算
@@ -88,43 +88,55 @@ export const CategorySectionHeader: React.FC<CategorySectionHeaderProps> = ({
   return (
     <TouchableOpacity
       style={[
-        styles.sectionHeader,
+        styles.sectionHeaderWrapper,
         {
-          backgroundColor: headerBackgroundColor,
-          borderBottomColor: colors.border,
-          paddingLeft,
+          paddingLeft: indentOffset,
         },
       ]}
       onPress={handlePress}
       onLongPress={handleLongPress}
       activeOpacity={0.7}
     >
-      {/* 展開/折りたたみアイコン */}
-      {hasChildren ? (
-        <Ionicons
-          name={isExpanded ? 'chevron-down' : 'chevron-forward'}
-          size={20}
-          color={colors.text}
-          style={{ marginRight: spacing.xs }}
-        />
-      ) : null}
-      <Text
+      <View
         style={[
-          styles.sectionHeaderText,
+          styles.sectionHeaderContent,
           {
-            ...typography.title,
-            color: colors.text,
+            backgroundColor: headerBackgroundColor,
+            borderBottomColor: colors.border,
           },
         ]}
       >
-        {section.category} ({section.fileCount})
-      </Text>
+        {/* 展開/折りたたみアイコン */}
+        {hasChildren ? (
+          <Ionicons
+            name={isExpanded ? 'chevron-down' : 'chevron-forward'}
+            size={20}
+            color={colors.text}
+            style={{ marginRight: spacing.xs }}
+          />
+        ) : null}
+        <Text
+          style={[
+            styles.sectionHeaderText,
+            {
+              ...typography.title,
+              color: colors.text,
+            },
+          ]}
+        >
+          {section.category} ({section.fileCount})
+        </Text>
+      </View>
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
-  sectionHeader: {
+  sectionHeaderWrapper: {
+    // 外側のコンテナ - インデント用の余白を設定
+  },
+  sectionHeaderContent: {
+    // 内側のコンテナ - 背景色と実際のコンテンツを表示
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 8,
