@@ -20,24 +20,33 @@ interface CategoryNode {
 }
 
 /**
+ * カテゴリーソート方法
+ */
+export type CategorySortMethod = 'name' | 'fileCount';
+
+/**
  * ファイルを階層的なカテゴリー構造でグループ化
  *
  * @param files - グループ化するファイルの配列
+ * @param sortMethod - カテゴリーのソート方法（'name': 名前順、'fileCount': ファイル数順）
  * @returns 階層構造を持つカテゴリーセクション配列
  *
  * @example
- * const sections = groupFilesByCategoryHierarchical(files);
+ * const sections = groupFilesByCategoryHierarchical(files, 'name');
  *
  * @remarks
  * - カテゴリー名に "/" を含む場合、階層構造として解釈（例: "研究/AI"）
  * - 親カテゴリーは自動生成（"研究/AI" があれば "研究" も存在）
  * - fileCount は直接属するファイル + 子孫カテゴリーのファイル総数
  * - directFiles は直接そのカテゴリーに属するファイルのみ
- * - ソート順: 親カテゴリー → サブカテゴリー（各階層内でfileCount降順）
+ * - ソート順:
+ *   - sortMethod='name': 名前順（五十音/ABC順）
+ *   - sortMethod='fileCount': ファイル数降順
  * - 「未分類」は常に最後
  */
 export function groupFilesByCategoryHierarchical(
-  files: FileFlat[]
+  files: FileFlat[],
+  sortMethod: CategorySortMethod = 'fileCount'
 ): FileCategorySectionHierarchical[] {
   const uncategorizedKey = '未分類';
   const categoryNodes = new Map<string, CategoryNode>();
@@ -129,11 +138,22 @@ export function groupFilesByCategoryHierarchical(
   /**
    * ソート処理
    * - 未分類は最後
-   * - 同じ親を持つカテゴリー同士でfileCount降順
+   * - 同じ親を持つカテゴリー同士でソート（sortMethodに応じて）
    * - 親カテゴリーの直後にその子カテゴリーが続く
    */
   const sortedSections: FileCategorySectionHierarchical[] = [];
   const added = new Set<string>();
+
+  // ソート関数を選択
+  const sortCategories = (a: FileCategorySectionHierarchical, b: FileCategorySectionHierarchical) => {
+    if (sortMethod === 'name') {
+      // 名前順（五十音/ABC順）
+      return a.category.localeCompare(b.category, 'ja');
+    } else {
+      // ファイル数降順
+      return b.fileCount - a.fileCount;
+    }
+  };
 
   const addCategoryAndChildren = (fullPath: string) => {
     if (added.has(fullPath)) return;
@@ -144,10 +164,10 @@ export function groupFilesByCategoryHierarchical(
     sortedSections.push(section);
     added.add(fullPath);
 
-    // 子カテゴリーを取得してソート（fileCount降順）
+    // 子カテゴリーを取得してソート
     const children = sectionsArray
       .filter(s => s.parent === fullPath)
-      .sort((a, b) => b.fileCount - a.fileCount);
+      .sort(sortCategories);
 
     for (const child of children) {
       addCategoryAndChildren(child.fullPath);
@@ -157,7 +177,7 @@ export function groupFilesByCategoryHierarchical(
   // ルートカテゴリー（parent === null）から開始
   const rootCategories = sectionsArray
     .filter(s => s.parent === null && s.fullPath !== uncategorizedKey)
-    .sort((a, b) => b.fileCount - a.fileCount);
+    .sort(sortCategories);
 
   for (const root of rootCategories) {
     addCategoryAndChildren(root.fullPath);
