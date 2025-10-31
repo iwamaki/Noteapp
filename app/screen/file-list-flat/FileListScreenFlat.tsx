@@ -244,20 +244,20 @@ function FileListScreenFlatContent() {
   );
 
   /**
-   * 並び替えモード開始ハンドラ
+   * 移動モード開始ハンドラ
    */
-  const handleStartReorder = useCallback((file: FileFlat) => {
-    logger.info('file', `Starting reorder mode for category: ${file.category}, source file: ${file.id}`);
-    dispatch({ type: 'ENTER_REORDER_MODE', payload: file.category || '未分類' });
-    dispatch({ type: 'SELECT_REORDER_SOURCE', payload: file.id });
+  const handleStartMove = useCallback((file: FileFlat) => {
+    logger.info('file', `Starting move mode for source file: ${file.id}, category: ${file.category}`);
+    dispatch({ type: 'ENTER_MOVE_MODE', payload: file.category || '未分類' });
+    dispatch({ type: 'SELECT_MOVE_SOURCE', payload: file.id });
   }, [dispatch]);
 
   /**
-   * 並び替えモード終了ハンドラ
+   * 移動モード終了ハンドラ
    */
-  const handleCancelReorder = useCallback(() => {
-    logger.info('file', 'Canceling reorder mode');
-    dispatch({ type: 'EXIT_REORDER_MODE' });
+  const handleCancelMove = useCallback(() => {
+    logger.info('file', 'Canceling move mode');
+    dispatch({ type: 'EXIT_MOVE_MODE' });
   }, [dispatch]);
 
   /**
@@ -299,59 +299,59 @@ function FileListScreenFlatContent() {
   });
 
   /**
-   * ファイルタップハンドラ（並び替えモード時）
+   * ファイルタップハンドラ（移動モード時）
    */
-  const handleReorderTap = useCallback(
-    async (file: FileFlat, index: number) => {
+  const handleMoveTap = useCallback(
+    async (file: FileFlat, index: number, categoryPath: string) => {
       // 移動元ファイルがセットされていない場合は何もしない
-      if (!state.reorderSourceFileId) {
-        logger.warn('file', 'Reorder source file not set');
+      if (!state.moveSourceFileId) {
+        logger.warn('file', 'Move source file not set');
         return;
       }
 
       // 同じファイルをタップした場合は何もしない
-      if (file.id === state.reorderSourceFileId) {
+      if (file.id === state.moveSourceFileId) {
         logger.debug('file', 'Same file tapped, ignoring');
         return;
       }
 
-      logger.info('file', `Moving file to index: ${index}`);
-
-      // 現在のセクションデータから該当カテゴリーのファイルリストを取得
-      const targetSection = sections.find((s) => s.fullPath === state.reorderCategoryPath);
-      if (!targetSection) {
-        logger.error('file', 'Target category section not found');
-        return;
-      }
-
-      // 既にソート済みのdirectFilesを使用
-      const categoryFiles = targetSection.directFiles;
-
-      // 移動元ファイルのインデックスを取得
-      const sourceIndex = categoryFiles.findIndex((f) => f.id === state.reorderSourceFileId);
-      if (sourceIndex === -1) {
-        logger.error('file', 'Source file not found in category');
-        return;
-      }
-
-      // 配列を並び替え（切り取って挿入）
-      const reordered = [...categoryFiles];
-      const [movedFile] = reordered.splice(sourceIndex, 1);
-      reordered.splice(index, 0, movedFile);
-
-      // orderフィールドを付与
-      const filesWithOrder = reordered.map((f, i) => ({ ...f, order: i }));
+      logger.info('file', `Moving file to category: ${categoryPath}, index: ${index}`);
 
       try {
-        await actions.reorderFiles(filesWithOrder);
-        logger.info('file', 'Files reordered successfully');
-        dispatch({ type: 'EXIT_REORDER_MODE' });
+        await actions.moveFile(state.moveSourceFileId, categoryPath, index);
+        logger.info('file', 'File moved successfully');
+        dispatch({ type: 'EXIT_MOVE_MODE' });
       } catch (error: any) {
-        logger.error('file', `Failed to reorder files: ${error.message}`, error);
-        Alert.alert('エラー', 'ファイルの並び替えに失敗しました');
+        logger.error('file', `Failed to move file: ${error.message}`, error);
+        Alert.alert('エラー', 'ファイルの移動に失敗しました');
       }
     },
-    [state.reorderSourceFileId, state.reorderCategoryPath, sections, actions, dispatch]
+    [state.moveSourceFileId, actions, dispatch]
+  );
+
+  /**
+   * カテゴリーヘッダータップハンドラ（移動モード時）
+   */
+  const handleCategoryHeaderTap = useCallback(
+    async (categoryPath: string) => {
+      // 移動モードでない場合は何もしない
+      if (!state.isMoveMode || !state.moveSourceFileId) {
+        return;
+      }
+
+      logger.info('file', `Moving file to category: ${categoryPath} (end of list)`);
+
+      try {
+        // カテゴリーの最後に移動（targetIndexを指定しない）
+        await actions.moveFile(state.moveSourceFileId, categoryPath);
+        logger.info('file', 'File moved successfully');
+        dispatch({ type: 'EXIT_MOVE_MODE' });
+      } catch (error: any) {
+        logger.error('file', `Failed to move file: ${error.message}`, error);
+        Alert.alert('エラー', 'ファイルの移動に失敗しました');
+      }
+    },
+    [state.isMoveMode, state.moveSourceFileId, actions, dispatch]
   );
 
   // キーボード + ChatInputBarの高さを計算してコンテンツが隠れないようにする
@@ -413,10 +413,12 @@ function FileListScreenFlatContent() {
           isExpanded={isExpanded}
           hasChildren={hasChildren}
           onToggle={handleToggleCategory}
+          onTap={state.isMoveMode ? () => handleCategoryHeaderTap(section.fullPath) : undefined}
+          isMoveMode={state.isMoveMode}
         />
       );
     },
-    [expandedCategories, handleToggleCategory, sections]
+    [expandedCategories, handleToggleCategory, sections, state.isMoveMode, handleCategoryHeaderTap]
   );
 
   /**
@@ -424,30 +426,30 @@ function FileListScreenFlatContent() {
    */
   const renderFileItem = useCallback(
     ({ item: file, index, section }: { item: FileFlat; index: number; section: { level: number; fullPath: string } }) => {
-      // 並び替えモード時の処理
-      const isReorderMode = state.isReorderMode && state.reorderCategoryPath === section.fullPath;
-      const isReorderSource = state.reorderSourceFileId === file.id;
+      // 移動モード時の処理
+      const isMoveMode = state.isMoveMode;
+      const isMoveSource = state.moveSourceFileId === file.id;
 
       return (
         <FlatListItem
           file={file}
           level={section.level}
-          isSelected={isReorderSource}
+          isSelected={isMoveSource}
           isSelectionMode={false}
           onPress={() => {
-            if (isReorderMode) {
-              handleReorderTap(file, index);
+            if (isMoveMode) {
+              handleMoveTap(file, index, section.fullPath);
             } else {
               handleSelectFile(file);
             }
           }}
           onLongPress={() => handleLongPressFile(file)}
-          reorderMode={isReorderMode}
-          reorderIndex={isReorderMode ? index + 1 : undefined}
+          moveMode={isMoveMode}
+          moveIndex={isMoveMode ? index + 1 : undefined}
         />
       );
     },
-    [state.isReorderMode, state.reorderCategoryPath, state.reorderSourceFileId, handleSelectFile, handleLongPressFile, handleReorderTap]
+    [state.isMoveMode, state.moveSourceFileId, handleSelectFile, handleLongPressFile, handleMoveTap]
   );
 
   // レンダリング時のデバッグログ
@@ -496,15 +498,15 @@ function FileListScreenFlatContent() {
         />
       )}
 
-      {/* 並び替えモード時のキャンセルボタン */}
-      {state.isReorderMode && (
-        <View style={[styles.reorderBar, { backgroundColor: colors.background }]}>
+      {/* 移動モード時のキャンセルボタン */}
+      {state.isMoveMode && (
+        <View style={[styles.moveBar, { backgroundColor: colors.background }]}>
           <Text style={{ fontSize: 14, color: colors.text }}>
             移動先をタップしてください
           </Text>
           <TouchableOpacity
             style={styles.cancelButton}
-            onPress={handleCancelReorder}
+            onPress={handleCancelMove}
           >
             <Text style={{ fontSize: 14, color: colors.primary, fontWeight: '600' }}>
               キャンセル
@@ -538,7 +540,7 @@ function FileListScreenFlatContent() {
         onRename={handleOpenRenameModal}
         onEditCategories={handleOpenCategoryEditModal}
         onEditTags={handleOpenTagEditModal}
-        onReorder={handleStartReorder}
+        onMove={handleStartMove}
       />
 
       <CustomModal
@@ -612,7 +614,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  reorderBar: {
+  moveBar: {
     position: 'absolute',
     bottom: 0,
     left: 0,

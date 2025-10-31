@@ -20,6 +20,8 @@ interface CategorySectionHeaderProps {
   isExpanded: boolean;
   hasChildren: boolean;
   onToggle: (fullPath: string) => void;
+  onTap?: (fullPath: string) => void;  // 移動モード時のタップハンドラー
+  isMoveMode?: boolean;  // 移動モード中かどうか
 }
 
 /**
@@ -43,6 +45,8 @@ export const CategorySectionHeader: React.FC<CategorySectionHeaderProps> = ({
   isExpanded,
   hasChildren,
   onToggle,
+  onTap,
+  isMoveMode = false,
 }) => {
   const { colors, spacing, typography } = useTheme();
 
@@ -63,34 +67,50 @@ export const CategorySectionHeader: React.FC<CategorySectionHeaderProps> = ({
 
   const headerBackgroundColor = getBackgroundColor(section.level);
 
+  // 移動モード時と通常モード時でハンドラーを切り替え
+  const handlePress = () => {
+    if (isMoveMode && onTap) {
+      onTap(section.fullPath);
+    } else {
+      onToggle(section.fullPath);
+    }
+  };
+
   return (
     <TouchableOpacity
       style={[
         styles.sectionHeader,
         {
-          backgroundColor: headerBackgroundColor,
+          backgroundColor: isMoveMode ? colors.primary + '30' : headerBackgroundColor,
           borderBottomColor: colors.border,
           paddingLeft,
         },
       ]}
-      onPress={() => onToggle(section.fullPath)}
+      onPress={handlePress}
       activeOpacity={0.7}
     >
-      {/* 展開/折りたたみアイコン（子要素がある場合のみ表示） */}
-      {hasChildren && (
+      {/* 移動モード時は移動アイコン、通常時は展開/折りたたみアイコン */}
+      {isMoveMode ? (
+        <Ionicons
+          name="arrow-forward-circle-outline"
+          size={20}
+          color={colors.primary}
+          style={{ marginRight: spacing.xs }}
+        />
+      ) : hasChildren ? (
         <Ionicons
           name={isExpanded ? 'chevron-down' : 'chevron-forward'}
           size={20}
           color={colors.text}
           style={{ marginRight: spacing.xs }}
         />
-      )}
+      ) : null}
       <Text
         style={[
           styles.sectionHeaderText,
           {
             ...typography.title,
-            color: colors.text,
+            color: isMoveMode ? colors.primary : colors.text,
           },
         ]}
       >
