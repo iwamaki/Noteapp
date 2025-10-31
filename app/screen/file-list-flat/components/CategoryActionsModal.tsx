@@ -3,7 +3,7 @@
  * @summary カテゴリーアクション選択モーダル
  * @description
  * 長押しされたカテゴリーに対する操作を選択するモーダル。
- * 削除、移動、名前変更、コピーなどのアクションを提供。
+ * 削除、名前変更のアクションを提供。
  */
 
 import React from 'react';
@@ -25,8 +25,6 @@ interface CategoryActionsModalProps {
   onClose: () => void;
   onDelete: (categoryPath: string) => void;
   onRename: (categoryPath: string) => void;
-  onMove: (categoryPath: string) => void;
-  onCopy: (categoryPath: string) => void;
 }
 
 interface ActionItem {
@@ -44,8 +42,6 @@ export const CategoryActionsModal: React.FC<CategoryActionsModalProps> = ({
   onClose,
   onDelete,
   onRename,
-  onMove,
-  onCopy,
 }) => {
   const { colors, typography, spacing } = useTheme();
 
@@ -57,22 +53,6 @@ export const CategoryActionsModal: React.FC<CategoryActionsModalProps> = ({
       label: '名前を変更',
       onPress: () => {
         onRename(categoryPath);
-        onClose();
-      },
-    },
-    {
-      icon: 'move-outline',
-      label: '移動',
-      onPress: () => {
-        onMove(categoryPath);
-        onClose();
-      },
-    },
-    {
-      icon: 'copy-outline',
-      label: 'コピーを作成',
-      onPress: () => {
-        onCopy(categoryPath);
         onClose();
       },
     },
