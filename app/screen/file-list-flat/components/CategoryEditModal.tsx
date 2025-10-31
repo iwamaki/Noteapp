@@ -32,10 +32,6 @@ export const CategoryEditModal: React.FC<CategoryEditModalProps> = ({
   const [inputValue, setInputValue] = useState('');
 
   const styles = StyleSheet.create({
-    inputBorder: {
-      borderWidth: 1,
-      borderRadius: 8,
-    },
     hint: {
       ...typography.caption,
       color: colors.textSecondary,

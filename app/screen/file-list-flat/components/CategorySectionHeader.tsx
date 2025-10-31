@@ -21,6 +21,7 @@ interface CategorySectionHeaderProps {
   hasChildren: boolean;
   onToggle: (fullPath: string) => void;
   onTap?: (fullPath: string) => void;  // 移動モード時のタップハンドラー
+  onLongPress?: (fullPath: string, categoryName: string, fileCount: number) => void;  // 長押しハンドラー（カテゴリー操作）
   isMoveMode?: boolean;  // 移動モード中かどうか
 }
 
@@ -46,6 +47,7 @@ export const CategorySectionHeader: React.FC<CategorySectionHeaderProps> = ({
   hasChildren,
   onToggle,
   onTap,
+  onLongPress,
   isMoveMode = false,
 }) => {
   const { colors, spacing, typography } = useTheme();
@@ -76,6 +78,13 @@ export const CategorySectionHeader: React.FC<CategorySectionHeaderProps> = ({
     }
   };
 
+  // 長押しハンドラー（移動モード中は無効）
+  const handleLongPress = () => {
+    if (!isMoveMode && onLongPress) {
+      onLongPress(section.fullPath, section.category, section.fileCount);
+    }
+  };
+
   return (
     <TouchableOpacity
       style={[
@@ -87,6 +96,7 @@ export const CategorySectionHeader: React.FC<CategorySectionHeaderProps> = ({
         },
       ]}
       onPress={handlePress}
+      onLongPress={handleLongPress}
       activeOpacity={0.7}
     >
       {/* 展開/折りたたみアイコン */}
