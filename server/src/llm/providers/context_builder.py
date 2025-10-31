@@ -96,7 +96,9 @@ class ChatContextBuilder:
         if isinstance(active_screen, EditScreenContext):
             self._setup_edit_screen_context(active_screen)
         elif isinstance(active_screen, FilelistScreenContext):
-            self._setup_filelist_screen_context(active_screen)
+            # Note: FilelistScreenContext は画面識別のみに使用
+            # ファイルリスト情報は allFiles として送信される
+            logger.info("Active screen: FilelistScreen (no context set - using allFiles)")
 
     def _setup_edit_screen_context(self, screen: EditScreenContext) -> None:
         """編集画面のコンテキストを設定
@@ -107,7 +109,7 @@ class ChatContextBuilder:
         file_path = screen.filePath
         file_content = screen.fileContent
 
-        # ツール用のファイルコンテキスト設定
+        # ツール用のファイルコンテキスト設定（ツールは常にコンテキストを必要とする）
         set_file_context({'filename': file_path, 'content': file_content})
         self._has_file_context = True
         logger.info(f"File context set from EditScreen: {file_path}")
@@ -118,74 +120,13 @@ class ChatContextBuilder:
         logger.info(f"Directory context set from EditScreen: {current_path}")
 
         # LLMに渡すコンテキストメッセージ生成
-        if file_content is not None:
+        # Note: fileContentはフロントエンドでsendFileContextToLLMの設定に従って空文字になる
+        if file_content is not None and file_content != '':
             self._context_msg = CONTEXT_MSG_EDIT_SCREEN.format(
                 file_path=file_path,
                 content=file_content
             )
 
-    def _setup_filelist_screen_context(self, screen: FilelistScreenContext) -> None:
-        """ファイルリスト画面のコンテキストを設定（フラット構造）
-
-        Args:
-            screen: ファイルリスト画面のコンテキスト
-        """
-        # ファイルリストの処理（フラット構造ではディレクトリ概念なし）
-        processed_file_list = self._process_visible_file_list(screen.visibleFileList)
-
-        # ツール用のディレクトリコンテキスト設定（フラット構造では空）
-        # 注: ツールとの互換性のため残すが、currentPathは使用しない
-        set_directory_context({
-            'currentPath': '/',  # フラット構造では常にルート
-            'fileList': processed_file_list
-        })
-        logger.info(
-            f"File list context set from FilelistScreen (flat structure) "
-            f"with {len(processed_file_list)} files"
-        )
-
-        # LLMに渡すコンテキストメッセージ生成（フラット構造版）
-        if screen.visibleFileList:
-            file_list_str = "\n".join([
-                self._format_file_item(item) for item in screen.visibleFileList
-            ])
-            self._context_msg = CONTEXT_MSG_FILELIST_SCREEN.format(
-                file_list=file_list_str
-            )
-
-    def _process_visible_file_list(self, visible_file_list: List[Any]) -> List[Dict[str, str]]:
-        """表示中のファイルリストを処理（フラット構造）
-
-        Args:
-            visible_file_list: 表示中のファイルリスト
-
-        Returns:
-            処理されたファイルリスト
-        """
-        processed_list = []
-        for item in visible_file_list:
-            if hasattr(item, 'title') and hasattr(item, 'type'):
-                processed_list.append({
-                    'title': item.title,
-                    'type': item.type
-                })
-        return processed_list
-
-    def _format_file_item(self, item: Any) -> str:
-        """ファイルアイテムをLLM用に整形（フラット構造）
-
-        Args:
-            item: FileListItemオブジェクト
-
-        Returns:
-            整形された文字列
-        """
-        parts = [f"- {item.title}"]
-        if hasattr(item, 'category') and item.category:
-            parts.append(f" [カテゴリー: {item.category}]")
-        if hasattr(item, 'tags') and item.tags:
-            parts.append(f" [タグ: {', '.join(item.tags)}]")
-        return "".join(parts)
 
     def _process_fallback_file_context(self, context: ChatContext) -> None:
         """フォールバック用のファイルコンテキストを処理（古い形式のサポート）
@@ -244,6 +185,11 @@ class ChatContextBuilder:
         Args:
             context: チャットコンテキスト
         """
+        # sendFileContextToLLMがFalseの場合はスキップ
+        if context.sendFileContextToLLM is False:
+            logger.info("All files context skipped: sendFileContextToLLM is False")
+            return
+
         if context.allFiles:
             set_all_files_context(context.allFiles)
             logger.info(f"All files context set: {len(context.allFiles)} files")
