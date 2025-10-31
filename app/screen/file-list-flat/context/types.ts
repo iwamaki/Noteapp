@@ -30,10 +30,10 @@ export interface FlatListState {
   selectedFileIds: Set<string>;
   isSelectionMode: boolean;
 
-  // 並び替えモード
-  isReorderMode: boolean;
-  reorderSourceFileId: string | null;
-  reorderCategoryPath: string | null;
+  // 移動モード
+  isMoveMode: boolean;
+  moveSourceFileId: string | null;
+  moveSourceCategoryPath: string | null;
 
   // フィルタリング・検索
   searchQuery: string;
@@ -75,11 +75,11 @@ export type FlatListAction =
   | { type: 'ENTER_SELECTION_MODE' }
   | { type: 'EXIT_SELECTION_MODE' }
 
-  // 並び替えモード
-  | { type: 'ENTER_REORDER_MODE'; payload: string }  // payload: categoryPath
-  | { type: 'EXIT_REORDER_MODE' }
-  | { type: 'SELECT_REORDER_SOURCE'; payload: string }  // payload: fileId
-  | { type: 'CLEAR_REORDER_SOURCE' }
+  // 移動モード
+  | { type: 'ENTER_MOVE_MODE'; payload: string }  // payload: categoryPath
+  | { type: 'EXIT_MOVE_MODE' }
+  | { type: 'SELECT_MOVE_SOURCE'; payload: string }  // payload: fileId
+  | { type: 'CLEAR_MOVE_SOURCE' }
 
   // フィルタリング・検索
   | { type: 'SET_SEARCH_QUERY'; payload: string }
@@ -123,6 +123,7 @@ export interface FlatListActions {
   updateFileCategory: (fileId: string, category: string) => Promise<void>;
   updateFileTags: (fileId: string, tags: string[]) => Promise<void>;
   reorderFiles: (reorderedFiles: FileFlat[]) => Promise<void>;
+  moveFile: (sourceFileId: string, targetCategoryPath: string, targetIndex?: number) => Promise<void>;
 
   // フィルタリング
   filterByCategory: (categoryName: string) => Promise<void>;
