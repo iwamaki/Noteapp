@@ -214,6 +214,85 @@ export const FlatListProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 
   /**
+   * ファイルの並び順を更新
+   */
+  const reorderFiles = useCallback(
+    async (reorderedFiles: FileFlat[]) => {
+      try {
+        logger.info('file', `Reordering ${reorderedFiles.length} files`);
+
+        const updatedFiles = await FileListUseCasesFlat.reorderFiles(reorderedFiles);
+
+        logger.info('file', `Files reordered: ${updatedFiles.length}`);
+
+        // 状態を更新
+        updatedFiles.forEach((file) => {
+          dispatch({ type: 'UPDATE_FILE', payload: file });
+        });
+      } catch (error: any) {
+        logger.error('file', `Failed to reorder files: ${error.message}`, error);
+        throw error;
+      }
+    },
+    []
+  );
+
+  /**
+   * ファイルを移動（カテゴリー変更 + 並び順指定）
+   */
+  const moveFile = useCallback(
+    async (sourceFileId: string, targetCategoryPath: string, targetIndex?: number) => {
+      try {
+        logger.info('file', `Moving file ${sourceFileId} to category ${targetCategoryPath} at index ${targetIndex ?? 'end'}`);
+
+        // ファイルを取得
+        const sourceFile = state.files.find(f => f.id === sourceFileId);
+        if (!sourceFile) {
+          throw new Error(`Source file not found: ${sourceFileId}`);
+        }
+
+        // カテゴリーが変わる場合はカテゴリーを更新
+        if (sourceFile.category !== targetCategoryPath) {
+          await FileListUseCasesFlat.updateFileCategory(sourceFileId, targetCategoryPath);
+        }
+
+        // targetIndexが指定されている場合は、そのカテゴリー内での並び順を更新
+        if (targetIndex !== undefined) {
+          // 対象カテゴリーのファイルを取得
+          const categoryFiles = state.files
+            .filter(f => f.category === targetCategoryPath)
+            .sort((a, b) => {
+              const orderA = a.order ?? Number.MAX_SAFE_INTEGER;
+              const orderB = b.order ?? Number.MAX_SAFE_INTEGER;
+              if (orderA !== orderB) return orderA - orderB;
+              return b.updatedAt.getTime() - a.updatedAt.getTime();
+            });
+
+          // 移動元ファイルを除外（カテゴリーが同じ場合）
+          const filesWithoutSource = categoryFiles.filter(f => f.id !== sourceFileId);
+
+          // targetIndexの位置に挿入
+          filesWithoutSource.splice(targetIndex, 0, { ...sourceFile, category: targetCategoryPath });
+
+          // orderを振り直し
+          const filesWithOrder = filesWithoutSource.map((f, i) => ({ ...f, order: i }));
+
+          await FileListUseCasesFlat.reorderFiles(filesWithOrder);
+        }
+
+        logger.info('file', `File moved successfully`);
+
+        // データを再読み込み
+        await refreshData();
+      } catch (error: any) {
+        logger.error('file', `Failed to move file: ${error.message}`, error);
+        throw error;
+      }
+    },
+    [state.files, refreshData]
+  );
+
+  /**
    * カテゴリーでフィルタリング
    */
   const filterByCategory = useCallback(async (categoryName: string) => {
@@ -287,6 +366,8 @@ export const FlatListProvider: React.FC<{ children: React.ReactNode }> = ({
       copySelectedFiles,
       updateFileCategory,
       updateFileTags,
+      reorderFiles,
+      moveFile,
       filterByCategory,
       filterByTag,
       search,
@@ -300,6 +381,8 @@ export const FlatListProvider: React.FC<{ children: React.ReactNode }> = ({
       copySelectedFiles,
       updateFileCategory,
       updateFileTags,
+      reorderFiles,
+      moveFile,
       filterByCategory,
       filterByTag,
       search,

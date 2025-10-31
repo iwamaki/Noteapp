@@ -10,7 +10,7 @@
  */
 
 import React from 'react';
-import { StyleSheet, TouchableOpacity, Text } from 'react-native';
+import { StyleSheet, TouchableOpacity, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { FileCategorySectionHierarchical } from '@data/core/typesFlat';
@@ -20,6 +20,9 @@ interface CategorySectionHeaderProps {
   isExpanded: boolean;
   hasChildren: boolean;
   onToggle: (fullPath: string) => void;
+  onTap?: (fullPath: string) => void;  // 移動モード時のタップハンドラー
+  onLongPress?: (fullPath: string, categoryName: string, fileCount: number) => void;  // 長押しハンドラー（カテゴリー操作）
+  isMoveMode?: boolean;  // 移動モード中かどうか
 }
 
 /**
@@ -43,11 +46,14 @@ export const CategorySectionHeader: React.FC<CategorySectionHeaderProps> = ({
   isExpanded,
   hasChildren,
   onToggle,
+  onTap,
+  onLongPress,
+  isMoveMode = false,
 }) => {
   const { colors, spacing, typography } = useTheme();
 
-  // 階層レベルに応じたパディング（ベースオフセット8px + 階層インデント15px）
-  const paddingLeft = 15 + (section.level * 15);
+  // 階層レベルに応じたインデント（レベル0はインデントなし、以降24pxずつ増加）
+  const indentOffset = section.level * 24;
 
   /**
    * 階層レベルに応じた背景色を計算
@@ -63,45 +69,74 @@ export const CategorySectionHeader: React.FC<CategorySectionHeaderProps> = ({
 
   const headerBackgroundColor = getBackgroundColor(section.level);
 
+  // 移動モード時と通常モード時でハンドラーを切り替え
+  const handlePress = () => {
+    if (isMoveMode && onTap) {
+      onTap(section.fullPath);
+    } else {
+      onToggle(section.fullPath);
+    }
+  };
+
+  // 長押しハンドラー（移動モード中は無効）
+  const handleLongPress = () => {
+    if (!isMoveMode && onLongPress) {
+      onLongPress(section.fullPath, section.category, section.fileCount);
+    }
+  };
+
   return (
     <TouchableOpacity
       style={[
-        styles.sectionHeader,
+        styles.sectionHeaderWrapper,
         {
-          backgroundColor: headerBackgroundColor,
-          borderBottomColor: colors.border,
-          paddingLeft,
+          paddingLeft: indentOffset,
         },
       ]}
-      onPress={() => onToggle(section.fullPath)}
+      onPress={handlePress}
+      onLongPress={handleLongPress}
       activeOpacity={0.7}
     >
-      {/* 展開/折りたたみアイコン（子要素がある場合のみ表示） */}
-      {hasChildren && (
-        <Ionicons
-          name={isExpanded ? 'chevron-down' : 'chevron-forward'}
-          size={20}
-          color={colors.text}
-          style={{ marginRight: spacing.xs }}
-        />
-      )}
-      <Text
+      <View
         style={[
-          styles.sectionHeaderText,
+          styles.sectionHeaderContent,
           {
-            ...typography.title,
-            color: colors.text,
+            backgroundColor: headerBackgroundColor,
+            borderBottomColor: colors.border,
           },
         ]}
       >
-        {section.category} ({section.fileCount})
-      </Text>
+        {/* 展開/折りたたみアイコン */}
+        {hasChildren ? (
+          <Ionicons
+            name={isExpanded ? 'chevron-down' : 'chevron-forward'}
+            size={20}
+            color={colors.text}
+            style={{ marginRight: spacing.xs }}
+          />
+        ) : null}
+        <Text
+          style={[
+            styles.sectionHeaderText,
+            {
+              ...typography.title,
+              color: colors.text,
+            },
+          ]}
+        >
+          {section.category} ({section.fileCount})
+        </Text>
+      </View>
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
-  sectionHeader: {
+  sectionHeaderWrapper: {
+    // 外側のコンテナ - インデント用の余白を設定
+  },
+  sectionHeaderContent: {
+    // 内側のコンテナ - 背景色と実際のコンテンツを表示
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 8,
