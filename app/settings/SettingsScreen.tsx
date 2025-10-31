@@ -240,25 +240,12 @@ function SettingsScreen() {
                 )}
 
                 <ListItem.Container>
-                  <ListItem.Title><Text style={{...typography.body, color: colors.text}}>ノートコンテキストをLLMに送信</Text></ListItem.Title>
+                  <ListItem.Title>ノートの文脈情報をLLMに送信</ListItem.Title>
                   <Switch
                     value={settings.sendFileContextToLLM}
                     onValueChange={(value: boolean) => updateSettings({ sendFileContextToLLM: value })}
                   />
                 </ListItem.Container>
-
-                {settings.sendFileContextToLLM && renderPicker(
-                  'コンテキスト階層の深さ',
-                  String(settings.llmContextMaxDepth),
-                  [
-                    { label: '1層 (現在)', value: '1' },
-                    { label: '2層', value: '2' },
-                    { label: '3層', value: '3' },
-                    { label: '5層', value: '5' },
-                    { label: '全階層', value: '-1' },
-                  ],
-                  (value) => updateSettings({ llmContextMaxDepth: Number(value) })
-                )}
               </>
             )}
           </>

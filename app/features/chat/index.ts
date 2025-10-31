@@ -12,6 +12,7 @@ import { ActiveScreenContextProvider, ActiveScreenContext, ChatServiceListener }
 import { FileRepository } from '@data/repositories/fileRepository';
 import WebSocketService from './services/websocketService';
 import { getOrCreateClientId } from './utils/clientId';
+import { useSettingsStore } from '../../settings/settingsStore';
 
 /**
  * シングルトンクラスとして機能し、アプリケーション全体でチャットの状態を管理します。
@@ -311,12 +312,18 @@ class ChatService {
    * 画面コンテキストからChatContextを構築
    */
   private async buildChatContext(screenContext: ActiveScreenContext | null): Promise<ChatContext> {
-    // 全ファイルとフォルダを取得してallFiles形式に変換
-    const allFilesData = await this.getAllFilesForContext();
+    // 設定を取得
+    const { settings } = useSettingsStore.getState();
+
+    // sendFileContextToLLMがtrueの場合のみ全ファイル情報を取得
+    const allFilesData = settings.sendFileContextToLLM
+      ? await this.getAllFilesForContext()
+      : undefined;
 
     const chatContext: ChatContext = {
       activeScreen: screenContext ?? undefined,
       allFiles: allFilesData,
+      sendFileContextToLLM: settings.sendFileContextToLLM,
     };
     return chatContext;
   }

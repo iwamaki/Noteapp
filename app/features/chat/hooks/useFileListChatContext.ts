@@ -6,7 +6,7 @@
  */
 
 import { useEffect, useRef } from 'react';
-import { ActiveScreenContextProvider, ActiveScreenContext, FileListItem } from '../types';
+import { ActiveScreenContextProvider, ActiveScreenContext } from '../types';
 import ChatService from '../index';
 import { logger } from '../../../utils/logger';
 import { CommandHandlerContext } from '../handlers/types';
@@ -41,21 +41,12 @@ export const useFileListChatContext = ({
   useEffect(() => {
     const contextProvider: ActiveScreenContextProvider = {
       getScreenContext: async (): Promise<ActiveScreenContext> => {
-        logger.debug('chatService', '[useFileListChatContext] Getting screen context', {
-          filesCount: filesRef.current.length,
-        });
+        logger.debug('chatService', '[useFileListChatContext] Getting screen context (no visibleFileList - using allFiles instead)');
 
-        // FileFlatをFileListItemに変換
-        const visibleFileList: FileListItem[] = filesRef.current.map(file => ({
-          title: file.title,
-          type: 'file' as const,
-          category: file.category,
-          tags: file.tags,
-        }));
-
+        // Note: visibleFileList は冗長なため廃止
+        // 全ファイル情報は allFiles として ChatService.buildChatContext() で送信される
         return {
           name: 'filelist',
-          visibleFileList,
         };
       },
     };

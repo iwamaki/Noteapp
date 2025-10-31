@@ -47,6 +47,7 @@ export interface ChatContext {
     category?: string;     // カテゴリー（階層パス形式: "研究/AI"）
     tags?: string[];       // タグ（柔軟な分類）
   }>;
+  sendFileContextToLLM?: boolean; // ファイルコンテキストをLLMに送信するかどうか
 }
 
 // LLMプロバイダー情報

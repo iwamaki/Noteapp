@@ -11,17 +11,10 @@ import { LLMCommand } from './llmService/types/types';
  * アクティブな画面のコンテキスト情報
  * LLMに共有したい画面固有の情報を保持します
  */
-export interface FileListItem {
-  title: string;         // ファイル名（フラット構造: パス不要）
-  type: 'file';         // フラット構造では常にfile
-  categories?: string[]; // カテゴリー（仮想フォルダ）
-  tags?: string[];       // タグ
-}
-
 export interface FilelistScreenContext {
   name: 'filelist';
-  visibleFileList: FileListItem[];
-  selectedFileList?: FileListItem[];
+  // Note: visibleFileList は廃止（冗長）
+  // 全ファイル情報は ChatContext.allFiles として送信される
 }
 
 export interface EditScreenContext {
