@@ -26,7 +26,7 @@ import { useKeyboardHeight } from '../../contexts/KeyboardHeightContext';
 import { FlatListProvider, useFlatListContext } from './context';
 import { useNavigation, NavigationProp, useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/types';
-import { FileFlat, FileCategorySectionHierarchical } from '@data/core/typesFlat';
+import { FileFlat } from '@data/core/typesFlat';
 import { logger } from '../../utils/logger';
 import { useSettingsStore } from '../../settings/settingsStore';
 import { FlatListItem } from './components/FlatListItem';
@@ -72,7 +72,7 @@ function FileListScreenFlatContent() {
     useCallback(() => {
       logger.info('file', 'FileListScreenFlat: Screen focused, refreshing data...');
       actions.refreshData();
-    }, [actions])
+    }, [actions.refreshData])
   );
 
   // === ハンドラの実装 ===
@@ -435,7 +435,7 @@ function FileListScreenFlatContent() {
           file={file}
           level={section.level}
           isSelected={isMoveSource}
-          isSelectionMode={false}
+          isSelectionMode={isMoveMode}
           onPress={() => {
             if (isMoveMode) {
               handleMoveTap(file, index, section.fullPath);
@@ -444,8 +444,6 @@ function FileListScreenFlatContent() {
             }
           }}
           onLongPress={() => handleLongPressFile(file)}
-          moveMode={isMoveMode}
-          moveIndex={isMoveMode ? index + 1 : undefined}
         />
       );
     },

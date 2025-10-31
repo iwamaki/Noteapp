@@ -81,7 +81,7 @@ export const CategorySectionHeader: React.FC<CategorySectionHeaderProps> = ({
       style={[
         styles.sectionHeader,
         {
-          backgroundColor: isMoveMode ? colors.primary + '30' : headerBackgroundColor,
+          backgroundColor: headerBackgroundColor,
           borderBottomColor: colors.border,
           paddingLeft,
         },
@@ -89,15 +89,8 @@ export const CategorySectionHeader: React.FC<CategorySectionHeaderProps> = ({
       onPress={handlePress}
       activeOpacity={0.7}
     >
-      {/* 移動モード時は移動アイコン、通常時は展開/折りたたみアイコン */}
-      {isMoveMode ? (
-        <Ionicons
-          name="arrow-forward-circle-outline"
-          size={20}
-          color={colors.primary}
-          style={{ marginRight: spacing.xs }}
-        />
-      ) : hasChildren ? (
+      {/* 展開/折りたたみアイコン */}
+      {hasChildren ? (
         <Ionicons
           name={isExpanded ? 'chevron-down' : 'chevron-forward'}
           size={20}
@@ -110,7 +103,7 @@ export const CategorySectionHeader: React.FC<CategorySectionHeaderProps> = ({
           styles.sectionHeaderText,
           {
             ...typography.title,
-            color: isMoveMode ? colors.primary : colors.text,
+            color: colors.text,
           },
         ]}
       >
