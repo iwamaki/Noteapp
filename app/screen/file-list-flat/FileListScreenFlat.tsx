@@ -407,8 +407,8 @@ function FileListScreenFlatContent() {
    * categoryGroupingService を使用
    */
   const sections = useMemo(
-    () => groupFilesByCategoryHierarchical(state.files),
-    [state.files]
+    () => groupFilesByCategoryHierarchical(state.files, settings.categorySortMethod),
+    [state.files, settings.categorySortMethod]
   );
 
   /**
