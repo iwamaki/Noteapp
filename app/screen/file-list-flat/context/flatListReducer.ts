@@ -21,6 +21,11 @@ export const initialFlatListState: FlatListState = {
   selectedFileIds: new Set(),
   isSelectionMode: false,
 
+  // 並び替えモード
+  isReorderMode: false,
+  reorderSourceFileId: null,
+  reorderCategoryPath: null,
+
   // フィルタリング・検索
   searchQuery: '',
   selectedCategories: [],
@@ -130,6 +135,37 @@ export function flatListReducer(
         ...state,
         isSelectionMode: false,
         selectedFileIds: new Set(),
+      };
+
+    // =============================================================================
+    // 並び替えモード
+    // =============================================================================
+    case 'ENTER_REORDER_MODE':
+      return {
+        ...state,
+        isReorderMode: true,
+        reorderCategoryPath: action.payload,
+        reorderSourceFileId: null,
+      };
+
+    case 'EXIT_REORDER_MODE':
+      return {
+        ...state,
+        isReorderMode: false,
+        reorderCategoryPath: null,
+        reorderSourceFileId: null,
+      };
+
+    case 'SELECT_REORDER_SOURCE':
+      return {
+        ...state,
+        reorderSourceFileId: action.payload,
+      };
+
+    case 'CLEAR_REORDER_SOURCE':
+      return {
+        ...state,
+        reorderSourceFileId: null,
       };
 
     // =============================================================================

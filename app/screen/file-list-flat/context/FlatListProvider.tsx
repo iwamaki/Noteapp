@@ -214,6 +214,30 @@ export const FlatListProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 
   /**
+   * ファイルの並び順を更新
+   */
+  const reorderFiles = useCallback(
+    async (reorderedFiles: FileFlat[]) => {
+      try {
+        logger.info('file', `Reordering ${reorderedFiles.length} files`);
+
+        const updatedFiles = await FileListUseCasesFlat.reorderFiles(reorderedFiles);
+
+        logger.info('file', `Files reordered: ${updatedFiles.length}`);
+
+        // 状態を更新
+        updatedFiles.forEach((file) => {
+          dispatch({ type: 'UPDATE_FILE', payload: file });
+        });
+      } catch (error: any) {
+        logger.error('file', `Failed to reorder files: ${error.message}`, error);
+        throw error;
+      }
+    },
+    []
+  );
+
+  /**
    * カテゴリーでフィルタリング
    */
   const filterByCategory = useCallback(async (categoryName: string) => {
@@ -287,6 +311,7 @@ export const FlatListProvider: React.FC<{ children: React.ReactNode }> = ({
       copySelectedFiles,
       updateFileCategory,
       updateFileTags,
+      reorderFiles,
       filterByCategory,
       filterByTag,
       search,
@@ -300,6 +325,7 @@ export const FlatListProvider: React.FC<{ children: React.ReactNode }> = ({
       copySelectedFiles,
       updateFileCategory,
       updateFileTags,
+      reorderFiles,
       filterByCategory,
       filterByTag,
       search,

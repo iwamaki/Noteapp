@@ -320,6 +320,7 @@ export class FileRepository {
         content: data.content ?? existingFile.content,
         tags: data.tags ?? existingFile.tags,
         category: data.category ?? existingFile.category,
+        order: data.order ?? existingFile.order,
         summary: data.summary ?? existingFile.summary,
         relatedNoteIds: data.relatedNoteIds ?? existingFile.relatedNoteIds,
         embedding: data.embedding ?? existingFile.embedding,

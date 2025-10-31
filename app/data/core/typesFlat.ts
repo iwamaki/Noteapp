@@ -29,6 +29,7 @@ export interface FileFlat {
   // ユーザー管理のメタデータ
   tags: string[];         // ユーザー指定のタグ（例: ["重要", "TODO"]）
   category: string;       // 階層パス形式のカテゴリー（例: "研究/AI/深層学習"）
+  order?: number;         // カテゴリー内での並び順（同じカテゴリー内でのみ有効）
 
   // LLM生成のメタデータ
   summary?: string;           // LLM生成の要約（短い概要）
@@ -53,6 +54,7 @@ export interface FileMetadataFlat {
   title: string;
   tags: string[];
   category: string;
+  order?: number;
   summary?: string;
   relatedNoteIds?: string[];
   embedding?: number[];
@@ -84,6 +86,7 @@ export interface UpdateFileDataFlat {
   content?: string;
   tags?: string[];
   category?: string;
+  order?: number;
   summary?: string;
   relatedNoteIds?: string[];
   embedding?: number[];

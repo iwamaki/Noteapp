@@ -30,6 +30,11 @@ export interface FlatListState {
   selectedFileIds: Set<string>;
   isSelectionMode: boolean;
 
+  // 並び替えモード
+  isReorderMode: boolean;
+  reorderSourceFileId: string | null;
+  reorderCategoryPath: string | null;
+
   // フィルタリング・検索
   searchQuery: string;
   selectedCategories: string[];
@@ -69,6 +74,12 @@ export type FlatListAction =
   | { type: 'DESELECT_ALL_FILES' }
   | { type: 'ENTER_SELECTION_MODE' }
   | { type: 'EXIT_SELECTION_MODE' }
+
+  // 並び替えモード
+  | { type: 'ENTER_REORDER_MODE'; payload: string }  // payload: categoryPath
+  | { type: 'EXIT_REORDER_MODE' }
+  | { type: 'SELECT_REORDER_SOURCE'; payload: string }  // payload: fileId
+  | { type: 'CLEAR_REORDER_SOURCE' }
 
   // フィルタリング・検索
   | { type: 'SET_SEARCH_QUERY'; payload: string }
@@ -111,6 +122,7 @@ export interface FlatListActions {
   // メタデータ操作
   updateFileCategory: (fileId: string, category: string) => Promise<void>;
   updateFileTags: (fileId: string, tags: string[]) => Promise<void>;
+  reorderFiles: (reorderedFiles: FileFlat[]) => Promise<void>;
 
   // フィルタリング
   filterByCategory: (categoryName: string) => Promise<void>;

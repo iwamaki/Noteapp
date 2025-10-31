@@ -18,7 +18,7 @@
  */
 
 import React, { useCallback, useMemo, useEffect, useState } from 'react';
-import { StyleSheet, SectionList, Alert, View, Text } from 'react-native';
+import { StyleSheet, SectionList, Alert, View, Text, TouchableOpacity } from 'react-native';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { MainContainer } from '../../components/MainContainer';
 import { CustomModal } from '../../components/CustomModal';
@@ -26,7 +26,7 @@ import { useKeyboardHeight } from '../../contexts/KeyboardHeightContext';
 import { FlatListProvider, useFlatListContext } from './context';
 import { useNavigation, NavigationProp, useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/types';
-import { FileFlat } from '@data/core/typesFlat';
+import { FileFlat, FileCategorySectionHierarchical } from '@data/core/typesFlat';
 import { logger } from '../../utils/logger';
 import { useSettingsStore } from '../../settings/settingsStore';
 import { FlatListItem } from './components/FlatListItem';
@@ -244,6 +244,23 @@ function FileListScreenFlatContent() {
   );
 
   /**
+   * 並び替えモード開始ハンドラ
+   */
+  const handleStartReorder = useCallback((file: FileFlat) => {
+    logger.info('file', `Starting reorder mode for category: ${file.category}, source file: ${file.id}`);
+    dispatch({ type: 'ENTER_REORDER_MODE', payload: file.category || '未分類' });
+    dispatch({ type: 'SELECT_REORDER_SOURCE', payload: file.id });
+  }, [dispatch]);
+
+  /**
+   * 並び替えモード終了ハンドラ
+   */
+  const handleCancelReorder = useCallback(() => {
+    logger.info('file', 'Canceling reorder mode');
+    dispatch({ type: 'EXIT_REORDER_MODE' });
+  }, [dispatch]);
+
+  /**
    * 作成実行
    */
   const handleCreate = useCallback(
@@ -281,6 +298,62 @@ function FileListScreenFlatContent() {
     sections,
   });
 
+  /**
+   * ファイルタップハンドラ（並び替えモード時）
+   */
+  const handleReorderTap = useCallback(
+    async (file: FileFlat, index: number) => {
+      // 移動元ファイルがセットされていない場合は何もしない
+      if (!state.reorderSourceFileId) {
+        logger.warn('file', 'Reorder source file not set');
+        return;
+      }
+
+      // 同じファイルをタップした場合は何もしない
+      if (file.id === state.reorderSourceFileId) {
+        logger.debug('file', 'Same file tapped, ignoring');
+        return;
+      }
+
+      logger.info('file', `Moving file to index: ${index}`);
+
+      // 現在のセクションデータから該当カテゴリーのファイルリストを取得
+      const targetSection = sections.find((s) => s.fullPath === state.reorderCategoryPath);
+      if (!targetSection) {
+        logger.error('file', 'Target category section not found');
+        return;
+      }
+
+      // 既にソート済みのdirectFilesを使用
+      const categoryFiles = targetSection.directFiles;
+
+      // 移動元ファイルのインデックスを取得
+      const sourceIndex = categoryFiles.findIndex((f) => f.id === state.reorderSourceFileId);
+      if (sourceIndex === -1) {
+        logger.error('file', 'Source file not found in category');
+        return;
+      }
+
+      // 配列を並び替え（切り取って挿入）
+      const reordered = [...categoryFiles];
+      const [movedFile] = reordered.splice(sourceIndex, 1);
+      reordered.splice(index, 0, movedFile);
+
+      // orderフィールドを付与
+      const filesWithOrder = reordered.map((f, i) => ({ ...f, order: i }));
+
+      try {
+        await actions.reorderFiles(filesWithOrder);
+        logger.info('file', 'Files reordered successfully');
+        dispatch({ type: 'EXIT_REORDER_MODE' });
+      } catch (error: any) {
+        logger.error('file', `Failed to reorder files: ${error.message}`, error);
+        Alert.alert('エラー', 'ファイルの並び替えに失敗しました');
+      }
+    },
+    [state.reorderSourceFileId, state.reorderCategoryPath, sections, actions, dispatch]
+  );
+
   // キーボード + ChatInputBarの高さを計算してコンテンツが隠れないようにする
   const chatBarOffset = chatInputBarHeight + keyboardHeight;
 
@@ -311,7 +384,6 @@ function FileListScreenFlatContent() {
 
   /**
    * セクションヘッダーのレンダリング
-   * CategorySectionHeader コンポーネントを使用
    */
   const renderSectionHeader = useCallback(
     ({ section }: { section: { category: string; fullPath: string; level: number; fileCount: number; parent: string | null; data: FileFlat[] } }) => {
@@ -351,19 +423,31 @@ function FileListScreenFlatContent() {
    * ファイルアイテムのレンダリング
    */
   const renderFileItem = useCallback(
-    ({ item: file, section }: { item: FileFlat; section: { level: number } }) => {
+    ({ item: file, index, section }: { item: FileFlat; index: number; section: { level: number; fullPath: string } }) => {
+      // 並び替えモード時の処理
+      const isReorderMode = state.isReorderMode && state.reorderCategoryPath === section.fullPath;
+      const isReorderSource = state.reorderSourceFileId === file.id;
+
       return (
         <FlatListItem
           file={file}
           level={section.level}
-          isSelected={false}
+          isSelected={isReorderSource}
           isSelectionMode={false}
-          onPress={() => handleSelectFile(file)}
+          onPress={() => {
+            if (isReorderMode) {
+              handleReorderTap(file, index);
+            } else {
+              handleSelectFile(file);
+            }
+          }}
           onLongPress={() => handleLongPressFile(file)}
+          reorderMode={isReorderMode}
+          reorderIndex={isReorderMode ? index + 1 : undefined}
         />
       );
     },
-    [handleSelectFile, handleLongPressFile]
+    [state.isReorderMode, state.reorderCategoryPath, state.reorderSourceFileId, handleSelectFile, handleLongPressFile, handleReorderTap]
   );
 
   // レンダリング時のデバッグログ
@@ -412,6 +496,23 @@ function FileListScreenFlatContent() {
         />
       )}
 
+      {/* 並び替えモード時のキャンセルボタン */}
+      {state.isReorderMode && (
+        <View style={[styles.reorderBar, { backgroundColor: colors.background }]}>
+          <Text style={{ fontSize: 14, color: colors.text }}>
+            移動先をタップしてください
+          </Text>
+          <TouchableOpacity
+            style={styles.cancelButton}
+            onPress={handleCancelReorder}
+          >
+            <Text style={{ fontSize: 14, color: colors.primary, fontWeight: '600' }}>
+              キャンセル
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       <CreateFileModal
         visible={state.modals.create.visible}
         onClose={() => dispatch({ type: 'CLOSE_CREATE_MODAL' })}
@@ -437,6 +538,7 @@ function FileListScreenFlatContent() {
         onRename={handleOpenRenameModal}
         onEditCategories={handleOpenCategoryEditModal}
         onEditTags={handleOpenTagEditModal}
+        onReorder={handleStartReorder}
       />
 
       <CustomModal
@@ -509,6 +611,28 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  reorderBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  cancelButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
   },
 });
 
