@@ -154,3 +154,28 @@ export interface FileCategorySectionHierarchical {
   fileCount: number;         // このカテゴリー配下の総ファイル数
   directFiles: FileFlat[];   // 直接このカテゴリーに属するファイル
 }
+
+// =============================================================================
+// Line-based Content Types
+// =============================================================================
+
+/**
+ * ファイルコンテンツの1行を表す
+ * - エディタやLLMによる行単位の編集を可能にするための基本単位
+ * - 改行コード（\r\n, \n, \r）は除去され、純粋な行内容のみを保持
+ */
+export interface FileLine {
+  lineNumber: number;     // 1-based行番号（エディタ表示に対応）
+  content: string;        // 改行コードを除いた行の内容
+}
+
+/**
+ * ファイルの全コンテンツを行の配列として表現
+ * - 行単位での編集、差分表示、AIによる部分修正などの高度な編集機能の基盤
+ * - content: stringの代替ではなく、補完的なビュー
+ */
+export interface FileContentLines {
+  fileId: string;         // ファイルID
+  totalLines: number;     // 総行数
+  lines: FileLine[];      // 行の配列
+}

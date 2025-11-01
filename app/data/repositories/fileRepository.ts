@@ -12,12 +12,14 @@ import type {
   FileFlat,
   CreateFileDataFlat,
   UpdateFileDataFlat,
+  FileContentLines,
 } from '../core/typesFlat';
 import { FileSystemV2Error, RepositoryError } from '../core/errors';
 import { CONTENT_DIR } from './storage/fileSystemPaths';
 import {
   readFileMetadata,
   readFileContent,
+  readFileContentAsLines,
   writeFileMetadata,
   writeFileContent,
   deleteFileDirectory,
@@ -157,6 +159,55 @@ export class FileRepository {
       throw new FileSystemV2Error(
         'Failed to get files by IDs',
         'GET_FILES_BY_IDS_ERROR',
+        e
+      );
+    }
+  }
+
+  /**
+   * Retrieves file content as an array of lines
+   *
+   * @param id - File ID
+   * @returns File content as lines or null if not found
+   *
+   * @example
+   * const result = await FileRepository.getContentAsLines('file-uuid-123');
+   * if (result) {
+   *   result.lines.forEach(line => {
+   *     console.log(`${line.lineNumber}: ${line.content}`);
+   *   });
+   * }
+   *
+   * @remarks
+   * - Line numbers are 1-based for editor compatibility
+   * - Newline characters are removed from each line
+   * - Empty lines are preserved
+   * - This is useful for line-by-line editing, diff display, and AI-assisted partial modifications
+   */
+  static async getContentAsLines(id: string): Promise<FileContentLines | null> {
+    try {
+      const fileDir = new Directory(CONTENT_DIR, id);
+
+      // Return null if directory doesn't exist
+      if (!(await fileDir.exists)) {
+        return null;
+      }
+
+      // Read lines
+      const lines = await readFileContentAsLines(fileDir);
+      if (lines === null) {
+        return null;
+      }
+
+      return {
+        fileId: id,
+        totalLines: lines.length,
+        lines,
+      };
+    } catch (e) {
+      throw new FileSystemV2Error(
+        `Failed to get file content as lines: ${id}`,
+        'GET_FILE_CONTENT_AS_LINES_ERROR',
         e
       );
     }
