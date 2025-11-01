@@ -49,6 +49,9 @@ class ChatService {
   private clientId: string | null = null;
   private isWebSocketInitialized: boolean = false;
 
+  // 添付ファイル
+  private attachedFile: { filename: string; content: string } | null = null;
+
   private constructor() {
     // プライベートコンストラクタでシングルトンを保証
   }
@@ -174,6 +177,46 @@ class ChatService {
   }
 
   /**
+   * ファイルをチャットに添付
+   * @param fileId 添付するファイルのID
+   */
+  public async attachFile(fileId: string): Promise<void> {
+    try {
+      const file = await FileRepository.getById(fileId);
+      if (!file) {
+        logger.error('chatService', `File not found: ${fileId}`);
+        return;
+      }
+
+      this.attachedFile = {
+        filename: file.title,
+        content: file.content,
+      };
+
+      logger.info('chatService', `File attached: ${file.title}`);
+      this.notifyAttachedFileChange();
+    } catch (error) {
+      logger.error('chatService', 'Error attaching file:', error);
+    }
+  }
+
+  /**
+   * 添付ファイルをクリア
+   */
+  public clearAttachedFile(): void {
+    this.attachedFile = null;
+    logger.info('chatService', 'Attached file cleared');
+    this.notifyAttachedFileChange();
+  }
+
+  /**
+   * 現在の添付ファイルを取得
+   */
+  public getAttachedFile(): { filename: string; content: string } | null {
+    return this.attachedFile;
+  }
+
+  /**
    * チャットメッセージを送信
    * @param message 送信するメッセージ
    */
@@ -244,6 +287,10 @@ class ChatService {
       this.handleError(error);
     } finally {
       this.setLoading(false);
+      // メッセージ送信後に添付ファイルをクリア
+      if (this.attachedFile) {
+        this.clearAttachedFile();
+      }
     }
   }
 
@@ -324,6 +371,7 @@ class ChatService {
       activeScreen: screenContext ?? undefined,
       allFiles: allFilesData,
       sendFileContextToLLM: settings.sendFileContextToLLM,
+      attachedFileContent: this.attachedFile ?? undefined,
     };
     return chatContext;
   }
@@ -413,6 +461,17 @@ class ChatService {
     this.listeners.forEach((listener) => {
       if (listener.onLoadingChange) {
         listener.onLoadingChange(this.isLoading);
+      }
+    });
+  }
+
+  /**
+   * 添付ファイルの変更を通知
+   */
+  private notifyAttachedFileChange(): void {
+    this.listeners.forEach((listener) => {
+      if (listener.onAttachedFileChange) {
+        listener.onAttachedFileChange(this.attachedFile);
       }
     });
   }

@@ -30,6 +30,7 @@ interface FileActionsModalProps {
   onEditCategories: (file: FileFlat) => void;
   onEditTags: (file: FileFlat) => void;
   onMove: (file: FileFlat) => void;
+  onAttachToChat: (file: FileFlat) => void;
 }
 
 interface ActionItem {
@@ -49,12 +50,21 @@ export const FileActionsModal: React.FC<FileActionsModalProps> = ({
   onEditCategories,
   onEditTags,
   onMove,
+  onAttachToChat,
 }) => {
   const { colors, typography, spacing } = useTheme();
 
   if (!file) return null;
 
   const actions: ActionItem[] = [
+    {
+      icon: 'chatbubble-outline',
+      label: 'チャットに添付',
+      onPress: () => {
+        onAttachToChat(file);
+        onClose();
+      },
+    },
     {
       icon: 'create-outline',
       label: '名前を変更',
