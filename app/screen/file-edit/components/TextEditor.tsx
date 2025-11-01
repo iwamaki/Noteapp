@@ -29,6 +29,14 @@ export const TextEditor: React.FC<TextEditorProps> = ({
     return content.split('\n');
   }, [content]);
 
+  // 行番号カラムの幅を計算（桁数に応じて動的に変更）
+  const lineNumberColumnWidth = useMemo(() => {
+    const maxLineNumber = lines.length;
+    const digits = maxLineNumber.toString().length;
+    // 1桁あたり8px + 右パディング（2px）
+    return digits * 8 + 2;
+  }, [lines.length]);
+
   // 各行の高さを更新
   const updateLineHeight = (index: number, height: number) => {
     setLineHeights(prev => {
@@ -43,12 +51,12 @@ export const TextEditor: React.FC<TextEditorProps> = ({
       flexDirection: 'row', // 横並びレイアウト
     },
     lineNumberColumn: {
-      width: 50,
       backgroundColor: colors.secondary,
       borderRightWidth: 1,
       borderRightColor: colors.border,
-      paddingRight: 8,
-      paddingLeft: 4,
+      paddingRight: 2,
+      paddingLeft: 0,
+      paddingTop: 4,
     },
     lineNumberWrapper: {
       justifyContent: 'flex-start',
@@ -76,6 +84,10 @@ export const TextEditor: React.FC<TextEditorProps> = ({
       color: colors.text,
       textAlignVertical: 'top',
       flex: 1,
+      paddingTop: 3,
+      paddingBottom: 3,
+      paddingLeft: 3,
+      paddingRight: 3,
     },
     // 隠し測定用Text（画面外に配置）
     hiddenMeasureContainer: {
@@ -111,7 +123,7 @@ export const TextEditor: React.FC<TextEditorProps> = ({
       )}
 
       {/* 行番号カラム */}
-      <View style={styles.lineNumberColumn}>
+      <View style={[styles.lineNumberColumn, { width: lineNumberColumnWidth }]}>
         {lines.map((_, i) => {
           const height = lineHeights[i] || typography.body.lineHeight;
           return (
