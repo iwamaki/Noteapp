@@ -389,7 +389,7 @@ function FileListScreenFlatContent() {
     logger.info('file', `Attaching file to chat: ${file.id} (${file.title})`);
     try {
       await ChatService.attachFile(file.id);
-      Alert.alert('成功', `「${file.title}」をチャットに添付しました`);
+      // 成功時はAlertを表示せず、UIの添付ファイル表示のみで通知
     } catch (error: any) {
       logger.error('file', `Failed to attach file to chat: ${error.message}`, error);
       Alert.alert('エラー', 'ファイルの添付に失敗しました');
