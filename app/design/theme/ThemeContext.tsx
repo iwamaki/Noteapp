@@ -70,7 +70,8 @@ const getTypographyForSize = (fontSize: 'small' | 'medium' | 'large' | 'xlarge')
   const subtitleSize = Math.round(16 * sizeMultiplier);
   const bodySize = Math.round(14 * sizeMultiplier);
   const captionSize = Math.round(12 * sizeMultiplier);
-  const headerSize = Math.round(16 * sizeMultiplier);
+  const headerSize = Math.round(18 * sizeMultiplier);
+  const categorySize = Math.round(16 * sizeMultiplier);
 
   // lineHeight倍率（可読性と行の揃いのバランス）
   const lineHeightMultiplier = 1.5;
@@ -97,6 +98,11 @@ const getTypographyForSize = (fontSize: 'small' | 'medium' | 'large' | 'xlarge')
     header: {
       fontSize: headerSize,
       lineHeight: Math.round(headerSize * lineHeightMultiplier),
+    },
+    category: {
+      fontSize: categorySize,
+      lineHeight: Math.round(categorySize * lineHeightMultiplier),
+      fontWeight: 'bold' as const,
     },
   };
 };

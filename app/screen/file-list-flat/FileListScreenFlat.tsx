@@ -75,6 +75,13 @@ function FileListScreenFlatContent() {
   const [showCategoryRenameModal, setShowCategoryRenameModal] = useState(false);
   const [categoryForRename, setCategoryForRename] = useState<{ path: string; name: string } | null>(null);
   const [categoryRenameImpact, setCategoryRenameImpact] = useState<CategoryImpact | null>(null);
+  // カテゴリー削除確認モーダルの状態
+  const [showCategoryDeleteConfirmModal, setShowCategoryDeleteConfirmModal] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<{
+    path: string;
+    name: string;
+    impact: CategoryImpact;
+  } | null>(null);
 
   // データ初期読み込み（初回マウント時のみ実行）
   useEffect(() => {
@@ -186,7 +193,6 @@ function FileListScreenFlatContent() {
           await actions.renameFile(file.id, newName);
           logger.info('file', `Successfully renamed file to ${newName}`);
           dispatch({ type: 'CLOSE_RENAME_MODAL' });
-          Alert.alert('成功', '名前を変更しました');
         } catch (error: any) {
           logger.error('file', `Failed to rename file to ${newName}: ${error.message}`, error);
           Alert.alert('エラー', error.message);
@@ -218,7 +224,6 @@ function FileListScreenFlatContent() {
         logger.info('file', 'Successfully updated category');
         setShowCategoryEditModal(false);
         setFileForCategoryEdit(null);
-        Alert.alert('成功', 'カテゴリーを更新しました');
       } catch (error: any) {
         logger.error('file', `Failed to update category: ${error.message}`, error);
         Alert.alert('エラー', error.message);
@@ -249,7 +254,6 @@ function FileListScreenFlatContent() {
         logger.info('file', 'Successfully updated tags');
         setShowTagEditModal(false);
         setFileForTagEdit(null);
-        Alert.alert('成功', 'タグを更新しました');
       } catch (error: any) {
         logger.error('file', `Failed to update tags: ${error.message}`, error);
         Alert.alert('エラー', error.message);
@@ -270,7 +274,7 @@ function FileListScreenFlatContent() {
   );
 
   /**
-   * カテゴリー削除ハンドラー
+   * カテゴリー削除確認モーダルを開く
    */
   const handleDeleteCategory = useCallback(
     async (categoryPath: string) => {
@@ -279,42 +283,39 @@ function FileListScreenFlatContent() {
       try {
         // 影響範囲を取得
         const impact = await CategoryOperationsService.getCategoryImpact(categoryPath);
+        const parts = categoryPath.split('/');
+        const categoryName = parts[parts.length - 1];
 
-        // 確認ダイアログ
-        const message = `「${categoryPath}」を削除しますか？\n\n⚠️ この操作は取り消せません\n\n削除される内容:\n• 直接属するファイル: ${impact.directFileCount}個${
-          impact.childCategories.length > 0
-            ? `\n• 子カテゴリー: ${impact.childCategories.length}個 (${impact.totalFileCount - impact.directFileCount}個のファイル)`
-            : ''
-        }\n━━━━━━━━━━━━━━━━━━\n合計: ${impact.totalFileCount}個のファイルが削除されます`;
-
-        Alert.alert('カテゴリー削除', message, [
-          {
-            text: 'キャンセル',
-            style: 'cancel',
-          },
-          {
-            text: '削除する',
-            style: 'destructive',
-            onPress: async () => {
-              try {
-                await CategoryOperationsService.deleteCategory(categoryPath);
-                logger.info('file', 'Category deleted successfully');
-                await actions.refreshData();
-                Alert.alert('成功', 'カテゴリーを削除しました');
-              } catch (error: any) {
-                logger.error('file', `Failed to delete category: ${error.message}`, error);
-                Alert.alert('エラー', error.message);
-              }
-            },
-          },
-        ]);
+        setCategoryToDelete({ path: categoryPath, name: categoryName, impact });
+        setShowCategoryDeleteConfirmModal(true);
       } catch (error: any) {
         logger.error('file', `Failed to get category impact: ${error.message}`, error);
         Alert.alert('エラー', error.message);
       }
     },
-    [actions]
+    []
   );
+
+  /**
+   * カテゴリー削除実行
+   */
+  const handleConfirmDeleteCategory = useCallback(async () => {
+    if (!categoryToDelete) return;
+
+    logger.info('file', `Attempting to delete category: ${categoryToDelete.path}`);
+    setShowCategoryDeleteConfirmModal(false);
+
+    try {
+      await CategoryOperationsService.deleteCategory(categoryToDelete.path);
+      logger.info('file', 'Category deleted successfully');
+      setCategoryToDelete(null);
+      await actions.refreshData();
+    } catch (error: any) {
+      logger.error('file', `Failed to delete category: ${error.message}`, error);
+      setCategoryToDelete(null);
+      Alert.alert('エラー', error.message);
+    }
+  }, [categoryToDelete, actions]);
 
   /**
    * カテゴリー名変更モーダルを開く
@@ -355,7 +356,6 @@ function FileListScreenFlatContent() {
         setCategoryForRename(null);
         setCategoryRenameImpact(null);
         await actions.refreshData();
-        Alert.alert('成功', 'カテゴリー名を変更しました');
       } catch (error: any) {
         logger.error('file', `Failed to rename category: ${error.message}`, error);
         Alert.alert('エラー', error.message);
@@ -605,7 +605,7 @@ function FileListScreenFlatContent() {
 
   return (
     <MainContainer
-      backgroundColor={colors.secondary}
+      backgroundColor={colors.background}
       isLoading={state.loading && state.files.length === 0}
     >
       {state.files.length === 0 && !state.loading ? (
@@ -756,6 +756,38 @@ function FileListScreenFlatContent() {
             setCategoryRenameImpact(null);
           }}
           onRename={handleRenameCategory}
+        />
+      )}
+
+      {/* カテゴリー削除確認モーダル */}
+      {categoryToDelete && (
+        <CustomModal
+          isVisible={showCategoryDeleteConfirmModal}
+          title="カテゴリー削除"
+          message={`「${categoryToDelete.path}」を削除しますか？\n\n⚠️ この操作は取り消せません\n\n削除される内容:\n• 直接属するファイル: ${categoryToDelete.impact.directFileCount}個${
+            categoryToDelete.impact.childCategories.length > 0
+              ? `\n• 子カテゴリー: ${categoryToDelete.impact.childCategories.length}個 (${categoryToDelete.impact.totalFileCount - categoryToDelete.impact.directFileCount}個のファイル)`
+              : ''
+          }\n━━━━━━━━━━━━━━━━━━\n合計: ${categoryToDelete.impact.totalFileCount}個のファイルが削除されます`}
+          buttons={[
+            {
+              text: 'キャンセル',
+              style: 'cancel',
+              onPress: () => {
+                setShowCategoryDeleteConfirmModal(false);
+                setCategoryToDelete(null);
+              },
+            },
+            {
+              text: '削除する',
+              style: 'destructive',
+              onPress: handleConfirmDeleteCategory,
+            },
+          ]}
+          onClose={() => {
+            setShowCategoryDeleteConfirmModal(false);
+            setCategoryToDelete(null);
+          }}
         />
       )}
     </MainContainer>

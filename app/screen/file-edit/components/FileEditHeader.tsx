@@ -13,7 +13,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useTheme } from '../../../design/theme/ThemeContext';
-import { responsive } from '../../../design/styles/commonStyles';
+import { responsive } from '../../../design/styles/responsive';
 import { Ionicons } from '@expo/vector-icons';
 
 interface FileEditHeaderProps {

@@ -100,7 +100,7 @@ function SettingsScreen() {
     () => StyleSheet.create({
       container: {
         flex: 1,
-        backgroundColor: colors.secondary,
+        backgroundColor: colors.background,
       },
       content: {
         padding: spacing.lg,

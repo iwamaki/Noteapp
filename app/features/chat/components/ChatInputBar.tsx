@@ -84,7 +84,7 @@ export const ChatInputBar: React.FC = () => {
         left: 0,
         right: 0,
         zIndex: 1,
-        backgroundColor: colors.secondary,
+        backgroundColor: colors.background,
         borderTopWidth: 1,
         borderTopColor: colors.tertiary,
         paddingBottom: insets.bottom,
@@ -129,7 +129,7 @@ export const ChatInputBar: React.FC = () => {
         paddingHorizontal: 10,
         paddingTop: 10,
         paddingBottom: 10,
-        backgroundColor: colors.secondary,
+        backgroundColor: colors.background,
       },
       expandButton: {
         alignSelf: 'flex-end',

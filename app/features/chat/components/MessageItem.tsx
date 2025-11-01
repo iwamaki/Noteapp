@@ -18,8 +18,10 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
     },
     aiMessage: {
       alignSelf: 'flex-start',
-      backgroundColor: colors.tertiary,
+      backgroundColor: colors.secondary,
       borderBottomLeftRadius: 4,
+      borderWidth: 1,
+      borderColor: colors.border,
     },
     baseText: {
       fontSize: typography.body.fontSize,

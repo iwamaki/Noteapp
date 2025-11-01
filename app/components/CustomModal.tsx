@@ -11,7 +11,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useTheme } from '../design/theme/ThemeContext';
-import { responsive } from '../design/styles/commonStyles';
+import { responsive } from '../design/styles/responsive';
 
 interface CustomModalButton {
   text: string;
@@ -46,7 +46,7 @@ export const CustomModal: React.FC<CustomModalProps> = ({
       backgroundColor: colors.overlay, // Semi-transparent overlay
     },
     modalView: {
-      backgroundColor: colors.secondary,
+      backgroundColor: colors.background,
       borderRadius: responsive.getResponsiveSize(10, 15, 20),
       paddingVertical: spacing.lg,
       alignItems: 'stretch',
@@ -110,7 +110,7 @@ export const CustomModal: React.FC<CustomModalProps> = ({
       color: colors.white,
     },
     cancelButton: {
-      backgroundColor: colors.tertiary,
+      backgroundColor: colors.secondary,
       borderWidth: 1,
       borderColor: colors.border,
     },

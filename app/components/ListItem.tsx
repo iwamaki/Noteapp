@@ -5,7 +5,7 @@
  */
 import React from 'react';
 import { TouchableOpacity, Text, View, StyleSheet, TextStyle } from 'react-native';
-import { responsive } from '../design/styles/commonStyles';
+import { responsive } from '../design/styles/responsive';
 import { useTheme } from '../design/theme/ThemeContext';
 
 // ============================================================
@@ -67,7 +67,7 @@ const ListItemContainer: React.FC<ListItemContainerProps> = ({
     },
     bottomLine: {
       height: 2,
-      backgroundColor: colors.border,
+      backgroundColor: colors.tertiary,
       position: 'absolute',
       bottom: 0,
       left: 0,
@@ -121,7 +121,7 @@ const ListItemTitle: React.FC<ListItemTitleProps> = ({ children, numberOfLines =
 
   const styles = StyleSheet.create({
     title: {
-      ...typography.title,
+      ...typography.body,
       marginBottom: spacing.xs,
       color: colors.text,
     },

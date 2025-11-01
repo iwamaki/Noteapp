@@ -50,21 +50,44 @@ export const CategorySectionHeader: React.FC<CategorySectionHeaderProps> = ({
   onLongPress,
   isMoveMode = false,
 }) => {
-  const { colors, spacing, typography } = useTheme();
+  const { colors, spacing, typography, themeMode } = useTheme();
 
   // 階層レベルに応じたインデント（レベル0はインデントなし、以降24pxずつ増加）
   const indentOffset = section.level * 24;
 
   /**
    * 階層レベルに応じた背景色を計算
-   * tertiary色に透明度を付けて、レベルが深くなるほど透明度を上げる（薄くなる）
+   * secondary色をベースに、レベルが深くなるほど明度を変化させる（完全不透明）
+   * - ライトテーマ: レベルが深いほど明るくする（白色を混ぜる）
+   * - ダークテーマ: レベルが深いほど暗くする（黒色を混ぜる）
    */
   const getBackgroundColor = (level: number): string => {
-    const baseOpacity = 0.8; // レベル0: 80%の不透明度
-    const decrement = 0.15; // レベルごとに15%薄くする
-    const opacity = Math.max(0.2, baseOpacity - (level * decrement));
-    const opacityHex = Math.round(opacity * 255).toString(16).padStart(2, '0');
-    return colors.tertiary + opacityHex;
+    // secondary色からRGB値を抽出
+    const hex = colors.secondary.replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+
+    // レベルに応じた色変化の係数
+    const changeFactor = Math.min(level * 0.15, 0.6); // 最大60%まで変化させる
+
+    let newR: number, newG: number, newB: number;
+
+    if (themeMode === 'dark') {
+      // ダークテーマ: 黒色を混ぜて暗くする
+      newR = Math.round(r * (1 - changeFactor));
+      newG = Math.round(g * (1 - changeFactor));
+      newB = Math.round(b * (1 - changeFactor));
+    } else {
+      // ライトテーマ: 白色を混ぜて明るくする
+      newR = Math.round(r + (255 - r) * changeFactor);
+      newG = Math.round(g + (255 - g) * changeFactor);
+      newB = Math.round(b + (255 - b) * changeFactor);
+    }
+
+    // RGB値を16進数に変換
+    const toHex = (value: number) => value.toString(16).padStart(2, '0');
+    return `#${toHex(newR)}${toHex(newG)}${toHex(newB)}`;
   };
 
   const headerBackgroundColor = getBackgroundColor(section.level);
@@ -119,7 +142,7 @@ export const CategorySectionHeader: React.FC<CategorySectionHeaderProps> = ({
           style={[
             styles.sectionHeaderText,
             {
-              ...typography.title,
+              ...typography.category,
               color: colors.text,
             },
           ]}

@@ -142,9 +142,9 @@ export const useCustomHeader = () => {
     },
     // ヘッダー自体のスタイルもテーマに合わせる
     headerStyle: {
-      backgroundColor: colors.secondary,
-      borderBottomWidth: 2,
-      borderBottomColor: colors.tertiary,
+      backgroundColor: colors.background,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
     },
     headerTintColor: colors.text,
   });
