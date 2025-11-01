@@ -65,23 +65,38 @@ const getTypographyForSize = (fontSize: 'small' | 'medium' | 'large' | 'xlarge')
     xlarge: 1.25,
   }[fontSize];
 
+  // 基本フォントサイズ
+  const titleSize = Math.round(18 * sizeMultiplier);
+  const subtitleSize = Math.round(16 * sizeMultiplier);
+  const bodySize = Math.round(14 * sizeMultiplier);
+  const captionSize = Math.round(12 * sizeMultiplier);
+  const headerSize = Math.round(16 * sizeMultiplier);
+
+  // lineHeight倍率（可読性と行の揃いのバランス）
+  const lineHeightMultiplier = 1.5;
+
   return {
     title: {
-      fontSize: Math.round(18 * sizeMultiplier),
+      fontSize: titleSize,
+      lineHeight: Math.round(titleSize * lineHeightMultiplier),
       fontWeight: 'bold' as const,
     },
     subtitle: {
-      fontSize: Math.round(16 * sizeMultiplier),
+      fontSize: subtitleSize,
+      lineHeight: Math.round(subtitleSize * lineHeightMultiplier),
       fontWeight: '600' as const,
     },
     body: {
-      fontSize: Math.round(14 * sizeMultiplier),
+      fontSize: bodySize,
+      lineHeight: Math.round(bodySize * lineHeightMultiplier),
     },
     caption: {
-      fontSize: Math.round(12 * sizeMultiplier),
+      fontSize: captionSize,
+      lineHeight: Math.round(captionSize * lineHeightMultiplier),
     },
     header: {
-      fontSize: Math.round(16 * sizeMultiplier),
+      fontSize: headerSize,
+      lineHeight: Math.round(headerSize * lineHeightMultiplier),
     },
   };
 };
