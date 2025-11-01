@@ -60,6 +60,10 @@ class LLMCommand(BaseModel):
     category: Optional[str] = None  # カテゴリー（階層パス形式: "研究/AI"）
     tags: Optional[List[str]] = None  # タグ
 
+    # 行ベース編集用フィールド（edit_file_linesツール用）
+    start_line: Optional[int] = None  # 開始行（1-based, inclusive）
+    end_line: Optional[int] = None  # 終了行（1-based, inclusive）
+
 
 class ChatResponse(BaseModel):
     message: str

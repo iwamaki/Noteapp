@@ -28,6 +28,7 @@ class AgentCommandExtractor:
             'delete_file': self._handle_delete_file,
             'rename_file': self._handle_rename_file,
             'edit_file': self._handle_edit_file,
+            'edit_file_lines': self._handle_edit_file_lines,
             'read_file': self._handle_read_file,
         }
 
@@ -176,6 +177,40 @@ class AgentCommandExtractor:
             action='edit_file',
             title=title,
             content=content
+        )
+
+    def _handle_edit_file_lines(self, tool_input: Dict[str, Any]) -> Optional[LLMCommand]:
+        """edit_file_linesツールの処理（部分編集）
+
+        Args:
+            tool_input: ツールの入力パラメータ
+
+        Returns:
+            LLMCommand
+        """
+        title = tool_input.get('title')
+        start_line = tool_input.get('start_line')
+        end_line = tool_input.get('end_line')
+        content = tool_input.get('content', '')
+
+        if not title:
+            logger.warning("edit_file_lines: title is missing")
+            return None
+
+        if start_line is None or end_line is None:
+            logger.warning("edit_file_lines: start_line or end_line is missing")
+            return None
+
+        # Convert float to int if needed (LLM sometimes returns float)
+        start_line_int = int(start_line)
+        end_line_int = int(end_line)
+
+        return LLMCommand(
+            action='edit_file_lines',
+            title=title,
+            content=content,
+            start_line=start_line_int,
+            end_line=end_line_int
         )
 
     def _handle_read_file(self, tool_input: Dict[str, Any]) -> Optional[LLMCommand]:

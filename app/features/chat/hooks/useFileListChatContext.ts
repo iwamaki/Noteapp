@@ -13,6 +13,7 @@ import { CommandHandlerContext } from '../handlers/types';
 import { createFileHandlerFlat } from '../handlers/createFileHandlerFlat';
 import { deleteFileHandlerFlat } from '../handlers/deleteFileHandlerFlat';
 import { renameFileHandlerFlat } from '../handlers/renameFileHandlerFlat';
+import { editFileLinesHandler } from '../handlers/editFileLinesHandler';
 import type { FileFlat } from '@data/core/typesFlat';
 
 interface UseFileListChatContextParams {
@@ -62,6 +63,7 @@ export const useFileListChatContext = ({
       create_file: (command: any) => createFileHandlerFlat(command, handlerContext),
       delete_file: (command: any) => deleteFileHandlerFlat(command, handlerContext),
       rename_file: (command: any) => renameFileHandlerFlat(command, handlerContext),
+      edit_file_lines: (command: any) => editFileLinesHandler(command, handlerContext),
     };
 
     logger.debug('chatService', '[useFileListChatContext] Registering context provider and handlers');
