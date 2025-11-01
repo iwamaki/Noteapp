@@ -4,14 +4,13 @@
  * @description
  * ファイルに紐づくカテゴリーを編集するモーダル。
  * 階層パス形式で単一のカテゴリーを入力可能（例: "研究/AI/深層学習"）。
- * CustomModalを活用してUI統一。
+ * InputFormModalを活用してUI統一。
  */
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { StyleSheet, Text } from 'react-native';
-import { CustomInlineInput } from '../../../components/CustomInlineInput';
 import { useTheme } from '../../../design/theme/ThemeContext';
-import { CustomModal } from '../../../components/CustomModal';
+import { InputFormModal } from '../../../components/InputFormModal';
 
 interface CategoryEditModalProps {
   visible: boolean;
@@ -29,7 +28,11 @@ export const CategoryEditModal: React.FC<CategoryEditModalProps> = ({
   onSave,
 }) => {
   const { colors, typography, spacing } = useTheme();
-  const [inputValue, setInputValue] = useState('');
+
+  const handleSave = (category: string) => {
+    onSave(category);
+    onClose();
+  };
 
   const styles = StyleSheet.create({
     hint: {
@@ -40,48 +43,19 @@ export const CategoryEditModal: React.FC<CategoryEditModalProps> = ({
     },
   });
 
-  useEffect(() => {
-    if (visible) {
-      setInputValue(initialCategory);
-    }
-  }, [visible, initialCategory]);
-
-  const handleSave = () => {
-    const category = inputValue.trim();
-    onSave(category);
-    onClose();
-  };
-
   return (
-    <CustomModal
-      isVisible={visible}
+    <InputFormModal
+      visible={visible}
       title="カテゴリーを編集"
       message={`「${fileName}」のカテゴリーを編集します。`}
+      initialValue={initialCategory}
+      placeholder="例: 研究/AI/深層学習"
       onClose={onClose}
-      buttons={[
-        {
-          text: 'キャンセル',
-          style: 'cancel',
-          onPress: onClose,
-        },
-        {
-          text: '保存',
-          style: 'default',
-          onPress: handleSave,
-        },
-      ]}
+      onSubmit={handleSave}
     >
-      <CustomInlineInput
-        placeholder="例: 研究/AI/深層学習"
-        value={inputValue}
-        onChangeText={setInputValue}
-        onClear={() => setInputValue('')}
-        autoFocus
-        onSubmitEditing={handleSave}
-      />
       <Text style={styles.hint}>
         階層構造を表すには「/」で区切ってください（例: 研究/AI）
       </Text>
-    </CustomModal>
+    </InputFormModal>
   );
 };

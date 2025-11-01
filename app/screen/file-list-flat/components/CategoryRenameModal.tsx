@@ -6,11 +6,10 @@
  * 影響範囲を表示し、配下のファイル・子カテゴリーも一緒に更新される。
  */
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { CustomInlineInput } from '../../../components/CustomInlineInput';
 import { useTheme } from '../../../design/theme/ThemeContext';
-import { CustomModal } from '../../../components/CustomModal';
+import { InputFormModal } from '../../../components/InputFormModal';
 import { CategoryImpact } from '@data/services/categoryOperationsService';
 
 interface CategoryRenameModalProps {
@@ -31,23 +30,11 @@ export const CategoryRenameModal: React.FC<CategoryRenameModalProps> = ({
   onRename,
 }) => {
   const { colors, typography, spacing } = useTheme();
-  const [inputValue, setInputValue] = useState(categoryName);
 
-  useEffect(() => {
-    if (visible) {
-      setInputValue(categoryName);
-    }
-  }, [visible, categoryName]);
-
-  const handleRename = () => {
-    const trimmedValue = inputValue.trim();
-    if (!trimmedValue || trimmedValue === categoryName) {
-      return;
-    }
-
+  const handleRename = (newName: string) => {
     // 新しいパスを構築
     const parts = categoryPath.split('/');
-    parts[parts.length - 1] = trimmedValue;
+    parts[parts.length - 1] = newName;
     const newPath = parts.join('/');
 
     onRename(newPath);
@@ -76,33 +63,17 @@ export const CategoryRenameModal: React.FC<CategoryRenameModalProps> = ({
   });
 
   return (
-    <CustomModal
-      isVisible={visible}
+    <InputFormModal
+      visible={visible}
       title="カテゴリー名を変更"
       message="新しいカテゴリー名を入力してください。"
+      initialValue={categoryName}
+      placeholder="新しいカテゴリー名"
       onClose={onClose}
-      buttons={[
-        {
-          text: 'キャンセル',
-          style: 'cancel',
-          onPress: onClose,
-        },
-        {
-          text: '変更',
-          style: 'default',
-          onPress: handleRename,
-        },
-      ]}
+      onSubmit={handleRename}
+      submitButtonText="変更"
+      validateInput={(value) => value.length > 0}
     >
-      <CustomInlineInput
-        placeholder="新しいカテゴリー名"
-        value={inputValue}
-        onChangeText={setInputValue}
-        onClear={() => setInputValue('')}
-        autoFocus
-        onSubmitEditing={handleRename}
-      />
-
       {/* 影響範囲の表示 */}
       {impact && impact.totalFileCount > 0 && (
         <View style={styles.impactInfo}>
@@ -121,6 +92,6 @@ export const CategoryRenameModal: React.FC<CategoryRenameModalProps> = ({
           </Text>
         </View>
       )}
-    </CustomModal>
+    </InputFormModal>
   );
 };
