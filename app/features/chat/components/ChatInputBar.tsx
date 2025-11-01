@@ -32,6 +32,8 @@ export const ChatInputBar: React.FC = () => {
     chatAreaHeight,
     panResponder,
     isResizing,
+    attachedFile,
+    clearAttachedFile,
   } = useChat();
   const [inputText, setInputText] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
@@ -89,6 +91,33 @@ export const ChatInputBar: React.FC = () => {
         shadowOpacity: 0.3,
         shadowRadius: 5,
         elevation: 5, // For Android
+      },
+      attachedFileWrapper: {
+        paddingVertical: 8,
+        paddingHorizontal: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.tertiary,
+        alignItems: 'center',
+        justifyContent: 'center',
+      },
+      attachedFileContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: `${colors.primary}15`, // プライマリカラーの薄い背景
+        paddingHorizontal: 12,
+        paddingVertical: 4,
+        borderRadius: 16, // Pill型
+        alignSelf: 'flex-start', // 横幅を内容に合わせる
+        borderWidth: 1,
+        borderColor: `${colors.primary}40`,
+      },
+      attachedFileIcon: {
+        marginRight: 6,
+      },
+      attachedFileName: {
+        fontSize: 12,
+        color: colors.primary,
+        fontWeight: '600',
       },
       inputArea: {
         flexDirection: 'row',
@@ -151,6 +180,27 @@ export const ChatInputBar: React.FC = () => {
             messageAreaHeight={chatAreaHeight}
             panHandlers={panResponder.panHandlers}
           />
+        )}
+
+        {/* 添付ファイル表示 */}
+        {attachedFile && (
+          <View style={styles.attachedFileWrapper}>
+            <TouchableOpacity
+              style={styles.attachedFileContainer}
+              onPress={clearAttachedFile}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name="document-text"
+                size={14}
+                color={colors.primary}
+                style={styles.attachedFileIcon}
+              />
+              <Text style={styles.attachedFileName} numberOfLines={1}>
+                {attachedFile.filename}
+              </Text>
+            </TouchableOpacity>
+          </View>
         )}
 
         {/* 入力エリア（常に表示） */}

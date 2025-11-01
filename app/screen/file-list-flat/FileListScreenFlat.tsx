@@ -43,6 +43,7 @@ import { useCategoryCollapse } from './hooks/useCategoryCollapse';
 import { useFileListChatContext } from '../../features/chat/hooks/useFileListChatContext';
 import { groupFilesByCategoryHierarchical } from '@data/services/categoryGroupingService';
 import { CategoryOperationsService, CategoryImpact } from '@data/services/categoryOperationsService';
+import ChatService from '../../features/chat';
 
 function FileListScreenFlatContent() {
   const { colors, spacing } = useTheme();
@@ -382,6 +383,20 @@ function FileListScreenFlatContent() {
   }, [dispatch]);
 
   /**
+   * チャット添付ハンドラ
+   */
+  const handleAttachToChat = useCallback(async (file: FileFlat) => {
+    logger.info('file', `Attaching file to chat: ${file.id} (${file.title})`);
+    try {
+      await ChatService.attachFile(file.id);
+      Alert.alert('成功', `「${file.title}」をチャットに添付しました`);
+    } catch (error: any) {
+      logger.error('file', `Failed to attach file to chat: ${error.message}`, error);
+      Alert.alert('エラー', 'ファイルの添付に失敗しました');
+    }
+  }, []);
+
+  /**
    * 作成実行
    */
   const handleCreate = useCallback(
@@ -661,6 +676,7 @@ function FileListScreenFlatContent() {
         onEditCategories={handleOpenCategoryEditModal}
         onEditTags={handleOpenTagEditModal}
         onMove={handleStartMove}
+        onAttachToChat={handleAttachToChat}
       />
 
       <CustomModal
