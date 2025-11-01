@@ -23,7 +23,7 @@ export class ConversationHistory {
   addExchange(
     userMessage: string,
     aiResponse: string,
-    attachedFile?: { filename: string; content: string }
+    attachedFiles?: Array<{ filename: string; content: string }>
   ): void {
     const timestamp = new Date();
 
@@ -31,7 +31,7 @@ export class ConversationHistory {
       role: 'user',
       content: userMessage,
       timestamp,
-      attachedFile
+      attachedFiles: attachedFiles && attachedFiles.length > 0 ? attachedFiles : undefined
     });
 
     this.addMessage({

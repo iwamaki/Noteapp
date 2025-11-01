@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Text,
+  ScrollView,
 } from 'react-native';
 import { CustomInlineInput } from '../../../components/CustomInlineInput';
 import { Ionicons } from '@expo/vector-icons';
@@ -32,8 +33,8 @@ export const ChatInputBar: React.FC = () => {
     chatAreaHeight,
     panResponder,
     isResizing,
-    attachedFile,
-    clearAttachedFile,
+    attachedFiles,
+    removeAttachedFile,
   } = useChat();
   const [inputText, setInputText] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
@@ -98,17 +99,18 @@ export const ChatInputBar: React.FC = () => {
         paddingHorizontal: 10,
         borderBottomWidth: 1,
         borderBottomColor: colors.tertiary,
-        alignItems: 'center',
-        justifyContent: 'center',
+      },
+      attachedFilesScrollView: {
+        flexDirection: 'row',
       },
       attachedFileContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: `${colors.primary}15`, // プライマリカラーの薄い背景
         paddingHorizontal: 12,
-        paddingVertical: 4,
+        paddingVertical: 6,
         borderRadius: 16, // Pill型
-        alignSelf: 'flex-start', // 横幅を内容に合わせる
+        marginRight: 8,
         borderWidth: 1,
         borderColor: `${colors.primary}40`,
       },
@@ -119,6 +121,7 @@ export const ChatInputBar: React.FC = () => {
         fontSize: 12,
         color: colors.primary,
         fontWeight: '600',
+        maxWidth: 120,
       },
       inputArea: {
         flexDirection: 'row',
@@ -183,23 +186,32 @@ export const ChatInputBar: React.FC = () => {
         )}
 
         {/* 添付ファイル表示 */}
-        {attachedFile && (
+        {attachedFiles.length > 0 && (
           <View style={styles.attachedFileWrapper}>
-            <TouchableOpacity
-              style={styles.attachedFileContainer}
-              onPress={clearAttachedFile}
-              activeOpacity={0.7}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.attachedFilesScrollView}
             >
-              <Ionicons
-                name="document-text"
-                size={14}
-                color={colors.primary}
-                style={styles.attachedFileIcon}
-              />
-              <Text style={styles.attachedFileName} numberOfLines={1}>
-                {attachedFile.filename}
-              </Text>
-            </TouchableOpacity>
+              {attachedFiles.map((file, index) => (
+                <TouchableOpacity
+                  key={`${file.filename}-${index}`}
+                  style={styles.attachedFileContainer}
+                  onPress={() => removeAttachedFile(index)}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons
+                    name="document-text"
+                    size={14}
+                    color={colors.primary}
+                    style={styles.attachedFileIcon}
+                  />
+                  <Text style={styles.attachedFileName} numberOfLines={1}>
+                    {file.filename}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           </View>
         )}
 

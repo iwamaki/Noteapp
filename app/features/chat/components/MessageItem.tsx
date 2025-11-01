@@ -135,18 +135,25 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
       <View style={containerStyle}>
         <Markdown style={markdownStyles} rules={markdownRules}>{message.content}</Markdown>
       </View>
-      {message.attachedFile && (
-        <View style={[styles.attachedFileContainer, message.role === 'user' ? styles.attachedFileContainerUser : styles.attachedFileContainerAI]}>
-          <Ionicons
-            name="document-text"
-            size={12}
-            color={colors.primary}
-            style={styles.attachedFileIcon}
-          />
-          <Text style={styles.attachedFileName} numberOfLines={1}>
-            {message.attachedFile.filename}
-          </Text>
-        </View>
+      {message.attachedFiles && message.attachedFiles.length > 0 && (
+        <>
+          {message.attachedFiles.map((file, index) => (
+            <View
+              key={`${file.filename}-${index}`}
+              style={[styles.attachedFileContainer, message.role === 'user' ? styles.attachedFileContainerUser : styles.attachedFileContainerAI]}
+            >
+              <Ionicons
+                name="document-text"
+                size={12}
+                color={colors.primary}
+                style={styles.attachedFileIcon}
+              />
+              <Text style={styles.attachedFileName} numberOfLines={1}>
+                {file.filename}
+              </Text>
+            </View>
+          ))}
+        </>
       )}
     </>
   );

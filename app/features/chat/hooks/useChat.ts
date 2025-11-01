@@ -25,7 +25,7 @@ export const useChat = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
-  const [attachedFile, setAttachedFile] = useState<{ filename: string; content: string } | null>(null);
+  const [attachedFiles, setAttachedFiles] = useState<Array<{ filename: string; content: string }>>([]);
   const { settings } = useSettingsStore();
 
   const chatAreaHeight = useRef(new Animated.Value(CHAT_AREA_INITIAL_HEIGHT)).current;
@@ -80,7 +80,7 @@ export const useChat = () => {
     // 初期状態を取得
     setMessages(ChatService.getMessages());
     setIsLoading(ChatService.getIsLoading());
-    setAttachedFile(ChatService.getAttachedFile());
+    setAttachedFiles(ChatService.getAttachedFiles());
 
     // リスナーを登録
     ChatService.subscribe(listenerId, {
@@ -92,9 +92,9 @@ export const useChat = () => {
         logger.debug('chat', '[useChat] Loading state changed', { loading });
         setIsLoading(loading);
       },
-      onAttachedFileChange: (file) => {
-        logger.debug('chat', '[useChat] Attached file changed', { file: file?.filename });
-        setAttachedFile(file);
+      onAttachedFileChange: (files) => {
+        logger.debug('chat', '[useChat] Attached files changed', { count: files.length });
+        setAttachedFiles(files);
       },
     });
 
@@ -115,9 +115,14 @@ export const useChat = () => {
     ChatService.resetChat();
   }, []);
 
-  const clearAttachedFile = useCallback(() => {
-    logger.debug('chat', '[useChat] clearAttachedFile called');
-    ChatService.clearAttachedFile();
+  const clearAttachedFiles = useCallback(() => {
+    logger.debug('chat', '[useChat] clearAttachedFiles called');
+    ChatService.clearAttachedFiles();
+  }, []);
+
+  const removeAttachedFile = useCallback((index: number) => {
+    logger.debug('chat', '[useChat] removeAttachedFile called', { index });
+    ChatService.removeAttachedFile(index);
   }, []);
 
   return {
@@ -128,7 +133,8 @@ export const useChat = () => {
     chatAreaHeight,
     panResponder,
     isResizing,
-    attachedFile,
-    clearAttachedFile,
+    attachedFiles,
+    clearAttachedFiles,
+    removeAttachedFile,
   };
 };

@@ -4,10 +4,10 @@ export interface ChatMessage {
   role: 'user' | 'ai' | 'system';
   content: string;
   timestamp: Date;
-  attachedFile?: {
+  attachedFiles?: Array<{
     filename: string;
     content: string;
-  };
+  }>;
 }
 
 // チャットコンテキスト
@@ -26,10 +26,10 @@ export interface ChatContext {
     size?: string;
     type?: string;
   };
-  attachedFileContent?: {
+  attachedFileContent?: Array<{
     filename: string;
     content: string;
-  };
+  }>;
   isEditMode?: boolean;
   selectedFiles?: string[];
   timestamp?: string;

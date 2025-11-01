@@ -52,5 +52,5 @@ export interface ChatServiceListener {
   /** ローディング状態が変更されたときに呼ばれる */
   onLoadingChange?: (isLoading: boolean) => void;
   /** 添付ファイルが変更されたときに呼ばれる */
-  onAttachedFileChange?: (file: { filename: string; content: string } | null) => void;
+  onAttachedFileChange?: (files: Array<{ filename: string; content: string }>) => void;
 }
