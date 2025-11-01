@@ -14,7 +14,7 @@ export const CustomInlineInput: React.FC<CustomInlineInputProps> = ({
   onClear,
   ...rest
 }) => {
-  const { colors, typography, spacing } = useTheme();
+  const { colors, typography } = useTheme();
 
   // テキストが入力されているかチェック
   const hasValue = value && value.toString().length > 0;

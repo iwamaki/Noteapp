@@ -5,7 +5,7 @@
 import { logger } from './logger';
 
 // Placeholder types for now
-type TreeNode = any;
+// type TreeNode = any;
 
 /**
  * A debug utility to ensure consistency between the data in storage and the data in the UI tree.
@@ -17,21 +17,7 @@ type TreeNode = any;
  * @param treeNodes The tree structure from the UI state.
  * @throws An error if an inconsistency is detected.
  */
-/**
- * Recursively collects all nodes from the tree, including children of collapsed folders.
- */
-const collectAllNodes = (nodes: TreeNode[]): TreeNode[] => {
-  const result: TreeNode[] = [];
-  for (const node of nodes) {
-    result.push(node);
-    if (node.children.length > 0) {
-      result.push(...collectAllNodes(node.children));
-    }
-  }
-  return result;
-};
-
-export const checkTreeConsistency = async (treeNodes: TreeNode[]): Promise<void> => {
+export const checkTreeConsistency = async (): Promise<void> => {
   // TODO: Re-implement for flat structure
   logger.warn('system', 'checkTreeConsistency is disabled for flat structure migration');
   return;

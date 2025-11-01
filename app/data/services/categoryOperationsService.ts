@@ -217,6 +217,7 @@ export class CategoryOperationsService {
     }
 
     // 禁止文字チェック
+    // eslint-disable-next-line no-control-regex
     const invalidChars = /[<>:"|?*\x00-\x1F]/;
     if (invalidChars.test(trimmed)) {
       return { valid: false, error: 'カテゴリー名に使用できない文字が含まれています' };

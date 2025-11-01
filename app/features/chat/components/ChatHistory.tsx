@@ -51,11 +51,7 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
     resetButton: {
       paddingVertical: 8,
       paddingHorizontal: 4,
-      marginRight: 8, 
-    },
-    resetButtonText: {
-      color: colors.textSecondary,
-      fontSize: typography.subtitle.fontSize,
+      marginRight: 8,
     },
 
     loadingContainer: {

@@ -81,7 +81,7 @@ class WebSocketService {
   private ws: WebSocket | null = null;
   private clientId: string;
   private state: WebSocketState = WebSocketState.DISCONNECTED;
-  private reconnectTimeout: NodeJS.Timeout | null = null;
+  private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
   private reconnectAttempts: number = 0;
   private maxReconnectAttempts: number = 5;
   private reconnectDelay: number = 3000; // 3秒
@@ -91,8 +91,8 @@ class WebSocketService {
   private stateListeners: Set<(state: WebSocketState) => void> = new Set();
 
   // ハートビート関連
-  private heartbeatInterval: NodeJS.Timeout | null = null;
-  private heartbeatTimeoutCheck: NodeJS.Timeout | null = null;
+  private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
+  private heartbeatTimeoutCheck: ReturnType<typeof setTimeout> | null = null;
   private lastPongTime: number = 0;
   private readonly HEARTBEAT_INTERVAL = 30000; // 30秒
   private readonly HEARTBEAT_TIMEOUT = 60000; // 60秒

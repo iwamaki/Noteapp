@@ -84,7 +84,6 @@ export const FlatListItem: React.FC<FlatListItemProps> = ({
                 style={[
                   styles.badgeText,
                   styles.tagBadgeText,
-                  { color: '#FFFFFF' },
                 ]}
               >
                 #{tag}
@@ -113,7 +112,10 @@ const styles = StyleSheet.create({
   badgeText: {
     fontWeight: '500',
   },
+  /* eslint-disable react-native/no-color-literals */
   tagBadgeText: {
     fontSize: 12,
+    color: '#FFFFFF',
   },
+  /* eslint-enable react-native/no-color-literals */
 });
