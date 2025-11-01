@@ -10,7 +10,6 @@ from src.llm.models import ChatContext, EditScreenContext, FilelistScreenContext
 from src.llm.tools.context_manager import set_file_context, set_directory_context, set_all_files_context
 from src.llm.providers.config import (
     CONTEXT_MSG_EDIT_SCREEN,
-    CONTEXT_MSG_FILELIST_SCREEN,
     CONTEXT_MSG_ATTACHED_FILE,
     DEFAULT_ROOT_PATH
 )
