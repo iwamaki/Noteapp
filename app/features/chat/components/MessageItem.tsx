@@ -18,20 +18,19 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
     },
     aiMessage: {
       alignSelf: 'flex-start',
-      backgroundColor: colors.secondary,
-      borderColor: colors.border,
-      borderWidth: 1,
+      backgroundColor: colors.tertiary,
+      borderBottomLeftRadius: 4,
     },
     baseText: {
       fontSize: typography.body.fontSize,
       lineHeight: typography.body.fontSize * 1.4,
     },
     message: {
-      borderRadius: 8,
+      borderRadius: 16,
       marginVertical: 4,
       maxWidth: '85%',
       paddingHorizontal: 12,
-      paddingVertical: 8,
+      paddingVertical: 5,
     },
     systemMarkdownText: {
       color: colors.text,
@@ -48,6 +47,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
     userMessage: {
       alignSelf: 'flex-end',
       backgroundColor: colors.primary,
+      borderBottomRightRadius: 4,
     },
 
     attachedFileContainer: {
