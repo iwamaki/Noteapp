@@ -491,7 +491,8 @@ class ChatService {
   private notifyAttachedFileChange(): void {
     this.listeners.forEach((listener) => {
       if (listener.onAttachedFileChange) {
-        listener.onAttachedFileChange(this.attachedFiles);
+        // 新しい配列を作成して渡す（参照を変えることでReactの再レンダリングをトリガー）
+        listener.onAttachedFileChange([...this.attachedFiles]);
       }
     });
   }
