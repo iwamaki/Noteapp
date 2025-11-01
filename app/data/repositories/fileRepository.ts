@@ -404,6 +404,111 @@ export class FileRepository {
     }
   }
 
+  /**
+   * Updates specific lines of a file's content
+   *
+   * @param id - File ID
+   * @param startLine - Start line number (1-based, inclusive)
+   * @param endLine - End line number (1-based, inclusive)
+   * @param newContent - New content to replace the lines (may contain newlines)
+   * @returns Updated file
+   *
+   * @example
+   * // Replace lines 3-5 with new content
+   * const file = await FileRepository.updateLines(
+   *   'file-id',
+   *   3,
+   *   5,
+   *   'New line 3\nNew line 4\nNew line 5'
+   * );
+   *
+   * @example
+   * // Delete lines 3-5
+   * const file = await FileRepository.updateLines('file-id', 3, 5, '');
+   *
+   * @remarks
+   * - Line numbers are 1-based for editor compatibility
+   * - Both start_line and end_line are inclusive
+   * - newContent can be empty string to delete lines
+   * - Validates that 1 <= start_line <= end_line <= totalLines
+   */
+  static async updateLines(
+    id: string,
+    startLine: number,
+    endLine: number,
+    newContent: string
+  ): Promise<FileFlat> {
+    try {
+      // Validation
+      if (startLine < 1) {
+        throw new FileSystemV2Error(
+          'start_line must be >= 1',
+          'INVALID_LINE_NUMBER'
+        );
+      }
+      if (endLine < 1) {
+        throw new FileSystemV2Error(
+          'end_line must be >= 1',
+          'INVALID_LINE_NUMBER'
+        );
+      }
+      if (startLine > endLine) {
+        throw new FileSystemV2Error(
+          'start_line must be <= end_line',
+          'INVALID_LINE_RANGE'
+        );
+      }
+
+      // Get file content as lines
+      const fileContentLines = await this.getContentAsLines(id);
+      if (!fileContentLines) {
+        throw new FileSystemV2Error(`File not found: ${id}`, 'FILE_NOT_FOUND');
+      }
+
+      const lines = fileContentLines.lines.map((line) => line.content);
+      const totalLines = lines.length;
+
+      // Validate line range
+      if (startLine > totalLines) {
+        throw new FileSystemV2Error(
+          `start_line (${startLine}) is greater than total lines (${totalLines})`,
+          'LINE_OUT_OF_RANGE'
+        );
+      }
+      if (endLine > totalLines) {
+        throw new FileSystemV2Error(
+          `end_line (${endLine}) is greater than total lines (${totalLines})`,
+          'LINE_OUT_OF_RANGE'
+        );
+      }
+
+      // Split new content into lines
+      const newLines = newContent === '' ? [] : newContent.split('\n');
+
+      // Calculate splice parameters
+      const deleteCount = endLine - startLine + 1;
+      const insertIndex = startLine - 1;
+
+      // Replace lines
+      lines.splice(insertIndex, deleteCount, ...newLines);
+
+      // Join lines back into content
+      const updatedContent = lines.join('\n');
+
+      // Update file using existing update method
+      return await this.update(id, { content: updatedContent });
+    } catch (e) {
+      if (e instanceof FileSystemV2Error) {
+        throw e;
+      }
+      throw new FileSystemV2Error(
+        `Failed to update lines: ${id}`,
+        'UPDATE_LINES_ERROR',
+        e
+      );
+    }
+  }
+
   // =============================================================================
   // Delete Operations
   // =============================================================================

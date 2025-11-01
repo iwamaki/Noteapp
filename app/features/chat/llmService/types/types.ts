@@ -84,6 +84,10 @@ export interface LLMCommand {
   new_title?: string;     // リネーム時の新しいファイル名
   category?: string;      // カテゴリー（階層パス形式: "研究/AI"）
   tags?: string[];        // タグ
+
+  // 行ベース編集用フィールド（edit_file_linesツール用）
+  start_line?: number;    // 開始行（1-based, inclusive）
+  end_line?: number;      // 終了行（1-based, inclusive）
 }
 
 // LLMレスポンス
