@@ -33,7 +33,7 @@ class ChatContext(BaseModel):
     fileList: Optional[List[Dict[str, Any]]] = None
     currentFile: Optional[str] = None
     currentFileContent: Optional[Dict[str, Optional[str]]] = None  # 現在開いているファイルの内容 {"filename": "...", "content": "..."}
-    attachedFileContent: Optional[Dict[str, str]] = None
+    attachedFileContent: Optional[List[Dict[str, str]]] = None  # 添付ファイルの内容（複数対応）
     conversationHistory: Optional[List[Dict[str, Any]]] = None
     activeScreen: Optional[Union[FilelistScreenContext, EditScreenContext]] = Field(None, discriminator='name')
     allFiles: Optional[List[Dict[str, Any]]] = None

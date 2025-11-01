@@ -140,7 +140,7 @@ class ChatContextBuilder:
         if context.currentFileContent:
             self._setup_current_file_context(context.currentFileContent)
         elif context.attachedFileContent:
-            self._setup_attached_file_context(context.attachedFileContent)
+            self._setup_attached_files_context(context.attachedFileContent)
 
     def _setup_current_file_context(self, file_content: Dict[str, Any]) -> None:
         """現在のファイルコンテキストを設定
@@ -160,23 +160,35 @@ class ChatContextBuilder:
                 content=content
             )
 
-    def _setup_attached_file_context(self, file_content: Dict[str, Any]) -> None:
-        """添付ファイルコンテキストを設定
+    def _setup_attached_files_context(self, files_content: List[Dict[str, Any]]) -> None:
+        """添付ファイルコンテキストを設定（複数ファイル対応）
 
         Args:
-            file_content: 添付ファイルコンテキスト辞書
+            files_content: 添付ファイルコンテキストのリスト
         """
-        set_file_context(file_content)
-        self._has_file_context = True
-        logger.info("File context set from attachedFileContent")
+        if not files_content:
+            return
 
-        content = file_content.get('content')
-        if content:
-            filename = file_content.get('filename', 'unknown_file')
-            self._context_msg = CONTEXT_MSG_ATTACHED_FILE.format(
-                filename=filename,
-                content=content
-            )
+        # 複数ファイルのコンテキストメッセージを構築
+        context_messages = []
+        for file_data in files_content:
+            content = file_data.get('content')
+            if content:
+                filename = file_data.get('filename', 'unknown_file')
+                msg = CONTEXT_MSG_ATTACHED_FILE.format(
+                    filename=filename,
+                    content=content
+                )
+                context_messages.append(msg)
+
+        if context_messages:
+            # 複数ファイルのメッセージを結合
+            self._context_msg = '\n'.join(context_messages)
+            self._has_file_context = True
+            logger.info(f"File context set from attachedFileContent: {len(files_content)} file(s)")
+
+        # Note: set_file_context()は呼ばない
+        # 添付ファイルはLLMへの情報提供が目的であり、ツールの編集対象ではないため
 
     def _process_all_files_context(self, context: ChatContext) -> None:
         """全ファイルリストのコンテキストを処理
