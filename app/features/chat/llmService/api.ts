@@ -32,9 +32,9 @@ export class APIService {
     message: string,
     context?: ChatContext,
     clientId?: string | null,
-    attachedFile?: { filename: string; content: string }
+    attachedFiles?: Array<{ filename: string; content: string }>
   ): Promise<LLMResponse> {
-    return this.llmServiceInstance.sendChatMessage(message, context, clientId, attachedFile);
+    return this.llmServiceInstance.sendChatMessage(message, context, clientId, attachedFiles);
   }
 
   // LLMプロバイダーのロード
