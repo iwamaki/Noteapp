@@ -29,13 +29,17 @@ export const TextEditor: React.FC<TextEditorProps> = ({
     return content.split('\n');
   }, [content]);
 
-  // 行番号カラムの幅を計算（桁数に応じて動的に変更）
+  // 行番号カラムの幅を計算（桁数に応じて動的に変更、フォントサイズに対応）
   const lineNumberColumnWidth = useMemo(() => {
     const maxLineNumber = lines.length;
     const digits = maxLineNumber.toString().length;
-    // 1桁あたり8px + 右パディング（2px）
-    return digits * 8 + 2;
-  }, [lines.length]);
+    // 1桁余分に幅を確保（余裕を持たせる）
+    const effectiveDigits = digits + 1;
+    // monospaceフォントの1文字あたりの幅は、フォントサイズの約0.6倍
+    // 余裕を持たせるため0.65倍で計算 + 右パディング（2px）
+    const charWidth = typography.caption.fontSize * 0.65;
+    return Math.ceil(effectiveDigits * charWidth) + 2;
+  }, [lines.length, typography.caption.fontSize]);
 
   // 各行の高さを更新
   const updateLineHeight = (index: number, height: number) => {
@@ -49,6 +53,8 @@ export const TextEditor: React.FC<TextEditorProps> = ({
     container: {
       flex: 1,
       flexDirection: 'row', // 横並びレイアウト
+      paddingTop: 10,
+      paddingRight: 10,
     },
     lineNumberColumn: {
       backgroundColor: colors.secondary,
@@ -56,7 +62,7 @@ export const TextEditor: React.FC<TextEditorProps> = ({
       borderRightColor: colors.border,
       paddingRight: 2,
       paddingLeft: 0,
-      paddingTop: 4,
+      paddingTop: 6,
     },
     lineNumberWrapper: {
       justifyContent: 'flex-start',
@@ -74,12 +80,8 @@ export const TextEditor: React.FC<TextEditorProps> = ({
       ...typography.body,
       fontFamily: 'monospace',
       lineHeight: typography.body.lineHeight,
-      borderLeftWidth: 0,
-      borderTopWidth: 0,
-      borderRightWidth: 0,
-      borderBottomWidth: 0,
+      borderWidth: 1,
       borderColor: colors.border,
-      borderRadius: 0,
       backgroundColor: colors.background,
       color: colors.text,
       textAlignVertical: 'top',
