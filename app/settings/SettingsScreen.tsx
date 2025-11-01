@@ -95,6 +95,7 @@ function SettingsScreen() {
   );
 
   // スタイルをメモ化（テーマが変わったときのみ再作成）
+  /* eslint-disable react-native/no-unused-styles */
   const styles = useMemo(
     () => StyleSheet.create({
       container: {
@@ -140,6 +141,7 @@ function SettingsScreen() {
     }),
     [colors, spacing, typography]
   );
+  /* eslint-enable react-native/no-unused-styles */
 
   if (isLoading) {
     return (
@@ -240,6 +242,7 @@ function SettingsScreen() {
                 )}
 
                 <ListItem.Container>
+                  {/* eslint-disable-next-line react-native/no-raw-text */}
                   <ListItem.Title>ノートの文脈情報をLLMに送信</ListItem.Title>
                   <Switch
                     value={settings.sendFileContextToLLM}

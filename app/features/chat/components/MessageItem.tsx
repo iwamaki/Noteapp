@@ -62,6 +62,12 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
       borderWidth: 1,
       borderColor: `${colors.primary}40`,
     },
+    attachedFileContainerUser: {
+      alignSelf: 'flex-end',
+    },
+    attachedFileContainerAI: {
+      alignSelf: 'flex-start',
+    },
     attachedFileIcon: {
       marginRight: 4,
     },
@@ -130,7 +136,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
         <Markdown style={markdownStyles} rules={markdownRules}>{message.content}</Markdown>
       </View>
       {message.attachedFile && (
-        <View style={[styles.attachedFileContainer, message.role === 'user' ? { alignSelf: 'flex-end' } : { alignSelf: 'flex-start' }]}>
+        <View style={[styles.attachedFileContainer, message.role === 'user' ? styles.attachedFileContainerUser : styles.attachedFileContainerAI]}>
           <Ionicons
             name="document-text"
             size={12}

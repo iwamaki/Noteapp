@@ -1,7 +1,7 @@
 import React, { useLayoutEffect } from 'react';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../../navigation/types';
-import { useCustomHeader, HeaderConfig } from '../../../components/CustomHeader';
+import { useCustomHeader } from '../../../components/CustomHeader';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 

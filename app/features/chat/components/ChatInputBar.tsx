@@ -75,6 +75,7 @@ export const ChatInputBar: React.FC = () => {
   const canSendMessage = inputText.trim().length > 0 && !isLoading;
 
   // 静的スタイルをメモ化（テーマが変わったときのみ再作成）
+  /* eslint-disable react-native/no-unused-styles */
   const styles = useMemo(
     () => StyleSheet.create({
       container: {
@@ -159,6 +160,7 @@ export const ChatInputBar: React.FC = () => {
     }),
     [colors, typography, insets.bottom]
   );
+  /* eslint-enable react-native/no-unused-styles */
 
   // 動的スタイルを分離（keyboardHeightが変わったときのみ再作成）
   const dynamicContainerStyle = useMemo(

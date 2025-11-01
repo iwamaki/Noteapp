@@ -3,9 +3,7 @@
  * @summary アイテム（ノート/フォルダ）の名前変更モーダル
  */
 import React, { useState, useEffect } from 'react';
-import { StyleSheet } from 'react-native';
 import { CustomInlineInput } from '../../../components/CustomInlineInput';
-import { useTheme } from '../../../design/theme/ThemeContext';
 import { CustomModal } from '../../../components/CustomModal';
 
 interface RenameItemModalProps {
@@ -23,15 +21,7 @@ export const RenameItemModal: React.FC<RenameItemModalProps> = ({
   onClose,
   onRename,
 }) => {
-  const { colors, typography, spacing } = useTheme();
   const [inputValue, setInputValue] = useState(initialName);
-
-  const styles = StyleSheet.create({
-    inputBorder: {
-      borderWidth: 1,
-      borderRadius: 8,
-    },
-  });
 
   useEffect(() => {
     if (visible) {

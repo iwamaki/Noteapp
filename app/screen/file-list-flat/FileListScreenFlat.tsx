@@ -634,6 +634,7 @@ function FileListScreenFlatContent() {
       )}
 
       {/* 移動モード時のキャンセルボタン */}
+      {/* eslint-disable react-native/no-inline-styles */}
       {state.isMoveMode && (
         <View style={[styles.moveBar, { backgroundColor: colors.background }]}>
           <Text style={{ fontSize: 14, color: colors.text }}>
@@ -649,6 +650,7 @@ function FileListScreenFlatContent() {
           </TouchableOpacity>
         </View>
       )}
+      {/* eslint-enable react-native/no-inline-styles */}
 
       <CreateFileModal
         visible={state.modals.create.visible}
@@ -777,6 +779,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  /* eslint-disable react-native/no-color-literals */
   moveBar: {
     position: 'absolute',
     bottom: 0,
@@ -795,6 +798,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
+  /* eslint-enable react-native/no-color-literals */
   cancelButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
