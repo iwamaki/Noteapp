@@ -227,11 +227,12 @@ class ChatService {
       return;
     }
 
-    // ユーザーメッセージを追加
+    // ユーザーメッセージを追加（添付ファイル情報を含める）
     const userMessage: ChatMessage = {
       role: 'user',
       content: trimmedMessage,
       timestamp: new Date(),
+      attachedFile: this.attachedFile ?? undefined,
     };
     this.addMessage(userMessage);
     this.setLoading(true);
@@ -256,9 +257,9 @@ class ChatService {
         logger.info('chatService', `WebSocket state before sending message: ${this.wsService.getState()}`);
       }
 
-      // APIにメッセージを送信（client_idも含める）
+      // APIにメッセージを送信（client_idと添付ファイル情報も含める）
       logger.debug('chatService', 'Sending message to LLM with context:', chatContext);
-      const response = await APIService.sendChatMessage(trimmedMessage, chatContext, this.clientId);
+      const response = await APIService.sendChatMessage(trimmedMessage, chatContext, this.clientId, this.attachedFile ?? undefined);
 
       // AIメッセージを追加
       const aiMessage: ChatMessage = {

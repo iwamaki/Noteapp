@@ -4,6 +4,10 @@ export interface ChatMessage {
   role: 'user' | 'ai' | 'system';
   content: string;
   timestamp: Date;
+  attachedFile?: {
+    filename: string;
+    content: string;
+  };
 }
 
 // チャットコンテキスト
