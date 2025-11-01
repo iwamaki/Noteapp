@@ -115,8 +115,8 @@ function FileEditScreen() {
         backgroundColor: colors.secondary,
       },
       contentContainer: {
-        paddingHorizontal: 16,
-        paddingVertical: 12,
+        paddingHorizontal: 0,
+        paddingVertical: 0,
         paddingBottom: chatBarOffset,
         flexGrow: 1,
       },

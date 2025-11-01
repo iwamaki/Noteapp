@@ -19,7 +19,8 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content }) => 
     container: {
       flex: 1,
       backgroundColor: colors.secondary,
-      // flex, padding は親コンポーネントで管理
+      paddingHorizontal: 16,
+      paddingVertical: 12,
     },
   });
 
