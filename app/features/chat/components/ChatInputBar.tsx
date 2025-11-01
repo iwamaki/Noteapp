@@ -133,8 +133,6 @@ export const ChatInputBar: React.FC = () => {
         marginBottom: 8,
         paddingHorizontal: 8,
         paddingVertical: 6,
-        backgroundColor: colors.border,
-        borderRadius: 4,
       },
       expandButtonText: {
         fontSize: typography.caption.fontSize,
@@ -210,7 +208,11 @@ export const ChatInputBar: React.FC = () => {
               onPress={() => setIsExpanded(true)}
               style={styles.expandButton}
             >
-              <Text style={styles.expandButtonText}>▲ {messages.filter(msg => msg.role === 'user').length}</Text>
+              <Ionicons
+                name="chevron-up"
+                size={typography.body.fontSize}
+                color={colors.text}
+              />
             </TouchableOpacity>
           )}
           <CustomInlineInput
