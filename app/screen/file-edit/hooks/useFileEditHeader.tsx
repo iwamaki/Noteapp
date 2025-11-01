@@ -6,7 +6,6 @@
 import React, { useLayoutEffect, useCallback, useMemo } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { StyleSheet } from 'react-native';
 import { RootStackParamList } from '../../../navigation/types';
 import { useCustomHeader } from '../../../components/CustomHeader';
 import type { ViewMode } from '../types';
@@ -58,6 +57,28 @@ export const useFileEditHeader = ({
     const buttons: Array<React.ReactNode> = [];
 
     if (!isLoading) {
+      // Undo/Redoボタンを追加
+      buttons.push(
+        <Ionicons
+          name="arrow-undo-outline"
+          size={24}
+          color={canUndo ? colors.primary : colors.textSecondary}
+          onPress={onUndo}
+          disabled={!canUndo}
+        />
+      );
+
+      buttons.push(
+        <Ionicons
+          name="arrow-redo-outline"
+          size={24}
+          color={canRedo ? colors.primary : colors.textSecondary}
+          onPress={onRedo}
+          disabled={!canRedo}
+        />
+      );
+
+      // 保存ボタン
       buttons.push(
         <Ionicons
           name="save-outline"
@@ -65,10 +86,10 @@ export const useFileEditHeader = ({
           color={isDirty ? colors.primary : colors.textSecondary}
           onPress={onSave}
           disabled={!isDirty}
-          style={styles.saveIcon}
         />
       );
 
+      // オーバーフローメニュー
       buttons.push(
         <FileEditOverflowMenu
           onToggleViewMode={handleToggleViewMode}
@@ -77,7 +98,7 @@ export const useFileEditHeader = ({
     }
 
     return buttons;
-  }, [isLoading, isDirty, colors.primary, colors.textSecondary, onSave, handleToggleViewMode]);
+  }, [isLoading, canUndo, canRedo, isDirty, colors.primary, colors.textSecondary, onUndo, onRedo, onSave, handleToggleViewMode]);
 
   // ヘッダー設定を更新（依存配列を最小化）
   useLayoutEffect(() => {
@@ -88,10 +109,6 @@ export const useFileEditHeader = ({
             title={title}
             onTitleChange={onTitleChange}
             editable={isEditable}
-            onUndo={onUndo}
-            onRedo={onRedo}
-            canUndo={canUndo}
-            canRedo={canRedo}
           />
         ),
         leftButtons: [
@@ -109,18 +126,8 @@ export const useFileEditHeader = ({
     title,
     isEditable,
     onTitleChange,
-    onUndo,
-    onRedo,
-    canUndo,
-    canRedo,
     rightButtons,
     createHeaderConfig,
     colors.text,
   ]);
 };
-
-const styles = StyleSheet.create({
-  saveIcon: {
-    marginLeft: 16, // Add left margin to push it further right
-  },
-});

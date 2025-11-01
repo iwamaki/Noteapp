@@ -9,12 +9,8 @@ import {
   StyleSheet,
   NativeSyntheticEvent,
   TextInputKeyPressEventData,
-  View,
-  TouchableOpacity,
 } from 'react-native';
 import { useTheme } from '../../../design/theme/ThemeContext';
-import { responsive } from '../../../design/styles/responsive';
-import { Ionicons } from '@expo/vector-icons';
 
 interface FileEditHeaderProps {
   title: string;
@@ -22,10 +18,6 @@ interface FileEditHeaderProps {
   editable: boolean;
   onCompositionStart?: () => void;
   onCompositionEnd?: (title: string) => void;
-  onUndo: () => void;
-  onRedo: () => void;
-  canUndo: boolean;
-  canRedo: boolean;
 }
 
 export const FileEditHeader: React.FC<FileEditHeaderProps> = ({
@@ -34,12 +26,8 @@ export const FileEditHeader: React.FC<FileEditHeaderProps> = ({
   editable,
   onCompositionStart,
   onCompositionEnd,
-  onUndo,
-  onRedo,
-  canUndo,
-  canRedo,
 }) => {
-  const { colors, typography, spacing } = useTheme();
+  const { colors, typography } = useTheme();
   const [localTitle, setLocalTitle] = useState(title);
   const isComposingRef = useRef(false);
 
@@ -48,24 +36,11 @@ export const FileEditHeader: React.FC<FileEditHeaderProps> = ({
   }, [title]);
 
   const styles = StyleSheet.create({
-    container: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      width: responsive.getResponsiveSize(180, 220, 260),
-    },
     headerTitle: {
       ...typography.title,
       color: colors.text,
       flex: 1,
       textAlign: 'left',
-    },
-    buttonContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    button: {
-      paddingHorizontal: spacing.sm,
     },
   });
 
@@ -109,37 +84,19 @@ export const FileEditHeader: React.FC<FileEditHeaderProps> = ({
   };
 
   return (
-    <View style={styles.container}>
-      <TextInput
-        value={localTitle}
-        onChangeText={handleChangeText}
-        style={styles.headerTitle}
-        placeholder="ファイルのタイトル"
-        placeholderTextColor={colors.textSecondary}
-        editable={editable}
-        onKeyPress={handleKeyPress}
-        onBlur={handleBlur}
-        onSubmitEditing={handleSubmitEditing}
-        onSelectionChange={handleSelectionChange}
-        autoCorrect={false}
-        autoCapitalize="none"
-      />
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity onPress={onUndo} disabled={!canUndo} style={styles.button}>
-          <Ionicons
-            name="arrow-undo-outline"
-            size={24}
-            color={canUndo ? colors.primary : colors.textSecondary}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={onRedo} disabled={!canRedo} style={styles.button}>
-          <Ionicons
-            name="arrow-redo-outline"
-            size={24}
-            color={canRedo ? colors.primary : colors.textSecondary}
-          />
-        </TouchableOpacity>
-      </View>
-    </View>
+    <TextInput
+      value={localTitle}
+      onChangeText={handleChangeText}
+      style={styles.headerTitle}
+      placeholder="ファイルのタイトル"
+      placeholderTextColor={colors.textSecondary}
+      editable={editable}
+      onKeyPress={handleKeyPress}
+      onBlur={handleBlur}
+      onSubmitEditing={handleSubmitEditing}
+      onSelectionChange={handleSelectionChange}
+      autoCorrect={false}
+      autoCapitalize="none"
+    />
   );
 };

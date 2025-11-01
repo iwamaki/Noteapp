@@ -47,9 +47,9 @@ export const HeaderButton: React.FC<HeaderButtonProps> = ({
 
   const styles = StyleSheet.create({
     button: {
-      paddingHorizontal: spacing.md,
+      paddingHorizontal: 0,
       paddingVertical: spacing.xs,
-      minWidth: 44,
+      minWidth: 38,
       justifyContent: 'center',
       alignItems: 'center',
     },

@@ -52,7 +52,7 @@ export const CustomHeader: React.FC<HeaderConfig> = ({
     },
     buttonContainer: {
       flexDirection: 'row',
-      marginHorizontal: spacing.md,
+      marginHorizontal: 0,
     },
   });
 
