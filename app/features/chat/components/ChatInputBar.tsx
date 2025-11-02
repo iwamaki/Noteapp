@@ -233,7 +233,7 @@ export const ChatInputBar: React.FC = () => {
           >
             <MaterialCommunityIcons
               name="arrow-right-bold"
-              size={iconSizes.large}
+              size={iconSizes.medium}
               color={colors.white}
               style={!canSendMessage && styles.disabledButtonText}
             />

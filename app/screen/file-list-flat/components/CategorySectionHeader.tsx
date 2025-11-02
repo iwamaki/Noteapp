@@ -125,7 +125,7 @@ export const CategorySectionHeader: React.FC<CategorySectionHeaderProps> = ({
           styles.sectionHeaderContent,
           {
             backgroundColor: headerBackgroundColor,
-            borderBottomColor: colors.border,
+            borderBottomColor: colors.tertiary,
           },
         ]}
       >

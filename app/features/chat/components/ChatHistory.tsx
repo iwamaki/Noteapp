@@ -84,7 +84,7 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
     },
     messagesHeaderTitle: {
       color: colors.text,
-      fontSize: typography.header.fontSize,
+      fontSize: typography.category.fontSize,
       fontWeight: '600',
     },
 

@@ -49,7 +49,7 @@ export const CustomHeader: React.FC<HeaderConfig> = ({
       alignItems: 'center',
       backgroundColor: colors.background,
       borderBottomWidth: 1,
-      borderBottomColor: colors.border,
+      borderBottomColor: colors.tertiary,
       paddingTop: insets.top,
       height: headerHeight + insets.top,
       paddingHorizontal: 8,
