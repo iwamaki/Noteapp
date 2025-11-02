@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Text } from 'react-native';
 import Markdown from 'react-native-markdown-display';
 import { ChatMessage } from '../llmService/index';
 import { useTheme } from '../../../design/theme/ThemeContext';
+import { Ionicons } from '@expo/vector-icons';
 
 interface MessageItemProps {
   message: ChatMessage;
@@ -18,19 +19,20 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
     aiMessage: {
       alignSelf: 'flex-start',
       backgroundColor: colors.secondary,
-      borderColor: colors.border,
+      borderBottomLeftRadius: 4,
       borderWidth: 1,
+      borderColor: colors.border,
     },
     baseText: {
       fontSize: typography.body.fontSize,
       lineHeight: typography.body.fontSize * 1.4,
     },
     message: {
-      borderRadius: 8,
+      borderRadius: 16,
       marginVertical: 4,
       maxWidth: '85%',
       paddingHorizontal: 12,
-      paddingVertical: 8,
+      paddingVertical: 5,
     },
     systemMarkdownText: {
       color: colors.text,
@@ -47,6 +49,34 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
     userMessage: {
       alignSelf: 'flex-end',
       backgroundColor: colors.primary,
+      borderBottomRightRadius: 4,
+    },
+
+    attachedFileContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: `${colors.primary}15`,
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      borderRadius: 12,
+      marginTop: 2,
+      marginBottom: 4,
+      borderWidth: 1,
+      borderColor: `${colors.primary}40`,
+    },
+    attachedFileContainerUser: {
+      alignSelf: 'flex-end',
+    },
+    attachedFileContainerAI: {
+      alignSelf: 'flex-start',
+    },
+    attachedFileIcon: {
+      marginRight: 4,
+    },
+    attachedFileName: {
+      fontSize: 11,
+      color: colors.primary,
+      fontWeight: '600',
     },
 
   });
@@ -103,8 +133,30 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
   };
 
   return (
-    <View style={containerStyle}>
-      <Markdown style={markdownStyles} rules={markdownRules}>{message.content}</Markdown>
-    </View>
+    <>
+      <View style={containerStyle}>
+        <Markdown style={markdownStyles} rules={markdownRules}>{message.content}</Markdown>
+      </View>
+      {message.attachedFiles && message.attachedFiles.length > 0 && (
+        <>
+          {message.attachedFiles.map((file, index) => (
+            <View
+              key={`${file.filename}-${index}`}
+              style={[styles.attachedFileContainer, message.role === 'user' ? styles.attachedFileContainerUser : styles.attachedFileContainerAI]}
+            >
+              <Ionicons
+                name="document-text"
+                size={12}
+                color={colors.primary}
+                style={styles.attachedFileIcon}
+              />
+              <Text style={styles.attachedFileName} numberOfLines={1}>
+                {file.filename}
+              </Text>
+            </View>
+          ))}
+        </>
+      )}
+    </>
   );
 };

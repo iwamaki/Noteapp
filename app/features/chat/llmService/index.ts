@@ -61,7 +61,8 @@ export class LLMService {
   async sendChatMessage(
     message: string,
     context: ChatContext = {},
-    clientId?: string | null
+    clientId?: string | null,
+    attachedFiles?: Array<{ filename: string; content: string }>
   ): Promise<LLMResponse> {
     // リクエストを開始（レート制限を適用）
     const requestId = await this.requestManager.startRequest();
@@ -119,7 +120,8 @@ export class LLMService {
       // 会話履歴に追加
       this.conversationHistory.addExchange(
         message,
-        data.message
+        data.message,
+        attachedFiles
       );
 
       logger.info('llm', `Request #${requestId} - Successfully completed`);

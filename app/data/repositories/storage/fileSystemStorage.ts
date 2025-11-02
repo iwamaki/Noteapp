@@ -7,7 +7,7 @@
  */
 
 import { Directory, File as FSFile } from 'expo-file-system';
-import type { FileMetadataFlat } from '../../core/typesFlat';
+import type { FileMetadataFlat, FileLine } from '../../core/typesFlat';
 import { FileSystemV2Error } from '../../core/errors';
 import {
   BASE_DIR,
@@ -103,6 +103,59 @@ export const writeFileContent = async (fileDir: Directory, content: string): Pro
       'WRITE_CONTENT_ERROR',
       e
     );
+  }
+};
+
+/**
+ * Reads file content as an array of lines
+ *
+ * @param fileDir - File directory
+ * @returns Array of lines with line numbers (1-based) or null if not found
+ *
+ * @remarks
+ * - Handles multiple newline formats: \r\n (Windows), \n (Unix/Mac), \r (old Mac)
+ * - Removes newline characters from each line
+ * - Empty lines are preserved as empty strings
+ * - Trailing newline does not create an extra empty line
+ *
+ * @example
+ * // File content: "line1\nline2\nline3\n"
+ * // Returns: [
+ * //   { lineNumber: 1, content: "line1" },
+ * //   { lineNumber: 2, content: "line2" },
+ * //   { lineNumber: 3, content: "line3" }
+ * // ]
+ */
+export const readFileContentAsLines = async (fileDir: Directory): Promise<FileLine[] | null> => {
+  try {
+    const contentFile = new FSFile(fileDir, FILE_CONTENT_FILENAME);
+    if (!(await contentFile.exists)) {
+      return null;
+    }
+
+    const content = await contentFile.text();
+
+    // Handle empty file
+    if (content === '') {
+      return [];
+    }
+
+    // Split by any newline format: \r\n, \n, or \r
+    const rawLines = content.split(/\r\n|\r|\n/);
+
+    // Remove trailing empty line if it exists (caused by final newline character)
+    if (rawLines.length > 0 && rawLines[rawLines.length - 1] === '') {
+      rawLines.pop();
+    }
+
+    // Map to FileLine with 1-based line numbers
+    return rawLines.map((line, index) => ({
+      lineNumber: index + 1,
+      content: line,
+    }));
+  } catch (e) {
+    console.error('Failed to read file content as lines:', e);
+    return null;
   }
 };
 

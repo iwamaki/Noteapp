@@ -65,23 +65,44 @@ const getTypographyForSize = (fontSize: 'small' | 'medium' | 'large' | 'xlarge')
     xlarge: 1.25,
   }[fontSize];
 
+  // 基本フォントサイズ
+  const titleSize = Math.round(18 * sizeMultiplier);
+  const subtitleSize = Math.round(16 * sizeMultiplier);
+  const bodySize = Math.round(14 * sizeMultiplier);
+  const captionSize = Math.round(12 * sizeMultiplier);
+  const headerSize = Math.round(18 * sizeMultiplier);
+  const categorySize = Math.round(16 * sizeMultiplier);
+
+  // lineHeight倍率（可読性と行の揃いのバランス）
+  const lineHeightMultiplier = 1.5;
+
   return {
     title: {
-      fontSize: Math.round(18 * sizeMultiplier),
+      fontSize: titleSize,
+      lineHeight: Math.round(titleSize * lineHeightMultiplier),
       fontWeight: 'bold' as const,
     },
     subtitle: {
-      fontSize: Math.round(16 * sizeMultiplier),
+      fontSize: subtitleSize,
+      lineHeight: Math.round(subtitleSize * lineHeightMultiplier),
       fontWeight: '600' as const,
     },
     body: {
-      fontSize: Math.round(14 * sizeMultiplier),
+      fontSize: bodySize,
+      lineHeight: Math.round(bodySize * lineHeightMultiplier),
     },
     caption: {
-      fontSize: Math.round(12 * sizeMultiplier),
+      fontSize: captionSize,
+      lineHeight: Math.round(captionSize * lineHeightMultiplier),
     },
     header: {
-      fontSize: Math.round(16 * sizeMultiplier),
+      fontSize: headerSize,
+      lineHeight: Math.round(headerSize * lineHeightMultiplier),
+    },
+    category: {
+      fontSize: categorySize,
+      lineHeight: Math.round(categorySize * lineHeightMultiplier),
+      fontWeight: 'bold' as const,
     },
   };
 };
@@ -111,12 +132,20 @@ const getShadows = (shadowColor: string) => ({
   },
 });
 
+// アイコンサイズを計算する関数
+const getIconSizes = (typography: ReturnType<typeof getTypographyForSize>) => ({
+  small: Math.round(typography.body.fontSize * 1.2),     // body の 1.2倍
+  medium: Math.round(typography.header.fontSize * 1.3),  // header の 1.3倍（ヘッダーボタン用）
+  large: Math.round(typography.title.fontSize * 1.5),    // title の 1.5倍
+});
+
 // テーマの型定義
 type Theme = {
   colors: typeof lightColors;
   spacing: typeof spacing;
   typography: ReturnType<typeof getTypographyForSize>;
   shadows: ReturnType<typeof getShadows>;
+  iconSizes: ReturnType<typeof getIconSizes>;
   themeMode: 'light' | 'dark';
 };
 
@@ -138,8 +167,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const colors = effectiveTheme === 'dark' ? darkColors : lightColors;
     const typography = getTypographyForSize(settings.fontSize);
     const shadows = getShadows(colors.shadow);
+    const iconSizes = getIconSizes(typography);
 
-    return { colors, spacing, typography, shadows, themeMode: effectiveTheme };
+    return { colors, spacing, typography, shadows, iconSizes, themeMode: effectiveTheme };
   }, [settings.theme, settings.fontSize, systemColorScheme]);
 
   return (

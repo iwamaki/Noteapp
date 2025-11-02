@@ -1,21 +1,23 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Modal, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../design/theme/ThemeContext';
-import { HeaderButton } from '../../../components/HeaderButton';
 
 interface FileEditOverflowMenuProps {
+  visible: boolean;
+  onClose: () => void;
   onToggleViewMode: () => void;
 }
 
 export const FileEditOverflowMenu: React.FC<FileEditOverflowMenuProps> = ({
+  visible,
+  onClose,
   onToggleViewMode,
 }) => {
-  const { colors, spacing } = useTheme();
-  const [modalVisible, setModalVisible] = useState(false);
+  const { colors, spacing, iconSizes } = useTheme();
 
   const handleMenuItemPress = (action: () => void) => {
-    setModalVisible(false);
+    onClose();
     action();
   };
 
@@ -52,34 +54,27 @@ export const FileEditOverflowMenu: React.FC<FileEditOverflowMenuProps> = ({
   });
 
   return (
-    <View>
-      <HeaderButton
-        iconName="ellipsis-vertical"
-        onPress={() => setModalVisible(true)}
-      />
-
-      <Modal
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-        animationType="fade"
+    <Modal
+      transparent={true}
+      visible={visible}
+      onRequestClose={onClose}
+      animationType="fade"
+    >
+      <TouchableOpacity
+        style={styles.modalOverlay}
+        activeOpacity={1}
+        onPress={onClose}
       >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setModalVisible(false)}
-        >
-          <View style={styles.menuContainer}>
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => handleMenuItemPress(onToggleViewMode)}
-            >
-              <Ionicons name="eye-outline" size={24} color={colors.text} />
-              <Text style={styles.menuItemText}>ビューモード切替</Text>
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
-      </Modal>
-    </View>
+        <View style={styles.menuContainer}>
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => handleMenuItemPress(onToggleViewMode)}
+          >
+            <Ionicons name="eye-outline" size={iconSizes.medium} color={colors.text} />
+            <Text style={styles.menuItemText}>ビューモード切替</Text>
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+    </Modal>
   );
 };

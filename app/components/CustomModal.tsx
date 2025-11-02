@@ -11,7 +11,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useTheme } from '../design/theme/ThemeContext';
-import { responsive } from '../design/styles/commonStyles';
+import { responsive } from '../design/styles/responsive';
 
 interface CustomModalButton {
   text: string;
@@ -46,11 +46,10 @@ export const CustomModal: React.FC<CustomModalProps> = ({
       backgroundColor: colors.overlay, // Semi-transparent overlay
     },
     modalView: {
-      margin: spacing.md,
-      backgroundColor: colors.secondary,
+      backgroundColor: colors.background,
       borderRadius: responsive.getResponsiveSize(10, 15, 20),
-      padding: spacing.lg,
-      alignItems: 'stretch', // Changed to stretch for children
+      paddingVertical: spacing.lg,
+      alignItems: 'stretch',
       shadowColor: colors.shadow,
       shadowOffset: {
         width: 0,
@@ -59,31 +58,36 @@ export const CustomModal: React.FC<CustomModalProps> = ({
       shadowOpacity: 0.25,
       shadowRadius: 4,
       elevation: 5,
-      width: '80%', // Adjust as needed
+      width: '100%',
       maxWidth: 400,
-      borderWidth: 2,
-      borderColor: colors.background,
+      maxHeight: '85%',
+      borderWidth: 1,
+      borderColor: colors.tertiary,
     },
     modalTitle: {
       ...typography.title,
       marginBottom: spacing.sm,
+      paddingHorizontal: spacing.lg,
       textAlign: 'center',
       color: colors.text,
     },
     modalMessage: {
       ...typography.body,
-      marginBottom: spacing.lg,
+      marginBottom: spacing.md,
+      paddingHorizontal: spacing.lg,
       textAlign: 'center',
       color: colors.textSecondary,
     },
     childrenContainer: {
-      marginVertical: spacing.md,
-      maxHeight: 400, // コンテンツの最大高さを制限
+      marginVertical: spacing.sm,
+      paddingHorizontal: spacing.lg,
+      flexShrink: 1,
     },
     buttonContainer: {
       flexDirection: 'row',
       justifyContent: 'center',
       gap: spacing.md,
+      paddingHorizontal: spacing.lg,
       width: '100%',
       marginTop: spacing.md,
     },
@@ -123,6 +127,9 @@ export const CustomModal: React.FC<CustomModalProps> = ({
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
+      paddingHorizontal: spacing.xl,
+      paddingVertical: spacing.xl,
+      width: '100%',
     },
   });
 

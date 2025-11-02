@@ -1,23 +1,24 @@
 /**
- * @file useFileEditHeader.ts
- * @summary ファイル編集画面のヘッダー設定ロジックを管理するフック
+ * @file useFileEditHeader.tsx
+ * @summary ファイル編集画面のヘッダーロジックを管理するフック
+ * @responsibility ボタンの状態管理とイベントハンドラーのみを担当し、
+ *                レイアウト構造はCustomHeaderコンポーネントに委譲する
  */
 
-import React, { useLayoutEffect, useCallback, useMemo } from 'react';
+import React, { useLayoutEffect, useCallback, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { StyleSheet } from 'react-native';
-import { RootStackParamList } from '../../../navigation/types';
-import { useCustomHeader } from '../../../components/CustomHeader';
-import type { ViewMode } from '../types';
 import { Ionicons } from '@expo/vector-icons';
+import { RootStackParamList } from '../../../navigation/types';
+import { CustomHeader } from '../../../components/CustomHeader';
 import { useTheme } from '../../../design/theme/ThemeContext';
+import type { ViewMode } from '../types';
 import { FileEditHeader } from '../components/FileEditHeader';
 import { FileEditOverflowMenu } from '../components/FileEditOverflowMenu';
 
 interface UseFileEditHeaderProps {
   title: string;
-  activeFileId: string | undefined;
+  category: string;
   viewMode: ViewMode;
   isLoading: boolean;
   isEditable: boolean;
@@ -33,7 +34,7 @@ interface UseFileEditHeaderProps {
 
 export const useFileEditHeader = ({
   title,
-  activeFileId,
+  category,
   viewMode,
   isLoading,
   isEditable,
@@ -47,82 +48,92 @@ export const useFileEditHeader = ({
   canRedo,
 }: UseFileEditHeaderProps) => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
-  const { createHeaderConfig } = useCustomHeader();
-  const { colors } = useTheme();
+  const { colors, iconSizes } = useTheme();
+  const [menuVisible, setMenuVisible] = useState(false);
 
   // ビューモード切り替えハンドラをメモ化
   const handleToggleViewMode = useCallback(() => {
     onViewModeChange(viewMode === 'edit' ? 'preview' : 'edit');
   }, [viewMode, onViewModeChange]);
 
-  // 右側のボタン群をメモ化
-  const rightButtons = useMemo(() => {
-    const buttons: Array<React.ReactNode> = [];
+  // 戻るボタンハンドラ
+  const handleGoBack = useCallback(() => {
+    navigation.goBack();
+  }, [navigation]);
 
-    if (!isLoading) {
-      buttons.push(
-        <Ionicons
-          name="save-outline"
-          size={24}
-          color={isDirty ? colors.primary : colors.textSecondary}
-          onPress={onSave}
-          disabled={!isDirty}
-          style={styles.saveIcon}
-        />
-      );
-
-      buttons.push(
-        <FileEditOverflowMenu
-          onToggleViewMode={handleToggleViewMode}
-        />
-      );
-    }
-
-    return buttons;
-  }, [isLoading, isDirty, colors.primary, colors.textSecondary, onSave, handleToggleViewMode]);
-
-  // ヘッダー設定を更新（依存配列を最小化）
+  // ヘッダー設定を更新
   useLayoutEffect(() => {
-    navigation.setOptions(
-      createHeaderConfig({
-        title: (
-          <FileEditHeader
-            title={title}
-            onTitleChange={onTitleChange}
-            editable={isEditable}
-            onUndo={onUndo}
-            onRedo={onRedo}
-            canUndo={canUndo}
-            canRedo={canRedo}
+    navigation.setOptions({
+      header: () => (
+        <>
+          <CustomHeader
+            title={
+              <FileEditHeader
+                title={title}
+                category={category}
+                onTitleChange={onTitleChange}
+                editable={isEditable}
+              />
+            }
+            leftButtons={[
+              {
+                icon: <Ionicons name="arrow-back-outline" size={iconSizes.medium} color={colors.text} />,
+                onPress: handleGoBack,
+              },
+            ]}
+            rightButtons={
+              isLoading
+                ? []
+                : [
+                    {
+                      icon: <Ionicons name="arrow-undo-outline" size={iconSizes.medium} color={canUndo ? colors.primary : colors.textSecondary} />,
+                      onPress: onUndo,
+                      disabled: !canUndo,
+                    },
+                    {
+                      icon: <Ionicons name="arrow-redo-outline" size={iconSizes.medium} color={canRedo ? colors.primary : colors.textSecondary} />,
+                      onPress: onRedo,
+                      disabled: !canRedo,
+                    },
+                    {
+                      icon: <Ionicons name="save-outline" size={iconSizes.medium} color={isDirty ? colors.primary : colors.textSecondary} />,
+                      onPress: onSave,
+                      disabled: !isDirty,
+                    },
+                    {
+                      icon: <Ionicons name="ellipsis-vertical" size={iconSizes.medium} color={colors.text} />,
+                      onPress: () => setMenuVisible(true),
+                    },
+                  ]
+            }
           />
-        ),
-        leftButtons: [
-          {
-            icon: <Ionicons name="arrow-back-outline" size={24} color={colors.text} />,
-            onPress: () => navigation.goBack(),
-            variant: 'secondary',
-          },
-        ],
-        rightButtons: rightButtons.map((button, index) => ({ title: `button-${index}`, icon: button, onPress: () => {} })),
-      })
-    );
+          <FileEditOverflowMenu
+            visible={menuVisible}
+            onClose={() => setMenuVisible(false)}
+            onToggleViewMode={handleToggleViewMode}
+          />
+        </>
+      ),
+    });
   }, [
     navigation,
     title,
+    category,
     isEditable,
     onTitleChange,
-    onUndo,
-    onRedo,
+    handleGoBack,
     canUndo,
     canRedo,
-    rightButtons,
-    createHeaderConfig,
+    isDirty,
+    isLoading,
+    onUndo,
+    onRedo,
+    onSave,
+    menuVisible,
+    handleToggleViewMode,
     colors.text,
+    colors.primary,
+    colors.textSecondary,
+    iconSizes.medium,
   ]);
 };
-
-const styles = StyleSheet.create({
-  saveIcon: {
-    marginLeft: 16, // Add left margin to push it further right
-  },
-});

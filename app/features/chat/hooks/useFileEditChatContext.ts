@@ -10,6 +10,7 @@ import ChatService from '../index';
 import { logger } from '../../../utils/logger';
 import { useSettingsStore } from '../../../settings/settingsStore';
 import { editFileHandler } from '../handlers/editFileHandler';
+import { editFileLinesHandler } from '../handlers/editFileLinesHandler';
 import { CommandHandlerContext } from '../handlers/types';
 
 interface UseFileEditChatContextParams {
@@ -84,6 +85,7 @@ export const useFileEditChatContext = ({
     // FileListScreen の create_file/delete_file/rename_file ハンドラは保持されます
     const commandHandlers = {
       edit_file: (command: any) => editFileHandler(command, handlerContext),
+      edit_file_lines: (command: any) => editFileLinesHandler(command, handlerContext),
       // read_fileはサーバーサイドで処理されるため、フロントエンドハンドラは不要
     };
 

@@ -6,6 +6,7 @@
  * 既存のfile-list/context/types.tsから大幅に簡素化。
  */
 
+import React from 'react';
 import { FileFlat } from '@data/core/typesFlat';
 
 // =============================================================================

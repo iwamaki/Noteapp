@@ -1,76 +1,170 @@
 /**
  * @file CustomHeader.tsx
- * @summary このファイルは、アプリケーションのカスタムヘッダーコンポーネントと、ヘッダー設定を生成するフックを定義します。
+ * @summary このファイルは、アプリケーションのカスタムヘッダーコンポーネントを定義します。
  * @responsibility アプリケーション全体で一貫性のあるヘッダーUIを提供し、タイトル、左右のボタンなどの要素を柔軟に設定できるようにする責任があります。
  */
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { HeaderButton } from './HeaderButton';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../design/theme/ThemeContext';
 
 export interface HeaderConfig {
-  title?: React.ReactNode;
+  title?: string | React.ReactNode;
   leftButtons?: Array<{
     title?: string;
-    icon?: React.ReactNode; // Add icon property
+    icon?: React.ReactNode;
     onPress: () => void | Promise<void>;
     variant?: 'primary' | 'secondary' | 'danger';
     disabled?: boolean;
   }>;
   rightButtons?: Array<{
     title?: string;
-    icon?: React.ReactNode; // Add icon property
+    icon?: React.ReactNode;
     onPress: () => void | Promise<void>;
     variant?: 'primary' | 'secondary' | 'danger';
     disabled?: boolean;
   }>;
+  flexRatio?: {
+    left: number;
+    center: number;
+    right: number;
+  };
 }
 
 export const CustomHeader: React.FC<HeaderConfig> = ({
   title,
   leftButtons = [],
   rightButtons = [],
+  flexRatio = { left: 1, center: 3, right: 4 },
 }) => {
-  const { spacing } = useTheme();
+  const { colors, typography } = useTheme();
+  const insets = useSafeAreaInsets();
+
+  // フォントサイズに基づいて動的にヘッダーの高さを計算
+  const headerHeight = Math.max(56, typography.header.lineHeight + 20); // 最小56px、またはlineHeight + padding
 
   const styles = StyleSheet.create({
     container: {
       flexDirection: 'row',
       alignItems: 'center',
+      backgroundColor: colors.background,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+      paddingTop: insets.top,
+      height: headerHeight + insets.top,
+      paddingHorizontal: 8,
     },
     leftSection: {
-      flex: 1,
+      flex: flexRatio.left,
       alignItems: 'flex-start',
+      justifyContent: 'center',
     },
     centerSection: {
-      flex: 2,
-      alignItems: 'stretch',
+      flex: flexRatio.center,
+      alignItems: 'stretch', // flex-start から stretch に変更
+      justifyContent: 'center',
     },
     rightSection: {
-      flex: 1,
+      flex: flexRatio.right,
       alignItems: 'flex-end',
-    },
-    buttonContainer: {
+      justifyContent: 'flex-end',
       flexDirection: 'row',
-      marginHorizontal: spacing.md,
+      gap: 8,
+    },
+    titleText: {
+      color: colors.text,
+      fontSize: typography.header.fontSize,
+      lineHeight: typography.header.lineHeight,
+      fontWeight: '600',
+    },
+    button: {
+      paddingHorizontal: 0,
+      paddingVertical: 8,
+      minWidth: 38,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    buttonText: {
+      fontSize: typography.subtitle.fontSize,
+      lineHeight: typography.subtitle.lineHeight,
+      fontWeight: '600',
+      textAlign: 'center',
+    },
+    disabledButton: {
+      opacity: 0.5,
     },
   });
+
+  const getButtonColor = (variant: 'primary' | 'secondary' | 'danger' = 'primary', disabled?: boolean) => {
+    if (disabled) return colors.textSecondary;
+
+    switch (variant) {
+      case 'primary':
+        return colors.primary;
+      case 'secondary':
+        return colors.textSecondary;
+      case 'danger':
+        return colors.danger;
+      default:
+        return colors.primary;
+    }
+  };
 
   const renderButtons = (buttons: HeaderConfig['leftButtons']) => {
     if (!buttons || buttons.length === 0) return null;
 
     return (
-      <View style={styles.buttonContainer}>
+      <>
         {buttons.map((button, index) => (
-          <HeaderButton
+          <TouchableOpacity
             key={index}
-            title={button.title}
+            style={[
+              styles.button,
+              button.disabled && styles.disabledButton,
+            ]}
             onPress={button.onPress}
-            variant={button.variant}
-          />
+            disabled={button.disabled}
+          >
+            {button.icon ? (
+              button.icon
+            ) : (
+              <Text
+                style={[
+                  styles.buttonText,
+                  {
+                    color: getButtonColor(button.variant, button.disabled),
+                  },
+                ]}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {button.title}
+              </Text>
+            )}
+          </TouchableOpacity>
         ))}
-      </View>
+      </>
     );
+  };
+
+  const renderTitle = () => {
+    if (!title) return null;
+
+    // titleが文字列の場合はTextコンポーネントでラップ
+    if (typeof title === 'string') {
+      return (
+        <Text
+          style={styles.titleText}
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
+          {title}
+        </Text>
+      );
+    }
+
+    // ReactNodeの場合はそのまま返す
+    return title;
   };
 
   return (
@@ -80,7 +174,7 @@ export const CustomHeader: React.FC<HeaderConfig> = ({
       </View>
 
       <View style={styles.centerSection}>
-        {title}
+        {renderTitle()}
       </View>
 
       <View style={styles.rightSection}>
@@ -88,66 +182,4 @@ export const CustomHeader: React.FC<HeaderConfig> = ({
       </View>
     </View>
   );
-};
-
-export const useCustomHeader = () => {
-  const { colors } = useTheme(); // フックのトップレベルで useTheme を呼び出す
-
-
-  const buttonContainerStyle = {
-    flexDirection: 'row' as const,
-    marginHorizontal: 10,
-  };
-
-  const createHeaderConfig = (config: HeaderConfig) => ({
-    headerTitle: () => config.title || null,
-    headerTitleAlign: 'left' as const,
-    headerTitleContainerStyle: {
-      flex: 1,
-      paddingHorizontal: 0,
-    },
-    headerLeft: () => {
-      if (!config.leftButtons?.length) return null;
-      return (
-        <View style={buttonContainerStyle}>
-          {config.leftButtons.map((button, index) => (
-            <HeaderButton
-              key={index}
-              title={button.title}
-              icon={button.icon}
-              onPress={button.onPress}
-              variant={button.variant}
-              disabled={button.disabled}
-            />
-          ))}
-        </View>
-      );
-    },
-    headerRight: () => {
-      if (!config.rightButtons?.length) return null;
-      return (
-        <View style={buttonContainerStyle}>
-          {config.rightButtons.map((button, index) => (
-            <HeaderButton
-              key={index}
-              title={button.title}
-              icon={button.icon}
-              onPress={button.onPress}
-              variant={button.variant}
-              disabled={button.disabled}
-            />
-          ))}
-        </View>
-      );
-    },
-    // ヘッダー自体のスタイルもテーマに合わせる
-    headerStyle: {
-      backgroundColor: colors.secondary,
-      borderBottomWidth: 2,
-      borderBottomColor: colors.tertiary,
-    },
-    headerTintColor: colors.text,
-  });
-
-  return { createHeaderConfig };
 };

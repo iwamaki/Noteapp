@@ -9,6 +9,7 @@ import {
   Animated,
   PanResponderInstance,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { ChatMessage } from '../llmService/index';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { MessageItem } from './MessageItem';
@@ -26,7 +27,7 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
   messages,
   isLoading,
   onCollapse,
-  onResetChat, 
+  onResetChat,
   messageAreaHeight,
   panHandlers,
 }) => {
@@ -43,20 +44,14 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
 
   const styles = StyleSheet.create({
     collapseButton: {
-      padding: 4,
-    },    
-    collapseButtonText: {
-      color: colors.textSecondary,      
-      fontSize: typography.subtitle.fontSize,
+      paddingVertical: 8,
+      paddingHorizontal: 4,
     },
 
     resetButton: {
-      padding: 4,
-      marginRight: 8, 
-    },
-    resetButtonText: {
-      color: colors.textSecondary,
-      fontSize: typography.subtitle.fontSize,
+      paddingVertical: 8,
+      paddingHorizontal: 4,
+      marginRight: 8,
     },
 
     loadingContainer: {
@@ -72,7 +67,7 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
     },
 
     messagesArea: {
-      backgroundColor: colors.secondary,
+      backgroundColor: colors.background,
       borderBottomColor: colors.border,
       borderBottomWidth: 1,
       overflow: 'hidden',
@@ -83,7 +78,7 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
     },
     messagesHeader: {
       alignItems: 'center',
-      backgroundColor: colors.secondary,
+      backgroundColor: colors.background,
       borderBottomColor: colors.border,
       borderBottomWidth: 1,
       flexDirection: 'row',
@@ -93,12 +88,13 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
     },
     messagesHeaderTitle: {
       color: colors.text,
-      fontSize: typography.body.fontSize,
+      fontSize: typography.header.fontSize,
       fontWeight: '600',
     },
 
     headerButtonContainer: {
       flexDirection: 'row',
+      alignItems: 'center',
     },
 
     messagesScrollView: {
@@ -112,10 +108,18 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
         <Text style={styles.messagesHeaderTitle}>チャット履歴</Text>
         <View style={styles.headerButtonContainer}>
           <TouchableOpacity onPress={onResetChat} style={styles.resetButton}>
-            <Text style={styles.resetButtonText}>リセット</Text>
+            <Ionicons
+              name="refresh-outline"
+              size={typography.header.fontSize}
+              color={colors.textSecondary}
+            />
           </TouchableOpacity>
           <TouchableOpacity onPress={onCollapse} style={styles.collapseButton}>
-            <Text style={styles.collapseButtonText}>▼</Text>
+            <Ionicons
+              name="chevron-down"
+              size={typography.header.fontSize}
+              color={colors.textSecondary}
+            />
           </TouchableOpacity>
         </View>
       </View>

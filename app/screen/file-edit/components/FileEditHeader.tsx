@@ -1,45 +1,38 @@
 /**
  * @file FileEditHeader.tsx
  * @summary ファイル編集画面のヘッダータイトル入力コンポーネント
+ * @responsibility カテゴリーとタイトルの表示・編集のみを担当
  */
 
 import React, { useState, useRef, useEffect } from 'react';
 import {
+  View,
+  Text,
   TextInput,
   StyleSheet,
   NativeSyntheticEvent,
   TextInputKeyPressEventData,
-  View,
-  TouchableOpacity,
 } from 'react-native';
 import { useTheme } from '../../../design/theme/ThemeContext';
-import { responsive } from '../../../design/styles/commonStyles';
-import { Ionicons } from '@expo/vector-icons';
 
 interface FileEditHeaderProps {
   title: string;
+  category: string;
   onTitleChange: (title: string) => void;
   editable: boolean;
   onCompositionStart?: () => void;
   onCompositionEnd?: (title: string) => void;
-  onUndo: () => void;
-  onRedo: () => void;
-  canUndo: boolean;
-  canRedo: boolean;
 }
 
 export const FileEditHeader: React.FC<FileEditHeaderProps> = ({
   title,
+  category,
   onTitleChange,
   editable,
   onCompositionStart,
   onCompositionEnd,
-  onUndo,
-  onRedo,
-  canUndo,
-  canRedo,
 }) => {
-  const { colors, typography, spacing } = useTheme();
+  const { colors } = useTheme();
   const [localTitle, setLocalTitle] = useState(title);
   const isComposingRef = useRef(false);
 
@@ -49,23 +42,20 @@ export const FileEditHeader: React.FC<FileEditHeaderProps> = ({
 
   const styles = StyleSheet.create({
     container: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      width: responsive.getResponsiveSize(180, 220, 260),
+      flex: 1,
+      justifyContent: 'center',
+    },
+    category: {
+      fontSize: 11,
+      color: colors.textSecondary,
+      marginBottom: 2,
     },
     headerTitle: {
-      ...typography.title,
+      fontSize: 14,
+      fontWeight: '600',
       color: colors.text,
-      flex: 1,
-      textAlign: 'left',
-    },
-    buttonContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    button: {
-      paddingHorizontal: spacing.sm,
+      padding: 0,
+      margin: 0,
     },
   });
 
@@ -110,6 +100,15 @@ export const FileEditHeader: React.FC<FileEditHeaderProps> = ({
 
   return (
     <View style={styles.container}>
+      {category && (
+        <Text
+          style={styles.category}
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
+          {category}
+        </Text>
+      )}
       <TextInput
         value={localTitle}
         onChangeText={handleChangeText}
@@ -123,23 +122,8 @@ export const FileEditHeader: React.FC<FileEditHeaderProps> = ({
         onSelectionChange={handleSelectionChange}
         autoCorrect={false}
         autoCapitalize="none"
+        numberOfLines={1}
       />
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity onPress={onUndo} disabled={!canUndo} style={styles.button}>
-          <Ionicons
-            name="arrow-undo-outline"
-            size={24}
-            color={canUndo ? colors.primary : colors.textSecondary}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={onRedo} disabled={!canRedo} style={styles.button}>
-          <Ionicons
-            name="arrow-redo-outline"
-            size={24}
-            color={canRedo ? colors.primary : colors.textSecondary}
-          />
-        </TouchableOpacity>
-      </View>
     </View>
   );
 };

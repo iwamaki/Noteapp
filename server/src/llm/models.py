@@ -13,27 +13,13 @@ class ChatMessage(BaseModel):
     timestamp: Optional[str] = None
 
 
-class FileListItem(BaseModel):
-    """フラット構造のファイルリストアイテム
-
-    フラット構造では、ファイルはtitleのみで識別され、
-    パスやディレクトリの概念はありません。
-    """
-    title: str
-    type: Literal["file"] = "file"
-    category: Optional[str] = None
-    tags: Optional[List[str]] = None
-
-
 class FilelistScreenContext(BaseModel):
     """ファイルリスト画面のコンテキスト（フラット構造）
 
-    フラット構造では、currentPathは不要です。
-    すべてのファイルは単一の平坦なリストとして表示されます。
+    Note: visibleFileList は廃止（冗長）
+    全ファイル情報は ChatContext.allFiles として送信される
     """
     name: Literal["filelist"] = "filelist"
-    visibleFileList: List[FileListItem]
-    selectedFileList: Optional[List[FileListItem]] = None
 
 
 class EditScreenContext(BaseModel):
@@ -47,10 +33,11 @@ class ChatContext(BaseModel):
     fileList: Optional[List[Dict[str, Any]]] = None
     currentFile: Optional[str] = None
     currentFileContent: Optional[Dict[str, Optional[str]]] = None  # 現在開いているファイルの内容 {"filename": "...", "content": "..."}
-    attachedFileContent: Optional[Dict[str, str]] = None
+    attachedFileContent: Optional[List[Dict[str, str]]] = None  # 添付ファイルの内容（複数対応）
     conversationHistory: Optional[List[Dict[str, Any]]] = None
     activeScreen: Optional[Union[FilelistScreenContext, EditScreenContext]] = Field(None, discriminator='name')
     allFiles: Optional[List[Dict[str, Any]]] = None
+    sendFileContextToLLM: Optional[bool] = None  # ファイルコンテキストをLLMに送信するかどうか
 
 
 class ChatRequest(BaseModel):
@@ -72,6 +59,10 @@ class LLMCommand(BaseModel):
     content: Optional[str] = None  # ファイルの内容
     category: Optional[str] = None  # カテゴリー（階層パス形式: "研究/AI"）
     tags: Optional[List[str]] = None  # タグ
+
+    # 行ベース編集用フィールド（edit_file_linesツール用）
+    start_line: Optional[int] = None  # 開始行（1-based, inclusive）
+    end_line: Optional[int] = None  # 終了行（1-based, inclusive）
 
 
 class ChatResponse(BaseModel):

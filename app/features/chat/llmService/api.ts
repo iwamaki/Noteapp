@@ -28,8 +28,13 @@ export class APIService {
   private static llmServiceInstance = new LLMService();
 
   // LLM関連のAPI関連
-  static async sendChatMessage(message: string, context?: ChatContext, clientId?: string | null): Promise<LLMResponse> {
-    return this.llmServiceInstance.sendChatMessage(message, context, clientId);
+  static async sendChatMessage(
+    message: string,
+    context?: ChatContext,
+    clientId?: string | null,
+    attachedFiles?: Array<{ filename: string; content: string }>
+  ): Promise<LLMResponse> {
+    return this.llmServiceInstance.sendChatMessage(message, context, clientId, attachedFiles);
   }
 
   // LLMプロバイダーのロード

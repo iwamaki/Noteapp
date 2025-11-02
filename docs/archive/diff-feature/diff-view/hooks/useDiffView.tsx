@@ -17,7 +17,7 @@ type DiffViewScreenRouteProp = RouteProp<RootStackParamList, 'DiffView'>;
 export const useDiffView = () => {
   const navigation = useNavigation();
   const route = useRoute<DiffViewScreenRouteProp>();
-  const { colors, typography } = useTheme();
+  const { colors, typography, iconSizes } = useTheme();
   const { createHeaderConfig } = useCustomHeader();
 
   // Destructure params based on mode
@@ -85,13 +85,13 @@ export const useDiffView = () => {
       createHeaderConfig({
         title: <Text style={{ color: colors.text, fontSize: typography.header.fontSize }}>{titleText}</Text>,
         leftButtons: [{
-            icon: <Ionicons name="arrow-back-outline" size={24} color={colors.text} />,
+            icon: <Ionicons name="arrow-back-outline" size={iconSizes.medium} color={colors.text} />,
             onPress: () => navigation.goBack(),
           }],
         rightButtons: rightButtons,
       })
     );
-  }, [navigation, createHeaderConfig, handleBack, handleRestore, mode, colors, typography]);
+  }, [navigation, createHeaderConfig, handleBack, handleRestore, mode, colors, typography, iconSizes.medium]);
 
   return {
     diff,

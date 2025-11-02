@@ -19,6 +19,10 @@ export const CustomInlineInput: React.FC<CustomInlineInputProps> = ({
   // テキストが入力されているかチェック
   const hasValue = value && value.toString().length > 0;
 
+  // バッテンボタンのサイズを計算（当たり判定を大きめに）
+  const clearButtonSize = spacing.xl + spacing.md; // 20 + 10 = 30
+  const clearButtonPadding = spacing.md; // 10
+
   const styles = StyleSheet.create({
     container: {
       position: 'relative',
@@ -28,21 +32,23 @@ export const CustomInlineInput: React.FC<CustomInlineInputProps> = ({
       borderWidth: 1,
       borderColor: colors.border,
       borderRadius: borderRadius,
-      paddingHorizontal: 15,
-      paddingVertical: 10,
-      paddingRight: hasValue ? 40 : 15, // バッテンボタンのスペースを確保
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+      paddingRight: hasValue ? clearButtonSize + clearButtonPadding : spacing.lg, // バッテンボタンのスペースを確保
       fontSize: typography.subtitle.fontSize,
       backgroundColor: colors.background,
       color: colors.text,
     },
     clearButton: {
       position: 'absolute',
-      right: 10,
+      right: spacing.xs,
       top: 0,
       bottom: 0,
       justifyContent: 'center',
       alignItems: 'center',
-      paddingHorizontal: 12,
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.sm,
+      minWidth: clearButtonSize,
     },
     clearButtonText: {
       color: colors.textSecondary,

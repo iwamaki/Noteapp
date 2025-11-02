@@ -6,13 +6,14 @@
  */
 
 import { useEffect, useRef } from 'react';
-import { ActiveScreenContextProvider, ActiveScreenContext, FileListItem } from '../types';
+import { ActiveScreenContextProvider, ActiveScreenContext } from '../types';
 import ChatService from '../index';
 import { logger } from '../../../utils/logger';
 import { CommandHandlerContext } from '../handlers/types';
 import { createFileHandlerFlat } from '../handlers/createFileHandlerFlat';
 import { deleteFileHandlerFlat } from '../handlers/deleteFileHandlerFlat';
 import { renameFileHandlerFlat } from '../handlers/renameFileHandlerFlat';
+import { editFileLinesHandler } from '../handlers/editFileLinesHandler';
 import type { FileFlat } from '@data/core/typesFlat';
 
 interface UseFileListChatContextParams {
@@ -41,21 +42,12 @@ export const useFileListChatContext = ({
   useEffect(() => {
     const contextProvider: ActiveScreenContextProvider = {
       getScreenContext: async (): Promise<ActiveScreenContext> => {
-        logger.debug('chatService', '[useFileListChatContext] Getting screen context', {
-          filesCount: filesRef.current.length,
-        });
+        logger.debug('chatService', '[useFileListChatContext] Getting screen context (no visibleFileList - using allFiles instead)');
 
-        // FileFlatをFileListItemに変換
-        const visibleFileList: FileListItem[] = filesRef.current.map(file => ({
-          title: file.title,
-          type: 'file' as const,
-          category: file.category,
-          tags: file.tags,
-        }));
-
+        // Note: visibleFileList は冗長なため廃止
+        // 全ファイル情報は allFiles として ChatService.buildChatContext() で送信される
         return {
           name: 'filelist',
-          visibleFileList,
         };
       },
     };
@@ -71,6 +63,7 @@ export const useFileListChatContext = ({
       create_file: (command: any) => createFileHandlerFlat(command, handlerContext),
       delete_file: (command: any) => deleteFileHandlerFlat(command, handlerContext),
       rename_file: (command: any) => renameFileHandlerFlat(command, handlerContext),
+      edit_file_lines: (command: any) => editFileLinesHandler(command, handlerContext),
     };
 
     logger.debug('chatService', '[useFileListChatContext] Registering context provider and handlers');

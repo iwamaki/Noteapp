@@ -1,6 +1,5 @@
 ---
-filename:  date_example_issue # "[作成日時]_[issueのタイトル]"
-id: 0 # issueのユニークID
+filename: 202x_issue # "[作成日時]_[issueのタイトル]"
 status: new # new | in-progress | blocked | pending-review | done
 priority: medium # A:high | B:medium | C:low
 attempt_count: 0 # このissueへの挑戦回数。失敗のたびにインクリメントする

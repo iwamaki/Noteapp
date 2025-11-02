@@ -20,13 +20,18 @@ export class ConversationHistory {
     this.trimHistory();
   }
 
-  addExchange(userMessage: string, aiResponse: string): void {
+  addExchange(
+    userMessage: string,
+    aiResponse: string,
+    attachedFiles?: Array<{ filename: string; content: string }>
+  ): void {
     const timestamp = new Date();
 
     this.addMessage({
       role: 'user',
       content: userMessage,
-      timestamp
+      timestamp,
+      attachedFiles: attachedFiles && attachedFiles.length > 0 ? attachedFiles : undefined
     });
 
     this.addMessage({

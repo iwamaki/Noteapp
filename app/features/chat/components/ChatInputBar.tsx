@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Text,
+  ScrollView,
 } from 'react-native';
 import { CustomInlineInput } from '../../../components/CustomInlineInput';
 import { Ionicons } from '@expo/vector-icons';
@@ -32,6 +33,8 @@ export const ChatInputBar: React.FC = () => {
     chatAreaHeight,
     panResponder,
     isResizing,
+    attachedFiles,
+    removeAttachedFile,
   } = useChat();
   const [inputText, setInputText] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
@@ -73,6 +76,7 @@ export const ChatInputBar: React.FC = () => {
   const canSendMessage = inputText.trim().length > 0 && !isLoading;
 
   // 静的スタイルをメモ化（テーマが変わったときのみ再作成）
+  /* eslint-disable react-native/no-unused-styles */
   const styles = useMemo(
     () => StyleSheet.create({
       container: {
@@ -80,7 +84,7 @@ export const ChatInputBar: React.FC = () => {
         left: 0,
         right: 0,
         zIndex: 1,
-        backgroundColor: colors.secondary,
+        backgroundColor: colors.background,
         borderTopWidth: 1,
         borderTopColor: colors.tertiary,
         paddingBottom: insets.bottom,
@@ -90,13 +94,42 @@ export const ChatInputBar: React.FC = () => {
         shadowRadius: 5,
         elevation: 5, // For Android
       },
+      attachedFileWrapper: {
+        paddingVertical: 8,
+        paddingHorizontal: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.tertiary,
+      },
+      attachedFilesScrollView: {
+        flexDirection: 'row',
+      },
+      attachedFileContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: `${colors.primary}15`, // プライマリカラーの薄い背景
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 16, // Pill型
+        marginRight: 8,
+        borderWidth: 1,
+        borderColor: `${colors.primary}40`,
+      },
+      attachedFileIcon: {
+        marginRight: 6,
+      },
+      attachedFileName: {
+        fontSize: 12,
+        color: colors.primary,
+        fontWeight: '600',
+        maxWidth: 120,
+      },
       inputArea: {
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: 10,
         paddingTop: 10,
         paddingBottom: 10,
-        backgroundColor: colors.secondary,
+        backgroundColor: colors.background,
       },
       expandButton: {
         alignSelf: 'flex-end',
@@ -104,8 +137,6 @@ export const ChatInputBar: React.FC = () => {
         marginBottom: 8,
         paddingHorizontal: 8,
         paddingVertical: 6,
-        backgroundColor: colors.border,
-        borderRadius: 4,
       },
       expandButtonText: {
         fontSize: typography.caption.fontSize,
@@ -132,6 +163,7 @@ export const ChatInputBar: React.FC = () => {
     }),
     [colors, typography, insets.bottom]
   );
+  /* eslint-enable react-native/no-unused-styles */
 
   // 動的スタイルを分離（keyboardHeightが変わったときのみ再作成）
   const dynamicContainerStyle = useMemo(
@@ -153,6 +185,36 @@ export const ChatInputBar: React.FC = () => {
           />
         )}
 
+        {/* 添付ファイル表示 */}
+        {attachedFiles.length > 0 && (
+          <View style={styles.attachedFileWrapper}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.attachedFilesScrollView}
+            >
+              {attachedFiles.map((file, index) => (
+                <TouchableOpacity
+                  key={`${file.filename}-${index}`}
+                  style={styles.attachedFileContainer}
+                  onPress={() => removeAttachedFile(index)}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons
+                    name="document-text"
+                    size={14}
+                    color={colors.primary}
+                    style={styles.attachedFileIcon}
+                  />
+                  <Text style={styles.attachedFileName} numberOfLines={1}>
+                    {file.filename}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
         {/* 入力エリア（常に表示） */}
         <View style={styles.inputArea}>
           {!isExpanded && (
@@ -160,7 +222,11 @@ export const ChatInputBar: React.FC = () => {
               onPress={() => setIsExpanded(true)}
               style={styles.expandButton}
             >
-              <Text style={styles.expandButtonText}>▲ {messages.filter(msg => msg.role === 'user').length}</Text>
+              <Ionicons
+                name="chevron-up"
+                size={typography.body.fontSize}
+                color={colors.text}
+              />
             </TouchableOpacity>
           )}
           <CustomInlineInput

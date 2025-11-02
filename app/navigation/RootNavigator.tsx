@@ -74,7 +74,7 @@ function RootNavigatorContent() {
 
             // 画面の背景色を設定してちらつき防止
             cardStyle: {
-              backgroundColor: colors.secondary,
+              backgroundColor: colors.background,
             },
 
             // アニメーション中の操作を制限

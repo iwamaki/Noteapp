@@ -12,6 +12,7 @@ import { ActiveScreenContextProvider, ActiveScreenContext, ChatServiceListener }
 import { FileRepository } from '@data/repositories/fileRepository';
 import WebSocketService from './services/websocketService';
 import { getOrCreateClientId } from './utils/clientId';
+import { useSettingsStore } from '../../settings/settingsStore';
 
 /**
  * シングルトンクラスとして機能し、アプリケーション全体でチャットの状態を管理します。
@@ -47,6 +48,9 @@ class ChatService {
   private wsService: WebSocketService | null = null;
   private clientId: string | null = null;
   private isWebSocketInitialized: boolean = false;
+
+  // 添付ファイル
+  private attachedFiles: Array<{ filename: string; content: string }> = [];
 
   private constructor() {
     // プライベートコンストラクタでシングルトンを保証
@@ -173,6 +177,65 @@ class ChatService {
   }
 
   /**
+   * ファイルをチャットに添付
+   * @param fileId 添付するファイルのID
+   */
+  public async attachFile(fileId: string): Promise<void> {
+    try {
+      const file = await FileRepository.getById(fileId);
+      if (!file) {
+        logger.error('chatService', `File not found: ${fileId}`);
+        return;
+      }
+
+      // 既に添付されている場合は追加しない
+      const alreadyAttached = this.attachedFiles.some(f => f.filename === file.title);
+      if (alreadyAttached) {
+        logger.warn('chatService', `File already attached: ${file.title}`);
+        return;
+      }
+
+      this.attachedFiles.push({
+        filename: file.title,
+        content: file.content,
+      });
+
+      logger.info('chatService', `File attached: ${file.title} (total: ${this.attachedFiles.length})`);
+      this.notifyAttachedFileChange();
+    } catch (error) {
+      logger.error('chatService', 'Error attaching file:', error);
+    }
+  }
+
+  /**
+   * 添付ファイルをすべてクリア
+   */
+  public clearAttachedFiles(): void {
+    this.attachedFiles = [];
+    logger.info('chatService', 'All attached files cleared');
+    this.notifyAttachedFileChange();
+  }
+
+  /**
+   * 指定したインデックスの添付ファイルを削除
+   * @param index 削除するファイルのインデックス
+   */
+  public removeAttachedFile(index: number): void {
+    if (index >= 0 && index < this.attachedFiles.length) {
+      const removed = this.attachedFiles.splice(index, 1)[0];
+      logger.info('chatService', `Attached file removed: ${removed.filename} (remaining: ${this.attachedFiles.length})`);
+      this.notifyAttachedFileChange();
+    }
+  }
+
+  /**
+   * 現在の添付ファイル一覧を取得
+   */
+  public getAttachedFiles(): Array<{ filename: string; content: string }> {
+    return [...this.attachedFiles];
+  }
+
+  /**
    * チャットメッセージを送信
    * @param message 送信するメッセージ
    */
@@ -183,11 +246,12 @@ class ChatService {
       return;
     }
 
-    // ユーザーメッセージを追加
+    // ユーザーメッセージを追加（添付ファイル情報を含める）
     const userMessage: ChatMessage = {
       role: 'user',
       content: trimmedMessage,
       timestamp: new Date(),
+      attachedFiles: this.attachedFiles.length > 0 ? [...this.attachedFiles] : undefined,
     };
     this.addMessage(userMessage);
     this.setLoading(true);
@@ -212,9 +276,9 @@ class ChatService {
         logger.info('chatService', `WebSocket state before sending message: ${this.wsService.getState()}`);
       }
 
-      // APIにメッセージを送信（client_idも含める）
+      // APIにメッセージを送信（client_idと添付ファイル情報も含める）
       logger.debug('chatService', 'Sending message to LLM with context:', chatContext);
-      const response = await APIService.sendChatMessage(trimmedMessage, chatContext, this.clientId);
+      const response = await APIService.sendChatMessage(trimmedMessage, chatContext, this.clientId, this.attachedFiles.length > 0 ? this.attachedFiles : undefined);
 
       // AIメッセージを追加
       const aiMessage: ChatMessage = {
@@ -243,6 +307,10 @@ class ChatService {
       this.handleError(error);
     } finally {
       this.setLoading(false);
+      // メッセージ送信後に添付ファイルをクリア
+      if (this.attachedFiles.length > 0) {
+        this.clearAttachedFiles();
+      }
     }
   }
 
@@ -311,12 +379,19 @@ class ChatService {
    * 画面コンテキストからChatContextを構築
    */
   private async buildChatContext(screenContext: ActiveScreenContext | null): Promise<ChatContext> {
-    // 全ファイルとフォルダを取得してallFiles形式に変換
-    const allFilesData = await this.getAllFilesForContext();
+    // 設定を取得
+    const { settings } = useSettingsStore.getState();
+
+    // sendFileContextToLLMがtrueの場合のみ全ファイル情報を取得
+    const allFilesData = settings.sendFileContextToLLM
+      ? await this.getAllFilesForContext()
+      : undefined;
 
     const chatContext: ChatContext = {
       activeScreen: screenContext ?? undefined,
       allFiles: allFilesData,
+      sendFileContextToLLM: settings.sendFileContextToLLM,
+      attachedFileContent: this.attachedFiles.length > 0 ? this.attachedFiles : undefined,
     };
     return chatContext;
   }
@@ -406,6 +481,18 @@ class ChatService {
     this.listeners.forEach((listener) => {
       if (listener.onLoadingChange) {
         listener.onLoadingChange(this.isLoading);
+      }
+    });
+  }
+
+  /**
+   * 添付ファイルの変更を通知
+   */
+  private notifyAttachedFileChange(): void {
+    this.listeners.forEach((listener) => {
+      if (listener.onAttachedFileChange) {
+        // 新しい配列を作成して渡す（参照を変えることでReactの再レンダリングをトリガー）
+        listener.onAttachedFileChange([...this.attachedFiles]);
       }
     });
   }

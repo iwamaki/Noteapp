@@ -18,8 +18,9 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content }) => 
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.secondary,
-      // flex, padding は親コンポーネントで管理
+      backgroundColor: colors.background,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
     },
   });
 

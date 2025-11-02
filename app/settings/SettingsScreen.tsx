@@ -3,7 +3,7 @@
  * @summary このファイルは、アプリケーションの設定画面をレンダリングします。
  * @responsibility ユーザーがアプリケーションの各種設定（表示、動作、LLM関連など）を閲覧・変更できるUIを提供し、設定の永続化と更新を管理します。
  */
-import React, { useEffect, useLayoutEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -13,19 +13,15 @@ import {
   ActivityIndicator,
   Switch,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
 import { useSettingsStore } from './settingsStore';
 import { useTheme } from '../design/theme/ThemeContext';
-import { useCustomHeader } from '../components/CustomHeader';
+import { useSettingsHeader } from './hooks/useSettingsHeader';
 import APIService from '../features/chat/llmService/api';
 import { LLMProvider } from '../features/chat/llmService/types/types';
-import { Ionicons } from '@expo/vector-icons';
 import { ListItem } from '../components/ListItem';
 
 function SettingsScreen() {
   const { colors, spacing, typography } = useTheme();
-  const navigation = useNavigation();
-  const { createHeaderConfig } = useCustomHeader();
   const { settings, loadSettings, updateSettings, isLoading } = useSettingsStore();
 
   // 初期値にキャッシュを使用（キャッシュがあれば即座に表示）
@@ -60,19 +56,8 @@ function SettingsScreen() {
     }
   };
 
-  useLayoutEffect(() => {
-    navigation.setOptions(
-      createHeaderConfig({
-        title: <Text style={{ color: colors.text, fontSize: typography.header.fontSize }}>設定</Text>,
-        leftButtons: [
-          {
-            icon: <Ionicons name="arrow-back-outline" size={24} color={colors.text} />,
-            onPress: () => navigation.goBack(),
-          },
-        ],
-      })
-    );
-  }, [navigation, colors, typography]);
+  // ヘッダー設定
+  useSettingsHeader();
 
   const renderSection = (title: string) => (
     <Text style={styles.sectionTitle}>{title}</Text>
@@ -95,11 +80,12 @@ function SettingsScreen() {
   );
 
   // スタイルをメモ化（テーマが変わったときのみ再作成）
+  /* eslint-disable react-native/no-unused-styles */
   const styles = useMemo(
     () => StyleSheet.create({
       container: {
         flex: 1,
-        backgroundColor: colors.secondary,
+        backgroundColor: colors.background,
       },
       content: {
         padding: spacing.lg,
@@ -140,6 +126,7 @@ function SettingsScreen() {
     }),
     [colors, spacing, typography]
   );
+  /* eslint-enable react-native/no-unused-styles */
 
   if (isLoading) {
     return (
@@ -240,25 +227,13 @@ function SettingsScreen() {
                 )}
 
                 <ListItem.Container>
-                  <ListItem.Title><Text style={{...typography.body, color: colors.text}}>ノートコンテキストをLLMに送信</Text></ListItem.Title>
+                  {/* eslint-disable-next-line react-native/no-raw-text */}
+                  <ListItem.Title>ノートの文脈情報をLLMに送信</ListItem.Title>
                   <Switch
                     value={settings.sendFileContextToLLM}
                     onValueChange={(value: boolean) => updateSettings({ sendFileContextToLLM: value })}
                   />
                 </ListItem.Container>
-
-                {settings.sendFileContextToLLM && renderPicker(
-                  'コンテキスト階層の深さ',
-                  String(settings.llmContextMaxDepth),
-                  [
-                    { label: '1層 (現在)', value: '1' },
-                    { label: '2層', value: '2' },
-                    { label: '3層', value: '3' },
-                    { label: '5層', value: '5' },
-                    { label: '全階層', value: '-1' },
-                  ],
-                  (value) => updateSettings({ llmContextMaxDepth: Number(value) })
-                )}
               </>
             )}
           </>

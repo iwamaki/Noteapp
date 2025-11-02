@@ -13,7 +13,7 @@
  * - ✅ シンプルなCRUD操作
  */
 
-import { FileFlat, CreateFileDataFlat, UpdateFileDataFlat } from '@data/core/typesFlat';
+import { FileFlat, CreateFileDataFlat } from '@data/core/typesFlat';
 import { FileRepository } from '@data/repositories/fileRepository';
 import { MetadataService } from '@data/services/metadataService';
 
@@ -299,6 +299,7 @@ export class FileListUseCasesFlat {
     }
 
     // 禁止文字チェック（ファイルシステムに依存する文字を避ける）
+    // eslint-disable-next-line no-control-regex
     const invalidChars = /[<>:"|?*\x00-\x1F]/;
     if (invalidChars.test(trimmed)) {
       return { valid: false, error: 'ファイル名に使用できない文字が含まれています' };

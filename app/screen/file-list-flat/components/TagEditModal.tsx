@@ -4,14 +4,13 @@
  * @description
  * ファイルに紐づくタグを編集するモーダル。
  * カンマ区切りまたはスペース区切りで複数のタグを入力可能。
- * CustomModalを活用してUI統一。
+ * InputFormModalを活用してUI統一。
  */
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { StyleSheet, Text } from 'react-native';
-import { CustomInlineInput } from '../../../components/CustomInlineInput';
 import { useTheme } from '../../../design/theme/ThemeContext';
-import { CustomModal } from '../../../components/CustomModal';
+import { InputFormModal } from '../../../components/InputFormModal';
 
 interface TagEditModalProps {
   visible: boolean;
@@ -29,29 +28,8 @@ export const TagEditModal: React.FC<TagEditModalProps> = ({
   onSave,
 }) => {
   const { colors, typography, spacing } = useTheme();
-  const [inputValue, setInputValue] = useState('');
 
-  const styles = StyleSheet.create({
-    inputBorder: {
-      borderWidth: 1,
-      borderRadius: 8,
-    },
-    hint: {
-      ...typography.caption,
-      color: colors.textSecondary,
-      marginTop: spacing.xs,
-      marginBottom: spacing.sm,
-    },
-  });
-
-  useEffect(() => {
-    if (visible) {
-      // カンマ区切りで表示（#なし）
-      setInputValue(initialTags.join(', '));
-    }
-  }, [visible, initialTags]);
-
-  const handleSave = () => {
+  const handleSave = (inputValue: string) => {
     // カンマまたはスペースで分割し、#を削除、空白を削除してフィルタリング
     const tags = inputValue
       .split(/[,\s]+/)
@@ -62,37 +40,29 @@ export const TagEditModal: React.FC<TagEditModalProps> = ({
     onClose();
   };
 
+  const styles = StyleSheet.create({
+    hint: {
+      ...typography.caption,
+      color: colors.textSecondary,
+      marginTop: spacing.xs,
+      marginBottom: spacing.sm,
+    },
+  });
+
   return (
-    <CustomModal
-      isVisible={visible}
+    <InputFormModal
+      visible={visible}
       title="タグを編集"
       message={`「${fileName}」のタグを編集します。`}
+      initialValue={initialTags.join(', ')}
+      placeholder="例: 重要, todo, アイデア"
       onClose={onClose}
-      buttons={[
-        {
-          text: 'キャンセル',
-          style: 'cancel',
-          onPress: onClose,
-        },
-        {
-          text: '保存',
-          style: 'default',
-          onPress: handleSave,
-        },
-      ]}
+      onSubmit={handleSave}
+      multiline
     >
-      <CustomInlineInput
-        placeholder="例: 重要, todo, アイデア"
-        value={inputValue}
-        onChangeText={setInputValue}
-        onClear={() => setInputValue('')}
-        autoFocus
-        onSubmitEditing={handleSave}
-        multiline
-      />
       <Text style={styles.hint}>
         複数のタグはカンマ（,）またはスペースで区切って入力してください。#は自動で削除されます。
       </Text>
-    </CustomModal>
+    </InputFormModal>
   );
 };

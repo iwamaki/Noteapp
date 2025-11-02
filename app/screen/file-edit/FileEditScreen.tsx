@@ -27,8 +27,8 @@ function FileEditScreen() {
   const { keyboardHeight, chatInputBarHeight } = useKeyboardHeight();
 
   const {
-    file,
     title,
+    category,
     content,
     setContent,
     isLoading,
@@ -76,7 +76,7 @@ function FileEditScreen() {
 
   useFileEditHeader({
     title,
-    activeFileId: file?.id,
+    category,
     viewMode,
     isLoading,
     isEditable: viewMode === 'edit' && !isLoading,
@@ -109,21 +109,23 @@ function FileEditScreen() {
   const chatBarOffset = chatInputBarHeight + keyboardHeight;
 
   // スタイルをメモ化（テーマとchatBarOffsetが変わったときのみ再作成）
+  /* eslint-disable react-native/no-unused-styles */
   const styles = useMemo(
     () => StyleSheet.create({
       scrollView: {
         flex: 1,
-        backgroundColor: colors.secondary,
+        backgroundColor: colors.background,
       },
       contentContainer: {
-        paddingHorizontal: 16,
-        paddingVertical: 12,
+        paddingHorizontal: 0,
+        paddingVertical: 0,
         paddingBottom: chatBarOffset,
         flexGrow: 1,
       },
     }),
     [colors.secondary, chatBarOffset]
   );
+  /* eslint-enable react-native/no-unused-styles */
 
   return (
     <MainContainer isLoading={isLoading}>
