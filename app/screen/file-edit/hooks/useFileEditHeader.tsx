@@ -65,7 +65,6 @@ export const useFileEditHeader = ({
     navigation.setOptions({
       header: () => (
         <CustomHeader
-          flexRatio={{ left: 1, center: 2, right: 2 }}
           title={
             <FileEditHeader
               title={title}
