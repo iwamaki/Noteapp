@@ -1,6 +1,7 @@
 /**
  * @file FileEditHeader.tsx
  * @summary ファイル編集画面のヘッダータイトル入力コンポーネント
+ * @responsibility カテゴリーとタイトルの表示・編集のみを担当
  */
 
 import React, { useState, useRef, useEffect } from 'react';

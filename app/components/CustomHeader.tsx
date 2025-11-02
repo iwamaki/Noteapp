@@ -5,6 +5,7 @@
  */
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HeaderButton } from './HeaderButton';
 import { useTheme } from '../design/theme/ThemeContext';
 
@@ -12,46 +13,61 @@ export interface HeaderConfig {
   title?: React.ReactNode;
   leftButtons?: Array<{
     title?: string;
-    icon?: React.ReactNode; // Add icon property
+    icon?: React.ReactNode;
     onPress: () => void | Promise<void>;
     variant?: 'primary' | 'secondary' | 'danger';
     disabled?: boolean;
   }>;
   rightButtons?: Array<{
     title?: string;
-    icon?: React.ReactNode; // Add icon property
+    icon?: React.ReactNode;
     onPress: () => void | Promise<void>;
     variant?: 'primary' | 'secondary' | 'danger';
     disabled?: boolean;
   }>;
+  flexRatio?: {
+    left: number;
+    center: number;
+    right: number;
+  };
 }
 
 export const CustomHeader: React.FC<HeaderConfig> = ({
   title,
   leftButtons = [],
   rightButtons = [],
+  flexRatio = { left: 1, center: 1, right: 1 },
 }) => {
+  const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
 
   const styles = StyleSheet.create({
     container: {
       flexDirection: 'row',
       alignItems: 'center',
+      backgroundColor: colors.background,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+      paddingTop: insets.top,
+      height: 56 + insets.top,
+      paddingHorizontal: 8,
     },
     leftSection: {
-      flex: 1,
+      flex: flexRatio.left,
       alignItems: 'flex-start',
+      justifyContent: 'center',
     },
     centerSection: {
-      flex: 2,
+      flex: flexRatio.center,
       alignItems: 'stretch',
+      justifyContent: 'center',
     },
     rightSection: {
-      flex: 2,
+      flex: flexRatio.right,
       alignItems: 'flex-end',
-    },
-    buttonContainer: {
+      justifyContent: 'center',
       flexDirection: 'row',
-      marginHorizontal: 0,
+      gap: 8,
     },
   });
 
@@ -59,16 +75,18 @@ export const CustomHeader: React.FC<HeaderConfig> = ({
     if (!buttons || buttons.length === 0) return null;
 
     return (
-      <View style={styles.buttonContainer}>
+      <>
         {buttons.map((button, index) => (
           <HeaderButton
             key={index}
             title={button.title}
+            icon={button.icon}
             onPress={button.onPress}
             variant={button.variant}
+            disabled={button.disabled}
           />
         ))}
-      </View>
+      </>
     );
   };
 

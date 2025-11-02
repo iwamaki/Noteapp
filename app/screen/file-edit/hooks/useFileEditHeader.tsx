@@ -1,16 +1,18 @@
 /**
- * @file useFileEditHeader.ts
- * @summary ファイル編集画面のヘッダー設定ロジックを管理するフック
+ * @file useFileEditHeader.tsx
+ * @summary ファイル編集画面のヘッダーロジックを管理するフック
+ * @responsibility ボタンの状態管理とイベントハンドラーのみを担当し、
+ *                レイアウト構造はCustomHeaderコンポーネントに委譲する
  */
 
-import React, { useLayoutEffect, useCallback, useMemo } from 'react';
+import React, { useLayoutEffect, useCallback } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../../../navigation/types';
-import { useCustomHeader } from '../../../components/CustomHeader';
-import type { ViewMode } from '../types';
 import { Ionicons } from '@expo/vector-icons';
+import { RootStackParamList } from '../../../navigation/types';
+import { CustomHeader } from '../../../components/CustomHeader';
 import { useTheme } from '../../../design/theme/ThemeContext';
+import type { ViewMode } from '../types';
 import { FileEditHeader } from '../components/FileEditHeader';
 import { FileEditOverflowMenu } from '../components/FileEditOverflowMenu';
 
@@ -46,7 +48,6 @@ export const useFileEditHeader = ({
   canRedo,
 }: UseFileEditHeaderProps) => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
-  const { createHeaderConfig } = useCustomHeader();
   const { colors } = useTheme();
 
   // ビューモード切り替えハンドラをメモ化
@@ -54,84 +55,76 @@ export const useFileEditHeader = ({
     onViewModeChange(viewMode === 'edit' ? 'preview' : 'edit');
   }, [viewMode, onViewModeChange]);
 
-  // 右側のボタン群をメモ化
-  const rightButtons = useMemo(() => {
-    const buttons: Array<React.ReactNode> = [];
+  // 戻るボタンハンドラ
+  const handleGoBack = useCallback(() => {
+    navigation.goBack();
+  }, [navigation]);
 
-    if (!isLoading) {
-      // Undo/Redoボタンを追加
-      buttons.push(
-        <Ionicons
-          name="arrow-undo-outline"
-          size={24}
-          color={canUndo ? colors.primary : colors.textSecondary}
-          onPress={onUndo}
-          disabled={!canUndo}
-        />
-      );
-
-      buttons.push(
-        <Ionicons
-          name="arrow-redo-outline"
-          size={24}
-          color={canRedo ? colors.primary : colors.textSecondary}
-          onPress={onRedo}
-          disabled={!canRedo}
-        />
-      );
-
-      // 保存ボタン
-      buttons.push(
-        <Ionicons
-          name="save-outline"
-          size={24}
-          color={isDirty ? colors.primary : colors.textSecondary}
-          onPress={onSave}
-          disabled={!isDirty}
-        />
-      );
-
-      // オーバーフローメニュー
-      buttons.push(
-        <FileEditOverflowMenu
-          onToggleViewMode={handleToggleViewMode}
-        />
-      );
-    }
-
-    return buttons;
-  }, [isLoading, canUndo, canRedo, isDirty, colors.primary, colors.textSecondary, onUndo, onRedo, onSave, handleToggleViewMode]);
-
-  // ヘッダー設定を更新（依存配列を最小化）
+  // ヘッダー設定を更新
   useLayoutEffect(() => {
-    navigation.setOptions(
-      createHeaderConfig({
-        title: (
-          <FileEditHeader
-            title={title}
-            category={category}
-            onTitleChange={onTitleChange}
-            editable={isEditable}
-          />
-        ),
-        leftButtons: [
-          {
-            icon: <Ionicons name="arrow-back-outline" size={24} color={colors.text} />,
-            onPress: () => navigation.goBack(),
-            variant: 'secondary',
-          },
-        ],
-        rightButtons: rightButtons.map((button, index) => ({ title: `button-${index}`, icon: button, onPress: () => {} })),
-      })
-    );
+    navigation.setOptions({
+      header: () => (
+        <CustomHeader
+          flexRatio={{ left: 1, center: 2, right: 2 }}
+          title={
+            <FileEditHeader
+              title={title}
+              category={category}
+              onTitleChange={onTitleChange}
+              editable={isEditable}
+            />
+          }
+          leftButtons={[
+            {
+              icon: <Ionicons name="arrow-back-outline" size={24} color={colors.text} />,
+              onPress: handleGoBack,
+            },
+          ]}
+          rightButtons={
+            isLoading
+              ? []
+              : [
+                  {
+                    icon: <Ionicons name="arrow-undo-outline" size={24} color={canUndo ? colors.primary : colors.textSecondary} />,
+                    onPress: onUndo,
+                    disabled: !canUndo,
+                  },
+                  {
+                    icon: <Ionicons name="arrow-redo-outline" size={24} color={canRedo ? colors.primary : colors.textSecondary} />,
+                    onPress: onRedo,
+                    disabled: !canRedo,
+                  },
+                  {
+                    icon: <Ionicons name="save-outline" size={24} color={isDirty ? colors.primary : colors.textSecondary} />,
+                    onPress: onSave,
+                    disabled: !isDirty,
+                  },
+                  {
+                    icon: <FileEditOverflowMenu onToggleViewMode={handleToggleViewMode} />,
+                    onPress: () => {}, // FileEditOverflowMenuが自身でonPressを管理
+                  },
+                ]
+          }
+        />
+      ),
+    });
   }, [
     navigation,
     title,
     category,
     isEditable,
     onTitleChange,
-    rightButtons,
-    createHeaderConfig,
+    handleGoBack,
+    canUndo,
+    canRedo,
+    isDirty,
+    isLoading,
+    onUndo,
+    onRedo,
+    onSave,
+    handleToggleViewMode,
     colors.text,
+    colors.primary,
+    colors.textSecondary,
   ]);
 };
