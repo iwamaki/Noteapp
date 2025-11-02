@@ -20,3 +20,4 @@ ruff
 # Web検索機能の依存関係
 langchain-tavily==0.2.12
 duckduckgo-search
+ddgs
