@@ -6,7 +6,7 @@
  */
 
 import APIService, { ChatContext } from './llmService/api';
-import { ChatMessage, LLMCommand } from './llmService/types/types';
+import { ChatMessage, LLMCommand, TokenUsageInfo, SummarizeResponse } from './llmService/types/types';
 import { logger } from '../../utils/logger';
 import { ActiveScreenContextProvider, ActiveScreenContext, ChatServiceListener } from './types';
 import { FileRepository } from '@data/repositories/fileRepository';
@@ -51,6 +51,9 @@ class ChatService {
 
   // 添付ファイル
   private attachedFiles: Array<{ filename: string; content: string }> = [];
+
+  // トークン使用量情報
+  private tokenUsage: TokenUsageInfo | null = null;
 
   private constructor() {
     // プライベートコンストラクタでシングルトンを保証
@@ -288,6 +291,11 @@ class ChatService {
       };
       this.addMessage(aiMessage);
 
+      // トークン使用量情報を更新
+      if (response.tokenUsage) {
+        this.setTokenUsage(response.tokenUsage);
+      }
+
       // コマンドの処理
       if (response.commands && response.commands.length > 0) {
         logger.debug('chatService', 'Commands received from LLM:', response.commands);
@@ -320,9 +328,92 @@ class ChatService {
   public resetChat(): void {
     logger.debug('chatService', 'Resetting chat history');
     this.messages = [];
+    this.tokenUsage = null;
     // LLMServiceの会話履歴もクリア
     APIService.clearHistory();
     this.notifyListeners();
+    this.notifyTokenUsageChange();
+  }
+
+  /**
+   * 会話履歴を要約する
+   * 長い会話をシステムメッセージの要約 + 最近のメッセージで圧縮します
+   */
+  public async summarizeConversation(): Promise<void> {
+    if (this.isLoading) {
+      logger.debug('chatService', 'summarizeConversation aborted (already loading)');
+      return;
+    }
+
+    if (this.messages.length === 0) {
+      logger.warn('chatService', 'Cannot summarize: no messages in history');
+      return;
+    }
+
+    this.setLoading(true);
+
+    try {
+      logger.info('chatService', 'Starting conversation summarization');
+
+      // APIServiceを通じて要約を実行
+      const result: SummarizeResponse = await APIService.summarizeConversation();
+
+      // 会話履歴を要約結果で置き換える
+      this.messages = [];
+
+      // 要約システムメッセージを追加
+      const summaryMessage: ChatMessage = {
+        role: 'system',
+        content: `📝 **会話の要約**\n\n${result.summary.content}`,
+        timestamp: result.summary.timestamp ? new Date(result.summary.timestamp) : new Date(),
+      };
+      this.messages.push(summaryMessage);
+
+      // 最近のメッセージを復元
+      result.recentMessages.forEach((msg) => {
+        const message: ChatMessage = {
+          role: msg.role as 'user' | 'ai' | 'system',
+          content: msg.content,
+          timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date(),
+        };
+        this.messages.push(message);
+      });
+
+      // トークン使用量をリセット（要約後は新しいカウントになる）
+      // バックエンドで再計算されたトークン使用量を次のメッセージ送信時に取得する
+      this.tokenUsage = null;
+
+      logger.info('chatService', `Conversation summarized: ${result.originalTokens} -> ${result.compressedTokens} tokens (${(result.compressionRatio * 100).toFixed(1)}% reduction)`);
+
+      // リスナーに通知
+      this.notifyListeners();
+      this.notifyTokenUsageChange();
+
+      // 要約完了のシステムメッセージを追加
+      const completionMessage: ChatMessage = {
+        role: 'system',
+        content: `✅ 要約が完了しました。${result.originalTokens}トークン → ${result.compressedTokens}トークン（${(result.compressionRatio * 100).toFixed(1)}%削減）`,
+        timestamp: new Date(),
+      };
+      this.addMessage(completionMessage);
+
+    } catch (error) {
+      logger.error('chatService', 'Error during summarization:', error);
+
+      let errorMessageContent = '❌ 要約中にエラーが発生しました。';
+      if (error instanceof Error) {
+        errorMessageContent += `\n\n${error.message}`;
+      }
+
+      const errorMessage: ChatMessage = {
+        role: 'system',
+        content: errorMessageContent,
+        timestamp: new Date(),
+      };
+      this.addMessage(errorMessage);
+    } finally {
+      this.setLoading(false);
+    }
   }
 
   /**
@@ -337,6 +428,13 @@ class ChatService {
    */
   public getIsLoading(): boolean {
     return this.isLoading;
+  }
+
+  /**
+   * 現在のトークン使用量情報を取得
+   */
+  public getTokenUsage(): TokenUsageInfo | null {
+    return this.tokenUsage;
   }
 
   /**
@@ -373,6 +471,15 @@ class ChatService {
   private setLoading(loading: boolean): void {
     this.isLoading = loading;
     this.notifyLoadingChange();
+  }
+
+  /**
+   * トークン使用量情報を設定
+   */
+  private setTokenUsage(tokenUsage: TokenUsageInfo): void {
+    this.tokenUsage = tokenUsage;
+    this.notifyTokenUsageChange();
+    logger.debug('chatService', 'Token usage updated:', tokenUsage);
   }
 
   /**
@@ -493,6 +600,17 @@ class ChatService {
       if (listener.onAttachedFileChange) {
         // 新しい配列を作成して渡す（参照を変えることでReactの再レンダリングをトリガー）
         listener.onAttachedFileChange([...this.attachedFiles]);
+      }
+    });
+  }
+
+  /**
+   * トークン使用量情報の変更を通知
+   */
+  private notifyTokenUsageChange(): void {
+    this.listeners.forEach((listener) => {
+      if (listener.onTokenUsageChange) {
+        listener.onTokenUsageChange(this.tokenUsage);
       }
     });
   }

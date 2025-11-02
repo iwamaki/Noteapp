@@ -69,14 +69,70 @@ logger = setup_logger()
 # 構造化ログ用のヘルパー関数
 
 
+def _sanitize_log_content(content: Any, max_depth: int = 3, current_depth: int = 0) -> Any:
+    """ログ出力から不要な情報を除外する
+
+    Args:
+        content: サニタイズ対象のコンテンツ
+        max_depth: 最大再帰深度
+        current_depth: 現在の深度
+
+    Returns:
+        サニタイズされたコンテンツ
+    """
+    # 深度制限
+    if current_depth > max_depth:
+        return "[max depth reached]"
+
+    # 除外したいフィールド
+    excluded_fields = {'signature', 'extras', 'api_key', 'token', 'password'}
+
+    if isinstance(content, dict):
+        sanitized = {}
+        for key, value in content.items():
+            # 除外フィールドはスキップ
+            if key in excluded_fields:
+                continue
+            # 再帰的にサニタイズ
+            sanitized[key] = _sanitize_log_content(value, max_depth, current_depth + 1)
+        return sanitized
+
+    elif isinstance(content, list):
+        # リストの場合は各要素をサニタイズ（最大10要素まで）
+        if len(content) > 10:
+            return [_sanitize_log_content(item, max_depth, current_depth + 1) for item in content[:10]] + ["... truncated"]
+        return [_sanitize_log_content(item, max_depth, current_depth + 1) for item in content]
+
+    elif isinstance(content, str):
+        # 長い文字列は切り詰め
+        if len(content) > 1000:
+            return content[:1000] + "... [truncated]"
+        return content
+
+    else:
+        # その他の型はそのまま返す（数値、bool、Noneなど）
+        return content
+
+
 def log_llm_raw(provider: str, direction: str, content: Union[str, Dict[str, Any]], metadata: Optional[Dict[str, Any]] = None):
-    """LLMとの生のやり取りを詳細にログ記録"""
+    """LLMとの生のやり取りを詳細にログ記録
+
+    Args:
+        provider: LLMプロバイダー名
+        direction: 通信方向（agent_request, agent_response など）
+        content: ログ出力する内容
+        metadata: 追加のメタデータ
+    """
+    # コンテンツをサニタイズ
+    sanitized_content = _sanitize_log_content(content)
+
     log_data = {
         "provider": provider,
         "direction": direction,
-        "raw_content": content
+        "raw_content": sanitized_content
     }
     if metadata:
-        log_data.update(metadata)
-    
+        sanitized_metadata = _sanitize_log_content(metadata)
+        log_data.update(sanitized_metadata)
+
     logger.info(log_data)

@@ -36,6 +36,8 @@ export const ChatInputBar: React.FC = () => {
     isResizing,
     attachedFiles,
     removeAttachedFile,
+    tokenUsage,
+    summarizeConversation,
   } = useChat();
   const [inputText, setInputText] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
@@ -175,9 +177,11 @@ export const ChatInputBar: React.FC = () => {
             messages={messages}
             isLoading={isLoading}
             onCollapse={() => setIsExpanded(false)}
-            onResetChat={resetChat} // 追加
+            onResetChat={resetChat}
+            onSummarize={summarizeConversation}
             messageAreaHeight={chatAreaHeight}
             panHandlers={panResponder.panHandlers}
+            tokenUsage={tokenUsage}
           />
         )}
 

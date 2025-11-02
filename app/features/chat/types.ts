@@ -5,7 +5,7 @@
  *                 およびチャットサービスで使用される型を定義します
  */
 
-import { LLMCommand } from './llmService/types/types';
+import { LLMCommand, TokenUsageInfo } from './llmService/types/types';
 
 /**
  * アクティブな画面のコンテキスト情報
@@ -53,4 +53,6 @@ export interface ChatServiceListener {
   onLoadingChange?: (isLoading: boolean) => void;
   /** 添付ファイルが変更されたときに呼ばれる */
   onAttachedFileChange?: (files: Array<{ filename: string; content: string }>) => void;
+  /** トークン使用量が更新されたときに呼ばれる */
+  onTokenUsageChange?: (tokenUsage: TokenUsageInfo | null) => void;
 }

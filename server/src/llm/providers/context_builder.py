@@ -4,7 +4,7 @@
 
 from typing import List, Optional, Dict, Any
 from dataclasses import dataclass
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
+from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
 
 from src.llm.models import ChatContext, EditScreenContext, FilelistScreenContext
 from src.llm.tools.context_manager import set_file_context, set_directory_context, set_all_files_context
@@ -233,6 +233,10 @@ class ChatContextBuilder:
                 self._chat_history.append(HumanMessage(content=content))
             elif role == 'ai':
                 self._chat_history.append(AIMessage(content=content))
+            elif role == 'system':
+                # システムメッセージ（要約など）をサポート
+                self._chat_history.append(SystemMessage(content=content))
+                logger.info("System message (summary) added to chat history")
 
     @staticmethod
     def _extract_directory_path(file_path: str) -> str:

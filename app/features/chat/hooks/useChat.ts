@@ -6,7 +6,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Animated, PanResponder } from 'react-native';
-import { ChatMessage } from '../llmService/index';
+import { ChatMessage, TokenUsageInfo } from '../llmService/index';
 import { logger } from '../../../utils/logger';
 import { useSettingsStore } from '../../../settings/settingsStore';
 import ChatService from '../index';
@@ -26,6 +26,7 @@ export const useChat = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [attachedFiles, setAttachedFiles] = useState<Array<{ filename: string; content: string }>>([]);
+  const [tokenUsage, setTokenUsage] = useState<TokenUsageInfo | null>(null);
   const { settings } = useSettingsStore();
 
   const chatAreaHeight = useRef(new Animated.Value(CHAT_AREA_INITIAL_HEIGHT)).current;
@@ -81,6 +82,7 @@ export const useChat = () => {
     setMessages(ChatService.getMessages());
     setIsLoading(ChatService.getIsLoading());
     setAttachedFiles(ChatService.getAttachedFiles());
+    setTokenUsage(ChatService.getTokenUsage());
 
     // リスナーを登録
     ChatService.subscribe(listenerId, {
@@ -95,6 +97,10 @@ export const useChat = () => {
       onAttachedFileChange: (files) => {
         logger.debug('chat', '[useChat] Attached files changed', { count: files.length });
         setAttachedFiles(files);
+      },
+      onTokenUsageChange: (usage) => {
+        logger.debug('chat', '[useChat] Token usage changed', usage);
+        setTokenUsage(usage);
       },
     });
 
@@ -125,6 +131,11 @@ export const useChat = () => {
     ChatService.removeAttachedFile(index);
   }, []);
 
+  const summarizeConversation = useCallback(async () => {
+    logger.debug('chat', '[useChat] summarizeConversation called');
+    await ChatService.summarizeConversation();
+  }, []);
+
   return {
     messages,
     isLoading,
@@ -136,5 +147,7 @@ export const useChat = () => {
     attachedFiles,
     clearAttachedFiles,
     removeAttachedFile,
+    tokenUsage,
+    summarizeConversation,
   };
 };

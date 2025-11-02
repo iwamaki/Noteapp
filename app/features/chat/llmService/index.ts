@@ -11,6 +11,9 @@ import type {
   LLMResponse,
   LLMHealthStatus,
   LLMConfig,
+  SummarizeRequest,
+  SummarizeResponse,
+  ChatMessage,
 } from './types/types';
 import { LLMError } from './types/LLMError';
 import { ConversationHistory } from './core/ConversationHistory';
@@ -20,7 +23,7 @@ import { ErrorHandler } from './utils/ErrorHandler';
 import { ProviderManager } from './core/ProviderManager';
 
 // Re-export types
-export type { ChatMessage, ChatContext, LLMProvider, LLMResponse, LLMHealthStatus, LLMConfig, LLMCommand } from './types/types';
+export type { ChatMessage, ChatContext, LLMProvider, LLMResponse, LLMHealthStatus, LLMConfig, LLMCommand, TokenUsageInfo, SummarizeRequest, SummarizeResponse, SummaryResult } from './types/types';
 export { LLMError } from './types/LLMError';
 export { ConversationHistory } from './core/ConversationHistory';
 
@@ -230,5 +233,75 @@ export class LLMService {
 
   clearHistory(): void {
     this.conversationHistory.clear();
+  }
+
+  /**
+   * 会話履歴を要約する
+   * @returns 要約結果と圧縮された会話履歴
+   */
+  async summarizeConversation(): Promise<SummarizeResponse> {
+    try {
+      // 現在の会話履歴を取得
+      const history = this.conversationHistory.getHistory().map(msg => ({
+        role: msg.role,
+        content: msg.content,
+        timestamp: msg.timestamp.toISOString(),
+      }));
+
+      if (history.length === 0) {
+        throw new LLMError('会話履歴が空です', 'EMPTY_HISTORY');
+      }
+
+      logger.info('llm', `Summarizing conversation with ${history.length} messages`);
+
+      // 要約リクエストを送信
+      const request: SummarizeRequest = {
+        conversationHistory: history,
+        provider: this.providerManager.getCurrentProvider(),
+        model: this.providerManager.getCurrentModel(),
+      };
+
+      const response = await this.httpClient.post('/api/chat/summarize', request);
+
+      if (response.status < 200 || response.status >= 300) {
+        throw new LLMError(
+          `HTTP error! status: ${response.status}`,
+          'HTTP_ERROR',
+          response.status
+        );
+      }
+
+      const data: SummarizeResponse = response.data;
+
+      // 会話履歴を要約結果で置き換える
+      this.conversationHistory.clear();
+
+      // システムメッセージ（要約）を追加
+      const summaryMessage: ChatMessage = {
+        role: 'system',
+        content: data.summary.content,
+        timestamp: data.summary.timestamp ? new Date(data.summary.timestamp) : new Date(),
+      };
+      this.conversationHistory.getHistory().push(summaryMessage);
+
+      // 最近のメッセージを復元
+      data.recentMessages.forEach((msg) => {
+        const message: ChatMessage = {
+          role: msg.role as 'user' | 'ai' | 'system',
+          content: msg.content,
+          timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date(),
+        };
+        this.conversationHistory.getHistory().push(message);
+      });
+
+      logger.info('llm', `Conversation summarized: ${data.originalTokens} -> ${data.compressedTokens} tokens (${(data.compressionRatio * 100).toFixed(1)}% reduction)`);
+
+      return data;
+    } catch (error) {
+      if (error instanceof LLMError) {
+        throw error;
+      }
+      throw new LLMError('要約の作成に失敗しました', 'SUMMARIZATION_ERROR');
+    }
   }
 }

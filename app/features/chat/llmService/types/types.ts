@@ -90,6 +90,14 @@ export interface LLMCommand {
   end_line?: number;      // 終了行（1-based, inclusive）
 }
 
+// トークン使用量情報
+export interface TokenUsageInfo {
+  currentTokens: number;   // 現在の会話履歴のトークン数
+  maxTokens: number;       // 推奨される最大トークン数
+  usageRatio: number;      // 使用率（0.0-1.0）
+  needsSummary: boolean;   // 要約が推奨されるかどうか
+}
+
 // LLMレスポンス
 export interface LLMResponse {
   message: string;
@@ -99,6 +107,7 @@ export interface LLMResponse {
   historyCount?: number;
   shouldSuggestNewChat?: boolean;
   warning?: string;
+  tokenUsage?: TokenUsageInfo;  // トークン使用量情報
 }
 
 // LLMヘルスステータス
@@ -112,4 +121,29 @@ export interface LLMConfig {
   maxHistorySize: number;
   apiTimeout: number;
   baseUrl: string;
+}
+
+// 要約リクエスト
+export interface SummarizeRequest {
+  conversationHistory: Array<{role: string; content: string; timestamp?: string}>;
+  max_tokens?: number;
+  preserve_recent?: number;
+  provider?: string;
+  model?: string;
+}
+
+// 要約結果（システムメッセージ）
+export interface SummaryResult {
+  role: 'system';
+  content: string;
+  timestamp?: string;
+}
+
+// 要約レスポンス
+export interface SummarizeResponse {
+  summary: SummaryResult;
+  recentMessages: Array<{role: string; content: string; timestamp?: string}>;
+  compressionRatio: number;
+  originalTokens: number;
+  compressedTokens: number;
 }
