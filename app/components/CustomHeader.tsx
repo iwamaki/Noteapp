@@ -4,13 +4,13 @@
  * @responsibility アプリケーション全体で一貫性のあるヘッダーUIを提供し、タイトル、左右のボタンなどの要素を柔軟に設定できるようにする責任があります。
  */
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HeaderButton } from './HeaderButton';
 import { useTheme } from '../design/theme/ThemeContext';
 
 export interface HeaderConfig {
-  title?: React.ReactNode;
+  title?: string | React.ReactNode;
   leftButtons?: Array<{
     title?: string;
     icon?: React.ReactNode;
@@ -69,6 +69,11 @@ export const CustomHeader: React.FC<HeaderConfig> = ({
       flexDirection: 'row',
       gap: 8,
     },
+    titleText: {
+      color: colors.text,
+      fontSize: 18,
+      fontWeight: '600',
+    },
   });
 
   const renderButtons = (buttons: HeaderConfig['leftButtons']) => {
@@ -90,6 +95,26 @@ export const CustomHeader: React.FC<HeaderConfig> = ({
     );
   };
 
+  const renderTitle = () => {
+    if (!title) return null;
+
+    // titleが文字列の場合はTextコンポーネントでラップ
+    if (typeof title === 'string') {
+      return (
+        <Text
+          style={styles.titleText}
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
+          {title}
+        </Text>
+      );
+    }
+
+    // ReactNodeの場合はそのまま返す
+    return title;
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.leftSection}>
@@ -97,7 +122,7 @@ export const CustomHeader: React.FC<HeaderConfig> = ({
       </View>
 
       <View style={styles.centerSection}>
-        {title}
+        {renderTitle()}
       </View>
 
       <View style={styles.rightSection}>
@@ -105,72 +130,4 @@ export const CustomHeader: React.FC<HeaderConfig> = ({
       </View>
     </View>
   );
-};
-
-export const useCustomHeader = () => {
-  const { colors } = useTheme(); // フックのトップレベルで useTheme を呼び出す
-
-
-  const buttonContainerStyle = {
-    flexDirection: 'row' as const,
-    marginHorizontal: 10,
-  };
-
-  const createHeaderConfig = (config: HeaderConfig) => ({
-    headerTitle: () => config.title || null,
-    headerTitleAlign: 'left' as const,
-    headerTitleContainerStyle: {
-      flex: 2,
-      paddingHorizontal: 0,
-    },
-    headerLeftContainerStyle: {
-      flex: 1,
-    },
-    headerRightContainerStyle: {
-      flex: 2,
-    },
-    headerLeft: () => {
-      if (!config.leftButtons?.length) return null;
-      return (
-        <View style={buttonContainerStyle}>
-          {config.leftButtons.map((button, index) => (
-            <HeaderButton
-              key={index}
-              title={button.title}
-              icon={button.icon}
-              onPress={button.onPress}
-              variant={button.variant}
-              disabled={button.disabled}
-            />
-          ))}
-        </View>
-      );
-    },
-    headerRight: () => {
-      if (!config.rightButtons?.length) return null;
-      return (
-        <View style={buttonContainerStyle}>
-          {config.rightButtons.map((button, index) => (
-            <HeaderButton
-              key={index}
-              title={button.title}
-              icon={button.icon}
-              onPress={button.onPress}
-              variant={button.variant}
-              disabled={button.disabled}
-            />
-          ))}
-        </View>
-      );
-    },
-    // ヘッダー自体のスタイルもテーマに合わせる
-    headerStyle: {
-      backgroundColor: colors.background,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    headerTintColor: colors.text,
-  });
-
-  return { createHeaderConfig };
 };

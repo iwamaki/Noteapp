@@ -1,7 +1,7 @@
 import React, { useLayoutEffect } from 'react';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../../navigation/types';
-import { useCustomHeader } from '../../../components/CustomHeader';
+import { CustomHeader } from '../../../components/CustomHeader';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -19,24 +19,25 @@ export const useFileListHeader = ({
   onSettings,
 }: UseFileListHeaderProps) => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
-  const { createHeaderConfig } = useCustomHeader();
   const { colors } = useTheme();
 
   useLayoutEffect(() => {
-    navigation.setOptions(
-      createHeaderConfig({
-        title: undefined,
-        rightButtons: [
-          {
-            icon: <Ionicons name="add-circle-outline" size={24} color={colors.text} />,
-            onPress: onCreateNew,
-          },
-          {
-            icon: <Ionicons name="settings-outline" size={24} color={colors.text} />,
-            onPress: onSettings,
-          },
-        ],
-      })
-    );
-  }, [navigation, createHeaderConfig, onCreateNew, onSettings, colors]);
+    navigation.setOptions({
+      header: () => (
+        <CustomHeader
+          title={undefined}
+          rightButtons={[
+            {
+              icon: <Ionicons name="add-circle-outline" size={24} color={colors.text} />,
+              onPress: onCreateNew,
+            },
+            {
+              icon: <Ionicons name="settings-outline" size={24} color={colors.text} />,
+              onPress: onSettings,
+            },
+          ]}
+        />
+      ),
+    });
+  }, [navigation, onCreateNew, onSettings, colors]);
 };
