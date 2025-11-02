@@ -1,12 +1,11 @@
 /**
  * @file CustomHeader.tsx
- * @summary このファイルは、アプリケーションのカスタムヘッダーコンポーネントと、ヘッダー設定を生成するフックを定義します。
+ * @summary このファイルは、アプリケーションのカスタムヘッダーコンポーネントを定義します。
  * @responsibility アプリケーション全体で一貫性のあるヘッダーUIを提供し、タイトル、左右のボタンなどの要素を柔軟に設定できるようにする責任があります。
  */
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { HeaderButton } from './HeaderButton';
 import { useTheme } from '../design/theme/ThemeContext';
 
 export interface HeaderConfig {
@@ -74,7 +73,37 @@ export const CustomHeader: React.FC<HeaderConfig> = ({
       fontSize: 18,
       fontWeight: '600',
     },
+    button: {
+      paddingHorizontal: 0,
+      paddingVertical: 8,
+      minWidth: 38,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    buttonText: {
+      fontSize: 16,
+      fontWeight: '600',
+      textAlign: 'center',
+    },
+    disabledButton: {
+      opacity: 0.5,
+    },
   });
+
+  const getButtonColor = (variant: 'primary' | 'secondary' | 'danger' = 'primary', disabled?: boolean) => {
+    if (disabled) return colors.textSecondary;
+
+    switch (variant) {
+      case 'primary':
+        return colors.primary;
+      case 'secondary':
+        return colors.textSecondary;
+      case 'danger':
+        return colors.danger;
+      default:
+        return colors.primary;
+    }
+  };
 
   const renderButtons = (buttons: HeaderConfig['leftButtons']) => {
     if (!buttons || buttons.length === 0) return null;
@@ -82,14 +111,32 @@ export const CustomHeader: React.FC<HeaderConfig> = ({
     return (
       <>
         {buttons.map((button, index) => (
-          <HeaderButton
+          <TouchableOpacity
             key={index}
-            title={button.title}
-            icon={button.icon}
+            style={[
+              styles.button,
+              button.disabled && styles.disabledButton,
+            ]}
             onPress={button.onPress}
-            variant={button.variant}
             disabled={button.disabled}
-          />
+          >
+            {button.icon ? (
+              button.icon
+            ) : (
+              <Text
+                style={[
+                  styles.buttonText,
+                  {
+                    color: getButtonColor(button.variant, button.disabled),
+                  },
+                ]}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {button.title}
+              </Text>
+            )}
+          </TouchableOpacity>
         ))}
       </>
     );

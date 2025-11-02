@@ -5,7 +5,7 @@
  *                レイアウト構造はCustomHeaderコンポーネントに委譲する
  */
 
-import React, { useLayoutEffect, useCallback } from 'react';
+import React, { useLayoutEffect, useCallback, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -49,6 +49,7 @@ export const useFileEditHeader = ({
 }: UseFileEditHeaderProps) => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { colors } = useTheme();
+  const [menuVisible, setMenuVisible] = useState(false);
 
   // ビューモード切り替えハンドラをメモ化
   const handleToggleViewMode = useCallback(() => {
@@ -64,47 +65,54 @@ export const useFileEditHeader = ({
   useLayoutEffect(() => {
     navigation.setOptions({
       header: () => (
-        <CustomHeader
-          title={
-            <FileEditHeader
-              title={title}
-              category={category}
-              onTitleChange={onTitleChange}
-              editable={isEditable}
-            />
-          }
-          leftButtons={[
-            {
-              icon: <Ionicons name="arrow-back-outline" size={24} color={colors.text} />,
-              onPress: handleGoBack,
-            },
-          ]}
-          rightButtons={
-            isLoading
-              ? []
-              : [
-                  {
-                    icon: <Ionicons name="arrow-undo-outline" size={24} color={canUndo ? colors.primary : colors.textSecondary} />,
-                    onPress: onUndo,
-                    disabled: !canUndo,
-                  },
-                  {
-                    icon: <Ionicons name="arrow-redo-outline" size={24} color={canRedo ? colors.primary : colors.textSecondary} />,
-                    onPress: onRedo,
-                    disabled: !canRedo,
-                  },
-                  {
-                    icon: <Ionicons name="save-outline" size={24} color={isDirty ? colors.primary : colors.textSecondary} />,
-                    onPress: onSave,
-                    disabled: !isDirty,
-                  },
-                  {
-                    icon: <FileEditOverflowMenu onToggleViewMode={handleToggleViewMode} />,
-                    onPress: () => {}, // FileEditOverflowMenuが自身でonPressを管理
-                  },
-                ]
-          }
-        />
+        <>
+          <CustomHeader
+            title={
+              <FileEditHeader
+                title={title}
+                category={category}
+                onTitleChange={onTitleChange}
+                editable={isEditable}
+              />
+            }
+            leftButtons={[
+              {
+                icon: <Ionicons name="arrow-back-outline" size={24} color={colors.text} />,
+                onPress: handleGoBack,
+              },
+            ]}
+            rightButtons={
+              isLoading
+                ? []
+                : [
+                    {
+                      icon: <Ionicons name="arrow-undo-outline" size={24} color={canUndo ? colors.primary : colors.textSecondary} />,
+                      onPress: onUndo,
+                      disabled: !canUndo,
+                    },
+                    {
+                      icon: <Ionicons name="arrow-redo-outline" size={24} color={canRedo ? colors.primary : colors.textSecondary} />,
+                      onPress: onRedo,
+                      disabled: !canRedo,
+                    },
+                    {
+                      icon: <Ionicons name="save-outline" size={24} color={isDirty ? colors.primary : colors.textSecondary} />,
+                      onPress: onSave,
+                      disabled: !isDirty,
+                    },
+                    {
+                      icon: <Ionicons name="ellipsis-vertical" size={24} color={colors.text} />,
+                      onPress: () => setMenuVisible(true),
+                    },
+                  ]
+            }
+          />
+          <FileEditOverflowMenu
+            visible={menuVisible}
+            onClose={() => setMenuVisible(false)}
+            onToggleViewMode={handleToggleViewMode}
+          />
+        </>
       ),
     });
   }, [
@@ -121,6 +129,7 @@ export const useFileEditHeader = ({
     onUndo,
     onRedo,
     onSave,
+    menuVisible,
     handleToggleViewMode,
     colors.text,
     colors.primary,
