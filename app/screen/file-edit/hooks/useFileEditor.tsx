@@ -51,6 +51,7 @@ export const useFileEditor = (fileId?: string, initialViewMode?: 'edit' | 'previ
     file: store.file,
     content: store.content,
     title: store.title,
+    category: store.file?.category || '',
     isDirty: store.isDirty,
     isLoading: store.isLoading,
     isSaving: store.isSaving,

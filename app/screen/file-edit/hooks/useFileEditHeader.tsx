@@ -16,6 +16,7 @@ import { FileEditOverflowMenu } from '../components/FileEditOverflowMenu';
 
 interface UseFileEditHeaderProps {
   title: string;
+  category: string;
   viewMode: ViewMode;
   isLoading: boolean;
   isEditable: boolean;
@@ -31,6 +32,7 @@ interface UseFileEditHeaderProps {
 
 export const useFileEditHeader = ({
   title,
+  category,
   viewMode,
   isLoading,
   isEditable,
@@ -107,6 +109,7 @@ export const useFileEditHeader = ({
         title: (
           <FileEditHeader
             title={title}
+            category={category}
             onTitleChange={onTitleChange}
             editable={isEditable}
           />
@@ -124,6 +127,7 @@ export const useFileEditHeader = ({
   }, [
     navigation,
     title,
+    category,
     isEditable,
     onTitleChange,
     rightButtons,

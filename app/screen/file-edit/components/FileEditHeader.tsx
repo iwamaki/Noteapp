@@ -5,6 +5,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import {
+  View,
+  Text,
   TextInput,
   StyleSheet,
   NativeSyntheticEvent,
@@ -14,6 +16,7 @@ import { useTheme } from '../../../design/theme/ThemeContext';
 
 interface FileEditHeaderProps {
   title: string;
+  category: string;
   onTitleChange: (title: string) => void;
   editable: boolean;
   onCompositionStart?: () => void;
@@ -22,12 +25,13 @@ interface FileEditHeaderProps {
 
 export const FileEditHeader: React.FC<FileEditHeaderProps> = ({
   title,
+  category,
   onTitleChange,
   editable,
   onCompositionStart,
   onCompositionEnd,
 }) => {
-  const { colors, typography } = useTheme();
+  const { colors } = useTheme();
   const [localTitle, setLocalTitle] = useState(title);
   const isComposingRef = useRef(false);
 
@@ -36,11 +40,21 @@ export const FileEditHeader: React.FC<FileEditHeaderProps> = ({
   }, [title]);
 
   const styles = StyleSheet.create({
-    headerTitle: {
-      ...typography.title,
-      color: colors.text,
+    container: {
       flex: 1,
-      textAlign: 'left',
+      justifyContent: 'center',
+    },
+    category: {
+      fontSize: 11,
+      color: colors.textSecondary,
+      marginBottom: 2,
+    },
+    headerTitle: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.text,
+      padding: 0,
+      margin: 0,
     },
   });
 
@@ -84,19 +98,31 @@ export const FileEditHeader: React.FC<FileEditHeaderProps> = ({
   };
 
   return (
-    <TextInput
-      value={localTitle}
-      onChangeText={handleChangeText}
-      style={styles.headerTitle}
-      placeholder="ファイルのタイトル"
-      placeholderTextColor={colors.textSecondary}
-      editable={editable}
-      onKeyPress={handleKeyPress}
-      onBlur={handleBlur}
-      onSubmitEditing={handleSubmitEditing}
-      onSelectionChange={handleSelectionChange}
-      autoCorrect={false}
-      autoCapitalize="none"
-    />
+    <View style={styles.container}>
+      {category && (
+        <Text
+          style={styles.category}
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
+          {category}
+        </Text>
+      )}
+      <TextInput
+        value={localTitle}
+        onChangeText={handleChangeText}
+        style={styles.headerTitle}
+        placeholder="ファイルのタイトル"
+        placeholderTextColor={colors.textSecondary}
+        editable={editable}
+        onKeyPress={handleKeyPress}
+        onBlur={handleBlur}
+        onSubmitEditing={handleSubmitEditing}
+        onSelectionChange={handleSelectionChange}
+        autoCorrect={false}
+        autoCapitalize="none"
+        numberOfLines={1}
+      />
+    </View>
   );
 };

@@ -28,6 +28,7 @@ function FileEditScreen() {
 
   const {
     title,
+    category,
     content,
     setContent,
     isLoading,
@@ -75,6 +76,7 @@ function FileEditScreen() {
 
   useFileEditHeader({
     title,
+    category,
     viewMode,
     isLoading,
     isEditable: viewMode === 'edit' && !isLoading,

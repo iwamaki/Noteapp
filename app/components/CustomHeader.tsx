@@ -31,7 +31,6 @@ export const CustomHeader: React.FC<HeaderConfig> = ({
   leftButtons = [],
   rightButtons = [],
 }) => {
-  const { spacing } = useTheme();
 
   const styles = StyleSheet.create({
     container: {
@@ -47,7 +46,7 @@ export const CustomHeader: React.FC<HeaderConfig> = ({
       alignItems: 'stretch',
     },
     rightSection: {
-      flex: 1,
+      flex: 2,
       alignItems: 'flex-end',
     },
     buttonContainer: {
@@ -103,8 +102,14 @@ export const useCustomHeader = () => {
     headerTitle: () => config.title || null,
     headerTitleAlign: 'left' as const,
     headerTitleContainerStyle: {
-      flex: 1,
+      flex: 2,
       paddingHorizontal: 0,
+    },
+    headerLeftContainerStyle: {
+      flex: 1,
+    },
+    headerRightContainerStyle: {
+      flex: 2,
     },
     headerLeft: () => {
       if (!config.leftButtons?.length) return null;
