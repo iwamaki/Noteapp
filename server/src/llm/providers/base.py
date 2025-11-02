@@ -204,8 +204,14 @@ class BaseAgentLLMProvider(BaseLLMProvider):
                 if isinstance(content, str):
                     agent_output = content
                 elif isinstance(content, list):
-                    # リスト形式の場合は文字列に変換
-                    agent_output = str(content)
+                    # リスト形式の場合は各要素からテキストを抽出
+                    text_parts = []
+                    for item in content:
+                        if isinstance(item, str):
+                            text_parts.append(item)
+                        elif isinstance(item, dict) and 'text' in item:
+                            text_parts.append(item['text'])
+                    agent_output = ''.join(text_parts)
                 else:
                     agent_output = ""
             else:
