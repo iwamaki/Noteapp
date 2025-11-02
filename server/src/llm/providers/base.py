@@ -4,17 +4,13 @@
 # @responsibility すべてのLLMプロバイダーが実装すべき共通のインターフェース（メソッド、プロパティ）を定義します。
 from abc import ABC, abstractmethod
 from typing import Optional, List, Dict, Any
-from langchain.schema import BaseMessage
-from langchain.agents import AgentExecutor, create_tool_calling_agent
-from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.messages import BaseMessage, AIMessage, HumanMessage
+from langchain.agents import create_agent
 
 from src.llm.models import ChatResponse, ChatContext, LLMCommand
 from src.llm.tools import AVAILABLE_TOOLS
 from src.llm.providers.config import (
-    MAX_AGENT_ITERATIONS,
     AGENT_VERBOSE,
-    HANDLE_PARSING_ERRORS,
-    RETURN_INTERMEDIATE_STEPS,
     DEFAULT_SYSTEM_PROMPT
 )
 from src.llm.providers.context_builder import ChatContextBuilder
@@ -94,31 +90,21 @@ class BaseAgentLLMProvider(BaseLLMProvider):
         return DEFAULT_SYSTEM_PROMPT
 
     def _setup_agent(self) -> None:
-        """Langchainエージェントとエグゼキューターをセットアップする
+        """Langchainエージェントをセットアップする
 
-        このメソッドは共通ロジックとして、プロンプトテンプレート、エージェント、
-        AgentExecutorを初期化します。
+        LangChain 1.0のcreate_agent APIを使用してエージェントを作成します。
+        create_agentはCompiledStateGraphを返し、これがエージェント実行を管理します。
         """
-        # プロンプトテンプレートを作成
-        self.prompt = ChatPromptTemplate.from_messages([
-            ("system", self._get_system_prompt()),
-            MessagesPlaceholder(variable_name="chat_history", optional=True),
-            ("human", "{input}"),
-            MessagesPlaceholder(variable_name="agent_scratchpad"),
-        ])
-
-        # エージェントを作成
-        self.agent = create_tool_calling_agent(self.llm, AVAILABLE_TOOLS, self.prompt)
-
-        # AgentExecutorを作成
-        self.agent_executor = AgentExecutor(
-            agent=self.agent,  # type: ignore[arg-type]
+        # LangChain 1.0: create_agentを使用
+        # プロンプトテンプレートは不要で、system_promptを直接指定
+        self.agent: Any = create_agent(
+            model=self.llm,
             tools=AVAILABLE_TOOLS,
-            verbose=AGENT_VERBOSE,
-            max_iterations=MAX_AGENT_ITERATIONS,
-            handle_parsing_errors=HANDLE_PARSING_ERRORS,
-            return_intermediate_steps=RETURN_INTERMEDIATE_STEPS
+            system_prompt=self._get_system_prompt(),
+            debug=AGENT_VERBOSE
         )
+        # Note: max_iterations, handle_parsing_errors, return_intermediate_stepsは
+        # LangChain 1.0では異なる方法で制御されるため、ここでは省略
 
     async def chat(self, message: str, context: Optional[ChatContext] = None) -> ChatResponse:
         """チャットメッセージを処理し、応答を返す（Agent Executor使用）
@@ -180,12 +166,14 @@ class BaseAgentLLMProvider(BaseLLMProvider):
             chat_history: 会話履歴
 
         Returns:
-            エージェント実行結果
+            エージェント実行結果（messagesキーを含む辞書）
         """
-        return await self.agent_executor.ainvoke({
-            "input": message,
-            "chat_history": chat_history
+        # LangChain 1.0: messagesリストにchat_historyと新しいmessageを統合
+        messages = chat_history + [HumanMessage(content=message)]
+        result: Dict[str, Any] = await self.agent.ainvoke({  # type: ignore[misc]
+            "messages": messages
         })
+        return result
 
     def _build_response(
         self,
@@ -196,20 +184,47 @@ class BaseAgentLLMProvider(BaseLLMProvider):
         """エージェント実行結果からChatResponseを構築する
 
         Args:
-            agent_result: エージェント実行結果
+            agent_result: エージェント実行結果（LangChain 1.0形式: {"messages": [...]})
             provider_name: プロバイダー名
             history_count: 会話履歴の件数
 
         Returns:
             ChatResponse
         """
-        agent_output = agent_result.get("output", "")
+        # LangChain 1.0: messagesリストから最後のAIメッセージを取得
+        messages = agent_result.get("messages", [])
+
+        # 最後のメッセージを取得（通常は最後のAIMessage）
+        agent_output = ""
+        if messages:
+            last_message = messages[-1]
+            if isinstance(last_message, AIMessage):
+                # contentはstr | list[str | dict]の可能性がある
+                content = last_message.content
+                if isinstance(content, str):
+                    agent_output = content
+                elif isinstance(content, list):
+                    # リスト形式の場合は文字列に変換
+                    agent_output = str(content)
+                else:
+                    agent_output = ""
+            else:
+                # フォールバック: どんなメッセージでもcontentを取得
+                content = getattr(last_message, 'content', '')
+                agent_output = str(content) if content else ""
+
+        # ツール呼び出しの数をカウント（intermediate_stepsの代替）
+        tool_call_count = sum(
+            len(getattr(msg, 'tool_calls', []))
+            for msg in messages
+            if isinstance(msg, AIMessage)
+        )
 
         # レスポンスログ記録
         self._log_agent_response(
             provider_name,
             agent_output,
-            len(agent_result.get("intermediate_steps", []))
+            tool_call_count
         )
 
         # コマンド抽出

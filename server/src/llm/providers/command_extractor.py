@@ -1,8 +1,9 @@
 # @file command_extractor.py
 # @summary エージェント実行結果からLLMCommandを抽出するクラスを提供します。
-# @responsibility AgentExecutorの実行結果から、フロントエンドで実行すべきコマンドを抽出・変換します。
+# @responsibility エージェントの実行結果から、フロントエンドで実行すべきコマンドを抽出・変換します。
 
 from typing import List, Optional, Dict, Any, Callable
+from langchain_core.messages import AIMessage
 from src.llm.models import LLMCommand
 from src.core.logger import logger
 
@@ -35,19 +36,35 @@ class AgentCommandExtractor:
     def extract_commands(self, agent_result: Dict[str, Any]) -> Optional[List[LLMCommand]]:
         """エージェント実行結果からコマンドを抽出
 
+        LangChain 1.0の新しいmessages形式と、旧形式のintermediate_steps形式の両方をサポートします。
+
         Args:
-            agent_result: AgentExecutorの実行結果
+            agent_result: エージェントの実行結果
+                - LangChain 1.0: {"messages": [...]}
+                - 旧形式: {"intermediate_steps": [...]}
 
         Returns:
             抽出されたコマンドのリスト（なければNone）
         """
         commands: List[LLMCommand] = []
-        intermediate_steps = agent_result.get("intermediate_steps", [])
 
-        for action, observation in intermediate_steps:
-            command = self._process_action(action)
-            if command:
-                commands.append(command)
+        # LangChain 1.0: messagesリストからツール呼び出しを抽出
+        messages = agent_result.get("messages", [])
+        for message in messages:
+            if isinstance(message, AIMessage) and hasattr(message, 'tool_calls'):
+                tool_calls = getattr(message, 'tool_calls', []) or []
+                for tool_call in tool_calls:
+                    command = self._process_tool_call(tool_call)
+                    if command:
+                        commands.append(command)
+
+        # フォールバック: 旧形式（intermediate_steps）もサポート
+        intermediate_steps = agent_result.get("intermediate_steps", [])
+        if intermediate_steps:
+            for action, observation in intermediate_steps:
+                command = self._process_action(action)
+                if command:
+                    commands.append(command)
 
         if commands:
             logger.debug({
@@ -56,6 +73,40 @@ class AgentCommandExtractor:
             })
 
         return commands if commands else None
+
+    def _process_tool_call(self, tool_call: Any) -> Optional[LLMCommand]:
+        """ツール呼び出しを処理してコマンドに変換（LangChain 1.0形式）
+
+        Args:
+            tool_call: ツール呼び出し情報
+                例: {"name": "create_file", "args": {...}, "id": "call_xxx", "type": "tool_call"}
+
+        Returns:
+            変換されたLLMCommand（変換できない場合はNone）
+        """
+        if not isinstance(tool_call, dict):
+            logger.warning("tool_call is not a dict")
+            return None
+
+        tool_name = tool_call.get('name')
+        if not tool_name or not isinstance(tool_name, str):
+            logger.warning("tool_call does not have a valid 'name' field")
+            return None
+
+        tool_input = tool_call.get('args', {})
+
+        # ハンドラーが登録されているか確認
+        handler = self._handlers.get(tool_name)
+        if not handler:
+            logger.debug(f"No handler registered for tool: {tool_name}")
+            return None
+
+        # ハンドラーを実行
+        try:
+            return handler(tool_input)
+        except Exception as e:
+            logger.error(f"Error processing {tool_name}: {e}")
+            return None
 
     def _process_action(self, action: Any) -> Optional[LLMCommand]:
         """個別のアクションを処理してコマンドに変換

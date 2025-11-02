@@ -1,7 +1,7 @@
 # @file gemini.py
 # @summary Google GeminiのLLMプロバイダーを実装します。
 # @responsibility BaseAgentLLMProviderを継承し、GeminiのAPIと通信してチャット応答を生成します。
-from pydantic.v1 import SecretStr
+from pydantic import SecretStr
 from langchain_google_genai import ChatGoogleGenerativeAI
 from .base import BaseAgentLLMProvider
 
