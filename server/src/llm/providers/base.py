@@ -362,12 +362,18 @@ class BaseAgentLLMProvider(BaseLLMProvider):
         Returns:
             TokenUsageInfo or None
         """
-        if not conversation_history:
-            return None
-
         try:
             # 推奨最大トークン数（テスト用に500に設定）
             max_tokens = 500
+
+            # 会話履歴が空の場合でも初期状態を返す
+            if not conversation_history:
+                return TokenUsageInfo(
+                    currentTokens=0,
+                    maxTokens=max_tokens,
+                    usageRatio=0.0,
+                    needsSummary=False
+                )
 
             # 現在のトークン数を計算
             current_tokens = count_message_tokens(

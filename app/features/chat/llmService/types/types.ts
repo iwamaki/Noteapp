@@ -8,6 +8,7 @@ export interface ChatMessage {
     filename: string;
     content: string;
   }>;
+  tokenUsageRatio?: number; // メッセージ作成時のトークン使用率（0.0~1.0以上）
 }
 
 // チャットコンテキスト

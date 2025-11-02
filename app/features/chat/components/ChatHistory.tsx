@@ -187,7 +187,7 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
         <View style={styles.headerButtonContainer}>
           <TouchableOpacity onPress={onSummarize} style={styles.resetButton}>
             <MaterialCommunityIcons
-              name="robot"
+              name="text-box-multiple"
               size={iconSizes.medium}
               color={colors.primary}
             />
@@ -211,7 +211,12 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
         contentContainerStyle={styles.messagesContent}
       >
         {messages.map((msg, index) => (
-          <MessageItem key={index} message={msg} />
+          <MessageItem
+            key={index}
+            message={msg}
+            tokenUsage={tokenUsage}
+            isLoading={isLoading}
+          />
         ))}
         {isLoading && (
           <View style={styles.loadingContainer}>

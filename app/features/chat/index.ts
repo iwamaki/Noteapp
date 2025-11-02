@@ -283,17 +283,28 @@ class ChatService {
       logger.debug('chatService', 'Sending message to LLM with context:', chatContext);
       const response = await APIService.sendChatMessage(trimmedMessage, chatContext, this.clientId, this.attachedFiles.length > 0 ? this.attachedFiles : undefined);
 
-      // AIメッセージを追加
+      // AIメッセージを追加（トークン使用率を記録）
       const aiMessage: ChatMessage = {
         role: 'ai',
         content: response.message || '',
         timestamp: new Date(),
+        tokenUsageRatio: response.tokenUsage?.usageRatio,
       };
       this.addMessage(aiMessage);
 
       // トークン使用量情報を更新
       if (response.tokenUsage) {
         this.setTokenUsage(response.tokenUsage);
+
+        // 100%を超えたら自動的に要約を実行
+        if (response.tokenUsage.usageRatio >= 1.0) {
+          logger.info('chatService', 'Token usage exceeded 100%, starting automatic summarization');
+          // 非同期で要約を実行（メッセージ送信処理をブロックしない）
+          // setLoadingをfalseにした後に要約を開始する必要があるため、finallyの後で実行
+          setTimeout(async () => {
+            await this.summarizeConversation();
+          }, 100);
+        }
       }
 
       // コマンドの処理

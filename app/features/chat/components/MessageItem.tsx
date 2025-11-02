@@ -1,27 +1,74 @@
 import React from 'react';
 import { View, StyleSheet, Text } from 'react-native';
 import Markdown from 'react-native-markdown-display';
-import { ChatMessage } from '../llmService/index';
+import { ChatMessage, TokenUsageInfo } from '../llmService/index';
 import { useTheme } from '../../../design/theme/ThemeContext';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 interface MessageItemProps {
   message: ChatMessage;
+  tokenUsage: TokenUsageInfo | null;
+  isLoading: boolean;
 }
 
-export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
-  const { colors, typography } = useTheme();
+export const MessageItem: React.FC<MessageItemProps> = ({ message, tokenUsage, isLoading }) => {
+  const { colors, typography, iconSizes } = useTheme();
+
+  // トークン使用量に応じたアイコンを選択
+  const getAIIcon = (): string => {
+    // メッセージに保存されたtokenUsageRatioを優先的に使用
+    let usageRatio: number | undefined = undefined;
+    if (message.role === 'ai' && message.tokenUsageRatio !== undefined) {
+      usageRatio = message.tokenUsageRatio;
+    } else if (tokenUsage) {
+      usageRatio = tokenUsage.usageRatio;
+    }
+
+    if (usageRatio === undefined) {
+      return 'robot';
+    }
+
+    const percentage = usageRatio * 100;
+
+    // 100%超えで要約中の場合
+    if (percentage >= 100 && isLoading) {
+      return 'robot-dead';
+    }
+
+    // 75%~99%
+    if (percentage >= 75) {
+      return 'robot-angry';
+    }
+
+    // 25%~75%
+    if (percentage >= 25) {
+      return 'robot';
+    }
+
+    // 0~25%
+    return 'robot-excited';
+  };
 
   const styles = StyleSheet.create({
     aiMarkdownText: {
       color: colors.text,
     },
     aiMessage: {
-      alignSelf: 'flex-start',
       backgroundColor: colors.secondary,
       borderBottomLeftRadius: 4,
       borderWidth: 1,
       borderColor: colors.border,
+    },
+    aiMessageWrapper: {
+      flexDirection: 'row',
+      alignItems: 'flex-end',
+      alignSelf: 'flex-start',
+      marginVertical: 4,
+      maxWidth: '85%',
+    },
+    aiIcon: {
+      marginRight: 8,
+      marginBottom: 4,
     },
     baseText: {
       fontSize: typography.body.fontSize,
@@ -29,8 +76,6 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
     },
     message: {
       borderRadius: 16,
-      marginVertical: 4,
-      maxWidth: '85%',
       paddingHorizontal: 12,
       paddingVertical: 5,
     },
@@ -42,7 +87,9 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
       backgroundColor: colors.warning + '30', // warning with opacity
       borderColor: colors.warning,
       borderWidth: 1,
-    },    
+      marginVertical: 4,
+      maxWidth: '85%',
+    },
     userMarkdownText: {
       color: colors.white,
     },
@@ -50,6 +97,8 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
       alignSelf: 'flex-end',
       backgroundColor: colors.primary,
       borderBottomRightRadius: 4,
+      marginVertical: 4,
+      maxWidth: '85%',
     },
 
     attachedFileContainer: {
@@ -132,6 +181,48 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
     },
   };
 
+  // AIメッセージの場合、アイコン付きのレイアウトを使用
+  if (message.role === 'ai') {
+    const aiIconName = getAIIcon();
+
+    return (
+      <>
+        <View style={styles.aiMessageWrapper}>
+          <MaterialCommunityIcons
+            name={aiIconName as any}
+            size={iconSizes.medium}
+            color={colors.primary}
+            style={styles.aiIcon}
+          />
+          <View style={containerStyle}>
+            <Markdown style={markdownStyles} rules={markdownRules}>{message.content}</Markdown>
+          </View>
+        </View>
+        {message.attachedFiles && message.attachedFiles.length > 0 && (
+          <>
+            {message.attachedFiles.map((file, index) => (
+              <View
+                key={`${file.filename}-${index}`}
+                style={[styles.attachedFileContainer, styles.attachedFileContainerAI]}
+              >
+                <Ionicons
+                  name="document-text"
+                  size={12}
+                  color={colors.primary}
+                  style={styles.attachedFileIcon}
+                />
+                <Text style={styles.attachedFileName} numberOfLines={1}>
+                  {file.filename}
+                </Text>
+              </View>
+            ))}
+          </>
+        )}
+      </>
+    );
+  }
+
+  // ユーザーメッセージとシステムメッセージは従来通り
   return (
     <>
       <View style={containerStyle}>
