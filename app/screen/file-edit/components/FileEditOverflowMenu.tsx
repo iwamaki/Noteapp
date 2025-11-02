@@ -14,7 +14,7 @@ export const FileEditOverflowMenu: React.FC<FileEditOverflowMenuProps> = ({
   onClose,
   onToggleViewMode,
 }) => {
-  const { colors, spacing } = useTheme();
+  const { colors, spacing, iconSizes } = useTheme();
 
   const handleMenuItemPress = (action: () => void) => {
     onClose();
@@ -70,7 +70,7 @@ export const FileEditOverflowMenu: React.FC<FileEditOverflowMenuProps> = ({
             style={styles.menuItem}
             onPress={() => handleMenuItemPress(onToggleViewMode)}
           >
-            <Ionicons name="eye-outline" size={24} color={colors.text} />
+            <Ionicons name="eye-outline" size={iconSizes.medium} color={colors.text} />
             <Text style={styles.menuItemText}>ビューモード切替</Text>
           </TouchableOpacity>
         </View>

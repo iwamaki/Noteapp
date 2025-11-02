@@ -10,7 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
  */
 export const useSettingsHeader = () => {
   const navigation = useNavigation();
-  const { colors } = useTheme();
+  const { colors, iconSizes } = useTheme();
 
   const handleGoBack = useCallback(() => {
     navigation.goBack();
@@ -23,12 +23,12 @@ export const useSettingsHeader = () => {
           title="設定"
           leftButtons={[
             {
-              icon: <Ionicons name="arrow-back-outline" size={24} color={colors.text} />,
+              icon: <Ionicons name="arrow-back-outline" size={iconSizes.medium} color={colors.text} />,
               onPress: handleGoBack,
             },
           ]}
         />
       ),
     });
-  }, [navigation, handleGoBack, colors.text]);
+  }, [navigation, handleGoBack, colors.text, iconSizes.medium]);
 };

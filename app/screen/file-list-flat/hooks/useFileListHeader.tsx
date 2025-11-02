@@ -19,7 +19,7 @@ export const useFileListHeader = ({
   onSettings,
 }: UseFileListHeaderProps) => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
-  const { colors } = useTheme();
+  const { colors, iconSizes } = useTheme();
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -28,16 +28,16 @@ export const useFileListHeader = ({
           title={undefined}
           rightButtons={[
             {
-              icon: <Ionicons name="add-circle-outline" size={24} color={colors.text} />,
+              icon: <Ionicons name="add-circle-outline" size={iconSizes.medium} color={colors.text} />,
               onPress: onCreateNew,
             },
             {
-              icon: <Ionicons name="settings-outline" size={24} color={colors.text} />,
+              icon: <Ionicons name="settings-outline" size={iconSizes.medium} color={colors.text} />,
               onPress: onSettings,
             },
           ]}
         />
       ),
     });
-  }, [navigation, onCreateNew, onSettings, colors]);
+  }, [navigation, onCreateNew, onSettings, colors, iconSizes.medium]);
 };

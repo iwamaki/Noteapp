@@ -37,8 +37,11 @@ export const CustomHeader: React.FC<HeaderConfig> = ({
   rightButtons = [],
   flexRatio = { left: 1, center: 3, right: 4 },
 }) => {
-  const { colors } = useTheme();
+  const { colors, typography } = useTheme();
   const insets = useSafeAreaInsets();
+
+  // フォントサイズに基づいて動的にヘッダーの高さを計算
+  const headerHeight = Math.max(56, typography.header.lineHeight + 20); // 最小56px、またはlineHeight + padding
 
   const styles = StyleSheet.create({
     container: {
@@ -48,7 +51,7 @@ export const CustomHeader: React.FC<HeaderConfig> = ({
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
       paddingTop: insets.top,
-      height: 56 + insets.top,
+      height: headerHeight + insets.top,
       paddingHorizontal: 8,
     },
     leftSection: {
@@ -58,7 +61,7 @@ export const CustomHeader: React.FC<HeaderConfig> = ({
     },
     centerSection: {
       flex: flexRatio.center,
-      alignItems: 'flex-start',
+      alignItems: 'stretch', // flex-start から stretch に変更
       justifyContent: 'center',
     },
     rightSection: {
@@ -70,7 +73,8 @@ export const CustomHeader: React.FC<HeaderConfig> = ({
     },
     titleText: {
       color: colors.text,
-      fontSize: 18,
+      fontSize: typography.header.fontSize,
+      lineHeight: typography.header.lineHeight,
       fontWeight: '600',
     },
     button: {
@@ -81,7 +85,8 @@ export const CustomHeader: React.FC<HeaderConfig> = ({
       alignItems: 'center',
     },
     buttonText: {
-      fontSize: 16,
+      fontSize: typography.subtitle.fontSize,
+      lineHeight: typography.subtitle.lineHeight,
       fontWeight: '600',
       textAlign: 'center',
     },

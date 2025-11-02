@@ -132,12 +132,20 @@ const getShadows = (shadowColor: string) => ({
   },
 });
 
+// アイコンサイズを計算する関数
+const getIconSizes = (typography: ReturnType<typeof getTypographyForSize>) => ({
+  small: Math.round(typography.body.fontSize * 1.2),     // body の 1.2倍
+  medium: Math.round(typography.header.fontSize * 1.3),  // header の 1.3倍（ヘッダーボタン用）
+  large: Math.round(typography.title.fontSize * 1.5),    // title の 1.5倍
+});
+
 // テーマの型定義
 type Theme = {
   colors: typeof lightColors;
   spacing: typeof spacing;
   typography: ReturnType<typeof getTypographyForSize>;
   shadows: ReturnType<typeof getShadows>;
+  iconSizes: ReturnType<typeof getIconSizes>;
   themeMode: 'light' | 'dark';
 };
 
@@ -159,8 +167,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const colors = effectiveTheme === 'dark' ? darkColors : lightColors;
     const typography = getTypographyForSize(settings.fontSize);
     const shadows = getShadows(colors.shadow);
+    const iconSizes = getIconSizes(typography);
 
-    return { colors, spacing, typography, shadows, themeMode: effectiveTheme };
+    return { colors, spacing, typography, shadows, iconSizes, themeMode: effectiveTheme };
   }, [settings.theme, settings.fontSize, systemColorScheme]);
 
   return (

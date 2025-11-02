@@ -48,7 +48,7 @@ export const useFileEditHeader = ({
   canRedo,
 }: UseFileEditHeaderProps) => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
-  const { colors } = useTheme();
+  const { colors, iconSizes } = useTheme();
   const [menuVisible, setMenuVisible] = useState(false);
 
   // ビューモード切り替えハンドラをメモ化
@@ -77,7 +77,7 @@ export const useFileEditHeader = ({
             }
             leftButtons={[
               {
-                icon: <Ionicons name="arrow-back-outline" size={24} color={colors.text} />,
+                icon: <Ionicons name="arrow-back-outline" size={iconSizes.medium} color={colors.text} />,
                 onPress: handleGoBack,
               },
             ]}
@@ -86,22 +86,22 @@ export const useFileEditHeader = ({
                 ? []
                 : [
                     {
-                      icon: <Ionicons name="arrow-undo-outline" size={24} color={canUndo ? colors.primary : colors.textSecondary} />,
+                      icon: <Ionicons name="arrow-undo-outline" size={iconSizes.medium} color={canUndo ? colors.primary : colors.textSecondary} />,
                       onPress: onUndo,
                       disabled: !canUndo,
                     },
                     {
-                      icon: <Ionicons name="arrow-redo-outline" size={24} color={canRedo ? colors.primary : colors.textSecondary} />,
+                      icon: <Ionicons name="arrow-redo-outline" size={iconSizes.medium} color={canRedo ? colors.primary : colors.textSecondary} />,
                       onPress: onRedo,
                       disabled: !canRedo,
                     },
                     {
-                      icon: <Ionicons name="save-outline" size={24} color={isDirty ? colors.primary : colors.textSecondary} />,
+                      icon: <Ionicons name="save-outline" size={iconSizes.medium} color={isDirty ? colors.primary : colors.textSecondary} />,
                       onPress: onSave,
                       disabled: !isDirty,
                     },
                     {
-                      icon: <Ionicons name="ellipsis-vertical" size={24} color={colors.text} />,
+                      icon: <Ionicons name="ellipsis-vertical" size={iconSizes.medium} color={colors.text} />,
                       onPress: () => setMenuVisible(true),
                     },
                   ]
@@ -134,5 +134,6 @@ export const useFileEditHeader = ({
     colors.text,
     colors.primary,
     colors.textSecondary,
+    iconSizes.medium,
   ]);
 };
