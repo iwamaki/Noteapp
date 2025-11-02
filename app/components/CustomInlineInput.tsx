@@ -4,11 +4,13 @@ import { useTheme } from '../../app/design/theme/ThemeContext';
 
 interface CustomInlineInputProps extends TextInputProps {
   borderRadius?: number;
+  borderColor?: string;
   onClear?: () => void;
 }
 
 export const CustomInlineInput: React.FC<CustomInlineInputProps> = ({
-  borderRadius = 15, // Default to 15 as per user's last request
+  borderRadius = 10,
+  borderColor,
   style,
   value,
   onClear,
@@ -30,7 +32,7 @@ export const CustomInlineInput: React.FC<CustomInlineInputProps> = ({
     },
     textInput: {
       borderWidth: 1,
-      borderColor: colors.border,
+      borderColor: borderColor ?? colors.border,
       borderRadius: borderRadius,
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.md,

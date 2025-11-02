@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { ChatMessage } from '../llmService/index';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { MessageItem } from './MessageItem';
+import { ToggleTabButton } from './ToggleTabButton';
 
 interface ChatHistoryProps {
   messages: ChatMessage[];
@@ -31,7 +32,7 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
   messageAreaHeight,
   panHandlers,
 }) => {
-  const { colors, typography } = useTheme();
+  const { colors, typography, iconSizes } = useTheme();
   const scrollViewRef = useRef<ScrollView>(null);
 
   useEffect(() => {
@@ -43,15 +44,10 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
   }, [messages]);
 
   const styles = StyleSheet.create({
-    collapseButton: {
-      paddingVertical: 8,
-      paddingHorizontal: 4,
-    },
-
     resetButton: {
       paddingVertical: 8,
       paddingHorizontal: 4,
-      marginRight: 8,
+      marginRight: 4,
     },
 
     loadingContainer: {
@@ -70,13 +66,13 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
       backgroundColor: colors.background,
       borderBottomColor: colors.border,
       borderBottomWidth: 1,
-      overflow: 'hidden',
     },
     messagesContent: {
       paddingHorizontal: 16,
       paddingVertical: 8,
     },
     messagesHeader: {
+      position: 'relative', // 付箋タブボタンのabsolute配置の基準
       alignItems: 'center',
       backgroundColor: colors.background,
       borderBottomColor: colors.border,
@@ -105,20 +101,20 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
   return (
     <Animated.View style={[styles.messagesArea, { height: messageAreaHeight }]}>
       <View style={styles.messagesHeader} {...panHandlers}>
+        {/* 付箋タブ型の折りたたみボタン（ヘッダーの中央上端） */}
+        <ToggleTabButton
+          onPress={onCollapse}
+          direction="down"
+          position="top"
+        />
+
         <Text style={styles.messagesHeaderTitle}>チャット履歴</Text>
         <View style={styles.headerButtonContainer}>
           <TouchableOpacity onPress={onResetChat} style={styles.resetButton}>
             <Ionicons
-              name="refresh-outline"
-              size={typography.header.fontSize}
-              color={colors.textSecondary}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={onCollapse} style={styles.collapseButton}>
-            <Ionicons
-              name="chevron-down"
-              size={typography.header.fontSize}
-              color={colors.textSecondary}
+              name="reload"
+              size={iconSizes.medium}
+              color={colors.text}
             />
           </TouchableOpacity>
         </View>
