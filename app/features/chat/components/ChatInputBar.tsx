@@ -14,15 +14,16 @@ import {
   ScrollView,
 } from 'react-native';
 import { CustomInlineInput } from '../../../components/CustomInlineInput';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useChat } from '../hooks/useChat';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { ChatHistory } from '../components/ChatHistory';
+import { ToggleTabButton } from '../components/ToggleTabButton';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useKeyboardHeight } from '../../../contexts/KeyboardHeightContext';
 
 export const ChatInputBar: React.FC = () => {
-  const { colors, typography } = useTheme();
+  const { colors, typography, iconSizes } = useTheme();
   const insets = useSafeAreaInsets();
   const { keyboardHeight, setChatInputBarHeight } = useKeyboardHeight();
   const {
@@ -88,11 +89,6 @@ export const ChatInputBar: React.FC = () => {
         borderTopWidth: 1,
         borderTopColor: colors.tertiary,
         paddingBottom: insets.bottom,
-        shadowColor: colors.shadow,
-        shadowOffset: { width: 0, height: -3 }, // Shadow above
-        shadowOpacity: 0.3,
-        shadowRadius: 5,
-        elevation: 5, // For Android
       },
       attachedFileWrapper: {
         paddingVertical: 8,
@@ -131,18 +127,6 @@ export const ChatInputBar: React.FC = () => {
         paddingBottom: 10,
         backgroundColor: colors.background,
       },
-      expandButton: {
-        alignSelf: 'flex-end',
-        marginRight: 8,
-        marginBottom: 8,
-        paddingHorizontal: 8,
-        paddingVertical: 6,
-      },
-      expandButtonText: {
-        fontSize: typography.caption.fontSize,
-        color: colors.text,
-        fontWeight: '600',
-      },
       customInput: {
         flex: 1,
         maxHeight: 100,
@@ -152,7 +136,10 @@ export const ChatInputBar: React.FC = () => {
       sendButton: {
         justifyContent: 'center',
         alignItems: 'center',
-        // Removed: backgroundColor, padding, borderRadius, minHeight
+        backgroundColor: colors.primary,
+        borderRadius: 18,
+        width: 36,
+        height: 36,
       },
       disabledButton: {
         opacity: 0.5,
@@ -173,6 +160,15 @@ export const ChatInputBar: React.FC = () => {
 
   return (
     <View style={[styles.container, dynamicContainerStyle]} onLayout={handleLayout}>
+        {/* 付箋タブ型の展開ボタン */}
+        {!isExpanded && (
+          <ToggleTabButton
+            onPress={() => setIsExpanded(true)}
+            direction="up"
+            position="top"
+          />
+        )}
+
         {/* メッセージ履歴エリア（展開可能） */}
         {isExpanded && (
           <ChatHistory
@@ -217,18 +213,6 @@ export const ChatInputBar: React.FC = () => {
 
         {/* 入力エリア（常に表示） */}
         <View style={styles.inputArea}>
-          {!isExpanded && (
-            <TouchableOpacity
-              onPress={() => setIsExpanded(true)}
-              style={styles.expandButton}
-            >
-              <Ionicons
-                name="chevron-up"
-                size={typography.body.fontSize}
-                color={colors.text}
-              />
-            </TouchableOpacity>
-          )}
           <CustomInlineInput
             style={styles.customInput}
             placeholder="メッセージを入力..."
@@ -240,16 +224,17 @@ export const ChatInputBar: React.FC = () => {
             onSubmitEditing={handleSendMessage}
             returnKeyType="send"
             blurOnSubmit={false}
+            borderColor={colors.background}
           />
           <TouchableOpacity
             style={[styles.sendButton, !canSendMessage && styles.disabledButton]}
             onPress={handleSendMessage}
             disabled={!canSendMessage}
           >
-            <Ionicons
-              name="send"
-              size={30}
-              color={colors.primary}
+            <MaterialCommunityIcons
+              name="arrow-right-bold"
+              size={iconSizes.medium}
+              color={colors.white}
               style={!canSendMessage && styles.disabledButtonText}
             />
           </TouchableOpacity>

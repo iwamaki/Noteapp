@@ -12,7 +12,7 @@ import { useSettingsStore } from '../../settings/settingsStore';
 const lightColors = {
   primary: '#007AFF',
   secondary: '#EEEEEE', // Adjusted secondary to a very light grey
-  tertiary: '#D0D0D0', // やや暗めの無彩色（カテゴリー背景などに使用）
+  tertiary: '#999999', // 中程度のグレー（白背景に対してコントラスト強化）
   background: '#fff', // Reverted background to white
   text: '#333333', // Softer black for text
   textSecondary: '#666',
@@ -31,7 +31,7 @@ const lightColors = {
 const darkColors = {
   primary: '#0A84FF',
   secondary: '#2C2C2C',
-  tertiary: '#505050', // 明るめの無彩色（カテゴリー背景などに使用）
+  tertiary: '#808080', // 明るいグレー（暗背景に対してコントラスト強化）
   background: '#1A1A1A',
   text: '#fff',
   textSecondary: '#888888',
@@ -136,7 +136,7 @@ const getShadows = (shadowColor: string) => ({
 const getIconSizes = (typography: ReturnType<typeof getTypographyForSize>) => ({
   small: Math.round(typography.body.fontSize * 1.2),     // body の 1.2倍
   medium: Math.round(typography.header.fontSize * 1.3),  // header の 1.3倍（ヘッダーボタン用）
-  large: Math.round(typography.title.fontSize * 1.5),    // title の 1.5倍
+  large: Math.round(typography.title.fontSize * 1.8),    // title の 1.8倍
 });
 
 // テーマの型定義

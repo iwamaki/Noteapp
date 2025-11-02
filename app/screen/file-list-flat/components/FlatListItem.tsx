@@ -38,13 +38,13 @@ export const FlatListItem: React.FC<FlatListItemProps> = ({
   onPress,
   onLongPress,
 }) => {
-  const { colors, spacing, typography } = useTheme();
+  const { colors, spacing, iconSizes } = useTheme();
 
   // 階層インデント計算（親カテゴリーの子要素として、同じ階層の子カテゴリーと同じ位置）
   const itemPaddingLeft = (level + 1) * 24;
 
-  // アイコンサイズをフォントサイズに連動
-  const iconSize = Math.round(typography.body.fontSize * 1.3);
+  // アイコンサイズをlargeに設定
+  const iconSize = iconSizes.large;
 
   // 左側要素：ファイルアイコン
   const leftElement = (

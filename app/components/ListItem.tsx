@@ -66,8 +66,8 @@ const ListItemContainer: React.FC<ListItemContainerProps> = ({
       fontWeight: '600',
     },
     bottomLine: {
-      height: 2,
-      backgroundColor: colors.tertiary,
+      height: 1,
+      backgroundColor: colors.secondary,
       position: 'absolute',
       bottom: 0,
       left: 0,
