@@ -11,7 +11,8 @@ from src.llm.models import ChatResponse, ChatContext, LLMCommand, TokenUsageInfo
 from src.llm.tools import AVAILABLE_TOOLS
 from src.llm.providers.config import (
     AGENT_VERBOSE,
-    DEFAULT_SYSTEM_PROMPT
+    DEFAULT_SYSTEM_PROMPT,
+    MAX_CONVERSATION_TOKENS
 )
 from src.llm.providers.context_builder import ChatContextBuilder
 from src.llm.providers.command_extractor import AgentCommandExtractor
@@ -395,8 +396,8 @@ class BaseAgentLLMProvider(BaseLLMProvider):
             TokenUsageInfo or None
         """
         try:
-            # 推奨最大トークン数（テスト用に500に設定）
-            max_tokens = 500
+            # 推奨最大トークン数
+            max_tokens = MAX_CONVERSATION_TOKENS
 
             # 会話履歴が空の場合でも初期状態を返す
             if not conversation_history:

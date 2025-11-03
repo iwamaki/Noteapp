@@ -5,6 +5,7 @@
 # APIリクエストとレスポンスのバリデーションおよびシリアライゼーションをPydanticによって自動化します。
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any, List, Union, Literal
+from src.llm.providers.config import MAX_CONVERSATION_TOKENS, PRESERVE_RECENT_MESSAGES
 
 
 class ChatMessage(BaseModel):
@@ -99,8 +100,8 @@ class SummarizeRequest(BaseModel):
     トークン数を削減するためのリクエストモデル。
     """
     conversationHistory: List[Dict[str, Any]]  # 要約対象の会話履歴
-    max_tokens: Optional[int] = 500  # 圧縮後の最大トークン数（テスト用に小さく設定）
-    preserve_recent: Optional[int] = 3  # 保持する最新メッセージ数（テスト用に小さく設定）
+    max_tokens: Optional[int] = MAX_CONVERSATION_TOKENS  # 圧縮後の最大トークン数
+    preserve_recent: Optional[int] = PRESERVE_RECENT_MESSAGES  # 保持する最新メッセージ数
     provider: Optional[str] = "openai"  # 要約に使用するLLMプロバイダー
     model: Optional[str] = None  # 要約に使用するモデル（Noneの場合はデフォルト）
 

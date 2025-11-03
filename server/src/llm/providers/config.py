@@ -39,3 +39,10 @@ CONTEXT_MSG_FILELIST_SCREEN: Final[str] = "\n\n[現在表示中のファイル�
 
 CONTEXT_MSG_ATTACHED_FILE: Final[str] = "\n\n[添付ファイル情報]\nファイル名: {filename}\n内容:\n---\n{content}\n---"
 """添付ファイル用のコンテキストメッセージテンプレート"""
+
+# 会話要約設定
+MAX_CONVERSATION_TOKENS: Final[int] = 4000
+"""会話履歴の推奨最大トークン数（この値を超えると要約が推奨される）"""
+
+PRESERVE_RECENT_MESSAGES: Final[int] = 20
+"""要約時に保持する最新メッセージ数"""

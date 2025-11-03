@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException
 from src.llm.models import ChatRequest, SummarizeRequest
 from src.llm.services.chat_service import ChatService
 from src.llm.services.summarization_service import SummarizationService
+from src.llm.providers.config import MAX_CONVERSATION_TOKENS, PRESERVE_RECENT_MESSAGES
 from src.core.logger import logger
 
 router = APIRouter()
@@ -80,8 +81,8 @@ async def summarize_conversation(request: SummarizeRequest):
     try:
         response = await summarization_service.summarize(
             conversation_history=request.conversationHistory,
-            max_tokens=request.max_tokens or 500,
-            preserve_recent=request.preserve_recent or 3,
+            max_tokens=request.max_tokens or MAX_CONVERSATION_TOKENS,
+            preserve_recent=request.preserve_recent or PRESERVE_RECENT_MESSAGES,
             provider=request.provider or "openai",
             model=request.model
         )
