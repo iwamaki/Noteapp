@@ -13,6 +13,7 @@ import { FileRepository } from '@data/repositories/fileRepository';
 import WebSocketService from './services/websocketService';
 import { ChatAttachmentService } from './services/chatAttachmentService';
 import { ChatTokenService } from './services/chatTokenService';
+import { ChatCommandService } from './services/chatCommandService';
 import { getOrCreateClientId } from './utils/clientId';
 import { useSettingsStore } from '../../settings/settingsStore';
 
@@ -27,11 +28,8 @@ class ChatService {
   // 現在アクティブなコンテキストプロバイダー
   private currentProvider: ActiveScreenContextProvider | null = null;
 
-  // グローバルハンドラのマップ（画面に依存しない、起動時に一度だけ登録）
-  private globalHandlers: Record<string, (command: LLMCommand) => void | Promise<void>> = {};
-
-  // コンテキストハンドラのマップ（画面依存、画面遷移時に更新）
-  private contextHandlers: Record<string, (command: LLMCommand) => void | Promise<void>> = {};
+  // コマンドサービス
+  private commandService: ChatCommandService;
 
   // チャットメッセージの履歴
   private messages: ChatMessage[] = [];
@@ -59,11 +57,11 @@ class ChatService {
 
   private constructor() {
     // プライベートコンストラクタでシングルトンを保証
-    // 添付ファイルサービスを初期化（変更通知コールバックを渡す）
+    // 各サービスを初期化
+    this.commandService = new ChatCommandService();
     this.attachmentService = new ChatAttachmentService((files) => {
       this.notifyAttachedFileChange(files);
     });
-    // トークン使用量サービスを初期化（変更通知と要約トリガーコールバックを渡す）
     this.tokenService = new ChatTokenService(
       (tokenUsage) => {
         this.notifyTokenUsageChange(tokenUsage);
@@ -95,7 +93,7 @@ class ChatService {
     // clearHandlers=trueの場合のみコンテキストハンドラをクリア
     // これにより、画面間でハンドラが保持される（デフォルト動作）
     if (clearHandlers) {
-      this.contextHandlers = {};
+      this.commandService.clearContextHandlers();
     }
   }
 
@@ -116,8 +114,7 @@ class ChatService {
    * @param handlers コマンド名をキーとしたハンドラのマップ
    */
   public registerGlobalHandlers(handlers: Record<string, (command: LLMCommand) => void | Promise<void>>): void {
-    logger.debug('chatService', 'Registering global command handlers:', Object.keys(handlers));
-    this.globalHandlers = { ...this.globalHandlers, ...handlers };
+    this.commandService.registerGlobalHandlers(handlers);
   }
 
   /**
@@ -125,8 +122,7 @@ class ChatService {
    * @param handlers コマンド名をキーとしたハンドラのマップ
    */
   public registerCommandHandlers(handlers: Record<string, (command: LLMCommand) => void | Promise<void>>): void {
-    logger.debug('chatService', 'Registering context command handlers:', Object.keys(handlers));
-    this.contextHandlers = { ...this.contextHandlers, ...handlers };
+    this.commandService.registerCommandHandlers(handlers);
   }
 
   /**
@@ -510,21 +506,7 @@ class ChatService {
    * グローバルハンドラとコンテキストハンドラの両方をチェック
    */
   private async dispatchCommands(commands: LLMCommand[]): Promise<void> {
-    for (const command of commands) {
-      // コンテキストハンドラを優先、なければグローバルハンドラを使用
-      const handler = this.contextHandlers[command.action] || this.globalHandlers[command.action];
-
-      if (handler) {
-        try {
-          await handler(command);
-          logger.debug('chatService', `Command ${command.action} executed successfully`);
-        } catch (error) {
-          logger.error('chatService', `Error executing command ${command.action}:`, error);
-        }
-      } else {
-        logger.warn('chatService', `No handler found for command: ${command.action}`);
-      }
-    }
+    await this.commandService.dispatchCommands(commands);
   }
 
   /**
