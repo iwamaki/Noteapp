@@ -67,19 +67,30 @@ export const useImportExport = () => {
         // ファイル名をサニタイズ
         let filename = sanitizeFilename(file.title);
 
-        // 重複チェック（同じファイル名の場合は番号を付ける）
-        if (filenameCount.has(filename)) {
-          const count = filenameCount.get(filename)! + 1;
-          filenameCount.set(filename, count);
-          filename = `${filename}_${count}`;
-        } else {
-          filenameCount.set(filename, 1);
+        // カテゴリパスを構築（階層構造を保持）
+        let categoryPath = '';
+        if (file.category && file.category.trim() !== '') {
+          // カテゴリの各階層をサニタイズ
+          const categoryParts = file.category.split('/').map(part => sanitizeFilename(part.trim()));
+          categoryPath = categoryParts.join('/') + '/';
         }
 
-        // .md拡張子を追加
-        const fullFilename = `${filename}.md`;
+        // フルパス（カテゴリ + ファイル名）を作成
+        const fullPath = `${categoryPath}${filename}`;
 
-        // ZIPにファイルを追加
+        // 重複チェック（同じパスの場合は番号を付ける）
+        if (filenameCount.has(fullPath)) {
+          const count = filenameCount.get(fullPath)! + 1;
+          filenameCount.set(fullPath, count);
+          filename = `${filename}_${count}`;
+        } else {
+          filenameCount.set(fullPath, 1);
+        }
+
+        // ファイル名（拡張子なし）
+        const fullFilename = `${categoryPath}${filename}`;
+
+        // ZIPにファイルを追加（カテゴリフォルダ構造を含む）
         zip.file(fullFilename, file.content);
         logger.debug('file', `Added to ZIP: ${fullFilename}`);
       }
@@ -153,21 +164,35 @@ export const useImportExport = () => {
         // ファイル内容を取得（生テキスト）
         const content = await zipEntry.async('text');
 
-        // ファイル名（拡張子含む）をタイトルとして使用
-        let finalTitle = resolveDuplicateTitle(filename, existingTitles);
+        // ファイルパスからカテゴリとタイトルを抽出
+        const pathParts = filename.split('/');
+        let title = pathParts[pathParts.length - 1]; // 最後の部分がファイル名
+        let category = '';
 
-        // 新規ファイル作成
+        // パスに階層がある場合、最後以外をカテゴリとして扱う
+        if (pathParts.length > 1) {
+          category = pathParts.slice(0, -1).join('/');
+        }
+
+        // タイトルの重複チェック（カテゴリを考慮したユニークキーで管理）
+        const uniqueKey = `${category}/${title}`;
+        let finalTitle = title;
+        if (existingTitles.has(uniqueKey)) {
+          finalTitle = resolveDuplicateTitle(title, existingTitles);
+        }
+
+        // 新規ファイル作成（カテゴリ構造を保持）
         const createData: CreateFileDataFlat = {
           title: finalTitle,
           content: content,
-          category: '', // 未分類
+          category: category,
           tags: [],
         };
 
         await FileRepository.create(createData);
-        existingTitles.add(finalTitle);
+        existingTitles.add(`${category}/${finalTitle}`);
         successCount++;
-        logger.debug('file', `Imported from ZIP: ${finalTitle}`);
+        logger.debug('file', `Imported from ZIP: ${category ? category + '/' : ''}${finalTitle}`);
       } catch (error: any) {
         logger.error('file', `Failed to import ${filename}: ${error.message}`, error);
         errorCount++;
@@ -209,20 +234,27 @@ export const useImportExport = () => {
           continue;
         }
 
-        let finalTitle = resolveDuplicateTitle(item.title, existingTitles);
+        // カテゴリを取得（JSONにカテゴリ情報があれば使用）
+        const category = item.category || '';
+        const uniqueKey = `${category}/${item.title}`;
+
+        let finalTitle = item.title;
+        if (existingTitles.has(uniqueKey)) {
+          finalTitle = resolveDuplicateTitle(item.title, existingTitles);
+        }
 
         // 新規ファイル作成
         const createData: CreateFileDataFlat = {
           title: finalTitle,
           content: item.content,
-          category: '', // 未分類
+          category: category,
           tags: Array.isArray(item.tags) ? item.tags : [],
         };
 
         await FileRepository.create(createData);
-        existingTitles.add(finalTitle);
+        existingTitles.add(`${category}/${finalTitle}`);
         successCount++;
-        logger.debug('file', `Imported from JSON: ${finalTitle}`);
+        logger.debug('file', `Imported from JSON: ${category ? category + '/' : ''}${finalTitle}`);
       } catch (error: any) {
         logger.error('file', `Failed to import item: ${error.message}`, error);
         errorCount++;
@@ -239,18 +271,25 @@ export const useImportExport = () => {
     const fsFile = new FSFile(fileUri);
     const content = await fsFile.text();
 
-    // ファイル名（拡張子含む）をタイトルとして使用
-    let finalTitle = resolveDuplicateTitle(filename, existingTitles);
+    // 未分類カテゴリとして扱う
+    const category = '';
+    const uniqueKey = `${category}/${filename}`;
+
+    let finalTitle = filename;
+    if (existingTitles.has(uniqueKey)) {
+      finalTitle = resolveDuplicateTitle(filename, existingTitles);
+    }
 
     // 新規ファイル作成（内容は一切変換しない）
     const createData: CreateFileDataFlat = {
       title: finalTitle,
       content: content,
-      category: '', // 未分類
+      category: category,
       tags: [],
     };
 
     await FileRepository.create(createData);
+    existingTitles.add(`${category}/${finalTitle}`);
     logger.debug('file', `Imported text file: ${finalTitle}`);
 
     return { successCount: 1, errorCount: 0 };
@@ -280,8 +319,9 @@ export const useImportExport = () => {
       logger.info('file', `Selected file: ${pickedFile.name}, mimeType: ${pickedFile.mimeType}`);
 
       // 既存のファイル名を取得（重複チェック用）
+      // カテゴリとタイトルの組み合わせをユニークキーとして管理
       const existingFiles = await FileRepository.getAll();
-      const existingTitles = new Set(existingFiles.map(f => f.title));
+      const existingTitles = new Set(existingFiles.map(f => `${f.category || ''}/${f.title}`));
 
       let result_stats: { successCount: number; errorCount: number };
 
