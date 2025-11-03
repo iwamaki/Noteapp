@@ -8,15 +8,19 @@ import { Ionicons } from '@expo/vector-icons';
 interface UseFileListHeaderProps {
   onCreateNew: () => void;
   onSettings: () => void;
+  onImport?: () => void;
+  onExport?: () => void;
 }
 
 /**
  * FileList画面のヘッダー設定フック
- * 新規作成ボタンと設定ボタンを右側に配置
+ * 新規作成、インポート/エクスポート、設定ボタンを右側に配置
  */
 export const useFileListHeader = ({
   onCreateNew,
   onSettings,
+  onImport,
+  onExport,
 }: UseFileListHeaderProps) => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const { colors, iconSizes } = useTheme();
@@ -31,6 +35,22 @@ export const useFileListHeader = ({
               icon: <Ionicons name="add-circle-outline" size={iconSizes.medium} color={colors.text} />,
               onPress: onCreateNew,
             },
+            ...(onImport
+              ? [
+                  {
+                    icon: <Ionicons name="download-outline" size={iconSizes.medium} color={colors.text} />,
+                    onPress: onImport,
+                  },
+                ]
+              : []),
+            ...(onExport
+              ? [
+                  {
+                    icon: <Ionicons name="share-outline" size={iconSizes.medium} color={colors.text} />,
+                    onPress: onExport,
+                  },
+                ]
+              : []),
             {
               icon: <Ionicons name="settings-outline" size={iconSizes.medium} color={colors.text} />,
               onPress: onSettings,
@@ -39,5 +59,5 @@ export const useFileListHeader = ({
         />
       ),
     });
-  }, [navigation, onCreateNew, onSettings, colors, iconSizes.medium]);
+  }, [navigation, onCreateNew, onSettings, onImport, onExport, colors, iconSizes.medium]);
 };

@@ -41,6 +41,7 @@ import { CategoryRenameModal } from './components/CategoryRenameModal';
 import { useFileListHeader } from './hooks/useFileListHeader';
 import { useCategoryCollapse } from './hooks/useCategoryCollapse';
 import { useFileListChatContext } from '../../features/chat/hooks/useFileListChatContext';
+import { useImportExport } from './hooks/useImportExport';
 import { groupFilesByCategoryHierarchical } from '@data/services/categoryGroupingService';
 import { CategoryOperationsService, CategoryImpact } from '@data/services/categoryOperationsService';
 import ChatService from '../../features/chat';
@@ -52,6 +53,9 @@ function FileListScreenFlatContent() {
   const { settings } = useSettingsStore();
 
   const { state, dispatch, actions } = useFlatListContext();
+
+  // インポート/エクスポート機能
+  const { handleImport, handleExport, isProcessing } = useImportExport();
 
   // アクションモーダルの状態
   const [selectedFileForActions, setSelectedFileForActions] = useState<FileFlat | null>(null);
@@ -504,10 +508,21 @@ function FileListScreenFlatContent() {
     [chatBarOffset, spacing.md]
   );
 
-  // ヘッダー設定（新規作成ボタンと設定ボタン）
+  /**
+   * インポート実行（データ再取得付き）
+   */
+  const handleImportWithRefresh = useCallback(async () => {
+    await handleImport();
+    // インポート完了後にデータを再取得
+    await actions.refreshData();
+  }, [handleImport, actions.refreshData]);
+
+  // ヘッダー設定（新規作成、インポート/エクスポート、設定ボタン）
   useFileListHeader({
     onCreateNew: () => dispatch({ type: 'OPEN_CREATE_MODAL' }),
     onSettings: () => navigation.navigate('Settings'),
+    onImport: handleImportWithRefresh,
+    onExport: handleExport,
   });
 
   // チャットコンテキスト（フラット構造版）
@@ -606,7 +621,7 @@ function FileListScreenFlatContent() {
   return (
     <MainContainer
       backgroundColor={colors.background}
-      isLoading={state.loading && state.files.length === 0}
+      isLoading={(state.loading && state.files.length === 0) || isProcessing}
     >
       {state.files.length === 0 && !state.loading ? (
         <View style={styles.centered}>
