@@ -12,6 +12,7 @@ import { ActiveScreenContextProvider, ActiveScreenContext, ChatServiceListener }
 import { FileRepository } from '@data/repositories/fileRepository';
 import WebSocketService from './services/websocketService';
 import { ChatAttachmentService } from './services/chatAttachmentService';
+import { ChatTokenService } from './services/chatTokenService';
 import { getOrCreateClientId } from './utils/clientId';
 import { useSettingsStore } from '../../settings/settingsStore';
 
@@ -53,8 +54,8 @@ class ChatService {
   // 添付ファイルサービス
   private attachmentService: ChatAttachmentService;
 
-  // トークン使用量情報
-  private tokenUsage: TokenUsageInfo | null = null;
+  // トークン使用量サービス
+  private tokenService: ChatTokenService;
 
   private constructor() {
     // プライベートコンストラクタでシングルトンを保証
@@ -62,6 +63,15 @@ class ChatService {
     this.attachmentService = new ChatAttachmentService((files) => {
       this.notifyAttachedFileChange(files);
     });
+    // トークン使用量サービスを初期化（変更通知と要約トリガーコールバックを渡す）
+    this.tokenService = new ChatTokenService(
+      (tokenUsage) => {
+        this.notifyTokenUsageChange(tokenUsage);
+      },
+      async () => {
+        await this.summarizeConversation();
+      }
+    );
   }
 
   /**
@@ -271,19 +281,9 @@ class ChatService {
       };
       this.addMessage(aiMessage);
 
-      // トークン使用量情報を更新
+      // トークン使用量情報を更新（100%超過時は自動要約がトリガーされる）
       if (response.tokenUsage) {
-        this.setTokenUsage(response.tokenUsage);
-
-        // 100%を超えたら自動的に要約を実行
-        if (response.tokenUsage.usageRatio >= 1.0) {
-          logger.info('chatService', 'Token usage exceeded 100%, starting automatic summarization');
-          // 非同期で要約を実行（メッセージ送信処理をブロックしない）
-          // setLoadingをfalseにした後に要約を開始する必要があるため、finallyの後で実行
-          setTimeout(async () => {
-            await this.summarizeConversation();
-          }, 100);
-        }
+        this.tokenService.updateTokenUsage(response.tokenUsage);
       }
 
       // コマンドの処理
@@ -318,11 +318,10 @@ class ChatService {
   public resetChat(): void {
     logger.debug('chatService', 'Resetting chat history');
     this.messages = [];
-    this.tokenUsage = null;
+    this.tokenService.resetTokenUsage();
     // LLMServiceの会話履歴もクリア
     APIService.clearHistory();
     this.notifyListeners();
-    this.notifyTokenUsageChange();
   }
 
   /**
@@ -368,13 +367,12 @@ class ChatService {
 
       // トークン使用量をリセット（要約後は新しいカウントになる）
       // バックエンドで再計算されたトークン使用量を次のメッセージ送信時に取得する
-      this.tokenUsage = null;
+      this.tokenService.resetTokenUsage();
 
       logger.info('chatService', `Conversation summarized: ${result.originalTokens} -> ${result.compressedTokens} tokens (${(result.compressionRatio * 100).toFixed(1)}% reduction)`);
 
       // リスナーに通知
       this.notifyListeners();
-      this.notifyTokenUsageChange();
 
       // 要約完了のシステムメッセージを追加
       const completionMessage: ChatMessage = {
@@ -421,7 +419,7 @@ class ChatService {
    * 現在のトークン使用量情報を取得
    */
   public getTokenUsage(): TokenUsageInfo | null {
-    return this.tokenUsage;
+    return this.tokenService.getTokenUsage();
   }
 
   /**
@@ -458,15 +456,6 @@ class ChatService {
   private setLoading(loading: boolean): void {
     this.isLoading = loading;
     this.notifyLoadingChange();
-  }
-
-  /**
-   * トークン使用量情報を設定
-   */
-  private setTokenUsage(tokenUsage: TokenUsageInfo): void {
-    this.tokenUsage = tokenUsage;
-    this.notifyTokenUsageChange();
-    logger.debug('chatService', 'Token usage updated:', tokenUsage);
   }
 
   /**
@@ -596,10 +585,10 @@ class ChatService {
   /**
    * トークン使用量情報の変更を通知
    */
-  private notifyTokenUsageChange(): void {
+  private notifyTokenUsageChange(tokenUsage: TokenUsageInfo | null): void {
     this.listeners.forEach((listener) => {
       if (listener.onTokenUsageChange) {
-        listener.onTokenUsageChange(this.tokenUsage);
+        listener.onTokenUsageChange(tokenUsage);
       }
     });
   }
