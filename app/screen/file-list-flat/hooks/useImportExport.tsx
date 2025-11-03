@@ -84,8 +84,8 @@ export const useImportExport = () => {
         logger.debug('file', `Added to ZIP: ${fullFilename}`);
       }
 
-      // ZIPファイルを生成
-      const zipBlob = await zip.generateAsync({ type: 'base64' });
+      // ZIPファイルを生成（Uint8Arrayとして）
+      const zipBlob = await zip.generateAsync({ type: 'uint8array' });
 
       // キャッシュディレクトリに保存
       const cacheDir = new Directory(Paths.cache);
@@ -93,7 +93,7 @@ export const useImportExport = () => {
       const zipFileName = `noteapp-export-${timestamp}.zip`;
       const zipFile = new FSFile(cacheDir, zipFileName);
 
-      // Base64データを書き込み
+      // バイナリデータを書き込み
       await zipFile.write(zipBlob);
 
       logger.info('file', `Export ZIP file created: ${zipFile.uri}`);
@@ -136,10 +136,10 @@ export const useImportExport = () => {
    */
   const importFromZip = async (fileUri: string, existingTitles: Set<string>) => {
     const fsFile = new FSFile(fileUri);
-    const zipBase64 = await fsFile.text();
+    const zipBytes = await fsFile.bytes();
 
     // ZIPを展開
-    const zip = await JSZip.loadAsync(zipBase64, { base64: true });
+    const zip = await JSZip.loadAsync(zipBytes);
 
     let successCount = 0;
     let errorCount = 0;
