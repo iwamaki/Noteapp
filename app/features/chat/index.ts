@@ -8,7 +8,7 @@
 import APIService, { ChatContext } from './llmService/api';
 import { ChatMessage, LLMCommand, TokenUsageInfo, SummarizeResponse } from './llmService/types/types';
 import { logger } from '../../utils/logger';
-import { ActiveScreenContextProvider, ActiveScreenContext, ChatServiceListener } from './types';
+import { ActiveScreenContextProvider, ActiveScreenContext } from './types';
 import { FileRepository } from '@data/repositories/fileRepository';
 import WebSocketService from './services/websocketService';
 import { ChatAttachmentService } from './services/chatAttachmentService';
@@ -37,9 +37,6 @@ class ChatService {
 
   // ローディング状態
   private isLoading: boolean = false;
-
-  // リスナー（購読者）のマップ
-  private listeners: Map<string, ChatServiceListener> = new Map();
 
   // LLMプロバイダーとモデル
   private llmProvider: string = 'anthropic';
@@ -419,23 +416,6 @@ class ChatService {
     return this.tokenService.getTokenUsage();
   }
 
-  /**
-   * リスナーを登録
-   * @param id リスナーの識別子
-   * @param listener リスナー
-   */
-  public subscribe(id: string, listener: ChatServiceListener): void {
-    this.listeners.set(id, listener);
-  }
-
-  /**
-   * リスナーを解除
-   * @param id リスナーの識別子
-   */
-  public unsubscribe(id: string): void {
-    this.listeners.delete(id);
-  }
-
   // ===== プライベートメソッド =====
 
   /**
@@ -532,67 +512,30 @@ class ChatService {
   }
 
   /**
-   * リスナーに通知
-   * 旧リスナーパターンとZustandストアの両方を更新（並行稼働期間）
+   * メッセージ変更をZustandストアに通知
    */
   private notifyListeners(): void {
-    // 旧リスナーパターン（Phase 3完了後に削除予定）
-    this.listeners.forEach((listener) => {
-      if (listener.onMessagesUpdate) {
-        listener.onMessagesUpdate(this.messages);
-      }
-    });
-
-    // Zustandストアを更新
     useChatStore.getState().setMessages(this.messages);
   }
 
   /**
-   * ローディング状態の変更を通知
-   * 旧リスナーパターンとZustandストアの両方を更新（並行稼働期間）
+   * ローディング状態の変更をZustandストアに通知
    */
   private notifyLoadingChange(): void {
-    // 旧リスナーパターン（Phase 3完了後に削除予定）
-    this.listeners.forEach((listener) => {
-      if (listener.onLoadingChange) {
-        listener.onLoadingChange(this.isLoading);
-      }
-    });
-
-    // Zustandストアを更新
     useChatStore.getState().setIsLoading(this.isLoading);
   }
 
   /**
-   * 添付ファイルの変更を通知
-   * 旧リスナーパターンとZustandストアの両方を更新（並行稼働期間）
+   * 添付ファイルの変更をZustandストアに通知
    */
   private notifyAttachedFileChange(files: Array<{ filename: string; content: string }>): void {
-    // 旧リスナーパターン（Phase 3完了後に削除予定）
-    this.listeners.forEach((listener) => {
-      if (listener.onAttachedFileChange) {
-        // 新しい配列を作成して渡す（参照を変えることでReactの再レンダリングをトリガー）
-        listener.onAttachedFileChange([...files]);
-      }
-    });
-
-    // Zustandストアを更新
     useChatStore.getState().setAttachedFiles(files);
   }
 
   /**
-   * トークン使用量情報の変更を通知
-   * 旧リスナーパターンとZustandストアの両方を更新（並行稼働期間）
+   * トークン使用量情報の変更をZustandストアに通知
    */
   private notifyTokenUsageChange(tokenUsage: TokenUsageInfo | null): void {
-    // 旧リスナーパターン（Phase 3完了後に削除予定）
-    this.listeners.forEach((listener) => {
-      if (listener.onTokenUsageChange) {
-        listener.onTokenUsageChange(tokenUsage);
-      }
-    });
-
-    // Zustandストアを更新
     useChatStore.getState().setTokenUsage(tokenUsage);
   }
 }
