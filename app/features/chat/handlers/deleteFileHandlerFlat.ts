@@ -8,6 +8,7 @@ import { LLMCommand } from '../llmService/types/types';
 import { CommandHandler } from './types';
 import { logger } from '../../../utils/logger';
 import { FileRepository } from '@data/repositories/fileRepository';
+import { UnifiedErrorHandler } from '../utils/errorHandler';
 
 /**
  * delete_fileコマンドのハンドラ（フラット構造版）
@@ -51,7 +52,14 @@ export const deleteFileHandlerFlat: CommandHandler = async (command: LLMCommand,
       logger.debug('chatService', 'UI refreshed after file deletion');
     }
   } catch (error) {
-    logger.error('chatService', 'Failed to delete file:', error);
-    throw new Error(`ファイルの削除に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
+    UnifiedErrorHandler.handleCommandError(
+      {
+        location: 'deleteFileHandler',
+        operation: 'ファイルの削除',
+        metadata: { title: command.title },
+      },
+      'ファイルの削除',
+      error
+    );
   }
 };

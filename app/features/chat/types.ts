@@ -5,7 +5,7 @@
  *                 およびチャットサービスで使用される型を定義します
  */
 
-import { LLMCommand, TokenUsageInfo } from './llmService/types/types';
+import { LLMCommand } from './llmService/types/types';
 
 /**
  * アクティブな画面のコンテキスト情報
@@ -41,18 +41,4 @@ export interface ActiveScreenContextProvider {
    * @param handlers コマンド名をキーとしたハンドラのマップ
    */
   registerCommandHandlers?(handlers: Record<string, (command: LLMCommand) => void | Promise<void>>): void;
-}
-
-/**
- * ChatServiceのイベントリスナー
- */
-export interface ChatServiceListener {
-  /** チャットメッセージが更新されたときに呼ばれる */
-  onMessagesUpdate?: (messages: any[]) => void;
-  /** ローディング状態が変更されたときに呼ばれる */
-  onLoadingChange?: (isLoading: boolean) => void;
-  /** 添付ファイルが変更されたときに呼ばれる */
-  onAttachedFileChange?: (files: Array<{ filename: string; content: string }>) => void;
-  /** トークン使用量が更新されたときに呼ばれる */
-  onTokenUsageChange?: (tokenUsage: TokenUsageInfo | null) => void;
 }

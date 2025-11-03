@@ -8,11 +8,16 @@
 import APIService, { ChatContext } from './llmService/api';
 import { ChatMessage, LLMCommand, TokenUsageInfo, SummarizeResponse } from './llmService/types/types';
 import { logger } from '../../utils/logger';
-import { ActiveScreenContextProvider, ActiveScreenContext, ChatServiceListener } from './types';
+import { ActiveScreenContextProvider, ActiveScreenContext } from './types';
 import { FileRepository } from '@data/repositories/fileRepository';
 import WebSocketService from './services/websocketService';
+import { ChatAttachmentService } from './services/chatAttachmentService';
+import { ChatTokenService } from './services/chatTokenService';
+import { ChatCommandService } from './services/chatCommandService';
 import { getOrCreateClientId } from './utils/clientId';
 import { useSettingsStore } from '../../settings/settingsStore';
+import { useChatStore } from './store/chatStore';
+import { UnifiedErrorHandler } from './utils/errorHandler';
 
 /**
  * シングルトンクラスとして機能し、アプリケーション全体でチャットの状態を管理します。
@@ -25,20 +30,14 @@ class ChatService {
   // 現在アクティブなコンテキストプロバイダー
   private currentProvider: ActiveScreenContextProvider | null = null;
 
-  // グローバルハンドラのマップ（画面に依存しない、起動時に一度だけ登録）
-  private globalHandlers: Record<string, (command: LLMCommand) => void | Promise<void>> = {};
-
-  // コンテキストハンドラのマップ（画面依存、画面遷移時に更新）
-  private contextHandlers: Record<string, (command: LLMCommand) => void | Promise<void>> = {};
+  // コマンドサービス
+  private commandService: ChatCommandService;
 
   // チャットメッセージの履歴
   private messages: ChatMessage[] = [];
 
   // ローディング状態
   private isLoading: boolean = false;
-
-  // リスナー（購読者）のマップ
-  private listeners: Map<string, ChatServiceListener> = new Map();
 
   // LLMプロバイダーとモデル
   private llmProvider: string = 'anthropic';
@@ -49,14 +48,27 @@ class ChatService {
   private clientId: string | null = null;
   private isWebSocketInitialized: boolean = false;
 
-  // 添付ファイル
-  private attachedFiles: Array<{ filename: string; content: string }> = [];
+  // 添付ファイルサービス
+  private attachmentService: ChatAttachmentService;
 
-  // トークン使用量情報
-  private tokenUsage: TokenUsageInfo | null = null;
+  // トークン使用量サービス
+  private tokenService: ChatTokenService;
 
   private constructor() {
     // プライベートコンストラクタでシングルトンを保証
+    // 各サービスを初期化
+    this.commandService = new ChatCommandService();
+    this.attachmentService = new ChatAttachmentService((files) => {
+      this.notifyAttachedFileChange(files);
+    });
+    this.tokenService = new ChatTokenService(
+      (tokenUsage) => {
+        this.notifyTokenUsageChange(tokenUsage);
+      },
+      async () => {
+        await this.summarizeConversation();
+      }
+    );
   }
 
   /**
@@ -80,7 +92,7 @@ class ChatService {
     // clearHandlers=trueの場合のみコンテキストハンドラをクリア
     // これにより、画面間でハンドラが保持される（デフォルト動作）
     if (clearHandlers) {
-      this.contextHandlers = {};
+      this.commandService.clearContextHandlers();
     }
   }
 
@@ -101,8 +113,7 @@ class ChatService {
    * @param handlers コマンド名をキーとしたハンドラのマップ
    */
   public registerGlobalHandlers(handlers: Record<string, (command: LLMCommand) => void | Promise<void>>): void {
-    logger.debug('chatService', 'Registering global command handlers:', Object.keys(handlers));
-    this.globalHandlers = { ...this.globalHandlers, ...handlers };
+    this.commandService.registerGlobalHandlers(handlers);
   }
 
   /**
@@ -110,8 +121,7 @@ class ChatService {
    * @param handlers コマンド名をキーとしたハンドラのマップ
    */
   public registerCommandHandlers(handlers: Record<string, (command: LLMCommand) => void | Promise<void>>): void {
-    logger.debug('chatService', 'Registering context command handlers:', Object.keys(handlers));
-    this.contextHandlers = { ...this.contextHandlers, ...handlers };
+    this.commandService.registerCommandHandlers(handlers);
   }
 
   /**
@@ -184,39 +194,14 @@ class ChatService {
    * @param fileId 添付するファイルのID
    */
   public async attachFile(fileId: string): Promise<void> {
-    try {
-      const file = await FileRepository.getById(fileId);
-      if (!file) {
-        logger.error('chatService', `File not found: ${fileId}`);
-        return;
-      }
-
-      // 既に添付されている場合は追加しない
-      const alreadyAttached = this.attachedFiles.some(f => f.filename === file.title);
-      if (alreadyAttached) {
-        logger.warn('chatService', `File already attached: ${file.title}`);
-        return;
-      }
-
-      this.attachedFiles.push({
-        filename: file.title,
-        content: file.content,
-      });
-
-      logger.info('chatService', `File attached: ${file.title} (total: ${this.attachedFiles.length})`);
-      this.notifyAttachedFileChange();
-    } catch (error) {
-      logger.error('chatService', 'Error attaching file:', error);
-    }
+    await this.attachmentService.attachFile(fileId);
   }
 
   /**
    * 添付ファイルをすべてクリア
    */
   public clearAttachedFiles(): void {
-    this.attachedFiles = [];
-    logger.info('chatService', 'All attached files cleared');
-    this.notifyAttachedFileChange();
+    this.attachmentService.clearAttachedFiles();
   }
 
   /**
@@ -224,18 +209,14 @@ class ChatService {
    * @param index 削除するファイルのインデックス
    */
   public removeAttachedFile(index: number): void {
-    if (index >= 0 && index < this.attachedFiles.length) {
-      const removed = this.attachedFiles.splice(index, 1)[0];
-      logger.info('chatService', `Attached file removed: ${removed.filename} (remaining: ${this.attachedFiles.length})`);
-      this.notifyAttachedFileChange();
-    }
+    this.attachmentService.removeAttachedFile(index);
   }
 
   /**
    * 現在の添付ファイル一覧を取得
    */
   public getAttachedFiles(): Array<{ filename: string; content: string }> {
-    return [...this.attachedFiles];
+    return this.attachmentService.getAttachedFiles();
   }
 
   /**
@@ -249,12 +230,15 @@ class ChatService {
       return;
     }
 
+    // 現在の添付ファイルを取得
+    const attachedFiles = this.attachmentService.getAttachedFiles();
+
     // ユーザーメッセージを追加（添付ファイル情報を含める）
     const userMessage: ChatMessage = {
       role: 'user',
       content: trimmedMessage,
       timestamp: new Date(),
-      attachedFiles: this.attachedFiles.length > 0 ? [...this.attachedFiles] : undefined,
+      attachedFiles: attachedFiles.length > 0 ? [...attachedFiles] : undefined,
     };
     this.addMessage(userMessage);
     this.setLoading(true);
@@ -281,7 +265,7 @@ class ChatService {
 
       // APIにメッセージを送信（client_idと添付ファイル情報も含める）
       logger.debug('chatService', 'Sending message to LLM with context:', chatContext);
-      const response = await APIService.sendChatMessage(trimmedMessage, chatContext, this.clientId, this.attachedFiles.length > 0 ? this.attachedFiles : undefined);
+      const response = await APIService.sendChatMessage(trimmedMessage, chatContext, this.clientId, attachedFiles.length > 0 ? attachedFiles : undefined);
 
       // AIメッセージを追加（トークン使用率を記録）
       const aiMessage: ChatMessage = {
@@ -292,19 +276,9 @@ class ChatService {
       };
       this.addMessage(aiMessage);
 
-      // トークン使用量情報を更新
+      // トークン使用量情報を更新（100%超過時は自動要約がトリガーされる）
       if (response.tokenUsage) {
-        this.setTokenUsage(response.tokenUsage);
-
-        // 100%を超えたら自動的に要約を実行
-        if (response.tokenUsage.usageRatio >= 1.0) {
-          logger.info('chatService', 'Token usage exceeded 100%, starting automatic summarization');
-          // 非同期で要約を実行（メッセージ送信処理をブロックしない）
-          // setLoadingをfalseにした後に要約を開始する必要があるため、finallyの後で実行
-          setTimeout(async () => {
-            await this.summarizeConversation();
-          }, 100);
-        }
+        this.tokenService.updateTokenUsage(response.tokenUsage);
       }
 
       // コマンドの処理
@@ -327,7 +301,7 @@ class ChatService {
     } finally {
       this.setLoading(false);
       // メッセージ送信後に添付ファイルをクリア
-      if (this.attachedFiles.length > 0) {
+      if (this.attachmentService.getAttachedFiles().length > 0) {
         this.clearAttachedFiles();
       }
     }
@@ -339,11 +313,10 @@ class ChatService {
   public resetChat(): void {
     logger.debug('chatService', 'Resetting chat history');
     this.messages = [];
-    this.tokenUsage = null;
+    this.tokenService.resetTokenUsage();
     // LLMServiceの会話履歴もクリア
     APIService.clearHistory();
     this.notifyListeners();
-    this.notifyTokenUsageChange();
   }
 
   /**
@@ -389,13 +362,12 @@ class ChatService {
 
       // トークン使用量をリセット（要約後は新しいカウントになる）
       // バックエンドで再計算されたトークン使用量を次のメッセージ送信時に取得する
-      this.tokenUsage = null;
+      this.tokenService.resetTokenUsage();
 
       logger.info('chatService', `Conversation summarized: ${result.originalTokens} -> ${result.compressedTokens} tokens (${(result.compressionRatio * 100).toFixed(1)}% reduction)`);
 
       // リスナーに通知
       this.notifyListeners();
-      this.notifyTokenUsageChange();
 
       // 要約完了のシステムメッセージを追加
       const completionMessage: ChatMessage = {
@@ -406,18 +378,13 @@ class ChatService {
       this.addMessage(completionMessage);
 
     } catch (error) {
-      logger.error('chatService', 'Error during summarization:', error);
-
-      let errorMessageContent = '❌ 要約中にエラーが発生しました。';
-      if (error instanceof Error) {
-        errorMessageContent += `\n\n${error.message}`;
-      }
-
-      const errorMessage: ChatMessage = {
-        role: 'system',
-        content: errorMessageContent,
-        timestamp: new Date(),
-      };
+      const errorMessage = UnifiedErrorHandler.handleChatError(
+        {
+          location: 'chatService',
+          operation: 'summarizeConversation',
+        },
+        error
+      );
       this.addMessage(errorMessage);
     } finally {
       this.setLoading(false);
@@ -442,24 +409,7 @@ class ChatService {
    * 現在のトークン使用量情報を取得
    */
   public getTokenUsage(): TokenUsageInfo | null {
-    return this.tokenUsage;
-  }
-
-  /**
-   * リスナーを登録
-   * @param id リスナーの識別子
-   * @param listener リスナー
-   */
-  public subscribe(id: string, listener: ChatServiceListener): void {
-    this.listeners.set(id, listener);
-  }
-
-  /**
-   * リスナーを解除
-   * @param id リスナーの識別子
-   */
-  public unsubscribe(id: string): void {
-    this.listeners.delete(id);
+    return this.tokenService.getTokenUsage();
   }
 
   // ===== プライベートメソッド =====
@@ -482,15 +432,6 @@ class ChatService {
   }
 
   /**
-   * トークン使用量情報を設定
-   */
-  private setTokenUsage(tokenUsage: TokenUsageInfo): void {
-    this.tokenUsage = tokenUsage;
-    this.notifyTokenUsageChange();
-    logger.debug('chatService', 'Token usage updated:', tokenUsage);
-  }
-
-  /**
    * 画面コンテキストからChatContextを構築
    */
   private async buildChatContext(screenContext: ActiveScreenContext | null): Promise<ChatContext> {
@@ -502,11 +443,13 @@ class ChatService {
       ? await this.getAllFilesForContext()
       : undefined;
 
+    const attachedFiles = this.attachmentService.getAttachedFiles();
+
     const chatContext: ChatContext = {
       activeScreen: screenContext ?? undefined,
       allFiles: allFilesData,
       sendFileContextToLLM: settings.sendFileContextToLLM,
-      attachedFileContent: this.attachedFiles.length > 0 ? this.attachedFiles : undefined,
+      attachedFileContent: attachedFiles.length > 0 ? attachedFiles : undefined,
     };
     return chatContext;
   }
@@ -540,87 +483,49 @@ class ChatService {
    * グローバルハンドラとコンテキストハンドラの両方をチェック
    */
   private async dispatchCommands(commands: LLMCommand[]): Promise<void> {
-    for (const command of commands) {
-      // コンテキストハンドラを優先、なければグローバルハンドラを使用
-      const handler = this.contextHandlers[command.action] || this.globalHandlers[command.action];
-
-      if (handler) {
-        try {
-          await handler(command);
-          logger.debug('chatService', `Command ${command.action} executed successfully`);
-        } catch (error) {
-          logger.error('chatService', `Error executing command ${command.action}:`, error);
-        }
-      } else {
-        logger.warn('chatService', `No handler found for command: ${command.action}`);
-      }
-    }
+    await this.commandService.dispatchCommands(commands);
   }
 
   /**
    * エラーを処理
    */
   private handleError(error: unknown): void {
-    logger.error('chatService', 'Error occurred:', error);
-    console.error('Chat error:', error);
-
-    let errorMessageContent = '不明なエラーが発生しました。\n\nサーバーが起動していることを確認してください。';
-
-    if (error instanceof Error) {
-      errorMessageContent = `❌ エラーが発生しました: ${error.message}\n\nサーバーが起動していることを確認してください。`;
-    }
-
-    const errorMessage: ChatMessage = {
-      role: 'system',
-      content: errorMessageContent,
-      timestamp: new Date(),
-    };
+    const errorMessage = UnifiedErrorHandler.handleChatError(
+      {
+        location: 'chatService',
+        operation: 'sendMessage',
+      },
+      error
+    );
     this.addMessage(errorMessage);
   }
 
   /**
-   * リスナーに通知
+   * メッセージ変更をZustandストアに通知
    */
   private notifyListeners(): void {
-    this.listeners.forEach((listener) => {
-      if (listener.onMessagesUpdate) {
-        listener.onMessagesUpdate(this.messages);
-      }
-    });
+    useChatStore.getState().setMessages(this.messages);
   }
 
   /**
-   * ローディング状態の変更を通知
+   * ローディング状態の変更をZustandストアに通知
    */
   private notifyLoadingChange(): void {
-    this.listeners.forEach((listener) => {
-      if (listener.onLoadingChange) {
-        listener.onLoadingChange(this.isLoading);
-      }
-    });
+    useChatStore.getState().setIsLoading(this.isLoading);
   }
 
   /**
-   * 添付ファイルの変更を通知
+   * 添付ファイルの変更をZustandストアに通知
    */
-  private notifyAttachedFileChange(): void {
-    this.listeners.forEach((listener) => {
-      if (listener.onAttachedFileChange) {
-        // 新しい配列を作成して渡す（参照を変えることでReactの再レンダリングをトリガー）
-        listener.onAttachedFileChange([...this.attachedFiles]);
-      }
-    });
+  private notifyAttachedFileChange(files: Array<{ filename: string; content: string }>): void {
+    useChatStore.getState().setAttachedFiles(files);
   }
 
   /**
-   * トークン使用量情報の変更を通知
+   * トークン使用量情報の変更をZustandストアに通知
    */
-  private notifyTokenUsageChange(): void {
-    this.listeners.forEach((listener) => {
-      if (listener.onTokenUsageChange) {
-        listener.onTokenUsageChange(this.tokenUsage);
-      }
-    });
+  private notifyTokenUsageChange(tokenUsage: TokenUsageInfo | null): void {
+    useChatStore.getState().setTokenUsage(tokenUsage);
   }
 }
 

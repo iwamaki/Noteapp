@@ -21,6 +21,7 @@ import { HttpClient } from './utils/HttpClient';
 import { RequestManager } from './core/RequestManager';
 import { ErrorHandler } from './utils/ErrorHandler';
 import { ProviderManager } from './core/ProviderManager';
+import { CHAT_CONFIG } from '../config/chatConfig';
 
 // Re-export types
 export type { ChatMessage, ChatContext, LLMProvider, LLMResponse, LLMHealthStatus, LLMConfig, LLMCommand, TokenUsageInfo, SummarizeRequest, SummarizeResponse, SummaryResult } from './types/types';
@@ -41,8 +42,8 @@ export class LLMService {
 
   constructor(config?: Partial<LLMConfig>) {
     this.config = {
-      maxHistorySize: 100,
-      apiTimeout: 30000,
+      maxHistorySize: CHAT_CONFIG.llm.maxHistorySize,
+      apiTimeout: CHAT_CONFIG.llm.apiTimeout,
       baseUrl: process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:8000',
       ...config,
     };
@@ -53,11 +54,11 @@ export class LLMService {
       timeout: this.config.apiTimeout,
     });
     this.requestManager = new RequestManager({
-      minRequestInterval: 100,
+      minRequestInterval: CHAT_CONFIG.llm.minRequestInterval,
     });
     this.providerManager = new ProviderManager({
-      defaultProvider: 'openai',
-      defaultModel: 'gpt-3.5-turbo',
+      defaultProvider: CHAT_CONFIG.llm.defaultProvider,
+      defaultModel: CHAT_CONFIG.llm.defaultModel,
     });
   }
 

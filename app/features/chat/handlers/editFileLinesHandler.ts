@@ -9,6 +9,7 @@ import type { FileFlat } from '@data/core/typesFlat';
 import { LLMCommand } from '../llmService/types/types';
 import { CommandHandler } from './types';
 import { logger } from '../../../utils/logger';
+import { UnifiedErrorHandler } from '../utils/errorHandler';
 
 /**
  * edit_file_linesコマンドのハンドラ
@@ -90,10 +91,18 @@ export const editFileLinesHandler: CommandHandler = async (
       logger.debug('toolService', 'File list refreshed');
     }
   } catch (error) {
-    logger.error('toolService', 'Failed to handle edit_file_lines command', {
-      error: error instanceof Error ? error.message : String(error),
-      command,
-    });
-    throw error;
+    UnifiedErrorHandler.handleCommandError(
+      {
+        location: 'editFileLinesHandler',
+        operation: 'ファイルの部分編集',
+        metadata: {
+          title: command.title,
+          startLine: command.start_line,
+          endLine: command.end_line,
+        },
+      },
+      'ファイルの部分編集',
+      error
+    );
   }
 };

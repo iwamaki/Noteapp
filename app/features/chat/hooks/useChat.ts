@@ -6,31 +6,32 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Animated, PanResponder } from 'react-native';
-import { ChatMessage, TokenUsageInfo } from '../llmService/index';
 import { logger } from '../../../utils/logger';
 import { useSettingsStore } from '../../../settings/settingsStore';
 import ChatService from '../index';
-
-// チャットエリアの高さの制限値
-const CHAT_AREA_MIN_HEIGHT = 150;       // 最小高さ
-const CHAT_AREA_MAX_HEIGHT = 400;       // 最大高さ
-const CHAT_AREA_INITIAL_HEIGHT = 250;   // 初期高さ
+import { CHAT_CONFIG } from '../config/chatConfig';
+import { useChatStore } from '../store/chatStore';
 
 /**
  * チャット機能のカスタムフック
  *
  * このフックは、ChatServiceと連携してチャット機能を提供します。
+ * Phase 3: Zustandストアを使用した状態管理に移行
  */
 export const useChat = () => {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isResizing, setIsResizing] = useState(false);
-  const [attachedFiles, setAttachedFiles] = useState<Array<{ filename: string; content: string }>>([]);
-  const [tokenUsage, setTokenUsage] = useState<TokenUsageInfo | null>(null);
+  // Zustandストアから状態を取得
+  const messages = useChatStore((state) => state.messages);
+  const isLoading = useChatStore((state) => state.isLoading);
+  const attachedFiles = useChatStore((state) => state.attachedFiles);
+  const tokenUsage = useChatStore((state) => state.tokenUsage);
+
   const { settings } = useSettingsStore();
 
-  const chatAreaHeight = useRef(new Animated.Value(CHAT_AREA_INITIAL_HEIGHT)).current;
-  const heightValue = useRef(CHAT_AREA_INITIAL_HEIGHT);
+  // UI状態（リサイズ中かどうか）はローカルステートとして保持
+  const [isResizing, setIsResizing] = useState(false);
+
+  const chatAreaHeight = useRef(new Animated.Value(CHAT_CONFIG.ui.chatAreaInitialHeight)).current;
+  const heightValue = useRef(CHAT_CONFIG.ui.chatAreaInitialHeight);
 
   useEffect(() => {
     const listenerId = chatAreaHeight.addListener(({ value }) => {
@@ -53,10 +54,10 @@ export const useChat = () => {
         const newHeight = gestureStartHeight.current - gestureState.dy;
 
         let clampedHeight = newHeight;
-        if (clampedHeight < CHAT_AREA_MIN_HEIGHT) {
-          clampedHeight = CHAT_AREA_MIN_HEIGHT;
-        } else if (clampedHeight > CHAT_AREA_MAX_HEIGHT) {
-          clampedHeight = CHAT_AREA_MAX_HEIGHT;
+        if (clampedHeight < CHAT_CONFIG.ui.chatAreaMinHeight) {
+          clampedHeight = CHAT_CONFIG.ui.chatAreaMinHeight;
+        } else if (clampedHeight > CHAT_CONFIG.ui.chatAreaMaxHeight) {
+          clampedHeight = CHAT_CONFIG.ui.chatAreaMaxHeight;
         }
 
         chatAreaHeight.setValue(clampedHeight);
@@ -71,45 +72,6 @@ export const useChat = () => {
   useEffect(() => {
     ChatService.setLLMConfig(settings.llmProvider, settings.llmModel);
   }, [settings.llmProvider, settings.llmModel]);
-
-  // ChatServiceのリスナーを登録
-  useEffect(() => {
-    const listenerId = 'useChat';
-
-    logger.debug('chat', '[useChat] Subscribing to ChatService');
-
-    // 初期状態を取得
-    setMessages(ChatService.getMessages());
-    setIsLoading(ChatService.getIsLoading());
-    setAttachedFiles(ChatService.getAttachedFiles());
-    setTokenUsage(ChatService.getTokenUsage());
-
-    // リスナーを登録
-    ChatService.subscribe(listenerId, {
-      onMessagesUpdate: (newMessages) => {
-        logger.debug('chat', '[useChat] Messages updated', { count: newMessages.length });
-        setMessages(newMessages);
-      },
-      onLoadingChange: (loading) => {
-        logger.debug('chat', '[useChat] Loading state changed', { loading });
-        setIsLoading(loading);
-      },
-      onAttachedFileChange: (files) => {
-        logger.debug('chat', '[useChat] Attached files changed', { count: files.length });
-        setAttachedFiles(files);
-      },
-      onTokenUsageChange: (usage) => {
-        logger.debug('chat', '[useChat] Token usage changed', usage);
-        setTokenUsage(usage);
-      },
-    });
-
-    // クリーンアップ
-    return () => {
-      logger.debug('chat', '[useChat] Unsubscribing from ChatService');
-      ChatService.unsubscribe(listenerId);
-    };
-  }, []);
 
   const sendMessage = useCallback(async (inputText: string) => {
     logger.debug('chat', '[useChat] sendMessage called with:', { inputText });
