@@ -83,7 +83,7 @@ export const getMarkdownStyles = (options: MarkdownStyleOptions) => {
       fontSize: typography.body.fontSize * 1.8,
       lineHeight: typography.body.lineHeight * 1.8,
       fontWeight: 'bold' as any,
-      marginTop: 20,
+      marginTop: 12,
       marginBottom: 10,
     } as TextStyle,
 

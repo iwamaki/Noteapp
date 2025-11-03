@@ -79,7 +79,7 @@ function FileEditScreen() {
     category,
     viewMode,
     isLoading,
-    isEditable: viewMode === 'edit' && !isLoading,
+    isEditable: false,
     isDirty,
     onTitleChange: handleTitleChange,
     onViewModeChange: setViewMode,

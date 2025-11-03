@@ -109,21 +109,31 @@ export const FileEditHeader: React.FC<FileEditHeaderProps> = ({
           {category}
         </Text>
       )}
-      <TextInput
-        value={localTitle}
-        onChangeText={handleChangeText}
-        style={styles.headerTitle}
-        placeholder="ファイルのタイトル"
-        placeholderTextColor={colors.textSecondary}
-        editable={editable}
-        onKeyPress={handleKeyPress}
-        onBlur={handleBlur}
-        onSubmitEditing={handleSubmitEditing}
-        onSelectionChange={handleSelectionChange}
-        autoCorrect={false}
-        autoCapitalize="none"
-        numberOfLines={1}
-      />
+      {editable ? (
+        <TextInput
+          value={localTitle}
+          onChangeText={handleChangeText}
+          style={styles.headerTitle}
+          placeholder="ファイルのタイトル"
+          placeholderTextColor={colors.textSecondary}
+          editable={editable}
+          onKeyPress={handleKeyPress}
+          onBlur={handleBlur}
+          onSubmitEditing={handleSubmitEditing}
+          onSelectionChange={handleSelectionChange}
+          autoCorrect={false}
+          autoCapitalize="none"
+          numberOfLines={1}
+        />
+      ) : (
+        <Text
+          style={styles.headerTitle}
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
+          {localTitle}
+        </Text>
+      )}
     </View>
   );
 };

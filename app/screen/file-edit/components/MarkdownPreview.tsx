@@ -20,7 +20,8 @@ export const MarkdownPreview: React.FC<MarkdownPreviewProps> = ({ content }) => 
       flex: 1,
       backgroundColor: colors.background,
       paddingHorizontal: 16,
-      paddingVertical: 12,
+      paddingTop: 0,
+      paddingBottom: 12,
     },
   });
 

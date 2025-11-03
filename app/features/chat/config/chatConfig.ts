@@ -69,7 +69,7 @@ export const CHAT_CONFIG = {
     /** スペーシング（padding/margin） */
     spacing: {
       xs: 2,
-      sm: 4,
+      sm: 6,
       md: 8,
       lg: 10,
       xl: 10,

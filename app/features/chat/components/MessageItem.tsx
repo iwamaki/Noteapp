@@ -55,6 +55,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, tokenUsage, i
       backgroundColor: colors.primary,
       borderBottomRightRadius: CHAT_CONFIG.components.border.radius.small,
       marginVertical: CHAT_CONFIG.components.spacing.sm,
+      marginRight: 4,
       maxWidth: CHAT_CONFIG.components.message.maxWidth,
     },
 
@@ -65,7 +66,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, tokenUsage, i
       paddingHorizontal: CHAT_CONFIG.components.spacing.md,
       paddingVertical: CHAT_CONFIG.components.spacing.xs,
       borderRadius: CHAT_CONFIG.components.border.radius.medium,
-      marginTop: CHAT_CONFIG.components.spacing.xs,
+      marginTop: 0,
       marginBottom: CHAT_CONFIG.components.spacing.sm,
       borderWidth: CHAT_CONFIG.components.border.width,
       borderColor: `${colors.primary}40`,

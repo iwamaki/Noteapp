@@ -33,15 +33,15 @@ export const ToggleTabButton: React.FC<ToggleTabButtonProps> = ({
       // 位置に応じてtop/bottomと角丸を設定
       ...(position === 'top'
         ? {
-            top: -20,
+            top: -14,
           }
         : {
-            bottom: -20,
+            bottom: -14,
           }),
     },
     toggleTabInner: {
       width: 60,
-      height: 20,
+      height: 14,
       backgroundColor: colors.background,
       borderWidth: 1,
       justifyContent: 'center',
@@ -49,16 +49,16 @@ export const ToggleTabButton: React.FC<ToggleTabButtonProps> = ({
       // 位置に応じて角丸とボーダーを設定
       ...(position === 'top'
         ? {
-            borderTopLeftRadius: 10,
-            borderTopRightRadius: 10,
+            borderTopLeftRadius: 8,
+            borderTopRightRadius: 8,
             borderTopColor: colors.tertiary,
             borderLeftColor: colors.tertiary,
             borderRightColor: colors.tertiary,
             borderBottomColor: colors.background, // 下端のボーダーを背景色に
           }
         : {
-            borderBottomLeftRadius: 10,
-            borderBottomRightRadius: 10,
+            borderBottomLeftRadius: 8,
+            borderBottomRightRadius: 8,
             borderBottomColor: colors.tertiary,
             borderLeftColor: colors.tertiary,
             borderRightColor: colors.tertiary,

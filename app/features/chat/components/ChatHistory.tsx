@@ -50,10 +50,9 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
 
   // トークン使用量インジケーターのレンダリング
   const renderTokenUsageIndicator = () => {
-    if (!tokenUsage) return null;
-
-    const percentage = tokenUsage.usageRatio * 100;
-    const barColor = getTokenUsageBarColor(tokenUsage, colors);
+    // tokenUsageがnullまたはundefinedの場合は常に表示（0%として）
+    const percentage = tokenUsage ? tokenUsage.usageRatio * 100 : 0;
+    const barColor = tokenUsage ? getTokenUsageBarColor(tokenUsage, colors) : colors.border;
 
     return (
       <View style={styles.tokenUsageContainer}>
@@ -68,23 +67,17 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
             ]}
           />
         </View>
-        <View style={styles.tokenUsageInfo}>
-          <Text style={styles.tokenUsageText}>
-            {tokenUsage.currentTokens}/{tokenUsage.maxTokens} トークン ({percentage.toFixed(0)}%)
-          </Text>
-          {tokenUsage.needsSummary && (
-            <Text style={styles.summaryWarning}>⚠️ 要約を推奨</Text>
-          )}
-        </View>
       </View>
     );
   };
 
   const styles = StyleSheet.create({
     resetButton: {
+      paddingHorizontal: 0,
       paddingVertical: 8,
-      paddingHorizontal: 4,
-      marginRight: 4,
+      minWidth: 38,
+      justifyContent: 'center',
+      alignItems: 'center',
     },
 
     loadingContainer: {
@@ -105,7 +98,7 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
       borderBottomWidth: 1,
     },
     messagesContent: {
-      paddingHorizontal: 16,
+      paddingHorizontal: 8,
       paddingVertical: 8,
     },
     messagesHeader: {
@@ -116,7 +109,8 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
       borderBottomWidth: 1,
       flexDirection: 'row',
       justifyContent: 'space-between',
-      paddingHorizontal: 16,
+      paddingLeft: 12,
+      paddingRight: 8,
       paddingVertical: 8,
     },
     messagesHeaderTitle: {
@@ -128,6 +122,7 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
     headerButtonContainer: {
       flexDirection: 'row',
       alignItems: 'center',
+      gap: 4,
     },
 
     messagesScrollView: {
@@ -136,16 +131,16 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
 
     // トークン使用量インジケーターのスタイル
     tokenUsageContainer: {
-      paddingHorizontal: 16,
-      paddingTop: 4,
-      paddingBottom: 8,
+      paddingHorizontal: 0,
+      paddingTop: 0,
+      paddingBottom: 0,
     },
     tokenUsageBar: {
       height: 4,
       backgroundColor: colors.border,
       borderRadius: 2,
       overflow: 'hidden',
-      marginBottom: 4,
+      marginBottom: 0,
     },
     tokenUsageProgress: {
       height: '100%',
@@ -181,9 +176,9 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
         <View style={styles.headerButtonContainer}>
           <TouchableOpacity onPress={onSummarize} style={styles.resetButton}>
             <MaterialCommunityIcons
-              name="text-box-multiple"
+              name="brain"
               size={iconSizes.medium}
-              color={colors.primary}
+              color={colors.text}
             />
           </TouchableOpacity>
           <TouchableOpacity onPress={onResetChat} style={styles.resetButton}>
