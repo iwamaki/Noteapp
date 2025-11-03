@@ -41,7 +41,82 @@ export const useImportExport = () => {
   };
 
   /**
-   * エクスポート機能
+   * ファイルをZIPにまとめてエクスポートする共通処理
+   */
+  const exportFilesToZip = async (files: any[], zipFileName: string) => {
+    if (files.length === 0) {
+      Alert.alert('エクスポート', 'エクスポートするファイルがありません');
+      return;
+    }
+
+    // ZIPファイルを作成
+    const zip = new JSZip();
+
+    // 各ファイルをMarkdownとしてZIPに追加
+    const filenameCount = new Map<string, number>();
+
+    for (const file of files) {
+      // ファイル名をサニタイズ
+      let filename = sanitizeFilename(file.title);
+
+      // カテゴリパスを構築（階層構造を保持）
+      let categoryPath = '';
+      if (file.category && file.category.trim() !== '') {
+        // カテゴリの各階層をサニタイズ
+        const categoryParts = file.category.split('/').map((part: string) => sanitizeFilename(part.trim()));
+        categoryPath = categoryParts.join('/') + '/';
+      }
+
+      // フルパス（カテゴリ + ファイル名）を作成
+      const fullPath = `${categoryPath}${filename}`;
+
+      // 重複チェック（同じパスの場合は番号を付ける）
+      if (filenameCount.has(fullPath)) {
+        const count = filenameCount.get(fullPath)! + 1;
+        filenameCount.set(fullPath, count);
+        filename = `${filename}_${count}`;
+      } else {
+        filenameCount.set(fullPath, 1);
+      }
+
+      // ファイル名（拡張子なし）
+      const fullFilename = `${categoryPath}${filename}`;
+
+      // ZIPにファイルを追加（カテゴリフォルダ構造を含む）
+      zip.file(fullFilename, file.content);
+      logger.debug('file', `Added to ZIP: ${fullFilename}`);
+    }
+
+    // ZIPファイルを生成（Uint8Arrayとして）
+    const zipBlob = await zip.generateAsync({ type: 'uint8array' });
+
+    // キャッシュディレクトリに保存
+    const cacheDir = new Directory(Paths.cache);
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('T')[0];
+    const fullZipFileName = zipFileName || `noteapp-export-${timestamp}.zip`;
+    const zipFile = new FSFile(cacheDir, fullZipFileName);
+
+    // バイナリデータを書き込み
+    await zipFile.write(zipBlob);
+
+    logger.info('file', `Export ZIP file created: ${zipFile.uri}`);
+
+    // システム共有ダイアログを表示
+    const canShare = await Sharing.isAvailableAsync();
+    if (canShare) {
+      await Sharing.shareAsync(zipFile.uri, {
+        mimeType: 'application/zip',
+        dialogTitle: 'ノートをエクスポート',
+      });
+      logger.info('file', `Successfully exported ${files.length} files as ZIP`);
+    } else {
+      Alert.alert('エラー', '共有機能が利用できません');
+      logger.error('file', 'Sharing is not available on this device');
+    }
+  };
+
+  /**
+   * エクスポート機能（全ファイル）
    * 全ファイルをZIPにまとめたMarkdownファイルとしてエクスポートし、システム共有ダイアログを表示
    */
   const handleExport = useCallback(async () => {
@@ -52,75 +127,9 @@ export const useImportExport = () => {
       // 全ファイルを取得
       const files = await FileRepository.getAll();
 
-      if (files.length === 0) {
-        Alert.alert('エクスポート', 'エクスポートするファイルがありません');
-        return;
-      }
-
-      // ZIPファイルを作成
-      const zip = new JSZip();
-
-      // 各ファイルをMarkdownとしてZIPに追加
-      const filenameCount = new Map<string, number>();
-
-      for (const file of files) {
-        // ファイル名をサニタイズ
-        let filename = sanitizeFilename(file.title);
-
-        // カテゴリパスを構築（階層構造を保持）
-        let categoryPath = '';
-        if (file.category && file.category.trim() !== '') {
-          // カテゴリの各階層をサニタイズ
-          const categoryParts = file.category.split('/').map(part => sanitizeFilename(part.trim()));
-          categoryPath = categoryParts.join('/') + '/';
-        }
-
-        // フルパス（カテゴリ + ファイル名）を作成
-        const fullPath = `${categoryPath}${filename}`;
-
-        // 重複チェック（同じパスの場合は番号を付ける）
-        if (filenameCount.has(fullPath)) {
-          const count = filenameCount.get(fullPath)! + 1;
-          filenameCount.set(fullPath, count);
-          filename = `${filename}_${count}`;
-        } else {
-          filenameCount.set(fullPath, 1);
-        }
-
-        // ファイル名（拡張子なし）
-        const fullFilename = `${categoryPath}${filename}`;
-
-        // ZIPにファイルを追加（カテゴリフォルダ構造を含む）
-        zip.file(fullFilename, file.content);
-        logger.debug('file', `Added to ZIP: ${fullFilename}`);
-      }
-
-      // ZIPファイルを生成（Uint8Arrayとして）
-      const zipBlob = await zip.generateAsync({ type: 'uint8array' });
-
-      // キャッシュディレクトリに保存
-      const cacheDir = new Directory(Paths.cache);
+      // 共通処理を使用してエクスポート
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('T')[0];
-      const zipFileName = `noteapp-export-${timestamp}.zip`;
-      const zipFile = new FSFile(cacheDir, zipFileName);
-
-      // バイナリデータを書き込み
-      await zipFile.write(zipBlob);
-
-      logger.info('file', `Export ZIP file created: ${zipFile.uri}`);
-
-      // システム共有ダイアログを表示
-      const canShare = await Sharing.isAvailableAsync();
-      if (canShare) {
-        await Sharing.shareAsync(zipFile.uri, {
-          mimeType: 'application/zip',
-          dialogTitle: 'ノートをエクスポート',
-        });
-        logger.info('file', `Successfully exported ${files.length} files as ZIP`);
-      } else {
-        Alert.alert('エラー', '共有機能が利用できません');
-        logger.error('file', 'Sharing is not available on this device');
-      }
+      await exportFilesToZip(files, `noteapp-export-${timestamp}.zip`);
     } catch (error: any) {
       logger.error('file', `Export failed: ${error.message}`, error);
       Alert.alert('エラー', 'エクスポートに失敗しました');
@@ -358,9 +367,82 @@ export const useImportExport = () => {
     }
   }, []);
 
+  /**
+   * 単一ファイルのエクスポート機能
+   * 指定されたファイルをZIPとしてエクスポート
+   */
+  const handleExportFile = useCallback(async (fileId: string) => {
+    try {
+      setIsProcessing(true);
+      logger.info('file', `Starting export for file: ${fileId}`);
+
+      // 指定されたファイルを取得
+      const file = await FileRepository.getById(fileId);
+      if (!file) {
+        Alert.alert('エラー', 'ファイルが見つかりません');
+        return;
+      }
+
+      // ファイル名をサニタイズしてZIPファイル名を作成
+      const safeFileName = sanitizeFilename(file.title);
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('T')[0];
+      const zipFileName = `${safeFileName}-${timestamp}.zip`;
+
+      // 共通処理を使用してエクスポート
+      await exportFilesToZip([file], zipFileName);
+    } catch (error: any) {
+      logger.error('file', `Export file failed: ${error.message}`, error);
+      Alert.alert('エラー', 'ファイルのエクスポートに失敗しました');
+    } finally {
+      setIsProcessing(false);
+    }
+  }, []);
+
+  /**
+   * カテゴリーのエクスポート機能
+   * 指定されたカテゴリー（サブカテゴリーを含む）のファイルをZIPとしてエクスポート
+   */
+  const handleExportCategory = useCallback(async (categoryPath: string) => {
+    try {
+      setIsProcessing(true);
+      logger.info('file', `Starting export for category: ${categoryPath}`);
+
+      // 全ファイルを取得
+      const allFiles = await FileRepository.getAll();
+
+      // 指定されたカテゴリーとそのサブカテゴリーに属するファイルをフィルタリング
+      const categoryFiles = allFiles.filter(file => {
+        // カテゴリーが完全一致、または指定されたカテゴリーで始まる（サブカテゴリーを含む）
+        return file.category === categoryPath || file.category.startsWith(categoryPath + '/');
+      });
+
+      if (categoryFiles.length === 0) {
+        Alert.alert('エクスポート', 'このカテゴリーにファイルがありません');
+        return;
+      }
+
+      // カテゴリー名をサニタイズしてZIPファイル名を作成
+      const categoryParts = categoryPath.split('/');
+      const categoryName = categoryParts[categoryParts.length - 1];
+      const safeCategoryName = sanitizeFilename(categoryName);
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('T')[0];
+      const zipFileName = `${safeCategoryName}-${timestamp}.zip`;
+
+      // 共通処理を使用してエクスポート
+      await exportFilesToZip(categoryFiles, zipFileName);
+    } catch (error: any) {
+      logger.error('file', `Export category failed: ${error.message}`, error);
+      Alert.alert('エラー', 'カテゴリーのエクスポートに失敗しました');
+    } finally {
+      setIsProcessing(false);
+    }
+  }, []);
+
   return {
     isProcessing,
     handleExport,
+    handleExportFile,
+    handleExportCategory,
     handleImport,
   };
 };

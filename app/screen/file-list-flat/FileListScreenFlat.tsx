@@ -55,7 +55,7 @@ function FileListScreenFlatContent() {
   const { state, dispatch, actions } = useFlatListContext();
 
   // インポート/エクスポート機能
-  const { handleImport, handleExport, isProcessing } = useImportExport();
+  const { handleImport, handleExportFile, handleExportCategory, isProcessing } = useImportExport();
 
   // アクションモーダルの状態
   const [selectedFileForActions, setSelectedFileForActions] = useState<FileFlat | null>(null);
@@ -401,6 +401,22 @@ function FileListScreenFlatContent() {
   }, []);
 
   /**
+   * ファイルエクスポートハンドラ
+   */
+  const handleExportFileWrapper = useCallback((file: FileFlat) => {
+    logger.info('file', `Exporting file: ${file.id} (${file.title})`);
+    handleExportFile(file.id);
+  }, [handleExportFile]);
+
+  /**
+   * カテゴリーエクスポートハンドラ
+   */
+  const handleExportCategoryWrapper = useCallback((categoryPath: string) => {
+    logger.info('file', `Exporting category: ${categoryPath}`);
+    handleExportCategory(categoryPath);
+  }, [handleExportCategory]);
+
+  /**
    * 作成実行
    */
   const handleCreate = useCallback(
@@ -517,12 +533,11 @@ function FileListScreenFlatContent() {
     await actions.refreshData();
   }, [handleImport, actions.refreshData]);
 
-  // ヘッダー設定（新規作成、インポート/エクスポート、設定ボタン）
+  // ヘッダー設定（新規作成、インポート、設定ボタン）
   useFileListHeader({
     onCreateNew: () => dispatch({ type: 'OPEN_CREATE_MODAL' }),
     onSettings: () => navigation.navigate('Settings'),
     onImport: handleImportWithRefresh,
-    onExport: handleExport,
   });
 
   // チャットコンテキスト（フラット構造版）
@@ -694,6 +709,7 @@ function FileListScreenFlatContent() {
         onEditTags={handleOpenTagEditModal}
         onMove={handleStartMove}
         onAttachToChat={handleAttachToChat}
+        onExport={handleExportFileWrapper}
       />
 
       <CustomModal
@@ -756,6 +772,7 @@ function FileListScreenFlatContent() {
         onClose={() => setSelectedCategoryForActions(null)}
         onDelete={handleDeleteCategory}
         onRename={handleOpenCategoryRenameModal}
+        onExport={handleExportCategoryWrapper}
       />
 
       {/* カテゴリー名変更モーダル */}
