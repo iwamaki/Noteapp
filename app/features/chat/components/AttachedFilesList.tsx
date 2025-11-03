@@ -9,6 +9,7 @@ import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-nati
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { useChatUI } from '../contexts/ChatUIContext';
+import { CHAT_CONFIG } from '../config/chatConfig';
 
 /**
  * 添付ファイルリストコンポーネント
@@ -24,9 +25,9 @@ export const AttachedFilesList: React.FC = () => {
 
   const styles = StyleSheet.create({
     attachedFileWrapper: {
-      paddingVertical: 8,
-      paddingHorizontal: 10,
-      borderBottomWidth: 1,
+      paddingVertical: CHAT_CONFIG.components.spacing.md,
+      paddingHorizontal: CHAT_CONFIG.components.spacing.lg,
+      borderBottomWidth: CHAT_CONFIG.components.border.width,
       borderBottomColor: colors.tertiary,
     },
     attachedFilesScrollView: {
@@ -36,21 +37,21 @@ export const AttachedFilesList: React.FC = () => {
       flexDirection: 'row',
       alignItems: 'center',
       backgroundColor: `${colors.primary}15`, // プライマリカラーの薄い背景
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderRadius: 16, // Pill型
-      marginRight: 8,
-      borderWidth: 1,
+      paddingHorizontal: CHAT_CONFIG.components.spacing.xl,
+      paddingVertical: CHAT_CONFIG.components.attachedFile.itemSpacing,
+      borderRadius: CHAT_CONFIG.components.border.radius.large, // Pill型
+      marginRight: CHAT_CONFIG.components.spacing.md,
+      borderWidth: CHAT_CONFIG.components.border.width,
       borderColor: `${colors.primary}40`,
     },
     attachedFileIcon: {
-      marginRight: 6,
+      marginRight: CHAT_CONFIG.components.attachedFile.itemSpacing,
     },
     attachedFileName: {
-      fontSize: 12,
+      fontSize: CHAT_CONFIG.components.fontSize.medium,
       color: colors.primary,
       fontWeight: '600',
-      maxWidth: 120,
+      maxWidth: CHAT_CONFIG.components.message.maxFileNameWidth,
     },
   });
 
@@ -66,11 +67,11 @@ export const AttachedFilesList: React.FC = () => {
             key={`${file.filename}-${index}`}
             style={styles.attachedFileContainer}
             onPress={() => removeAttachedFile(index)}
-            activeOpacity={0.7}
+            activeOpacity={CHAT_CONFIG.components.opacity.muted}
           >
             <Ionicons
               name="document-text"
-              size={14}
+              size={CHAT_CONFIG.components.icon.medium}
               color={colors.primary}
               style={styles.attachedFileIcon}
             />

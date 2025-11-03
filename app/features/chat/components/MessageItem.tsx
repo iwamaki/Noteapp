@@ -5,6 +5,7 @@ import { ChatMessage, TokenUsageInfo } from '../llmService/index';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { getTokenUsageRatio, getAIIconName } from '../utils/tokenUsageHelpers';
+import { CHAT_CONFIG } from '../config/chatConfig';
 
 interface MessageItemProps {
   message: ChatMessage;
@@ -25,28 +26,28 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, tokenUsage, i
     },
     aiMessage: {
       backgroundColor: colors.secondary,
-      borderBottomLeftRadius: 4,
-      borderWidth: 1,
+      borderBottomLeftRadius: CHAT_CONFIG.components.border.radius.small,
+      borderWidth: CHAT_CONFIG.components.border.width,
       borderColor: colors.border,
     },
     aiMessageWrapper: {
       flexDirection: 'row',
       alignItems: 'flex-end',
       alignSelf: 'flex-start',
-      marginVertical: 4,
-      maxWidth: '85%',
+      marginVertical: CHAT_CONFIG.components.spacing.sm,
+      maxWidth: CHAT_CONFIG.components.message.maxWidth,
     },
     aiIcon: {
-      marginRight: 8,
-      marginBottom: 4,
+      marginRight: CHAT_CONFIG.components.spacing.md,
+      marginBottom: CHAT_CONFIG.components.spacing.sm,
     },
     baseText: {
       fontSize: typography.body.fontSize,
       lineHeight: typography.body.fontSize * 1.4,
     },
     message: {
-      borderRadius: 16,
-      paddingHorizontal: 12,
+      borderRadius: CHAT_CONFIG.components.border.radius.large,
+      paddingHorizontal: CHAT_CONFIG.components.spacing.xl,
       paddingVertical: 5,
     },
     systemMarkdownText: {
@@ -56,9 +57,9 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, tokenUsage, i
       alignSelf: 'stretch',  // 横幅いっぱいに広がる
       backgroundColor: colors.warning + '30', // warning with opacity
       borderColor: colors.warning,
-      borderWidth: 1,
-      marginVertical: 4,
-      marginHorizontal: 16,  // 左右に余白を確保
+      borderWidth: CHAT_CONFIG.components.border.width,
+      marginVertical: CHAT_CONFIG.components.spacing.sm,
+      marginHorizontal: CHAT_CONFIG.components.spacing.xxl,  // 左右に余白を確保
     },
     userMarkdownText: {
       color: colors.white,
@@ -66,21 +67,21 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, tokenUsage, i
     userMessage: {
       alignSelf: 'flex-end',
       backgroundColor: colors.primary,
-      borderBottomRightRadius: 4,
-      marginVertical: 4,
-      maxWidth: '85%',
+      borderBottomRightRadius: CHAT_CONFIG.components.border.radius.small,
+      marginVertical: CHAT_CONFIG.components.spacing.sm,
+      maxWidth: CHAT_CONFIG.components.message.maxWidth,
     },
 
     attachedFileContainer: {
       flexDirection: 'row',
       alignItems: 'center',
       backgroundColor: `${colors.primary}15`,
-      paddingHorizontal: 8,
-      paddingVertical: 2,
-      borderRadius: 12,
-      marginTop: 2,
-      marginBottom: 4,
-      borderWidth: 1,
+      paddingHorizontal: CHAT_CONFIG.components.spacing.md,
+      paddingVertical: CHAT_CONFIG.components.spacing.xs,
+      borderRadius: CHAT_CONFIG.components.border.radius.medium,
+      marginTop: CHAT_CONFIG.components.spacing.xs,
+      marginBottom: CHAT_CONFIG.components.spacing.sm,
+      borderWidth: CHAT_CONFIG.components.border.width,
       borderColor: `${colors.primary}40`,
     },
     attachedFileContainerUser: {
@@ -90,10 +91,10 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, tokenUsage, i
       alignSelf: 'flex-start',
     },
     attachedFileIcon: {
-      marginRight: 4,
+      marginRight: CHAT_CONFIG.components.spacing.sm,
     },
     attachedFileName: {
-      fontSize: 11,
+      fontSize: CHAT_CONFIG.components.fontSize.small,
       color: colors.primary,
       fontWeight: '600',
     },
@@ -120,26 +121,6 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, tokenUsage, i
 
   const markdownStyles = {
     body: StyleSheet.flatten(markdownTextStyle),
-    // 他のMarkdown要素のスタイルを必要に応じて追加
-    // 例: heading1: { color: colors.text, fontSize: typography.h1.fontSize },
-    // link: { color: colors.primary },
-    // strong: { fontWeight: 'bold' },
-    // em: { fontStyle: 'italic' },
-    // code_inline: {
-    //   backgroundColor: colors.border,
-    //   padding: 2,
-    //   borderRadius: 3,
-    //   fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
-    // },
-    // blockquote: {
-    //   borderLeftColor: colors.primary,
-    //   borderLeftWidth: 4,
-    //   paddingLeft: 8,
-    //   marginLeft: 8,
-    // },
-    // list_item: {
-    //   color: colors.text,
-    // },
   };
 
   const markdownRules = {
@@ -152,7 +133,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, tokenUsage, i
   };
 
   // 要約済みメッセージのスタイル（薄く表示）
-  const summarizedStyle = message.isSummarized ? { opacity: 0.5 } : {};
+  const summarizedStyle = message.isSummarized ? { opacity: CHAT_CONFIG.components.opacity.summarized } : {};
 
   // AIメッセージの場合、アイコン付きのレイアウトを使用
   if (message.role === 'ai') {
@@ -178,7 +159,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, tokenUsage, i
               >
                 <Ionicons
                   name="document-text"
-                  size={12}
+                  size={CHAT_CONFIG.components.icon.small}
                   color={colors.primary}
                   style={styles.attachedFileIcon}
                 />
@@ -208,7 +189,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, tokenUsage, i
             >
               <Ionicons
                 name="document-text"
-                size={12}
+                size={CHAT_CONFIG.components.icon.small}
                 color={colors.primary}
                 style={styles.attachedFileIcon}
               />

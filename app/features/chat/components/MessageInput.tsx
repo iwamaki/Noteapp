@@ -10,6 +10,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { CustomInlineInput } from '../../../components/CustomInlineInput';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { useChatUI } from '../contexts/ChatUIContext';
+import { CHAT_CONFIG } from '../config/chatConfig';
 
 interface MessageInputProps {
   inputText: string;
@@ -39,30 +40,30 @@ export const MessageInput: React.FC<MessageInputProps> = ({ inputText, setInputT
     inputArea: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingHorizontal: 10,
-      paddingTop: 10,
-      paddingBottom: 10,
+      paddingHorizontal: CHAT_CONFIG.components.spacing.lg,
+      paddingTop: CHAT_CONFIG.components.spacing.lg,
+      paddingBottom: CHAT_CONFIG.components.spacing.lg,
       backgroundColor: colors.background,
     },
     customInput: {
       flex: 1,
-      maxHeight: 100,
-      marginRight: 10,
-      minHeight: 44,
+      maxHeight: CHAT_CONFIG.components.input.maxHeight,
+      marginRight: CHAT_CONFIG.components.spacing.lg,
+      minHeight: CHAT_CONFIG.components.input.minHeight,
     },
     sendButton: {
       justifyContent: 'center',
       alignItems: 'center',
       backgroundColor: colors.primary,
-      borderRadius: 18,
-      width: 36,
-      height: 36,
+      borderRadius: CHAT_CONFIG.components.border.radius.pill,
+      width: CHAT_CONFIG.components.input.buttonSize,
+      height: CHAT_CONFIG.components.input.buttonSize,
     },
     disabledButton: {
-      opacity: 0.5,
+      opacity: CHAT_CONFIG.components.opacity.disabled,
     },
     disabledButtonText: {
-      opacity: 0.7,
+      opacity: CHAT_CONFIG.components.opacity.muted,
     },
   });
 
@@ -74,7 +75,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({ inputText, setInputT
         value={inputText}
         onChangeText={setInputText}
         multiline
-        maxLength={2000}
+        maxLength={CHAT_CONFIG.components.input.maxLength}
         editable={!isLoading}
         onSubmitEditing={handleSendMessage}
         returnKeyType="send"

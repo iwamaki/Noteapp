@@ -77,6 +77,7 @@ export const ChatInputBar: React.FC = () => {
   const styles = useMemo(
     () =>
       StyleSheet.create({
+        // eslint-disable-next-line react-native/no-unused-styles
         container: {
           position: 'absolute',
           left: 0,

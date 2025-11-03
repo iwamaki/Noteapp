@@ -4,6 +4,8 @@
  * @responsibility ハードコードされた設定値を定数として定義し、変更を容易にする
  */
 
+import { DimensionValue } from 'react-native';
+
 /**
  * チャット機能全体の設定定数
  */
@@ -58,5 +60,78 @@ export const CHAT_CONFIG = {
   search: {
     /** 検索結果スニペットの前後表示文字数 */
     snippetContextLength: 50,
+  },
+
+  /**
+   * チャットUIコンポーネントの定数
+   */
+  components: {
+    /** スペーシング（padding/margin） */
+    spacing: {
+      xs: 2,
+      sm: 4,
+      md: 8,
+      lg: 10,
+      xl: 12,
+      xxl: 16,
+    },
+
+    /** ボーダー設定 */
+    border: {
+      width: 1,
+      radius: {
+        small: 4,
+        medium: 12,
+        large: 16,
+        pill: 18,
+      },
+    },
+
+    /** アイコンサイズ */
+    icon: {
+      small: 12,
+      medium: 14,
+    },
+
+    /** フォントサイズ */
+    fontSize: {
+      small: 11,
+      medium: 12,
+    },
+
+    /** 透明度 */
+    opacity: {
+      disabled: 0.5,
+      muted: 0.7,
+      summarized: 0.5,
+    },
+
+    /** メッセージ関連のサイズ */
+    message: {
+      /** メッセージの最大幅（%） */
+      maxWidth: '85%' as DimensionValue,
+      /** 添付ファイル名の最大幅 */
+      maxFileNameWidth: 120,
+    },
+
+    /** 入力エリア関連 */
+    input: {
+      /** テキスト入力の最大文字数 */
+      maxLength: 2000,
+      /** 入力エリアの最大高さ */
+      maxHeight: 100,
+      /** 入力エリアの最小高さ */
+      minHeight: 44,
+      /** 送信ボタンのサイズ */
+      buttonSize: 36,
+    },
+
+    /** 添付ファイル表示関連 */
+    attachedFile: {
+      /** ファイル名表示の最大幅 */
+      maxNameWidth: 120,
+      /** ファイルアイテムの余白 */
+      itemSpacing: 6,
+    },
   },
 };
