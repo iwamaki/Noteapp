@@ -10,11 +10,7 @@ import { ChatMessage, TokenUsageInfo } from '../llmService/index';
 import { logger } from '../../../utils/logger';
 import { useSettingsStore } from '../../../settings/settingsStore';
 import ChatService from '../index';
-
-// チャットエリアの高さの制限値
-const CHAT_AREA_MIN_HEIGHT = 150;       // 最小高さ
-const CHAT_AREA_MAX_HEIGHT = 400;       // 最大高さ
-const CHAT_AREA_INITIAL_HEIGHT = 250;   // 初期高さ
+import { CHAT_CONFIG } from '../config/chatConfig';
 
 /**
  * チャット機能のカスタムフック
@@ -29,8 +25,8 @@ export const useChat = () => {
   const [tokenUsage, setTokenUsage] = useState<TokenUsageInfo | null>(null);
   const { settings } = useSettingsStore();
 
-  const chatAreaHeight = useRef(new Animated.Value(CHAT_AREA_INITIAL_HEIGHT)).current;
-  const heightValue = useRef(CHAT_AREA_INITIAL_HEIGHT);
+  const chatAreaHeight = useRef(new Animated.Value(CHAT_CONFIG.ui.chatAreaInitialHeight)).current;
+  const heightValue = useRef(CHAT_CONFIG.ui.chatAreaInitialHeight);
 
   useEffect(() => {
     const listenerId = chatAreaHeight.addListener(({ value }) => {
@@ -53,10 +49,10 @@ export const useChat = () => {
         const newHeight = gestureStartHeight.current - gestureState.dy;
 
         let clampedHeight = newHeight;
-        if (clampedHeight < CHAT_AREA_MIN_HEIGHT) {
-          clampedHeight = CHAT_AREA_MIN_HEIGHT;
-        } else if (clampedHeight > CHAT_AREA_MAX_HEIGHT) {
-          clampedHeight = CHAT_AREA_MAX_HEIGHT;
+        if (clampedHeight < CHAT_CONFIG.ui.chatAreaMinHeight) {
+          clampedHeight = CHAT_CONFIG.ui.chatAreaMinHeight;
+        } else if (clampedHeight > CHAT_CONFIG.ui.chatAreaMaxHeight) {
+          clampedHeight = CHAT_CONFIG.ui.chatAreaMaxHeight;
         }
 
         chatAreaHeight.setValue(clampedHeight);
