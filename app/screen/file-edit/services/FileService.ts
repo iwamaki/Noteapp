@@ -76,6 +76,7 @@ export class FileService {
           title: data.title,
           content: data.content,
           tags: data.tags,
+          summary: data.summary,
         });
         return file;
       } else {
@@ -84,6 +85,7 @@ export class FileService {
           title: data.title || '',
           content: data.content || '',
           tags: data.tags || [],
+          summary: data.summary,
         });
         return file;
       }

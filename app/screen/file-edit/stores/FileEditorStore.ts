@@ -34,6 +34,7 @@ export const useFileEditorStore = create<FileEditorStore>((set, get) => ({
   file: null,
   content: '',
   title: '',
+  summary: '',
   isDirty: false,
   isLoading: false,
   isSaving: false,
@@ -61,6 +62,7 @@ export const useFileEditorStore = create<FileEditorStore>((set, get) => ({
           originalFile: file,
           content: file.content,
           title: file.title,
+          summary: file.summary || '',
           isDirty: false,
           isLoading: false,
         });
@@ -72,6 +74,7 @@ export const useFileEditorStore = create<FileEditorStore>((set, get) => ({
           originalFile: null,
 	  content: '',
           title: '',
+          summary: '',
           isDirty: false,
           isLoading: false,
         });
@@ -92,7 +95,9 @@ export const useFileEditorStore = create<FileEditorStore>((set, get) => ({
     set((state) => ({
       content,
       isDirty:
-        content !== originalFile?.content || state.title !== originalFile?.title,
+        content !== originalFile?.content ||
+        state.title !== originalFile?.title ||
+        state.summary !== (originalFile?.summary || ''),
     }));
 
     get().history.push(content);
@@ -100,18 +105,33 @@ export const useFileEditorStore = create<FileEditorStore>((set, get) => ({
 
   // ===== タイトル設定 =====
   setTitle: (title: string) => {
-    const { originalFile, content } = get();
+    const { originalFile, content, summary } = get();
 
     set({
       title,
       isDirty:
-        content !== originalFile?.content || title !== originalFile?.title,
+        content !== originalFile?.content ||
+        title !== originalFile?.title ||
+        summary !== (originalFile?.summary || ''),
+    });
+  },
+
+  // ===== 要約設定 =====
+  setSummary: (summary: string) => {
+    const { originalFile, content, title } = get();
+
+    set({
+      summary,
+      isDirty:
+        content !== originalFile?.content ||
+        title !== originalFile?.title ||
+        summary !== (originalFile?.summary || ''),
     });
   },
 
   // ===== 保存 =====
   save: async () => {
-    const { fileId, title, content, isDirty } = get();
+    const { fileId, title, content, summary, isDirty } = get();
 
     if (!isDirty) {
       return;
@@ -127,6 +147,7 @@ export const useFileEditorStore = create<FileEditorStore>((set, get) => ({
         id: fileId || undefined,
         title,
         content,
+        summary,
       });
 
       set({
@@ -135,6 +156,7 @@ export const useFileEditorStore = create<FileEditorStore>((set, get) => ({
         file: savedFile,
         originalFile: savedFile,
         fileId: savedFile.id,
+        summary: savedFile.summary || '',
       });
     } catch (error) {
       set({
@@ -183,6 +205,7 @@ export const useFileEditorStore = create<FileEditorStore>((set, get) => ({
       set({
         content: originalFile.content,
         title: originalFile.title,
+        summary: originalFile.summary || '',
         isDirty: false,
         error: null,
       });
@@ -205,6 +228,7 @@ export const useFileEditorStore = create<FileEditorStore>((set, get) => ({
       file: null,
       content: '',
       title: '',
+      summary: '',
       isDirty: false,
       isLoading: false,
       isSaving: false,

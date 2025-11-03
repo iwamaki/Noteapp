@@ -15,6 +15,7 @@ import { useTheme } from '../../design/theme/ThemeContext';
 import type { ViewMode } from './types';
 import { ToastMessage } from './components/ToastMessage'; // ToastMessageをインポート
 import { useToastMessage } from './hooks/useToastMessage'; // useToastMessageをインポート
+import { SummarySection } from './components/SummarySection'; // SummarySectionをインポート
 
 type FileEditScreenRouteProp = RouteProp<RootStackParamList, 'FileEdit'>;
 
@@ -30,7 +31,9 @@ function FileEditScreen() {
     title,
     category,
     content,
+    summary,
     setContent,
+    setSummary,
     isLoading,
     isSaving,
     save: handleSave,
@@ -137,6 +140,11 @@ function FileEditScreen() {
         showsVerticalScrollIndicator={true}
         showsHorizontalScrollIndicator={false}
       >
+        <SummarySection
+          summary={summary}
+          onSummaryChange={setSummary}
+          defaultExpanded={true}
+        />
         <FileEditor
           filename={title}
           initialContent={content}

@@ -22,6 +22,7 @@ export interface EditorState {
   file: FileFlat | null;
   content: string;
   title: string;
+  summary: string;
   isDirty: boolean;
   isLoading: boolean;
   isSaving: boolean;
@@ -65,6 +66,7 @@ export interface EditorError {
 export interface EditorActions {
   setContent: (content: string) => void;
   setTitle: (title: string) => void;
+  setSummary: (summary: string) => void;
   save: () => Promise<void>;
   undo: () => void;
   redo: () => void;
