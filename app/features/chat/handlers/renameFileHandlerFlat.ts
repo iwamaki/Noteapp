@@ -8,6 +8,7 @@ import { LLMCommand } from '../llmService/types/types';
 import { CommandHandler } from './types';
 import { logger } from '../../../utils/logger';
 import { FileRepository } from '@data/repositories/fileRepository';
+import { UnifiedErrorHandler } from '../utils/errorHandler';
 
 /**
  * rename_fileコマンドのハンドラ（フラット構造版）
@@ -60,7 +61,14 @@ export const renameFileHandlerFlat: CommandHandler = async (command: LLMCommand,
       logger.debug('chatService', 'UI refreshed after file rename');
     }
   } catch (error) {
-    logger.error('chatService', 'Failed to rename file:', error);
-    throw new Error(`ファイル名の変更に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
+    UnifiedErrorHandler.handleCommandError(
+      {
+        location: 'renameFileHandler',
+        operation: 'ファイル名の変更',
+        metadata: { title: command.title, newTitle: command.new_title },
+      },
+      'ファイル名の変更',
+      error
+    );
   }
 };

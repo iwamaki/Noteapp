@@ -7,6 +7,7 @@
 import { LLMCommand } from '../llmService/types/types';
 import { CommandHandler } from './types';
 import { logger } from '../../../utils/logger';
+import { UnifiedErrorHandler } from '../utils/errorHandler';
 
 /**
  * edit_fileコマンドのハンドラ
@@ -22,12 +23,15 @@ export const editFileHandler: CommandHandler = (command: LLMCommand, context?) =
     hasContent: !!command.content,
   });
 
-  if (!context?.setContent) {
-    logger.error('toolService', 'setContent function not provided in context');
-    return;
-  }
+  try {
+    if (!context?.setContent) {
+      throw new Error('setContent関数がコンテキストに提供されていません');
+    }
 
-  if (typeof command.content === 'string') {
+    if (typeof command.content !== 'string') {
+      throw new Error(`無効なコンテンツタイプです: ${typeof command.content}`);
+    }
+
     // LLMからのコンテキストには時々コードブロックのマークダウンが含まれるため、削除する
     const newContent = command.content
       .replace(/^```[a-zA-Z]*\n/, '')
@@ -35,7 +39,14 @@ export const editFileHandler: CommandHandler = (command: LLMCommand, context?) =
 
     context.setContent(newContent);
     logger.debug('toolService', 'File content updated successfully');
-  } else {
-    logger.warn('toolService', 'Invalid content type', typeof command.content);
+  } catch (error) {
+    UnifiedErrorHandler.handleCommandError(
+      {
+        location: 'editFileHandler',
+        operation: 'ファイルの編集',
+      },
+      'ファイルの編集',
+      error
+    );
   }
 };

@@ -17,6 +17,7 @@ import { ChatCommandService } from './services/chatCommandService';
 import { getOrCreateClientId } from './utils/clientId';
 import { useSettingsStore } from '../../settings/settingsStore';
 import { useChatStore } from './store/chatStore';
+import { UnifiedErrorHandler } from './utils/errorHandler';
 
 /**
  * シングルトンクラスとして機能し、アプリケーション全体でチャットの状態を管理します。
@@ -377,18 +378,13 @@ class ChatService {
       this.addMessage(completionMessage);
 
     } catch (error) {
-      logger.error('chatService', 'Error during summarization:', error);
-
-      let errorMessageContent = '❌ 要約中にエラーが発生しました。';
-      if (error instanceof Error) {
-        errorMessageContent += `\n\n${error.message}`;
-      }
-
-      const errorMessage: ChatMessage = {
-        role: 'system',
-        content: errorMessageContent,
-        timestamp: new Date(),
-      };
+      const errorMessage = UnifiedErrorHandler.handleChatError(
+        {
+          location: 'chatService',
+          operation: 'summarizeConversation',
+        },
+        error
+      );
       this.addMessage(errorMessage);
     } finally {
       this.setLoading(false);
@@ -494,20 +490,13 @@ class ChatService {
    * エラーを処理
    */
   private handleError(error: unknown): void {
-    logger.error('chatService', 'Error occurred:', error);
-    console.error('Chat error:', error);
-
-    let errorMessageContent = '不明なエラーが発生しました。\n\nサーバーが起動していることを確認してください。';
-
-    if (error instanceof Error) {
-      errorMessageContent = `❌ エラーが発生しました: ${error.message}\n\nサーバーが起動していることを確認してください。`;
-    }
-
-    const errorMessage: ChatMessage = {
-      role: 'system',
-      content: errorMessageContent,
-      timestamp: new Date(),
-    };
+    const errorMessage = UnifiedErrorHandler.handleChatError(
+      {
+        location: 'chatService',
+        operation: 'sendMessage',
+      },
+      error
+    );
     this.addMessage(errorMessage);
   }
 
