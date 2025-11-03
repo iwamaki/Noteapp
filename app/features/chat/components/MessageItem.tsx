@@ -83,12 +83,12 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, tokenUsage, i
       color: colors.text,
     },
     systemMessage: {
-      alignSelf: 'center',
+      alignSelf: 'stretch',  // 横幅いっぱいに広がる
       backgroundColor: colors.warning + '30', // warning with opacity
       borderColor: colors.warning,
       borderWidth: 1,
       marginVertical: 4,
-      maxWidth: '85%',
+      marginHorizontal: 16,  // 左右に余白を確保
     },
     userMarkdownText: {
       color: colors.white,
@@ -181,13 +181,16 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, tokenUsage, i
     },
   };
 
+  // 要約済みメッセージのスタイル（薄く表示）
+  const summarizedStyle = message.isSummarized ? { opacity: 0.5 } : {};
+
   // AIメッセージの場合、アイコン付きのレイアウトを使用
   if (message.role === 'ai') {
     const aiIconName = getAIIcon();
 
     return (
       <>
-        <View style={styles.aiMessageWrapper}>
+        <View style={[styles.aiMessageWrapper, summarizedStyle]}>
           <MaterialCommunityIcons
             name={aiIconName as any}
             size={iconSizes.medium}
@@ -203,7 +206,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, tokenUsage, i
             {message.attachedFiles.map((file, index) => (
               <View
                 key={`${file.filename}-${index}`}
-                style={[styles.attachedFileContainer, styles.attachedFileContainerAI]}
+                style={[styles.attachedFileContainer, styles.attachedFileContainerAI, summarizedStyle]}
               >
                 <Ionicons
                   name="document-text"
@@ -225,7 +228,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, tokenUsage, i
   // ユーザーメッセージとシステムメッセージは従来通り
   return (
     <>
-      <View style={containerStyle}>
+      <View style={[containerStyle, summarizedStyle]}>
         <Markdown style={markdownStyles} rules={markdownRules}>{message.content}</Markdown>
       </View>
       {message.attachedFiles && message.attachedFiles.length > 0 && (
@@ -233,7 +236,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, tokenUsage, i
           {message.attachedFiles.map((file, index) => (
             <View
               key={`${file.filename}-${index}`}
-              style={[styles.attachedFileContainer, message.role === 'user' ? styles.attachedFileContainerUser : styles.attachedFileContainerAI]}
+              style={[styles.attachedFileContainer, message.role === 'user' ? styles.attachedFileContainerUser : styles.attachedFileContainerAI, summarizedStyle]}
             >
               <Ionicons
                 name="document-text"

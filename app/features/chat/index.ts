@@ -369,26 +369,23 @@ class ChatService {
       // APIServiceを通じて要約を実行
       const result: SummarizeResponse = await APIService.summarizeConversation();
 
-      // 会話履歴を要約結果で置き換える
-      this.messages = [];
+      // 表示用：要約前のすべてのメッセージにisSummarizedフラグを追加
+      // （UI表示では要約前のメッセージも残しておく）
+      this.messages = this.messages.map(msg => ({
+        ...msg,
+        isSummarized: true,
+      }));
 
-      // 要約システムメッセージを追加
+      // 要約システムメッセージを最後に追加（区切りとして）
       const summaryMessage: ChatMessage = {
         role: 'system',
-        content: `📝 **会話の要約**\n\n${result.summary.content}`,
-        timestamp: result.summary.timestamp ? new Date(result.summary.timestamp) : new Date(),
+        content: `📝 **会話の要約**\n\n${result.summary.content}\n\n---\n\n以下は要約後の会話が続きます。`,
+        timestamp: new Date(),
       };
       this.messages.push(summaryMessage);
 
-      // 最近のメッセージを復元
-      result.recentMessages.forEach((msg) => {
-        const message: ChatMessage = {
-          role: msg.role as 'user' | 'ai' | 'system',
-          content: msg.content,
-          timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date(),
-        };
-        this.messages.push(message);
-      });
+      // 注: LLMService側の会話履歴は既に圧縮されている
+      // this.messagesは表示用なので全履歴を保持し、isSummarizedフラグで区別する
 
       // トークン使用量をリセット（要約後は新しいカウントになる）
       // バックエンドで再計算されたトークン使用量を次のメッセージ送信時に取得する

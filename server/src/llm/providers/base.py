@@ -142,13 +142,45 @@ class BaseAgentLLMProvider(BaseLLMProvider):
 
             # 3. レスポンス構築
             # 会話履歴を取得（トークン計算用）
+            # 注: 最新のユーザーメッセージとAI応答を含めた履歴でトークンを計算する必要がある
             conversation_history = context.conversationHistory if context and context.conversationHistory else []
+
+            # AI応答を取得
+            messages = result.get("messages", [])
+            agent_output = ""
+            if messages:
+                last_message = messages[-1]
+                if isinstance(last_message, AIMessage):
+                    content = last_message.content
+                    if isinstance(content, str):
+                        agent_output = content
+                    elif isinstance(content, list):
+                        text_parts = []
+                        for item in content:
+                            if isinstance(item, str):
+                                text_parts.append(item)
+                            elif isinstance(item, dict) and 'text' in item:
+                                text_parts.append(item['text'])
+                        agent_output = ''.join(text_parts)
+
+            # トークン計算用に最新の会話履歴を構築（今回のやり取りを含む）
+            updated_conversation_history = list(conversation_history)
+            updated_conversation_history.append({
+                "role": "user",
+                "content": message,
+                "timestamp": ""
+            })
+            updated_conversation_history.append({
+                "role": "ai",
+                "content": agent_output,
+                "timestamp": ""
+            })
 
             return self._build_response(
                 result,
                 provider_name,
                 built_context.history_count,
-                conversation_history
+                updated_conversation_history
             )
 
         except Exception as e:

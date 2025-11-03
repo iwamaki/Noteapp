@@ -9,6 +9,7 @@ export interface ChatMessage {
     content: string;
   }>;
   tokenUsageRatio?: number; // メッセージ作成時のトークン使用率（0.0~1.0以上）
+  isSummarized?: boolean; // このメッセージが要約済みかどうか（表示用フラグ）
 }
 
 // チャットコンテキスト

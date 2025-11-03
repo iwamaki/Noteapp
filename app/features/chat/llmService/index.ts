@@ -282,7 +282,7 @@ export class LLMService {
         content: data.summary.content,
         timestamp: data.summary.timestamp ? new Date(data.summary.timestamp) : new Date(),
       };
-      this.conversationHistory.getHistory().push(summaryMessage);
+      this.conversationHistory.addMessage(summaryMessage);
 
       // 最近のメッセージを復元
       data.recentMessages.forEach((msg) => {
@@ -291,7 +291,7 @@ export class LLMService {
           content: msg.content,
           timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date(),
         };
-        this.conversationHistory.getHistory().push(message);
+        this.conversationHistory.addMessage(message);
       });
 
       logger.info('llm', `Conversation summarized: ${data.originalTokens} -> ${data.compressedTokens} tokens (${(data.compressionRatio * 100).toFixed(1)}% reduction)`);
