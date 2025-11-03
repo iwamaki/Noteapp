@@ -11,6 +11,7 @@ import { logger } from '../../utils/logger';
 import { ActiveScreenContextProvider, ActiveScreenContext, ChatServiceListener } from './types';
 import { FileRepository } from '@data/repositories/fileRepository';
 import WebSocketService from './services/websocketService';
+import { ChatAttachmentService } from './services/chatAttachmentService';
 import { getOrCreateClientId } from './utils/clientId';
 import { useSettingsStore } from '../../settings/settingsStore';
 
@@ -49,14 +50,18 @@ class ChatService {
   private clientId: string | null = null;
   private isWebSocketInitialized: boolean = false;
 
-  // 添付ファイル
-  private attachedFiles: Array<{ filename: string; content: string }> = [];
+  // 添付ファイルサービス
+  private attachmentService: ChatAttachmentService;
 
   // トークン使用量情報
   private tokenUsage: TokenUsageInfo | null = null;
 
   private constructor() {
     // プライベートコンストラクタでシングルトンを保証
+    // 添付ファイルサービスを初期化（変更通知コールバックを渡す）
+    this.attachmentService = new ChatAttachmentService((files) => {
+      this.notifyAttachedFileChange(files);
+    });
   }
 
   /**
@@ -184,39 +189,14 @@ class ChatService {
    * @param fileId 添付するファイルのID
    */
   public async attachFile(fileId: string): Promise<void> {
-    try {
-      const file = await FileRepository.getById(fileId);
-      if (!file) {
-        logger.error('chatService', `File not found: ${fileId}`);
-        return;
-      }
-
-      // 既に添付されている場合は追加しない
-      const alreadyAttached = this.attachedFiles.some(f => f.filename === file.title);
-      if (alreadyAttached) {
-        logger.warn('chatService', `File already attached: ${file.title}`);
-        return;
-      }
-
-      this.attachedFiles.push({
-        filename: file.title,
-        content: file.content,
-      });
-
-      logger.info('chatService', `File attached: ${file.title} (total: ${this.attachedFiles.length})`);
-      this.notifyAttachedFileChange();
-    } catch (error) {
-      logger.error('chatService', 'Error attaching file:', error);
-    }
+    await this.attachmentService.attachFile(fileId);
   }
 
   /**
    * 添付ファイルをすべてクリア
    */
   public clearAttachedFiles(): void {
-    this.attachedFiles = [];
-    logger.info('chatService', 'All attached files cleared');
-    this.notifyAttachedFileChange();
+    this.attachmentService.clearAttachedFiles();
   }
 
   /**
@@ -224,18 +204,14 @@ class ChatService {
    * @param index 削除するファイルのインデックス
    */
   public removeAttachedFile(index: number): void {
-    if (index >= 0 && index < this.attachedFiles.length) {
-      const removed = this.attachedFiles.splice(index, 1)[0];
-      logger.info('chatService', `Attached file removed: ${removed.filename} (remaining: ${this.attachedFiles.length})`);
-      this.notifyAttachedFileChange();
-    }
+    this.attachmentService.removeAttachedFile(index);
   }
 
   /**
    * 現在の添付ファイル一覧を取得
    */
   public getAttachedFiles(): Array<{ filename: string; content: string }> {
-    return [...this.attachedFiles];
+    return this.attachmentService.getAttachedFiles();
   }
 
   /**
@@ -249,12 +225,15 @@ class ChatService {
       return;
     }
 
+    // 現在の添付ファイルを取得
+    const attachedFiles = this.attachmentService.getAttachedFiles();
+
     // ユーザーメッセージを追加（添付ファイル情報を含める）
     const userMessage: ChatMessage = {
       role: 'user',
       content: trimmedMessage,
       timestamp: new Date(),
-      attachedFiles: this.attachedFiles.length > 0 ? [...this.attachedFiles] : undefined,
+      attachedFiles: attachedFiles.length > 0 ? [...attachedFiles] : undefined,
     };
     this.addMessage(userMessage);
     this.setLoading(true);
@@ -281,7 +260,7 @@ class ChatService {
 
       // APIにメッセージを送信（client_idと添付ファイル情報も含める）
       logger.debug('chatService', 'Sending message to LLM with context:', chatContext);
-      const response = await APIService.sendChatMessage(trimmedMessage, chatContext, this.clientId, this.attachedFiles.length > 0 ? this.attachedFiles : undefined);
+      const response = await APIService.sendChatMessage(trimmedMessage, chatContext, this.clientId, attachedFiles.length > 0 ? attachedFiles : undefined);
 
       // AIメッセージを追加（トークン使用率を記録）
       const aiMessage: ChatMessage = {
@@ -327,7 +306,7 @@ class ChatService {
     } finally {
       this.setLoading(false);
       // メッセージ送信後に添付ファイルをクリア
-      if (this.attachedFiles.length > 0) {
+      if (this.attachmentService.getAttachedFiles().length > 0) {
         this.clearAttachedFiles();
       }
     }
@@ -502,11 +481,13 @@ class ChatService {
       ? await this.getAllFilesForContext()
       : undefined;
 
+    const attachedFiles = this.attachmentService.getAttachedFiles();
+
     const chatContext: ChatContext = {
       activeScreen: screenContext ?? undefined,
       allFiles: allFilesData,
       sendFileContextToLLM: settings.sendFileContextToLLM,
-      attachedFileContent: this.attachedFiles.length > 0 ? this.attachedFiles : undefined,
+      attachedFileContent: attachedFiles.length > 0 ? attachedFiles : undefined,
     };
     return chatContext;
   }
@@ -603,11 +584,11 @@ class ChatService {
   /**
    * 添付ファイルの変更を通知
    */
-  private notifyAttachedFileChange(): void {
+  private notifyAttachedFileChange(files: Array<{ filename: string; content: string }>): void {
     this.listeners.forEach((listener) => {
       if (listener.onAttachedFileChange) {
         // 新しい配列を作成して渡す（参照を変えることでReactの再レンダリングをトリガー）
-        listener.onAttachedFileChange([...this.attachedFiles]);
+        listener.onAttachedFileChange([...files]);
       }
     });
   }
