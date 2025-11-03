@@ -16,6 +16,7 @@ import { ChatTokenService } from './services/chatTokenService';
 import { ChatCommandService } from './services/chatCommandService';
 import { getOrCreateClientId } from './utils/clientId';
 import { useSettingsStore } from '../../settings/settingsStore';
+import { useChatStore } from './store/chatStore';
 
 /**
  * シングルトンクラスとして機能し、アプリケーション全体でチャットの状態を管理します。
@@ -532,47 +533,67 @@ class ChatService {
 
   /**
    * リスナーに通知
+   * 旧リスナーパターンとZustandストアの両方を更新（並行稼働期間）
    */
   private notifyListeners(): void {
+    // 旧リスナーパターン（Phase 3完了後に削除予定）
     this.listeners.forEach((listener) => {
       if (listener.onMessagesUpdate) {
         listener.onMessagesUpdate(this.messages);
       }
     });
+
+    // Zustandストアを更新
+    useChatStore.getState().setMessages(this.messages);
   }
 
   /**
    * ローディング状態の変更を通知
+   * 旧リスナーパターンとZustandストアの両方を更新（並行稼働期間）
    */
   private notifyLoadingChange(): void {
+    // 旧リスナーパターン（Phase 3完了後に削除予定）
     this.listeners.forEach((listener) => {
       if (listener.onLoadingChange) {
         listener.onLoadingChange(this.isLoading);
       }
     });
+
+    // Zustandストアを更新
+    useChatStore.getState().setIsLoading(this.isLoading);
   }
 
   /**
    * 添付ファイルの変更を通知
+   * 旧リスナーパターンとZustandストアの両方を更新（並行稼働期間）
    */
   private notifyAttachedFileChange(files: Array<{ filename: string; content: string }>): void {
+    // 旧リスナーパターン（Phase 3完了後に削除予定）
     this.listeners.forEach((listener) => {
       if (listener.onAttachedFileChange) {
         // 新しい配列を作成して渡す（参照を変えることでReactの再レンダリングをトリガー）
         listener.onAttachedFileChange([...files]);
       }
     });
+
+    // Zustandストアを更新
+    useChatStore.getState().setAttachedFiles(files);
   }
 
   /**
    * トークン使用量情報の変更を通知
+   * 旧リスナーパターンとZustandストアの両方を更新（並行稼働期間）
    */
   private notifyTokenUsageChange(tokenUsage: TokenUsageInfo | null): void {
+    // 旧リスナーパターン（Phase 3完了後に削除予定）
     this.listeners.forEach((listener) => {
       if (listener.onTokenUsageChange) {
         listener.onTokenUsageChange(tokenUsage);
       }
     });
+
+    // Zustandストアを更新
+    useChatStore.getState().setTokenUsage(tokenUsage);
   }
 }
 
