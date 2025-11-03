@@ -4,6 +4,7 @@ import Markdown from 'react-native-markdown-display';
 import { ChatMessage, TokenUsageInfo } from '../llmService/index';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { getTokenUsageRatio, getAIIconName } from '../utils/tokenUsageHelpers';
 
 interface MessageItemProps {
   message: ChatMessage;
@@ -15,39 +16,8 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, tokenUsage, i
   const { colors, typography, iconSizes } = useTheme();
 
   // トークン使用量に応じたアイコンを選択
-  const getAIIcon = (): string => {
-    // メッセージに保存されたtokenUsageRatioを優先的に使用
-    let usageRatio: number | undefined = undefined;
-    if (message.role === 'ai' && message.tokenUsageRatio !== undefined) {
-      usageRatio = message.tokenUsageRatio;
-    } else if (tokenUsage) {
-      usageRatio = tokenUsage.usageRatio;
-    }
-
-    if (usageRatio === undefined) {
-      return 'robot';
-    }
-
-    const percentage = usageRatio * 100;
-
-    // 100%超えで要約中の場合
-    if (percentage >= 100 && isLoading) {
-      return 'robot-dead';
-    }
-
-    // 75%~99%
-    if (percentage >= 75) {
-      return 'robot-angry';
-    }
-
-    // 25%~75%
-    if (percentage >= 25) {
-      return 'robot';
-    }
-
-    // 0~25%
-    return 'robot-excited';
-  };
+  const usageRatio = getTokenUsageRatio(message, tokenUsage);
+  const aiIconName = getAIIconName(usageRatio, isLoading);
 
   const styles = StyleSheet.create({
     aiMarkdownText: {
@@ -186,8 +156,6 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, tokenUsage, i
 
   // AIメッセージの場合、アイコン付きのレイアウトを使用
   if (message.role === 'ai') {
-    const aiIconName = getAIIcon();
-
     return (
       <>
         <View style={[styles.aiMessageWrapper, summarizedStyle]}>

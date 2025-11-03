@@ -14,6 +14,7 @@ import { ChatMessage, TokenUsageInfo } from '../llmService/index';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { MessageItem } from './MessageItem';
 import { ToggleTabButton } from './ToggleTabButton';
+import { getTokenUsageBarColor } from '../utils/tokenUsageHelpers';
 
 interface ChatHistoryProps {
   messages: ChatMessage[];
@@ -52,14 +53,7 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
     if (!tokenUsage) return null;
 
     const percentage = tokenUsage.usageRatio * 100;
-
-    // 色の決定: 80%以上は赤、60-80%は黄、60%以下は緑
-    let barColor = colors.success;
-    if (tokenUsage.needsSummary) {
-      barColor = colors.danger;
-    } else if (percentage > 60) {
-      barColor = colors.warning;
-    }
+    const barColor = getTokenUsageBarColor(tokenUsage, colors);
 
     return (
       <View style={styles.tokenUsageContainer}>
