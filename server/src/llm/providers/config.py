@@ -8,7 +8,7 @@ from typing import Final
 MAX_AGENT_ITERATIONS: Final[int] = 5
 """エージェントがツールを呼び出せる最大回数"""
 
-AGENT_VERBOSE: Final[bool] = True
+AGENT_VERBOSE: Final[bool] = False
 """エージェント実行時の詳細ログ出力フラグ"""
 
 HANDLE_PARSING_ERRORS: Final[bool] = True

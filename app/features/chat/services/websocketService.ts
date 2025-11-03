@@ -6,6 +6,7 @@
 
 import { logger } from '../../../utils/logger';
 import { FileRepository } from '@data/repositories/fileRepository';
+import { CHAT_CONFIG } from '../config/chatConfig';
 
 /**
  * WebSocketメッセージの型定義
@@ -83,8 +84,8 @@ class WebSocketService {
   private state: WebSocketState = WebSocketState.DISCONNECTED;
   private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
   private reconnectAttempts: number = 0;
-  private maxReconnectAttempts: number = 5;
-  private reconnectDelay: number = 3000; // 3秒
+  private maxReconnectAttempts: number = CHAT_CONFIG.websocket.maxReconnectAttempts;
+  private reconnectDelay: number = CHAT_CONFIG.websocket.reconnectDelay;
   private lastUrl: string = ''; // 再接続用URL
 
   // ステート変更リスナー
@@ -94,8 +95,8 @@ class WebSocketService {
   private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
   private heartbeatTimeoutCheck: ReturnType<typeof setTimeout> | null = null;
   private lastPongTime: number = 0;
-  private readonly HEARTBEAT_INTERVAL = 30000; // 30秒
-  private readonly HEARTBEAT_TIMEOUT = 60000; // 60秒
+  private readonly HEARTBEAT_INTERVAL = CHAT_CONFIG.websocket.heartbeatInterval;
+  private readonly HEARTBEAT_TIMEOUT = CHAT_CONFIG.websocket.heartbeatTimeout;
 
   private constructor(clientId: string) {
     this.clientId = clientId;
@@ -344,8 +345,9 @@ class WebSocketService {
 
               let snippet = '';
               if (matchIndex !== -1) {
-                const start = Math.max(0, matchIndex - 50);
-                const end = Math.min(content.length, matchIndex + query.length + 50);
+                const contextLength = CHAT_CONFIG.search.snippetContextLength;
+                const start = Math.max(0, matchIndex - contextLength);
+                const end = Math.min(content.length, matchIndex + query.length + contextLength);
                 snippet = (start > 0 ? '...' : '') +
                   content.substring(start, end) +
                   (end < content.length ? '...' : '');
@@ -512,10 +514,10 @@ class WebSocketService {
       }
     }, this.HEARTBEAT_INTERVAL);
 
-    // タイムアウトチェック（10秒ごと）
+    // タイムアウトチェック
     this.heartbeatTimeoutCheck = setInterval(() => {
       this.checkHeartbeatTimeout();
-    }, 10000);
+    }, CHAT_CONFIG.websocket.timeoutCheckInterval);
 
     logger.info('websocket', 'Heartbeat timers initialized');
   }

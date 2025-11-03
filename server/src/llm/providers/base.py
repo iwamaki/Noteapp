@@ -7,7 +7,7 @@ from typing import Optional, List, Dict, Any
 from langchain_core.messages import BaseMessage, AIMessage, HumanMessage
 from langchain.agents import create_agent
 
-from src.llm.models import ChatResponse, ChatContext, LLMCommand
+from src.llm.models import ChatResponse, ChatContext, LLMCommand, TokenUsageInfo
 from src.llm.tools import AVAILABLE_TOOLS
 from src.llm.providers.config import (
     AGENT_VERBOSE,
@@ -15,6 +15,7 @@ from src.llm.providers.config import (
 )
 from src.llm.providers.context_builder import ChatContextBuilder
 from src.llm.providers.command_extractor import AgentCommandExtractor
+from src.llm.utils.token_counter import count_message_tokens
 from src.core.logger import logger, log_llm_raw
 
 class BaseLLMProvider(ABC):
@@ -140,10 +141,46 @@ class BaseAgentLLMProvider(BaseLLMProvider):
             result = await self._execute_agent(message, built_context.chat_history)
 
             # 3. レスポンス構築
+            # 会話履歴を取得（トークン計算用）
+            # 注: 最新のユーザーメッセージとAI応答を含めた履歴でトークンを計算する必要がある
+            conversation_history = context.conversationHistory if context and context.conversationHistory else []
+
+            # AI応答を取得
+            messages = result.get("messages", [])
+            agent_output = ""
+            if messages:
+                last_message = messages[-1]
+                if isinstance(last_message, AIMessage):
+                    content = last_message.content
+                    if isinstance(content, str):
+                        agent_output = content
+                    elif isinstance(content, list):
+                        text_parts = []
+                        for item in content:
+                            if isinstance(item, str):
+                                text_parts.append(item)
+                            elif isinstance(item, dict) and 'text' in item:
+                                text_parts.append(item['text'])
+                        agent_output = ''.join(text_parts)
+
+            # トークン計算用に最新の会話履歴を構築（今回のやり取りを含む）
+            updated_conversation_history = list(conversation_history)
+            updated_conversation_history.append({
+                "role": "user",
+                "content": message,
+                "timestamp": ""
+            })
+            updated_conversation_history.append({
+                "role": "ai",
+                "content": agent_output,
+                "timestamp": ""
+            })
+
             return self._build_response(
                 result,
                 provider_name,
-                built_context.history_count
+                built_context.history_count,
+                updated_conversation_history
             )
 
         except Exception as e:
@@ -179,7 +216,8 @@ class BaseAgentLLMProvider(BaseLLMProvider):
         self,
         agent_result: Dict[str, Any],
         provider_name: str,
-        history_count: int
+        history_count: int,
+        conversation_history: List[Dict[str, Any]] = []
     ) -> ChatResponse:
         """エージェント実行結果からChatResponseを構築する
 
@@ -187,6 +225,7 @@ class BaseAgentLLMProvider(BaseLLMProvider):
             agent_result: エージェント実行結果（LangChain 1.0形式: {"messages": [...]})
             provider_name: プロバイダー名
             history_count: 会話履歴の件数
+            conversation_history: 会話履歴（トークン計算用）
 
         Returns:
             ChatResponse
@@ -240,12 +279,19 @@ class BaseAgentLLMProvider(BaseLLMProvider):
         if commands:
             self._log_agent_commands(provider_name, commands)
 
+        # トークン使用情報を計算
+        token_usage = self._calculate_token_usage(
+            conversation_history,
+            provider_name
+        )
+
         return ChatResponse(
             message=agent_output,
             commands=commands,
             provider=provider_name,
             model=self.model,
-            historyCount=history_count
+            historyCount=history_count,
+            tokenUsage=token_usage
         )
 
     def _build_error_response(
@@ -333,3 +379,59 @@ class BaseAgentLLMProvider(BaseLLMProvider):
             "count": len(commands),
             "actions": actions
         }, {})
+
+    def _calculate_token_usage(
+        self,
+        conversation_history: List[Dict[str, Any]],
+        provider_name: str
+    ) -> Optional[TokenUsageInfo]:
+        """会話履歴のトークン使用情報を計算する
+
+        Args:
+            conversation_history: 会話履歴
+            provider_name: プロバイダー名
+
+        Returns:
+            TokenUsageInfo or None
+        """
+        try:
+            # 推奨最大トークン数（テスト用に500に設定）
+            max_tokens = 500
+
+            # 会話履歴が空の場合でも初期状態を返す
+            if not conversation_history:
+                return TokenUsageInfo(
+                    currentTokens=0,
+                    maxTokens=max_tokens,
+                    usageRatio=0.0,
+                    needsSummary=False
+                )
+
+            # 現在のトークン数を計算
+            current_tokens = count_message_tokens(
+                conversation_history,
+                provider=provider_name,
+                model=self.model
+            )
+
+            # 使用率を計算
+            usage_ratio = current_tokens / max_tokens if max_tokens > 0 else 0.0
+
+            # 要約が必要かどうか（80%以上で推奨）
+            needs_summary = usage_ratio >= 0.8
+
+            logger.debug(
+                f"Token usage: {current_tokens}/{max_tokens} "
+                f"({usage_ratio:.1%}) - Summary recommended: {needs_summary}"
+            )
+
+            return TokenUsageInfo(
+                currentTokens=current_tokens,
+                maxTokens=max_tokens,
+                usageRatio=usage_ratio,
+                needsSummary=needs_summary
+            )
+
+        except Exception as e:
+            logger.error(f"Error calculating token usage: {e}")
+            return None

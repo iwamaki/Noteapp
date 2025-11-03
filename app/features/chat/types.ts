@@ -42,15 +42,3 @@ export interface ActiveScreenContextProvider {
    */
   registerCommandHandlers?(handlers: Record<string, (command: LLMCommand) => void | Promise<void>>): void;
 }
-
-/**
- * ChatServiceのイベントリスナー
- */
-export interface ChatServiceListener {
-  /** チャットメッセージが更新されたときに呼ばれる */
-  onMessagesUpdate?: (messages: any[]) => void;
-  /** ローディング状態が変更されたときに呼ばれる */
-  onLoadingChange?: (isLoading: boolean) => void;
-  /** 添付ファイルが変更されたときに呼ばれる */
-  onAttachedFileChange?: (files: Array<{ filename: string; content: string }>) => void;
-}

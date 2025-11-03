@@ -65,12 +65,24 @@ class LLMCommand(BaseModel):
     end_line: Optional[int] = None  # 終了行（1-based, inclusive）
 
 
+class TokenUsageInfo(BaseModel):
+    """トークン使用量情報
+
+    フロントエンドで要約が必要かどうかを判断するための情報。
+    """
+    currentTokens: int  # 現在の会話履歴のトークン数
+    maxTokens: int  # 推奨される最大トークン数
+    usageRatio: float  # 使用率（0.0-1.0）
+    needsSummary: bool  # 要約が推奨されるかどうか
+
+
 class ChatResponse(BaseModel):
     message: str
     commands: Optional[List[LLMCommand]] = None
     provider: Optional[str] = None
     model: Optional[str] = None
     historyCount: Optional[int] = None
+    tokenUsage: Optional[TokenUsageInfo] = None  # トークン使用量情報
 
 
 class LLMProvider(BaseModel):
@@ -78,3 +90,39 @@ class LLMProvider(BaseModel):
     defaultModel: str
     models: List[str]
     status: str
+
+
+class SummarizeRequest(BaseModel):
+    """会話履歴の要約リクエスト
+
+    長い会話履歴を圧縮して、重要な情報を保持したまま
+    トークン数を削減するためのリクエストモデル。
+    """
+    conversationHistory: List[Dict[str, Any]]  # 要約対象の会話履歴
+    max_tokens: Optional[int] = 500  # 圧縮後の最大トークン数（テスト用に小さく設定）
+    preserve_recent: Optional[int] = 3  # 保持する最新メッセージ数（テスト用に小さく設定）
+    provider: Optional[str] = "openai"  # 要約に使用するLLMプロバイダー
+    model: Optional[str] = None  # 要約に使用するモデル（Noneの場合はデフォルト）
+
+
+class SummaryResult(BaseModel):
+    """要約された会話コンテキスト
+
+    システムメッセージとして会話履歴に挿入される要約。
+    """
+    role: Literal["system"] = "system"
+    content: str  # 要約されたテキスト
+    timestamp: Optional[str] = None
+
+
+class SummarizeResponse(BaseModel):
+    """会話履歴の要約レスポンス
+
+    要約されたシステムメッセージと、保持された最新メッセージ、
+    圧縮統計情報を含む。
+    """
+    summary: SummaryResult  # 要約されたシステムメッセージ
+    recentMessages: List[Dict[str, Any]]  # 保持された最新メッセージ
+    compressionRatio: float  # 圧縮率（0.0-1.0）
+    originalTokens: int  # 元のトークン数
+    compressedTokens: int  # 圧縮後のトークン数

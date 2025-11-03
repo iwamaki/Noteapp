@@ -9,19 +9,22 @@ import {
   Animated,
   PanResponderInstance,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { ChatMessage } from '../llmService/index';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { ChatMessage, TokenUsageInfo } from '../llmService/index';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { MessageItem } from './MessageItem';
 import { ToggleTabButton } from './ToggleTabButton';
+import { getTokenUsageBarColor } from '../utils/tokenUsageHelpers';
 
 interface ChatHistoryProps {
   messages: ChatMessage[];
   isLoading: boolean;
   onCollapse: () => void;
-  onResetChat: () => void; 
+  onResetChat: () => void;
+  onSummarize: () => void;
   messageAreaHeight: Animated.AnimatedValue;
   panHandlers: PanResponderInstance['panHandlers'];
+  tokenUsage: TokenUsageInfo | null;
 }
 
 export const ChatHistory: React.FC<ChatHistoryProps> = ({
@@ -29,8 +32,10 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
   isLoading,
   onCollapse,
   onResetChat,
+  onSummarize,
   messageAreaHeight,
   panHandlers,
+  tokenUsage,
 }) => {
   const { colors, typography, iconSizes } = useTheme();
   const scrollViewRef = useRef<ScrollView>(null);
@@ -42,6 +47,38 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
       }, 100);
     }
   }, [messages]);
+
+  // トークン使用量インジケーターのレンダリング
+  const renderTokenUsageIndicator = () => {
+    if (!tokenUsage) return null;
+
+    const percentage = tokenUsage.usageRatio * 100;
+    const barColor = getTokenUsageBarColor(tokenUsage, colors);
+
+    return (
+      <View style={styles.tokenUsageContainer}>
+        <View style={styles.tokenUsageBar}>
+          <View
+            style={[
+              styles.tokenUsageProgress,
+              {
+                width: `${Math.min(percentage, 100)}%`,
+                backgroundColor: barColor
+              }
+            ]}
+          />
+        </View>
+        <View style={styles.tokenUsageInfo}>
+          <Text style={styles.tokenUsageText}>
+            {tokenUsage.currentTokens}/{tokenUsage.maxTokens} トークン ({percentage.toFixed(0)}%)
+          </Text>
+          {tokenUsage.needsSummary && (
+            <Text style={styles.summaryWarning}>⚠️ 要約を推奨</Text>
+          )}
+        </View>
+      </View>
+    );
+  };
 
   const styles = StyleSheet.create({
     resetButton: {
@@ -96,6 +133,38 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
     messagesScrollView: {
       flex: 1,
     },
+
+    // トークン使用量インジケーターのスタイル
+    tokenUsageContainer: {
+      paddingHorizontal: 16,
+      paddingTop: 4,
+      paddingBottom: 8,
+    },
+    tokenUsageBar: {
+      height: 4,
+      backgroundColor: colors.border,
+      borderRadius: 2,
+      overflow: 'hidden',
+      marginBottom: 4,
+    },
+    tokenUsageProgress: {
+      height: '100%',
+      borderRadius: 2,
+    },
+    tokenUsageInfo: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    tokenUsageText: {
+      fontSize: 10,
+      color: colors.textSecondary,
+    },
+    summaryWarning: {
+      fontSize: 10,
+      color: colors.danger,
+      fontWeight: '600',
+    },
   });
 
   return (
@@ -110,6 +179,13 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
 
         <Text style={styles.messagesHeaderTitle}>チャット履歴</Text>
         <View style={styles.headerButtonContainer}>
+          <TouchableOpacity onPress={onSummarize} style={styles.resetButton}>
+            <MaterialCommunityIcons
+              name="text-box-multiple"
+              size={iconSizes.medium}
+              color={colors.primary}
+            />
+          </TouchableOpacity>
           <TouchableOpacity onPress={onResetChat} style={styles.resetButton}>
             <Ionicons
               name="reload"
@@ -119,13 +195,22 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* トークン使用量インジケーター */}
+      {renderTokenUsageIndicator()}
+
       <ScrollView
         ref={scrollViewRef}
         style={styles.messagesScrollView}
         contentContainerStyle={styles.messagesContent}
       >
         {messages.map((msg, index) => (
-          <MessageItem key={index} message={msg} />
+          <MessageItem
+            key={index}
+            message={msg}
+            tokenUsage={tokenUsage}
+            isLoading={isLoading}
+          />
         ))}
         {isLoading && (
           <View style={styles.loadingContainer}>

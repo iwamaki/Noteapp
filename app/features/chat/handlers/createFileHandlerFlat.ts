@@ -8,6 +8,7 @@ import { LLMCommand } from '../llmService/types/types';
 import { CommandHandler } from './types';
 import { logger } from '../../../utils/logger';
 import { FileRepository } from '@data/repositories/fileRepository';
+import { UnifiedErrorHandler } from '../utils/errorHandler';
 
 /**
  * create_fileコマンドのハンドラ（フラット構造版）
@@ -51,7 +52,14 @@ export const createFileHandlerFlat: CommandHandler = async (command: LLMCommand,
       logger.debug('chatService', 'UI refreshed after file creation');
     }
   } catch (error) {
-    logger.error('chatService', 'Failed to create file:', error);
-    throw new Error(`ファイルの作成に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
+    UnifiedErrorHandler.handleCommandError(
+      {
+        location: 'createFileHandler',
+        operation: 'ファイルの作成',
+        metadata: { title: command.title },
+      },
+      'ファイルの作成',
+      error
+    );
   }
 };

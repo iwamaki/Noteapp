@@ -6,6 +6,7 @@ from .create_file import create_file
 from .delete_file import delete_file
 from .rename_file import rename_file
 from .search_files import search_files
+from .web_search import web_search
 
 AVAILABLE_TOOLS: list[BaseTool] = [
     # フラット構造用ツール
@@ -16,4 +17,5 @@ AVAILABLE_TOOLS: list[BaseTool] = [
     delete_file, # type: ignore
     rename_file, # type: ignore
     search_files, # type: ignore
+    web_search, # type: ignore
 ]

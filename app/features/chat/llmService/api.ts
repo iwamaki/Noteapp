@@ -4,7 +4,7 @@
  * @responsibility LLM（大規模言語モデル）との通信を抽象化し、チャットメッセージの送信やLLMプロバイダーの設定などの機能を提供する責任があります。
  */
 
-import { ChatContext, LLMResponse, LLMService } from './index';
+import { ChatContext, LLMResponse, LLMService, SummarizeResponse } from './index';
 
 export interface CreateFileRequest {
   title: string;
@@ -85,6 +85,11 @@ export class APIService {
   // LLMプロバイダーのキャッシュをクリア
   static refreshLLMProviders() {
     this.llmServiceInstance.refreshProviders();
+  }
+
+  // 会話履歴を要約
+  static async summarizeConversation(): Promise<SummarizeResponse> {
+    return this.llmServiceInstance.summarizeConversation();
   }
 
 }
