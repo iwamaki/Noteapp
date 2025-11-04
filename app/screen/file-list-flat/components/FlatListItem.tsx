@@ -38,7 +38,7 @@ export const FlatListItem: React.FC<FlatListItemProps> = ({
   onPress,
   onLongPress,
 }) => {
-  const { colors, spacing, iconSizes } = useTheme();
+  const { colors, spacing, iconSizes, typography } = useTheme();
 
   // 階層インデント計算（親カテゴリーの子要素として、同じ階層の子カテゴリーと同じ位置）
   const itemPaddingLeft = (level + 1) * 24;
@@ -65,6 +65,28 @@ export const FlatListItem: React.FC<FlatListItemProps> = ({
         leftElement={leftElement}
       >
       <ListItem.Title>{file.title}</ListItem.Title>
+
+      {/* 要約コンテナ */}
+      {file.summary && (
+        <View style={{ marginTop: spacing.xs }}>
+          <Text style={[typography.caption, { color: colors.textSecondary }, styles.summaryText]}>
+            <Text style={styles.label}>要約：</Text>
+            {file.summary}
+          </Text>
+        </View>
+      )}
+
+      {/* 本文コンテナ */}
+      {file.content && (
+        <View style={{ marginTop: spacing.xs, paddingLeft: spacing.md }}>
+          <Text
+            style={[typography.caption, { color: colors.textSecondary }]}
+            numberOfLines={2}
+          >
+            {file.content}
+          </Text>
+        </View>
+      )}
 
       {/* タグ表示 */}
       {file.tags.length > 0 && (
@@ -98,6 +120,12 @@ export const FlatListItem: React.FC<FlatListItemProps> = ({
 };
 
 const styles = StyleSheet.create({
+  label: {
+    fontWeight: '600',
+  },
+  summaryText: {
+    fontStyle: 'italic',
+  },
   metadataContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
