@@ -127,6 +127,13 @@ async def summarize_document(request: DocumentSummarizeRequest) -> DocumentSumma
         f"provider={request.provider}"
     )
 
+    # 最低文字数チェック
+    MIN_CONTENT_LENGTH = 100
+    if len(request.content.strip()) < MIN_CONTENT_LENGTH:
+        error_msg = f"Content too short. Minimum {MIN_CONTENT_LENGTH} characters required."
+        logger.warning(f"Rejected document summarization: {error_msg}")
+        raise HTTPException(status_code=400, detail=error_msg)
+
     try:
         summary = await summarization_service.summarize_document(
             content=request.content,

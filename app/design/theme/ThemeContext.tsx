@@ -18,7 +18,7 @@ const lightColors = {
   textSecondary: '#666',
   border: '#ddd',
   shadow: '#000',
-  success: '#28a745',
+  success: '#218838', // 少し暗い緑に変更
   warning: '#ffc107',
   danger: '#dc3545',
   white: '#fff',
@@ -37,7 +37,7 @@ const darkColors = {
   textSecondary: '#888888',
   border: '#38383A',
   shadow: '#000',
-  success: '#32D74B',
+  success: '#28B93F', // 少し暗い緑に変更
   warning: '#FFD60A',
   danger: '#FF453A',
   white: '#fff',

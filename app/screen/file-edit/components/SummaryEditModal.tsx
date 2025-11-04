@@ -8,7 +8,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { CustomModal } from '../../../components/CustomModal';
 import APIService from '../../../features/chat/llmService/api';
@@ -30,7 +29,7 @@ export const SummaryEditModal: React.FC<SummaryEditModalProps> = ({
   onClose,
   onSave,
 }) => {
-  const { colors, spacing, typography, iconSizes } = useTheme();
+  const { colors, spacing, typography } = useTheme();
   const [summary, setSummary] = useState(initialSummary);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,6 +56,13 @@ export const SummaryEditModal: React.FC<SummaryEditModalProps> = ({
   const handleGenerateSummary = async () => {
     if (!fileContent || !fileTitle) {
       setError('文書の内容またはタイトルが取得できません');
+      return;
+    }
+
+    // 最低文字数チェック（100文字）
+    const MIN_CONTENT_LENGTH = 100;
+    if (fileContent.trim().length < MIN_CONTENT_LENGTH) {
+      setError(`文書が短すぎます。要約を生成するには、少なくとも${MIN_CONTENT_LENGTH}文字以上の内容が必要です。`);
       return;
     }
 
@@ -96,11 +102,7 @@ export const SummaryEditModal: React.FC<SummaryEditModalProps> = ({
       marginTop: spacing.xs,
       fontStyle: 'italic',
     },
-    llmButtonContainer: {
-      marginTop: spacing.md,
-    },
     llmButton: {
-      flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: colors.success,
@@ -113,9 +115,10 @@ export const SummaryEditModal: React.FC<SummaryEditModalProps> = ({
     },
     llmButtonText: {
       ...typography.body,
+      fontSize: (typography.body.fontSize || 16) * 0.875, // 1段階小さく
       fontWeight: '600',
-      color: colors.background,
-      marginLeft: spacing.sm,
+      color: colors.white,
+      textAlign: 'center',
     },
     errorText: {
       ...typography.caption,
@@ -123,6 +126,24 @@ export const SummaryEditModal: React.FC<SummaryEditModalProps> = ({
       marginTop: spacing.xs,
     },
   });
+
+  // 自動生成ボタンをカスタムコンポーネントとして定義
+  const generateButton = (
+    <TouchableOpacity
+      style={[styles.llmButton, isGenerating && styles.llmButtonDisabled]}
+      disabled={isGenerating}
+      onPress={handleGenerateSummary}
+    >
+      {isGenerating ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+          <ActivityIndicator size="small" color={colors.white} />
+          <Text style={styles.llmButtonText}>生成中...</Text>
+        </View>
+      ) : (
+        <Text style={styles.llmButtonText}>要約生成</Text>
+      )}
+    </TouchableOpacity>
+  );
 
   return (
     <CustomModal
@@ -136,7 +157,13 @@ export const SummaryEditModal: React.FC<SummaryEditModalProps> = ({
           onPress: handleCancel,
         },
         {
-          text: '保存',
+          text: '要約生成',
+          style: 'default',
+          onPress: handleGenerateSummary,
+          customComponent: generateButton,
+        },
+        {
+          text: '適用',
           style: 'default',
           onPress: handleSave,
         },
@@ -161,31 +188,6 @@ export const SummaryEditModal: React.FC<SummaryEditModalProps> = ({
           {error}
         </Text>
       )}
-
-      {/* LLM生成ボタン */}
-      <View style={styles.llmButtonContainer}>
-        <TouchableOpacity
-          style={[styles.llmButton, isGenerating && styles.llmButtonDisabled]}
-          disabled={isGenerating}
-          onPress={handleGenerateSummary}
-        >
-          {isGenerating ? (
-            <>
-              <ActivityIndicator size="small" color={colors.background} />
-              <Text style={styles.llmButtonText}>
-                生成中...
-              </Text>
-            </>
-          ) : (
-            <>
-              <Ionicons name="sparkles" size={iconSizes.small} color={colors.background} />
-              <Text style={styles.llmButtonText}>
-                LLMで自動生成
-              </Text>
-            </>
-          )}
-        </TouchableOpacity>
-      </View>
     </CustomModal>
   );
 };

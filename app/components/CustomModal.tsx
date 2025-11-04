@@ -17,6 +17,7 @@ interface CustomModalButton {
   text: string;
   onPress?: () => void;
   style?: 'default' | 'cancel' | 'destructive';
+  customComponent?: React.ReactNode; // カスタムボタンコンポーネント
 }
 
 interface CustomModalProps {
@@ -26,6 +27,7 @@ interface CustomModalProps {
   buttons: CustomModalButton[];
   onClose: () => void;
   children?: React.ReactNode;
+  fixedFooter?: React.ReactNode; // スクロールエリア外に固定表示する要素
 }
 
 export const CustomModal: React.FC<CustomModalProps> = ({
@@ -35,6 +37,7 @@ export const CustomModal: React.FC<CustomModalProps> = ({
   buttons,
   onClose,
   children,
+  fixedFooter,
 }) => {
   const { colors, typography, spacing } = useTheme();
 
@@ -83,6 +86,12 @@ export const CustomModal: React.FC<CustomModalProps> = ({
       paddingHorizontal: spacing.lg,
       flexShrink: 1,
     },
+    fixedFooterContainer: {
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.sm,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+    },
     buttonContainer: {
       flexDirection: 'row',
       justifyContent: 'center',
@@ -101,6 +110,7 @@ export const CustomModal: React.FC<CustomModalProps> = ({
     },
     buttonText: {
       ...typography.body,
+      fontSize: (typography.body.fontSize || 16) * 0.875, // 1段階小さく
       fontWeight: 'bold',
     },
     defaultButton: {
@@ -173,8 +183,23 @@ export const CustomModal: React.FC<CustomModalProps> = ({
                 {children}
               </ScrollView>
             )}
+            {fixedFooter && (
+              <View style={styles.fixedFooterContainer}>
+                {fixedFooter}
+              </View>
+            )}
             <View style={styles.buttonContainer}>
               {buttons.map((button, index) => {
+                // カスタムコンポーネントが指定されている場合はそれを使用
+                if (button.customComponent) {
+                  return (
+                    <View key={index} style={{ flex: 1 }}>
+                      {button.customComponent}
+                    </View>
+                  );
+                }
+
+                // 通常のボタン
                 const { button: buttonStyle, text: textStyle } = getButtonStyles(
                   button.style
                 );
