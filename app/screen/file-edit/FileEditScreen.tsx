@@ -15,7 +15,8 @@ import { useTheme } from '../../design/theme/ThemeContext';
 import type { ViewMode } from './types';
 import { ToastMessage } from './components/ToastMessage'; // ToastMessageをインポート
 import { useToastMessage } from './hooks/useToastMessage'; // useToastMessageをインポート
-import { SummarySection } from './components/SummarySection'; // SummarySectionをインポート
+import { FeatureBar } from './components/FeatureBar'; // FeatureBarをインポート
+import { SummaryEditModal } from './components/SummaryEditModal'; // SummaryEditModalをインポート
 
 type FileEditScreenRouteProp = RouteProp<RootStackParamList, 'FileEdit'>;
 
@@ -49,6 +50,7 @@ function FileEditScreen() {
 
   const [isConfirmModalVisible, setConfirmModalVisible] = useState(false);
   const [nextAction, setNextAction] = useState<any>(null);
+  const [isSummaryModalVisible, setIsSummaryModalVisible] = useState(false);
   const { showToast, toastProps } = useToastMessage();
 
   const prevIsSavingRef = useRef(isSaving);
@@ -78,13 +80,9 @@ function FileEditScreen() {
   }, [navigation, isDirty, isLoading]);
 
   useFileEditHeader({
-    title,
-    category,
     viewMode,
     isLoading,
-    isEditable: false,
     isDirty,
-    onTitleChange: handleTitleChange,
     onViewModeChange: setViewMode,
     onSave: handleSave,
     onUndo: undo,
@@ -133,6 +131,12 @@ function FileEditScreen() {
   return (
     <MainContainer isLoading={isLoading}>
       <ToastMessage {...toastProps} />
+      <FeatureBar
+        title={title}
+        category={category}
+        onTitleChange={handleTitleChange}
+        onSummaryPress={() => setIsSummaryModalVisible(true)}
+      />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.contentContainer}
@@ -140,11 +144,6 @@ function FileEditScreen() {
         showsVerticalScrollIndicator={true}
         showsHorizontalScrollIndicator={false}
       >
-        <SummarySection
-          summary={summary}
-          onSummaryChange={setSummary}
-          defaultExpanded={true}
-        />
         <FileEditor
           filename={title}
           initialContent={content}
@@ -153,6 +152,12 @@ function FileEditScreen() {
           onContentChange={setContent}
         />
       </ScrollView>
+      <SummaryEditModal
+        visible={isSummaryModalVisible}
+        initialSummary={summary}
+        onClose={() => setIsSummaryModalVisible(false)}
+        onSave={setSummary}
+      />
       <CustomModal
         isVisible={isConfirmModalVisible}
         title="未保存の変更があります。"

@@ -6,20 +6,13 @@ import { useTheme } from '../../../design/theme/ThemeContext';
 interface FileEditOverflowMenuProps {
   visible: boolean;
   onClose: () => void;
-  onToggleViewMode: () => void;
 }
 
 export const FileEditOverflowMenu: React.FC<FileEditOverflowMenuProps> = ({
   visible,
   onClose,
-  onToggleViewMode,
 }) => {
   const { colors, spacing, iconSizes } = useTheme();
-
-  const handleMenuItemPress = (action: () => void) => {
-    onClose();
-    action();
-  };
 
   const styles = StyleSheet.create({
     modalOverlay: {
@@ -45,9 +38,10 @@ export const FileEditOverflowMenu: React.FC<FileEditOverflowMenuProps> = ({
       paddingVertical: spacing.md,
       flexDirection: 'row',
       alignItems: 'center',
+      opacity: 0.5,
     },
     menuItemText: {
-      color: colors.text,
+      color: colors.textSecondary,
       fontSize: 16,
       marginLeft: spacing.md,
     },
@@ -68,10 +62,24 @@ export const FileEditOverflowMenu: React.FC<FileEditOverflowMenuProps> = ({
         <View style={styles.menuContainer}>
           <TouchableOpacity
             style={styles.menuItem}
-            onPress={() => handleMenuItemPress(onToggleViewMode)}
+            disabled={true}
           >
-            <Ionicons name="eye-outline" size={iconSizes.medium} color={colors.text} />
-            <Text style={styles.menuItemText}>ビューモード切替</Text>
+            <Ionicons name="settings-outline" size={iconSizes.medium} color={colors.textSecondary} />
+            <Text style={styles.menuItemText}>設定（準備中）</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.menuItem}
+            disabled={true}
+          >
+            <Ionicons name="share-outline" size={iconSizes.medium} color={colors.textSecondary} />
+            <Text style={styles.menuItemText}>共有（準備中）</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.menuItem}
+            disabled={true}
+          >
+            <Ionicons name="download-outline" size={iconSizes.medium} color={colors.textSecondary} />
+            <Text style={styles.menuItemText}>エクスポート（準備中）</Text>
           </TouchableOpacity>
         </View>
       </TouchableOpacity>

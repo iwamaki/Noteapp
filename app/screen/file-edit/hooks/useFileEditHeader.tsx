@@ -13,17 +13,12 @@ import { RootStackParamList } from '../../../navigation/types';
 import { CustomHeader } from '../../../components/CustomHeader';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import type { ViewMode } from '../types';
-import { FileEditHeader } from '../components/FileEditHeader';
 import { FileEditOverflowMenu } from '../components/FileEditOverflowMenu';
 
 interface UseFileEditHeaderProps {
-  title: string;
-  category: string;
   viewMode: ViewMode;
   isLoading: boolean;
-  isEditable: boolean;
   isDirty: boolean;
-  onTitleChange: (title: string) => void;
   onViewModeChange: (mode: ViewMode) => void;
   onSave: () => void;
   onUndo: () => void;
@@ -33,13 +28,9 @@ interface UseFileEditHeaderProps {
 }
 
 export const useFileEditHeader = ({
-  title,
-  category,
   viewMode,
   isLoading,
-  isEditable,
   isDirty,
-  onTitleChange,
   onViewModeChange,
   onSave,
   onUndo,
@@ -67,14 +58,6 @@ export const useFileEditHeader = ({
       header: () => (
         <>
           <CustomHeader
-            title={
-              <FileEditHeader
-                title={title}
-                category={category}
-                onTitleChange={onTitleChange}
-                editable={isEditable}
-              />
-            }
             leftButtons={[
               {
                 icon: <Ionicons name="arrow-back-outline" size={iconSizes.medium} color={colors.text} />,
@@ -101,6 +84,10 @@ export const useFileEditHeader = ({
                       disabled: !isDirty,
                     },
                     {
+                      icon: <Ionicons name={viewMode === 'edit' ? 'eye-outline' : 'create-outline'} size={iconSizes.medium} color={colors.text} />,
+                      onPress: handleToggleViewMode,
+                    },
+                    {
                       icon: <Ionicons name="ellipsis-vertical" size={iconSizes.medium} color={colors.text} />,
                       onPress: () => setMenuVisible(true),
                     },
@@ -110,17 +97,12 @@ export const useFileEditHeader = ({
           <FileEditOverflowMenu
             visible={menuVisible}
             onClose={() => setMenuVisible(false)}
-            onToggleViewMode={handleToggleViewMode}
           />
         </>
       ),
     });
   }, [
     navigation,
-    title,
-    category,
-    isEditable,
-    onTitleChange,
     handleGoBack,
     canUndo,
     canRedo,
@@ -129,6 +111,7 @@ export const useFileEditHeader = ({
     onUndo,
     onRedo,
     onSave,
+    viewMode,
     menuVisible,
     handleToggleViewMode,
     colors.text,
