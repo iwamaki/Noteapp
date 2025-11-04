@@ -22,4 +22,7 @@ export type { TokenUsageInfo, LLMConfig } from './config.types';
 // 要約関連
 export type { SummarizeRequest, SummarizeResponse, SummaryResult } from './summarization.types';
 
+// 文書要約関連
+export type { DocumentSummarizeRequest, DocumentSummarizeResponse } from './document-summarization.types';
+
 // LLMErrorは別ファイルなのでここではre-exportしない（既にLLMError.tsに存在）

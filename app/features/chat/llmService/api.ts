@@ -92,6 +92,11 @@ export class APIService {
     return this.llmServiceInstance.summarizeConversation();
   }
 
+  // 文書を要約
+  static async summarizeDocument(content: string, title: string): Promise<string> {
+    return this.llmServiceInstance.summarizeDocument(content, title);
+  }
+
 }
 
 export { LLMService } from './index';

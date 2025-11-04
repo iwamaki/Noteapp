@@ -242,3 +242,94 @@ class SummarizationService:
 5. 決定事項: ...
 """
         return prompt
+
+    async def summarize_document(
+        self,
+        content: str,
+        title: str,
+        provider: str = "openai",
+        model: Optional[str] = None
+    ) -> str:
+        """文書内容を要約する
+
+        Args:
+            content: 文書の内容
+            title: 文書のタイトル（コンテキスト用）
+            provider: 要約に使用するLLMプロバイダー
+            model: 要約に使用するモデル
+
+        Returns:
+            要約テキスト
+        """
+        logger.info(
+            f"Starting document summarization: title='{title}', "
+            f"content_length={len(content)}, provider={provider}"
+        )
+
+        try:
+            llm = self._get_llm_instance(provider, model)
+            summary_text = await self._create_document_summary(llm, title, content)
+
+            logger.info(f"Document summarization complete: {summary_text[:100]}...")
+            return summary_text
+
+        except Exception as e:
+            logger.error(f"Error during document summarization: {str(e)}")
+            raise
+
+    async def _create_document_summary(
+        self,
+        llm,
+        title: str,
+        content: str
+    ) -> str:
+        """LLMを使用して文書の要約を生成する
+
+        Args:
+            llm: LangChain LLM instance
+            title: 文書のタイトル
+            content: 文書の内容
+
+        Returns:
+            要約テキスト
+        """
+        # 要約プロンプトを構築
+        summary_prompt = self._build_document_summary_prompt(title, content)
+
+        # LLMに要約を依頼
+        response = await llm.ainvoke([HumanMessage(content=summary_prompt)])
+
+        # レスポンスからテキストを抽出
+        if hasattr(response, 'content'):
+            summary_text = response.content
+        else:
+            summary_text = str(response)
+
+        return summary_text.strip()
+
+    def _build_document_summary_prompt(self, title: str, content: str) -> str:
+        """文書要約用のプロンプトを構築する
+
+        Args:
+            title: 文書のタイトル
+            content: 文書の内容
+
+        Returns:
+            要約プロンプト
+        """
+        prompt = f"""以下の文書を簡潔に要約してください。
+
+文書タイトル: {title}
+
+文書内容:
+{content}
+
+要件:
+- 文書の主要なトピックや目的を明確にする
+- 重要なポイントを漏らさず含める
+- 簡潔でありながら、文書の全体像が分かる内容にする
+- 3〜5文程度で要約する（内容の複雑さに応じて調整可）
+- 箇条書きではなく、自然な文章で記述する
+
+要約:"""
+        return prompt

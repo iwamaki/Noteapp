@@ -14,6 +14,8 @@ import type {
   SummarizeRequest,
   SummarizeResponse,
   ChatMessage,
+  DocumentSummarizeRequest,
+  DocumentSummarizeResponse,
 } from './types/types';
 import { LLMError } from './types/LLMError';
 import { ConversationHistory } from './core/ConversationHistory';
@@ -24,7 +26,7 @@ import { ProviderManager } from './core/ProviderManager';
 import { CHAT_CONFIG } from '../config/chatConfig';
 
 // Re-export types
-export type { ChatMessage, ChatContext, LLMProvider, LLMResponse, LLMHealthStatus, LLMConfig, LLMCommand, TokenUsageInfo, SummarizeRequest, SummarizeResponse, SummaryResult } from './types/types';
+export type { ChatMessage, ChatContext, LLMProvider, LLMResponse, LLMHealthStatus, LLMConfig, LLMCommand, TokenUsageInfo, SummarizeRequest, SummarizeResponse, SummaryResult, DocumentSummarizeRequest, DocumentSummarizeResponse } from './types/types';
 export { LLMError } from './types/LLMError';
 export { ConversationHistory } from './core/ConversationHistory';
 
@@ -303,6 +305,51 @@ export class LLMService {
         throw error;
       }
       throw new LLMError('要約の作成に失敗しました', 'SUMMARIZATION_ERROR');
+    }
+  }
+
+  /**
+   * 文書内容を要約する
+   * @param content 文書の内容
+   * @param title 文書のタイトル
+   * @returns 要約テキスト
+   */
+  async summarizeDocument(
+    content: string,
+    title: string
+  ): Promise<string> {
+    try {
+      logger.info('llm', `Summarizing document: title="${title}", content_length=${content.length}`);
+
+      // 要約リクエストを送信
+      const request: DocumentSummarizeRequest = {
+        content,
+        title,
+        provider: this.providerManager.getCurrentProvider(),
+        model: this.providerManager.getCurrentModel(),
+      };
+
+      const response = await this.httpClient.post('/api/document/summarize', request);
+
+      if (response.status < 200 || response.status >= 300) {
+        throw new LLMError(
+          `HTTP error! status: ${response.status}`,
+          'HTTP_ERROR',
+          response.status
+        );
+      }
+
+      const data: DocumentSummarizeResponse = response.data;
+
+      logger.info('llm', `Document summarization complete: ${data.summary.substring(0, 100)}...`);
+
+      return data.summary;
+    } catch (error) {
+      if (error instanceof LLMError) {
+        throw error;
+      }
+      logger.error('llm', 'Failed to summarize document:', error);
+      throw new LLMError('文書要約の作成に失敗しました', 'DOCUMENT_SUMMARIZATION_ERROR');
     }
   }
 }

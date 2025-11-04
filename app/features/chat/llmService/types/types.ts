@@ -11,6 +11,7 @@
  * - provider.types.ts: LLMProvider, LLMHealthStatus
  * - config.types.ts: TokenUsageInfo, LLMConfig
  * - summarization.types.ts: SummarizeRequest, SummarizeResponse, SummaryResult
+ * - document-summarization.types.ts: DocumentSummarizeRequest, DocumentSummarizeResponse
  */
 
 // 全ての型をindex.tsからre-export
@@ -26,4 +27,6 @@ export type {
   SummarizeRequest,
   SummarizeResponse,
   SummaryResult,
+  DocumentSummarizeRequest,
+  DocumentSummarizeResponse,
 } from './index';

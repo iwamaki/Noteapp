@@ -127,3 +127,22 @@ class SummarizeResponse(BaseModel):
     compressionRatio: float  # 圧縮率（0.0-1.0）
     originalTokens: int  # 元のトークン数
     compressedTokens: int  # 圧縮後のトークン数
+
+
+class DocumentSummarizeRequest(BaseModel):
+    """文書要約リクエスト
+
+    文書の内容をLLMで要約するためのリクエストモデル。
+    """
+    content: str  # 文書の内容
+    title: str  # 文書のタイトル（コンテキスト用）
+    provider: Optional[str] = "openai"  # 要約に使用するLLMプロバイダー
+    model: Optional[str] = None  # 要約に使用するモデル（Noneの場合はデフォルト）
+
+
+class DocumentSummarizeResponse(BaseModel):
+    """文書要約レスポンス
+
+    生成された要約テキストを含む。
+    """
+    summary: str  # 生成された要約

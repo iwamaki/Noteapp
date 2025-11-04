@@ -2,7 +2,7 @@
 # @summary チャット関連のAPIエンドポイントを定義します。
 # @responsibility /api/chatへのPOSTおよびGETリクエストを処理し、ChatServiceに処理を委譲します。
 from fastapi import APIRouter, HTTPException
-from src.llm.models import ChatRequest, SummarizeRequest
+from src.llm.models import ChatRequest, SummarizeRequest, DocumentSummarizeRequest, DocumentSummarizeResponse
 from src.llm.services.chat_service import ChatService
 from src.llm.services.summarization_service import SummarizationService
 from src.llm.providers.config import MAX_CONVERSATION_TOKENS, PRESERVE_RECENT_MESSAGES
@@ -101,4 +101,48 @@ async def summarize_conversation(request: SummarizeRequest):
 
     except Exception as e:
         logger.error(f"Error during summarization: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/api/document/summarize")
+async def summarize_document(request: DocumentSummarizeRequest) -> DocumentSummarizeResponse:
+    """文書内容を要約する
+
+    文書の内容をLLMに送信して要約を生成します。
+
+    Args:
+        request: DocumentSummarizeRequest
+            - content: 文書の内容
+            - title: 文書のタイトル（コンテキスト用）
+            - provider: 要約に使用するLLMプロバイダー（デフォルト: "openai"）
+            - model: 要約に使用するモデル（Noneの場合はデフォルト）
+
+    Returns:
+        DocumentSummarizeResponse:
+            - summary: 生成された要約テキスト
+    """
+    logger.info(
+        f"Received document summarization request: "
+        f"title='{request.title}', content_length={len(request.content)}, "
+        f"provider={request.provider}"
+    )
+
+    try:
+        summary = await summarization_service.summarize_document(
+            content=request.content,
+            title=request.title,
+            provider=request.provider or "openai",
+            model=request.model
+        )
+
+        logger.info(f"Document summarization complete: {len(summary)} characters")
+
+        return DocumentSummarizeResponse(summary=summary)
+
+    except ValueError as e:
+        logger.error(f"Invalid request for document summarization: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+    except Exception as e:
+        logger.error(f"Error during document summarization: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))

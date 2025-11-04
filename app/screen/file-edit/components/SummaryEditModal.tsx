@@ -7,14 +7,17 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { CustomModal } from '../../../components/CustomModal';
+import APIService from '../../../features/chat/llmService/api';
 
 interface SummaryEditModalProps {
   visible: boolean;
   initialSummary: string;
+  fileContent: string;
+  fileTitle: string;
   onClose: () => void;
   onSave: (summary: string) => void;
 }
@@ -22,16 +25,21 @@ interface SummaryEditModalProps {
 export const SummaryEditModal: React.FC<SummaryEditModalProps> = ({
   visible,
   initialSummary,
+  fileContent,
+  fileTitle,
   onClose,
   onSave,
 }) => {
   const { colors, spacing, typography, iconSizes } = useTheme();
   const [summary, setSummary] = useState(initialSummary);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // モーダルが開いたときに初期値を設定
   useEffect(() => {
     if (visible) {
       setSummary(initialSummary);
+      setError(null);
     }
   }, [visible, initialSummary]);
 
@@ -42,7 +50,31 @@ export const SummaryEditModal: React.FC<SummaryEditModalProps> = ({
 
   const handleCancel = () => {
     setSummary(initialSummary);
+    setError(null);
     onClose();
+  };
+
+  const handleGenerateSummary = async () => {
+    if (!fileContent || !fileTitle) {
+      setError('文書の内容またはタイトルが取得できません');
+      return;
+    }
+
+    setIsGenerating(true);
+    setError(null);
+
+    try {
+      const generatedSummary = await APIService.summarizeDocument(
+        fileContent,
+        fileTitle
+      );
+      setSummary(generatedSummary);
+    } catch (err) {
+      console.error('要約生成エラー:', err);
+      setError('要約の生成に失敗しました。もう一度お試しください。');
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const styles = StyleSheet.create({
@@ -75,13 +107,20 @@ export const SummaryEditModal: React.FC<SummaryEditModalProps> = ({
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.md,
       borderRadius: spacing.sm,
+    },
+    llmButtonDisabled: {
       opacity: 0.5,
     },
     llmButtonText: {
       ...typography.body,
       fontWeight: '600',
-      color: colors.textSecondary,
+      color: colors.background,
       marginLeft: spacing.sm,
+    },
+    errorText: {
+      ...typography.caption,
+      color: colors.danger,
+      marginTop: spacing.xs,
     },
   });
 
@@ -113,19 +152,38 @@ export const SummaryEditModal: React.FC<SummaryEditModalProps> = ({
         textAlignVertical="top"
       />
       <Text style={styles.hint}>
-        このファイルの内容を1〜2文で要約します。
+        このファイルの内容を簡潔に要約します。
       </Text>
 
-      {/* LLM生成ボタン（将来実装） */}
+      {/* エラーメッセージ */}
+      {error && (
+        <Text style={styles.errorText}>
+          {error}
+        </Text>
+      )}
+
+      {/* LLM生成ボタン */}
       <View style={styles.llmButtonContainer}>
         <TouchableOpacity
-          style={styles.llmButton}
-          disabled={true}
+          style={[styles.llmButton, isGenerating && styles.llmButtonDisabled]}
+          disabled={isGenerating}
+          onPress={handleGenerateSummary}
         >
-          <Ionicons name="sparkles" size={iconSizes.small} color={colors.textSecondary} />
-          <Text style={styles.llmButtonText}>
-            LLMで自動生成
-          </Text>
+          {isGenerating ? (
+            <>
+              <ActivityIndicator size="small" color={colors.background} />
+              <Text style={styles.llmButtonText}>
+                生成中...
+              </Text>
+            </>
+          ) : (
+            <>
+              <Ionicons name="sparkles" size={iconSizes.small} color={colors.background} />
+              <Text style={styles.llmButtonText}>
+                LLMで自動生成
+              </Text>
+            </>
+          )}
         </TouchableOpacity>
       </View>
     </CustomModal>

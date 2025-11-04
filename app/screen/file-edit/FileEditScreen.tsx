@@ -155,6 +155,8 @@ function FileEditScreen() {
       <SummaryEditModal
         visible={isSummaryModalVisible}
         initialSummary={summary}
+        fileContent={content}
+        fileTitle={title}
         onClose={() => setIsSummaryModalVisible(false)}
         onSave={setSummary}
       />
