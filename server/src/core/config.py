@@ -16,6 +16,25 @@ class Settings:
         self.openai_api_key: str | None = None
         self.gemini_api_key: str | None = None
 
+        # LLMのデフォルト設定（Gemini優先 - コスト効率のため）
+        self.default_llm_provider: str = "gemini"
+        self.default_llm_models: dict[str, str] = {
+            "gemini": "gemini-2.5-flash",
+            "openai": "gpt-3.5-turbo"
+        }
+
+        # プロバイダーごとの利用可能なモデルリスト
+        self.available_models: dict[str, list[str]] = {
+            "gemini": ["gemini-2.5-flash", "gemini-2.5-pro"],
+            "openai": ["gpt-3.5-turbo", "gpt-4", "gpt-4-turbo-preview"]
+        }
+
+        # プロバイダーの表示名
+        self.provider_display_names: dict[str, str] = {
+            "gemini": "Google Gemini",
+            "openai": "OpenAI"
+        }
+
         gcp_project_id = os.getenv("GCP_PROJECT_ID")
         openai_secret_id = os.getenv("OPENAI_API_SECRET_ID", "OPENAI_API_KEY")
         gemini_secret_id = os.getenv("GEMINI_API_SECRET_ID", "GOOGLE_API_KEY")
@@ -53,6 +72,23 @@ class Settings:
         except Exception as e:
             logger.warning(f"Error accessing secret {secret_id}: {e}. Falling back to environment variable.")
         return None
+
+    def get_default_provider(self) -> str:
+        """デフォルトのLLMプロバイダーを取得する"""
+        return self.default_llm_provider
+
+    def get_default_model(self, provider: str | None = None) -> str:
+        """指定されたプロバイダーのデフォルトモデルを取得する
+
+        Args:
+            provider: プロバイダー名（Noneの場合はデフォルトプロバイダー）
+
+        Returns:
+            モデル名
+        """
+        if provider is None:
+            provider = self.default_llm_provider
+        return self.default_llm_models.get(provider, self.default_llm_models[self.default_llm_provider])
 
 # 設定インスタンスを作成
 settings = Settings()

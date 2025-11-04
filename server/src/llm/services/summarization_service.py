@@ -36,7 +36,7 @@ class SummarizationService:
             if not settings.openai_api_key:
                 raise ValueError("OpenAI API key is not configured")
 
-            model_name = model or "gpt-3.5-turbo"
+            model_name = model or settings.get_default_model("openai")
             return ChatOpenAI(
                 api_key=SecretStr(settings.openai_api_key),
                 model=model_name,
@@ -47,7 +47,7 @@ class SummarizationService:
             if not settings.gemini_api_key:
                 raise ValueError("Gemini API key is not configured")
 
-            model_name = model or "gemini-1.5-flash"
+            model_name = model or settings.get_default_model("gemini")
             return ChatGoogleGenerativeAI(
                 api_key=settings.gemini_api_key,
                 model=model_name,
@@ -62,7 +62,7 @@ class SummarizationService:
         conversation_history: List[Dict[str, Any]],
         max_tokens: int = 4000,
         preserve_recent: int = 10,
-        provider: str = "openai",
+        provider: Optional[str] = None,
         model: Optional[str] = None
     ) -> SummarizeResponse:
         """会話履歴を要約する
@@ -71,22 +71,26 @@ class SummarizationService:
             conversation_history: 要約対象の会話履歴
             max_tokens: 圧縮後の最大トークン数
             preserve_recent: 保持する最新メッセージ数
-            provider: 要約に使用するLLMプロバイダー
-            model: 要約に使用するモデル
+            provider: 要約に使用するLLMプロバイダー（Noneの場合はデフォルト）
+            model: 要約に使用するモデル（Noneの場合はデフォルト）
 
         Returns:
             SummarizeResponse: 要約結果
         """
+        # プロバイダーのデフォルト値を設定
+        if provider is None:
+            provider = settings.get_default_provider()
+
         logger.info(
             f"Starting summarization: {len(conversation_history)} messages, "
-            f"preserve_recent={preserve_recent}, max_tokens={max_tokens}"
+            f"preserve_recent={preserve_recent}, max_tokens={max_tokens}, provider={provider}"
         )
 
         # 元のトークン数を計算
         original_tokens = count_message_tokens(
             conversation_history,
             provider=provider,
-            model=model or ("gpt-3.5-turbo" if provider == "openai" else "gemini-1.5-flash")
+            model=model or settings.get_default_model(provider)
         )
 
         # メッセージを分割: 古いメッセージ vs 最新メッセージ
@@ -135,7 +139,7 @@ class SummarizationService:
             compressed_tokens = count_message_tokens(
                 compressed_messages,
                 provider=provider,
-                model=model or ("gpt-3.5-turbo" if provider == "openai" else "gemini-1.5-flash")
+                model=model or settings.get_default_model(provider)
             )
 
             compression_ratio = compressed_tokens / original_tokens if original_tokens > 0 else 1.0
@@ -247,7 +251,7 @@ class SummarizationService:
         self,
         content: str,
         title: str,
-        provider: str = "openai",
+        provider: Optional[str] = None,
         model: Optional[str] = None
     ) -> str:
         """文書内容を要約する
@@ -255,12 +259,16 @@ class SummarizationService:
         Args:
             content: 文書の内容
             title: 文書のタイトル（コンテキスト用）
-            provider: 要約に使用するLLMプロバイダー
-            model: 要約に使用するモデル
+            provider: 要約に使用するLLMプロバイダー（Noneの場合はデフォルト）
+            model: 要約に使用するモデル（Noneの場合はデフォルト）
 
         Returns:
             要約テキスト
         """
+        # プロバイダーのデフォルト値を設定
+        if provider is None:
+            provider = settings.get_default_provider()
+
         logger.info(
             f"Starting document summarization: title='{title}', "
             f"content_length={len(content)}, provider={provider}"
@@ -325,11 +333,12 @@ class SummarizationService:
 {content}
 
 要件:
+- 「本文書は」という書き出しから始める
 - 文書の主要なトピックや目的を明確にする
 - 重要なポイントを漏らさず含める
 - 簡潔でありながら、文書の全体像が分かる内容にする
 - 自然な文章で記述する（箇条書きや記号は使わない）
-- 300文字程度で要約する
+- 200文字程度で要約する
 
 要約:"""
         return prompt

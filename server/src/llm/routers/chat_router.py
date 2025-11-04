@@ -6,6 +6,7 @@ from src.llm.models import ChatRequest, SummarizeRequest, DocumentSummarizeReque
 from src.llm.services.chat_service import ChatService
 from src.llm.services.summarization_service import SummarizationService
 from src.llm.providers.config import MAX_CONVERSATION_TOKENS, PRESERVE_RECENT_MESSAGES
+from src.core.config import settings
 from src.core.logger import logger
 
 router = APIRouter()
@@ -33,10 +34,16 @@ async def chat_post(request: ChatRequest):
 @router.get("/api/chat")
 async def chat_get(
     message: str,
-    provider: str = "openai",
-    model: str = "gpt-3.5-turbo"
+    provider: str | None = None,
+    model: str | None = None
 ):
     """チャットメッセージを処理（GET）- テスト用"""
+    # デフォルト値を設定
+    if provider is None:
+        provider = settings.get_default_provider()
+    if model is None:
+        model = settings.get_default_model(provider)
+
     try:
         response = await chat_service.process_chat(
             message=message,
@@ -83,7 +90,7 @@ async def summarize_conversation(request: SummarizeRequest):
             conversation_history=request.conversationHistory,
             max_tokens=request.max_tokens or MAX_CONVERSATION_TOKENS,
             preserve_recent=request.preserve_recent or PRESERVE_RECENT_MESSAGES,
-            provider=request.provider or "openai",
+            provider=request.provider or settings.get_default_provider(),
             model=request.model
         )
 
@@ -138,7 +145,7 @@ async def summarize_document(request: DocumentSummarizeRequest) -> DocumentSumma
         summary = await summarization_service.summarize_document(
             content=request.content,
             title=request.title,
-            provider=request.provider or "openai",
+            provider=request.provider or settings.get_default_provider(),
             model=request.model
         )
 

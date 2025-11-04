@@ -3,22 +3,29 @@
 会話履歴のトークン数を計算し、要約の必要性を判断するためのユーティリティ。
 tiktokenライブラリを使用してOpenAI互換のトークンカウントを実現。
 """
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import tiktoken
+from src.core.config import settings
 from src.core.logger import logger
 
 
-def count_tokens(text: str, provider: str = "openai", model: str = "gpt-3.5-turbo") -> int:
+def count_tokens(text: str, provider: Optional[str] = None, model: Optional[str] = None) -> int:
     """テキストのトークン数をカウントする
 
     Args:
         text: カウント対象のテキスト
-        provider: LLMプロバイダー（"openai" or "gemini"）
-        model: モデル名（エンコーディング選択に使用）
+        provider: LLMプロバイダー（"openai" or "gemini"）（Noneの場合はデフォルト）
+        model: モデル名（エンコーディング選択に使用）（Noneの場合はデフォルト）
 
     Returns:
         トークン数
     """
+    # デフォルト値を設定
+    if provider is None:
+        provider = settings.get_default_provider()
+    if model is None:
+        model = settings.get_default_model(provider)
+
     try:
         encoding = _get_encoding_for_model(provider, model)
         return len(encoding.encode(text))
@@ -30,8 +37,8 @@ def count_tokens(text: str, provider: str = "openai", model: str = "gpt-3.5-turb
 
 def count_message_tokens(
     messages: List[Dict[str, Any]],
-    provider: str = "openai",
-    model: str = "gpt-3.5-turbo"
+    provider: Optional[str] = None,
+    model: Optional[str] = None
 ) -> int:
     """メッセージリストの総トークン数をカウントする
 
@@ -41,12 +48,18 @@ def count_message_tokens(
     Args:
         messages: カウント対象のメッセージリスト
             例: [{"role": "user", "content": "Hello"}, {"role": "ai", "content": "Hi!"}]
-        provider: LLMプロバイダー（"openai" or "gemini"）
-        model: モデル名
+        provider: LLMプロバイダー（"openai" or "gemini"）（Noneの場合はデフォルト）
+        model: モデル名（Noneの場合はデフォルト）
 
     Returns:
         総トークン数（メッセージオーバーヘッド含む）
     """
+    # デフォルト値を設定
+    if provider is None:
+        provider = settings.get_default_provider()
+    if model is None:
+        model = settings.get_default_model(provider)
+
     try:
         encoding = _get_encoding_for_model(provider, model)
 
@@ -128,20 +141,26 @@ def _get_encoding_for_model(provider: str, model: str) -> tiktoken.Encoding:
 def estimate_compression_needed(
     messages: List[Dict[str, Any]],
     max_tokens: int = 4000,
-    provider: str = "openai",
-    model: str = "gpt-3.5-turbo"
+    provider: Optional[str] = None,
+    model: Optional[str] = None
 ) -> tuple[bool, int, float]:
     """会話履歴の圧縮が必要かどうかを判断する
 
     Args:
         messages: 会話履歴
         max_tokens: 最大許容トークン数
-        provider: LLMプロバイダー
-        model: モデル名
+        provider: LLMプロバイダー（Noneの場合はデフォルト）
+        model: モデル名（Noneの場合はデフォルト）
 
     Returns:
         (圧縮が必要か, 現在のトークン数, トークン使用率)
     """
+    # デフォルト値を設定
+    if provider is None:
+        provider = settings.get_default_provider()
+    if model is None:
+        model = settings.get_default_model(provider)
+
     current_tokens = count_message_tokens(messages, provider, model)
     usage_ratio = current_tokens / max_tokens
     needs_compression = current_tokens > max_tokens

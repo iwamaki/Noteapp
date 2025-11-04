@@ -6,6 +6,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any, List, Union, Literal
 from src.llm.providers.config import MAX_CONVERSATION_TOKENS, PRESERVE_RECENT_MESSAGES
+from src.core.config import settings
 
 
 class ChatMessage(BaseModel):
@@ -43,8 +44,8 @@ class ChatContext(BaseModel):
 
 class ChatRequest(BaseModel):
     message: str
-    provider: str = "openai"
-    model: str = "gpt-3.5-turbo"
+    provider: str = Field(default_factory=lambda: settings.get_default_provider())
+    model: str = Field(default_factory=lambda: settings.get_default_model())
     context: Optional[ChatContext] = None
     client_id: Optional[str] = None  # WebSocket接続のクライアントID
 
@@ -102,7 +103,7 @@ class SummarizeRequest(BaseModel):
     conversationHistory: List[Dict[str, Any]]  # 要約対象の会話履歴
     max_tokens: Optional[int] = MAX_CONVERSATION_TOKENS  # 圧縮後の最大トークン数
     preserve_recent: Optional[int] = PRESERVE_RECENT_MESSAGES  # 保持する最新メッセージ数
-    provider: Optional[str] = "openai"  # 要約に使用するLLMプロバイダー
+    provider: Optional[str] = Field(default_factory=lambda: settings.get_default_provider())  # 要約に使用するLLMプロバイダー
     model: Optional[str] = None  # 要約に使用するモデル（Noneの場合はデフォルト）
 
 
@@ -136,7 +137,7 @@ class DocumentSummarizeRequest(BaseModel):
     """
     content: str  # 文書の内容
     title: str  # 文書のタイトル（コンテキスト用）
-    provider: Optional[str] = "openai"  # 要約に使用するLLMプロバイダー
+    provider: Optional[str] = Field(default_factory=lambda: settings.get_default_provider())  # 要約に使用するLLMプロバイダー
     model: Optional[str] = None  # 要約に使用するモデル（Noneの場合はデフォルト）
 
 
