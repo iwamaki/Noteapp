@@ -50,6 +50,7 @@ docs/reference/
 *.pyc
 __pycache__/
 server/src/__pycache__/
+server/data/  # RAGベクトルストアのデータファイル
 
 # API keys and credentials
 key.json
