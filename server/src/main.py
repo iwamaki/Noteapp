@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.llm.routers import chat_router
 from src.llm.routers import llm_providers_router
 from src.llm.routers import tools_router
+from src.llm.routers import knowledge_base_router
 from src.api.websocket import manager
 from src.core.logger import logger
 
@@ -24,6 +25,7 @@ app.add_middleware(
 app.include_router(chat_router.router)
 app.include_router(llm_providers_router.router)
 app.include_router(tools_router.router)
+app.include_router(knowledge_base_router.router)
 
 # ルートエンドポイント
 @app.get("/")
@@ -37,7 +39,8 @@ async def root():
             "providers": "/api/llm-providers",
             "tools": "/api/tools",
             "health": "/api/health",
-            "websocket": "/ws/{client_id}"
+            "websocket": "/ws/{client_id}",
+            "knowledge_base": "/documents"
         }
     }
 
