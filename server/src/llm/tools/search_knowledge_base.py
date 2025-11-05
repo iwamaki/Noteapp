@@ -1,31 +1,31 @@
 from langchain.tools import tool
 from src.core.logger import logger
-from src.llm.rag.vector_store import VectorStoreManager
+from src.llm.rag.collection_manager import CollectionManager
 from typing import Optional
 
 
-# グローバルなベクトルストアマネージャーのインスタンス
-# 初回使用時に初期化される
-_vector_store_manager: Optional[VectorStoreManager] = None
+# グローバルなコレクションマネージャーのインスタンス
+_collection_manager: Optional[CollectionManager] = None
 
 
-def get_vector_store_manager() -> VectorStoreManager:
-    """ベクトルストアマネージャーのシングルトンインスタンスを取得
+def get_collection_manager() -> CollectionManager:
+    """コレクションマネージャーのシングルトンインスタンスを取得
 
     Returns:
-        VectorStoreManager: ベクトルストアマネージャーのインスタンス
+        CollectionManager: コレクションマネージャーのインスタンス
     """
-    global _vector_store_manager
-    if _vector_store_manager is None:
-        _vector_store_manager = VectorStoreManager(collection_name="default")
-        logger.info("VectorStoreManager instance created")
-    return _vector_store_manager
+    global _collection_manager
+    if _collection_manager is None:
+        _collection_manager = CollectionManager()
+        logger.info("CollectionManager instance created for search_knowledge_base tool")
+    return _collection_manager
 
 
 @tool
 async def search_knowledge_base(
     query: str,
-    max_results: int = 4
+    max_results: int = 4,
+    collection_name: str = "default"
 ) -> str:
     """
     ローカル知識ベース（ベクトルデータベース）から関連情報を検索します。
@@ -42,25 +42,36 @@ async def search_knowledge_base(
     Args:
         query: 検索クエリ（例: "機械学習の基礎について", "契約書の重要条項"）
         max_results: 取得する検索結果の最大数（1-10、デフォルト: 4）
+        collection_name: 検索対象のコレクション名（デフォルト: "default"）
 
     Returns:
         検索結果と詳細内容、またはエラーメッセージ
     """
-    logger.info(f"search_knowledge_base tool called: query={query}, max_results={max_results}")
+    logger.info(f"search_knowledge_base tool called: query={query}, max_results={max_results}, collection={collection_name}")
 
     # パラメータの範囲チェック
     max_results = max(1, min(10, max_results))
 
     try:
-        # ベクトルストアマネージャーを取得
-        vector_store = get_vector_store_manager()
+        # コレクションマネージャーを取得
+        manager = get_collection_manager()
+
+        # 指定されたコレクションを取得
+        vector_store = manager.get_collection(collection_name)
+
+        if vector_store is None:
+            return (
+                f"コレクション '{collection_name}' が見つかりません。\n\n"
+                "コレクションが存在しないか、期限切れで削除された可能性があります。\n"
+                "別のコレクションを指定するか、新しいドキュメントをアップロードしてください。"
+            )
 
         # ベクトルストアの統計情報を取得
         stats = vector_store.get_stats()
 
         if not stats["exists"] or stats["document_count"] == 0:
             return (
-                "知識ベースが空です。\n\n"
+                f"コレクション '{collection_name}' は空です。\n\n"
                 "まだドキュメントがアップロードされていません。\n"
                 "ドキュメントを追加してから検索を実行してください。"
             )
@@ -121,5 +132,5 @@ def _format_search_results(query: str, results: list, stats: dict) -> str:
         result_parts.append(f"\n{content}")
         result_parts.append(f"\n{'-'*60}")
 
-    logger.info(f"Knowledge base search completed: query={query}, results_count={len(results)}")
+    logger.info(f"Knowledge base search completed: collection={collection_name}, query={query}, results_count={len(results)}")
     return "".join(result_parts)
