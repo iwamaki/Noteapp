@@ -342,6 +342,38 @@ class ChatService {
       // APIServiceを通じて要約を実行
       const result: SummarizeResponse = await APIService.summarizeConversation();
 
+      // compressionRatioが0.95以上の場合（効果が小さい、または逆効果）
+      const isActuallySummarized = result.compressionRatio < 0.95;
+
+      if (!isActuallySummarized) {
+        // 要約が効果的でなかった場合
+        logger.info('chatService', `Summarization not effective (compressionRatio: ${result.compressionRatio})`);
+
+        let message: string;
+        if (result.compressionRatio >= 1.0) {
+          // トークンが増えた場合
+          const increase = result.compressedTokens - result.originalTokens;
+          message = `⚠️ 要約を実行しましたが、トークン数が削減されませんでした。\n\n元のトークン数: ${result.originalTokens}\n要約後: ${result.compressedTokens}（+${increase}）\n\n会話が短すぎるため、要約の効果がありません。\nもう少し会話を続けてから要約をお試しください。`;
+        } else {
+          // 削減効果が小さい場合
+          const reduction = ((1 - result.compressionRatio) * 100).toFixed(1);
+          message = `ℹ️ 要約の削減効果が小さいため、適用されませんでした。\n\n元のトークン数: ${result.originalTokens}\n要約後: ${result.compressedTokens}\n削減率: ${reduction}%\n\nもう少し会話を続けてから要約をお試しください。`;
+        }
+
+        const infoMessage: ChatMessage = {
+          role: 'system',
+          content: message,
+          timestamp: new Date(),
+        };
+        this.addMessage(infoMessage);
+
+        // 要約されていないので、isSummarizedフラグは付けない
+        // トークン使用量もリセットしない
+        return;
+      }
+
+      // 実際に要約された場合のみ以下を実行
+
       // 表示用：要約前のすべてのメッセージにisSummarizedフラグを追加
       // （UI表示では要約前のメッセージも残しておく）
       this.messages = this.messages.map(msg => ({
@@ -372,7 +404,7 @@ class ChatService {
       // 要約完了のシステムメッセージを追加
       const completionMessage: ChatMessage = {
         role: 'system',
-        content: `✅ 要約が完了しました。${result.originalTokens}トークン → ${result.compressedTokens}トークン（${(result.compressionRatio * 100).toFixed(1)}%削減）`,
+        content: `✅ 要約が完了しました。${result.originalTokens}トークン → ${result.compressedTokens}トークン（${((1 - result.compressionRatio) * 100).toFixed(1)}%削減）`,
         timestamp: new Date(),
       };
       this.addMessage(completionMessage);

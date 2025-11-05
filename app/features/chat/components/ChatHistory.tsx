@@ -40,6 +40,9 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
   const { colors, typography, iconSizes } = useTheme();
   const scrollViewRef = useRef<ScrollView>(null);
 
+  // 要約ボタンを有効にする条件: トークン使用量が75%超
+  const canSummarize = tokenUsage ? tokenUsage.usageRatio > 0.75 : false;
+
   useEffect(() => {
     if (messages.length > 0) {
       setTimeout(() => {
@@ -174,11 +177,15 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
 
         <Text style={styles.messagesHeaderTitle}>チャット履歴</Text>
         <View style={styles.headerButtonContainer}>
-          <TouchableOpacity onPress={onSummarize} style={styles.resetButton}>
+          <TouchableOpacity
+            onPress={onSummarize}
+            style={styles.resetButton}
+            disabled={!canSummarize}
+          >
             <MaterialCommunityIcons
               name="brain"
               size={iconSizes.medium}
-              color={colors.text}
+              color={canSummarize ? colors.text : colors.textSecondary}
             />
           </TouchableOpacity>
           <TouchableOpacity onPress={onResetChat} style={styles.resetButton}>

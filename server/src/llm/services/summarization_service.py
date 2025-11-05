@@ -144,10 +144,24 @@ class SummarizationService:
 
             compression_ratio = compressed_tokens / original_tokens if original_tokens > 0 else 1.0
 
-            logger.info(
-                f"Summarization complete: {original_tokens} -> {compressed_tokens} tokens "
-                f"(compression ratio: {compression_ratio:.2%})"
-            )
+            # 要約が逆効果（トークンが増えた）または効果が小さい場合は警告
+            if compression_ratio >= 1.0:
+                logger.warning(
+                    f"Summarization increased token count: {original_tokens} -> {compressed_tokens} tokens "
+                    f"(compression ratio: {compression_ratio:.2%}). "
+                    f"This likely means too few messages were summarized (preserve_recent={preserve_recent})."
+                )
+            elif compression_ratio > 0.95:
+                logger.warning(
+                    f"Summarization had minimal effect: {original_tokens} -> {compressed_tokens} tokens "
+                    f"(compression ratio: {compression_ratio:.2%})"
+                )
+            else:
+                logger.info(
+                    f"Summarization complete: {original_tokens} -> {compressed_tokens} tokens "
+                    f"(compression ratio: {compression_ratio:.2%})"
+                )
+
             logger.info(f"Generated summary: {summary_text[:200]}..." if len(summary_text) > 200 else f"Generated summary: {summary_text}")
 
             return SummarizeResponse(
