@@ -1,5 +1,5 @@
 # @file llm_providers.py
-# @summary LLMプロバイダー情報とヘルスチェックのエンドポイントを定義します。
+# @summary LLMプロバイダー情報とヘルスチェックのエンドポイントを定義します（Gemini専用）
 # @responsibility /api/llm-providersおよび/api/healthへのGETリクエストを処理します。
 from fastapi import APIRouter
 from src.llm.models import LLMProvider
@@ -9,17 +9,8 @@ router = APIRouter()
 
 @router.get("/api/llm-providers")
 async def get_llm_providers():
-    """利用可能なLLMプロバイダーを取得"""
+    """利用可能なLLMプロバイダーを取得（Gemini専用）"""
     providers = {}
-
-    # OpenAIプロバイダー
-    if settings.openai_api_key:
-        providers["openai"] = LLMProvider(
-            name=settings.provider_display_names.get("openai", "OpenAI"),
-            defaultModel=settings.get_default_model("openai"),
-            models=settings.available_models.get("openai", []),
-            status="available"
-        )
 
     # Geminiプロバイダー
     if settings.gemini_api_key:
@@ -29,14 +20,12 @@ async def get_llm_providers():
             models=settings.available_models.get("gemini", []),
             status="available"
         )
-
-    # APIキーが設定されていない場合のフォールバック
-    if not providers:
-        default_provider = settings.get_default_provider()
-        providers[default_provider] = LLMProvider(
-            name=settings.provider_display_names.get(default_provider, default_provider.capitalize()),
-            defaultModel=settings.get_default_model(default_provider),
-            models=settings.available_models.get(default_provider, []),
+    else:
+        # APIキーが設定されていない場合
+        providers["gemini"] = LLMProvider(
+            name=settings.provider_display_names.get("gemini", "Google Gemini"),
+            defaultModel=settings.get_default_model("gemini"),
+            models=settings.available_models.get("gemini", []),
             status="unavailable"
         )
 
@@ -44,16 +33,8 @@ async def get_llm_providers():
 
 @router.get("/api/health")
 async def health_check():
-    """ヘルスチェック"""
+    """ヘルスチェック（Gemini専用）"""
     providers_status = {}
-
-    if settings.openai_api_key:
-        providers_status["openai"] = {
-            "name": settings.provider_display_names.get("openai", "OpenAI"),
-            "status": "available",
-            "defaultModel": settings.get_default_model("openai"),
-            "models": settings.available_models.get("openai", [])
-        }
 
     if settings.gemini_api_key:
         providers_status["gemini"] = {

@@ -13,40 +13,31 @@ load_dotenv()
 
 class Settings:
     def __init__(self):
-        self.openai_api_key: str | None = None
         self.gemini_api_key: str | None = None
 
-        # LLMのデフォルト設定（Gemini優先 - コスト効率のため）
+        # LLMのデフォルト設定（Gemini専用）
         self.default_llm_provider: str = "gemini"
         self.default_llm_models: dict[str, str] = {
-            "gemini": "gemini-2.5-flash",
-            "openai": "gpt-3.5-turbo"
+            "gemini": "gemini-2.5-flash"
         }
 
         # プロバイダーごとの利用可能なモデルリスト
         self.available_models: dict[str, list[str]] = {
-            "gemini": ["gemini-2.5-flash", "gemini-2.5-pro"],
-            "openai": ["gpt-3.5-turbo", "gpt-4", "gpt-4-turbo-preview"]
+            "gemini": ["gemini-2.5-flash", "gemini-2.5-pro"]
         }
 
         # プロバイダーの表示名
         self.provider_display_names: dict[str, str] = {
-            "gemini": "Google Gemini",
-            "openai": "OpenAI"
+            "gemini": "Google Gemini"
         }
 
         gcp_project_id = os.getenv("GCP_PROJECT_ID")
-        openai_secret_id = os.getenv("OPENAI_API_SECRET_ID", "OPENAI_API_KEY")
         gemini_secret_id = os.getenv("GEMINI_API_SECRET_ID", "GOOGLE_API_KEY")
 
         # GOOGLE_APPLICATION_CREDENTIALS が設定されている場合、Secret Managerを試す
         if os.getenv("GOOGLE_APPLICATION_CREDENTIALS"):
             try:
                 client = secretmanager.SecretManagerServiceClient()
-                
-                # OpenAI APIキーの取得
-                if gcp_project_id and openai_secret_id:
-                    self.openai_api_key = self._get_secret(client, gcp_project_id, openai_secret_id)
 
                 # Gemini APIキーの取得
                 if gcp_project_id and gemini_secret_id:
@@ -56,8 +47,6 @@ class Settings:
                 logger.warning(f"Could not initialize Secret Manager client: {e}. Falling back to environment variables.")
 
         # Secret Managerで取得できなかった場合、環境変数からフォールバック
-        if not self.openai_api_key:
-            self.openai_api_key = os.getenv("OPENAI_API_KEY")
         if not self.gemini_api_key:
             self.gemini_api_key = os.getenv("GEMINI_API_KEY")
 

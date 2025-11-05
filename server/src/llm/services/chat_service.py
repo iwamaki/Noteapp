@@ -1,11 +1,10 @@
 # @file chat_service.py
-# @summary LLMプロバイダーを管理し、チャット処理を委譲します。
-# @responsibility リクエストに応じて適切なLLMプロバイダーを選択し、チャット処理を実行させます。
+# @summary LLMプロバイダーを管理し、チャット処理を委譲します（Gemini専用）
+# @responsibility Geminiプロバイダーを使用してチャット処理を実行します。
 from typing import Optional
 from src.core.config import settings
 from src.llm.models import ChatResponse, ChatContext
 from src.llm.providers.base import BaseLLMProvider
-from src.llm.providers.openai import OpenAIProvider
 from src.llm.providers.gemini import GeminiProvider
 from src.llm.tools.context_manager import set_client_id
 from src.core.logger import logger
@@ -17,9 +16,7 @@ class ChatService:
         pass
 
     def get_provider(self, provider_name: str, model: str) -> Optional[BaseLLMProvider]:
-        """指定されたプロバイダーとモデルに基づいてLLMプロバイダーインスタンスを取得する"""
-        if provider_name == "openai" and settings.openai_api_key:
-            return OpenAIProvider(api_key=settings.openai_api_key, model=model)
+        """Geminiプロバイダーインスタンスを取得する（Gemini専用）"""
         if provider_name == "gemini" and settings.gemini_api_key:
             return GeminiProvider(api_key=settings.gemini_api_key, model=model)
         return None

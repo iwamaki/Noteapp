@@ -5,8 +5,6 @@
 """
 from typing import List, Dict, Any, Optional
 from datetime import datetime
-from pydantic import SecretStr
-from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage
 
@@ -23,27 +21,16 @@ class SummarizationService:
         pass
 
     def _get_llm_instance(self, provider: str, model: Optional[str]):
-        """LLMインスタンスを取得する
+        """LLMインスタンスを取得する（Gemini専用）
 
         Args:
-            provider: LLMプロバイダー（"openai" or "gemini"）
+            provider: LLMプロバイダー（"gemini"のみサポート）
             model: モデル名（Noneの場合はデフォルト）
 
         Returns:
             LangChain LLM instance
         """
-        if provider == "openai":
-            if not settings.openai_api_key:
-                raise ValueError("OpenAI API key is not configured")
-
-            model_name = model or settings.get_default_model("openai")
-            return ChatOpenAI(
-                api_key=SecretStr(settings.openai_api_key),
-                model=model_name,
-                temperature=0.3,  # 要約は一貫性を重視
-            )
-
-        elif provider == "gemini":
+        if provider == "gemini":
             if not settings.gemini_api_key:
                 raise ValueError("Gemini API key is not configured")
 
@@ -55,7 +42,7 @@ class SummarizationService:
             )
 
         else:
-            raise ValueError(f"Unknown provider: {provider}")
+            raise ValueError(f"Unsupported provider: {provider}. Only 'gemini' is supported.")
 
     async def summarize(
         self,
