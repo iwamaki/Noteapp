@@ -212,7 +212,7 @@ async def web_search_with_rag(
             )
 
             # 6. 結果サマリーを返す
-            return _format_rag_result(
+            result_text = _format_rag_result(
                 query=query,
                 collection_name=collection_name,
                 pages_count=len(successful_pages),
@@ -220,6 +220,19 @@ async def web_search_with_rag(
                 ttl_hours=collection_ttl_hours,
                 search_results=search_results[:len(successful_pages)]
             )
+
+            # 応答の長さをログ出力
+            logger.info(
+                f"web_search_with_rag response generated: "
+                f"collection={collection_name}, "
+                f"query={query}, "
+                f"pages={len(successful_pages)}, "
+                f"chunks={len(all_chunks)}, "
+                f"response_length={len(result_text)} chars"
+            )
+            logger.debug(f"Full response:\n{result_text}")
+
+            return result_text
 
     except httpx.HTTPStatusError as e:
         error_msg = f"HTTP {e.response.status_code}: {e.response.text}"

@@ -83,10 +83,24 @@ async def search_knowledge_base(
         )
 
         if not results:
-            return f"検索結果: クエリ '{query}' に一致する情報が見つかりませんでした。"
+            response = f"検索結果: クエリ '{query}' に一致する情報が見つかりませんでした。"
+            logger.info(f"search_knowledge_base response: {response}")
+            return response
 
         # 結果を整形
-        return _format_search_results(query, results, stats)
+        response = _format_search_results(query, results, stats)
+
+        # 応答の長さをログ出力
+        logger.info(
+            f"search_knowledge_base response generated: "
+            f"collection={stats.get('collection_name', 'unknown')}, "
+            f"query={query}, "
+            f"results_count={len(results)}, "
+            f"response_length={len(response)} chars"
+        )
+        logger.debug(f"Full response:\n{response}")
+
+        return response
 
     except Exception as e:
         error_msg = str(e)
