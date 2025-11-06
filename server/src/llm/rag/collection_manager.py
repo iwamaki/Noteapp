@@ -186,6 +186,9 @@ class CollectionManager:
         Returns:
             VectorStoreManager、存在しない場合はNone
         """
+        # メタデータをリロード（他のプロセスでの変更を反映）
+        self._load_metadata()
+
         # メタデータが存在しない場合
         if name not in self.metadata:
             logger.warning(f"Collection '{name}' not found in metadata")

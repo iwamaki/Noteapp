@@ -2,7 +2,7 @@
 # @summary 知識ベース（RAG）管理用のAPIエンドポイント
 # @responsibility ドキュメントのアップロード、統計情報取得、削除を提供します
 
-from fastapi import APIRouter, UploadFile, File, HTTPException, Query
+from fastapi import APIRouter, UploadFile, File, HTTPException, Query, Body
 from fastapi.responses import JSONResponse
 from typing import Optional
 import tempfile
@@ -30,16 +30,36 @@ def get_collection_manager() -> CollectionManager:
     return _collection_manager
 
 
-def get_vector_store(collection_name: str = "default") -> VectorStoreManager:
-    """ベクトルストアを取得（コレクション名を指定可能）"""
+def get_vector_store(collection_name: str = "default", create_if_missing: bool = False) -> VectorStoreManager:
+    """ベクトルストアを取得（コレクション名を指定可能）
+
+    Args:
+        collection_name: コレクション名
+        create_if_missing: 存在しない場合に自動作成するかどうか
+
+    Returns:
+        VectorStoreManager
+
+    Raises:
+        HTTPException: コレクションが見つからない場合（create_if_missing=Falseの場合）
+    """
     manager = get_collection_manager()
     vector_store = manager.get_collection(collection_name)
 
     if vector_store is None:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Collection '{collection_name}' not found or expired"
-        )
+        if create_if_missing:
+            # 永久保存コレクションとして作成
+            logger.info(f"Creating new persistent collection: {collection_name}")
+            vector_store = manager.create_collection(
+                name=collection_name,
+                collection_type="persistent",
+                description=f"Auto-created collection for {collection_name}"
+            )
+        else:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Collection '{collection_name}' not found or expired"
+            )
 
     return vector_store
 
@@ -61,6 +81,10 @@ class CreateCollectionRequest(BaseModel):
     prefix: str = "temp"
     ttl_hours: float = 1.0
     description: Optional[str] = None
+
+
+class UploadTextRequest(BaseModel):
+    text: str
 
 
 @router.post("/api/knowledge-base/documents/upload")
@@ -114,8 +138,8 @@ async def upload_document(
         if not chunks:
             raise HTTPException(status_code=400, detail="ドキュメントの処理に失敗しました")
 
-        # ベクトルストアに追加
-        vector_store = get_vector_store(collection_name)
+        # ベクトルストアに追加（存在しない場合は自動作成）
+        vector_store = get_vector_store(collection_name, create_if_missing=True)
         vector_store.add_documents(chunks, save_after_add=True)
 
         # 統計情報を取得
@@ -221,10 +245,10 @@ async def clear_knowledge_base(
 
 @router.post("/api/knowledge-base/documents/upload-text")
 async def upload_text(
-    text: str,
+    request: UploadTextRequest,
     collection_name: str = Query(default="default"),
-    metadata_title: Optional[str] = None,
-    metadata_description: Optional[str] = None
+    metadata_title: Optional[str] = Query(default=None),
+    metadata_description: Optional[str] = Query(default=None)
 ):
     """
     テキストを直接アップロードして知識ベースに追加
@@ -238,6 +262,7 @@ async def upload_text(
     Returns:
         アップロード結果とドキュメント情報
     """
+    text = request.text
     logger.info(f"Text upload requested: {len(text)} characters to collection '{collection_name}'")
 
     if not text.strip():
@@ -259,8 +284,8 @@ async def upload_text(
         if not chunks:
             raise HTTPException(status_code=400, detail="テキストの処理に失敗しました")
 
-        # ベクトルストアに追加
-        vector_store = get_vector_store(collection_name)
+        # ベクトルストアに追加（存在しない場合は自動作成）
+        vector_store = get_vector_store(collection_name, create_if_missing=True)
         vector_store.add_documents(chunks, save_after_add=True)
 
         # 統計情報を取得

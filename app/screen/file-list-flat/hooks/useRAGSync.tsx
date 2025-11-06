@@ -13,6 +13,22 @@ import { logger } from '../../../utils/logger';
 import APIService from '../../../features/chat/llmService/api';
 
 /**
+ * カテゴリーパスをコレクション名にサニタイズ
+ * @param categoryPath カテゴリーのパス（例: "01_調べ物/技術"）
+ * @returns サニタイズされたコレクション名（例: "category_01_調べ物_技術"）
+ */
+function sanitizeCategoryPath(categoryPath: string): string {
+  // スラッシュをアンダースコアに置換
+  let sanitized = categoryPath.replace(/\//g, '_');
+  // 連続するアンダースコアを1つに
+  sanitized = sanitized.replace(/_+/g, '_');
+  // 前後のアンダースコアを削除
+  sanitized = sanitized.replace(/^_|_$/g, '');
+  // プレフィックスを追加
+  return `category_${sanitized}`;
+}
+
+/**
  * RAG同期機能を提供するフック
  */
 export const useRAGSync = () => {
@@ -57,10 +73,14 @@ export const useRAGSync = () => {
 
       logger.debug('rag', `Combined text length: ${combinedText.length} characters`);
 
-      // バックエンドのRAGにアップロード（永久保存コレクション "default" を使用）
+      // カテゴリーパスからコレクション名を生成
+      const collectionName = sanitizeCategoryPath(categoryPath);
+      logger.info('rag', `Using collection name: ${collectionName} for category: ${categoryPath}`);
+
+      // バックエンドのRAGにアップロード（カテゴリー専用の永久コレクション）
       const result = await APIService.uploadTextToKnowledgeBase(
         combinedText,
-        'default', // 永久保存コレクション
+        collectionName, // カテゴリー専用コレクション
         `カテゴリー: ${categoryName}`, // メタデータのタイトル
         `${categoryFiles.length}個のファイルを含むカテゴリー` // メタデータの説明
       );
@@ -77,7 +97,8 @@ export const useRAGSync = () => {
         Alert.alert(
           'Q&A作成完了',
           `カテゴリー「${categoryName}」のファイル（${categoryFiles.length}件）を知識ベースに追加しました。\n\n` +
-          `チャットで質問することで、このカテゴリーの内容に基づいた回答が得られます。\n\n` +
+          `チャットで「${categoryName}について教えて」のように質問すると、このカテゴリーの内容に基づいた回答が得られます。\n\n` +
+          `コレクション名: ${collectionName}\n` +
           `作成されたチャンク数: ${result.document?.chunks_created}\n` +
           `総文字数: ${result.document?.total_characters}`,
           [{ text: 'OK' }]
