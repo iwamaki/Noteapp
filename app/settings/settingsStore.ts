@@ -79,6 +79,7 @@ export interface AppSettings {
 
   // 8. ファイルリスト表示設定
   categorySortMethod: 'name' | 'fileCount';
+  showSummary: boolean; // ファイルリストに要約を表示するかどうか
 }
 
 // デフォルト設定値
@@ -150,6 +151,7 @@ const defaultSettings: AppSettings = {
 
   // ファイルリスト表示設定
   categorySortMethod: 'fileCount',
+  showSummary: true,
 };
 
 interface SettingsStore {

@@ -184,6 +184,15 @@ function SettingsScreen() {
           (value) => updateSettings({ categorySortMethod: value as 'name' | 'fileCount' })
         )}
 
+        <ListItem.Container>
+          {/* eslint-disable-next-line react-native/no-raw-text */}
+          <ListItem.Title>ファイルリストに要約を表示</ListItem.Title>
+          <Switch
+            value={settings.showSummary}
+            onValueChange={(value: boolean) => updateSettings({ showSummary: value })}
+          />
+        </ListItem.Container>
+
         {settings.llmEnabled && (
           <>
             {renderSection('LLM設定')}

@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { FileFlat } from '@data/core/typesFlat';
 import { ListItem } from '../../../components/ListItem';
+import { useSettingsStore } from '../../../settings/settingsStore';
 
 interface FlatListItemProps {
   file: FileFlat;
@@ -39,6 +40,7 @@ export const FlatListItem: React.FC<FlatListItemProps> = ({
   onLongPress,
 }) => {
   const { colors, spacing, iconSizes, typography } = useTheme();
+  const { settings } = useSettingsStore();
 
   // 階層インデント計算（親カテゴリーの子要素として、同じ階層の子カテゴリーと同じ位置）
   const itemPaddingLeft = (level + 1) * 24;
@@ -67,7 +69,7 @@ export const FlatListItem: React.FC<FlatListItemProps> = ({
       <ListItem.Title>{file.title}</ListItem.Title>
 
       {/* 要約コンテナ */}
-      {file.summary && (
+      {settings.showSummary && file.summary && (
         <View style={{ marginTop: spacing.xs }}>
           <Text style={[typography.caption, { color: colors.textSecondary }, styles.summaryText]}>
             <Text style={styles.label}>要約：</Text>
