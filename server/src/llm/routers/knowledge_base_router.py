@@ -2,32 +2,20 @@
 # @summary 知識ベース（RAG）管理用のAPIエンドポイント
 # @responsibility ドキュメントのアップロード、統計情報取得、削除を提供します
 
-from fastapi import APIRouter, UploadFile, File, HTTPException, Query, Body
+from fastapi import APIRouter, UploadFile, File, HTTPException, Query
 from fastapi.responses import JSONResponse
 from typing import Optional
 import tempfile
 import shutil
 from pathlib import Path
-from pydantic import BaseModel
 
 from src.llm.rag.vector_store import VectorStoreManager
-from src.llm.rag.document_processor import DocumentProcessor
-from src.llm.rag.collection_manager import CollectionManager, CollectionType
+from src.llm.rag.collection_manager import CollectionType
+from src.llm.rag.instances import get_collection_manager, get_document_processor
+from src.llm.routers.schemas import CreateCollectionRequest, UploadTextRequest
 from src.core.logger import logger
 
 router = APIRouter()
-
-# グローバルなインスタンス
-_collection_manager: Optional[CollectionManager] = None
-_document_processor: Optional[DocumentProcessor] = None
-
-
-def get_collection_manager() -> CollectionManager:
-    """コレクションマネージャーのシングルトンインスタンスを取得"""
-    global _collection_manager
-    if _collection_manager is None:
-        _collection_manager = CollectionManager()
-    return _collection_manager
 
 
 def get_vector_store(collection_name: str = "default", create_if_missing: bool = False) -> VectorStoreManager:
@@ -62,29 +50,6 @@ def get_vector_store(collection_name: str = "default", create_if_missing: bool =
             )
 
     return vector_store
-
-
-def get_document_processor() -> DocumentProcessor:
-    """ドキュメントプロセッサのシングルトンインスタンスを取得"""
-    global _document_processor
-    if _document_processor is None:
-        _document_processor = DocumentProcessor(
-            chunk_size=1000,
-            chunk_overlap=200
-        )
-    return _document_processor
-
-
-# リクエスト/レスポンスモデル
-class CreateCollectionRequest(BaseModel):
-    name: Optional[str] = None
-    prefix: str = "temp"
-    ttl_hours: float = 1.0
-    description: Optional[str] = None
-
-
-class UploadTextRequest(BaseModel):
-    text: str
 
 
 @router.post("/api/knowledge-base/documents/upload")

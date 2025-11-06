@@ -4,48 +4,13 @@
 
 from langchain.tools import tool
 from src.core.logger import logger
-from src.llm.rag.collection_manager import CollectionManager
-from src.llm.rag.document_processor import DocumentProcessor
+from src.llm.rag.instances import get_collection_manager, get_document_processor
 from typing import Optional
 import os
 import httpx
 import asyncio
 from bs4 import BeautifulSoup  # type: ignore
 from datetime import datetime
-
-
-# グローバルなインスタンス
-_collection_manager: Optional[CollectionManager] = None
-_document_processor: Optional[DocumentProcessor] = None
-
-
-def get_collection_manager() -> CollectionManager:
-    """コレクションマネージャーのシングルトンインスタンスを取得
-
-    Returns:
-        CollectionManager: コレクションマネージャーのインスタンス
-    """
-    global _collection_manager
-    if _collection_manager is None:
-        _collection_manager = CollectionManager()
-        logger.info("CollectionManager instance created for web_search_with_rag tool")
-    return _collection_manager
-
-
-def get_document_processor() -> DocumentProcessor:
-    """ドキュメントプロセッサのシングルトンインスタンスを取得
-
-    Returns:
-        DocumentProcessor: ドキュメントプロセッサのインスタンス
-    """
-    global _document_processor
-    if _document_processor is None:
-        _document_processor = DocumentProcessor(
-            chunk_size=1000,
-            chunk_overlap=200
-        )
-        logger.info("DocumentProcessor instance created for web_search_with_rag tool")
-    return _document_processor
 
 
 @tool

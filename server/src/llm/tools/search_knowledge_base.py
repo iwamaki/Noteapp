@@ -1,24 +1,6 @@
 from langchain.tools import tool
 from src.core.logger import logger
-from src.llm.rag.collection_manager import CollectionManager
-from typing import Optional
-
-
-# グローバルなコレクションマネージャーのインスタンス
-_collection_manager: Optional[CollectionManager] = None
-
-
-def get_collection_manager() -> CollectionManager:
-    """コレクションマネージャーのシングルトンインスタンスを取得
-
-    Returns:
-        CollectionManager: コレクションマネージャーのインスタンス
-    """
-    global _collection_manager
-    if _collection_manager is None:
-        _collection_manager = CollectionManager()
-        logger.info("CollectionManager instance created for search_knowledge_base tool")
-    return _collection_manager
+from src.llm.rag.instances import get_collection_manager
 
 
 @tool
