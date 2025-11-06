@@ -19,9 +19,19 @@ import { useSettingsHeader } from './hooks/useSettingsHeader';
 import APIService from '../features/chat/llmService/api';
 import { LLMProvider } from '../features/chat/llmService/types/types';
 import { ListItem } from '../components/ListItem';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../navigation/types';
+import { Ionicons } from '@expo/vector-icons';
+import { useSubscription } from '../utils/subscriptionHelpers';
+import { SUBSCRIPTION_PLANS } from '../constants/plans';
+
+type SettingsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Settings'>;
 
 function SettingsScreen() {
   const { colors, spacing, typography } = useTheme();
+  const navigation = useNavigation<SettingsScreenNavigationProp>();
+  const { tier, status } = useSubscription();
   const { settings, loadSettings, updateSettings, isLoading } = useSettingsStore();
 
   // 初期値にキャッシュを使用（キャッシュがあれば即座に表示）
@@ -123,6 +133,32 @@ function SettingsScreen() {
         ...typography.body,
         color: colors.textSecondary,
       },
+      subscriptionButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: colors.secondary,
+        padding: spacing.lg,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: colors.border,
+        marginBottom: spacing.lg,
+      },
+      subscriptionButtonContent: {
+        flex: 1,
+      },
+      subscriptionButtonTitle: {
+        ...typography.subtitle,
+        color: colors.text,
+        marginBottom: 4,
+      },
+      subscriptionButtonSubtitle: {
+        ...typography.caption,
+        color: colors.textSecondary,
+      },
+      subscriptionIcon: {
+        marginLeft: spacing.md,
+      },
     }),
     [colors, spacing, typography]
   );
@@ -139,6 +175,31 @@ function SettingsScreen() {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.content}>
+        {/* サブスクリプションセクション */}
+        {renderSection('サブスクリプション')}
+
+        <TouchableOpacity
+          style={styles.subscriptionButton}
+          onPress={() => navigation.navigate('Subscription')}
+        >
+          <View style={styles.subscriptionButtonContent}>
+            <Text style={styles.subscriptionButtonTitle}>
+              現在のプラン: {SUBSCRIPTION_PLANS[tier].displayName}
+            </Text>
+            <Text style={styles.subscriptionButtonSubtitle}>
+              {status === 'active' || status === 'trial'
+                ? 'タップしてプランを管理'
+                : 'プランをアップグレード'}
+            </Text>
+          </View>
+          <Ionicons
+            name="chevron-forward"
+            size={24}
+            color={colors.textSecondary}
+            style={styles.subscriptionIcon}
+          />
+        </TouchableOpacity>
+
         {renderSection('表示設定')}
 
         {renderPicker(

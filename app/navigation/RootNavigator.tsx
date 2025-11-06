@@ -15,6 +15,7 @@ import { RootStackParamList } from './types';
 import FileListScreen from '../screen/file-list-flat/FileListScreenFlat';
 import FileEditScreen from '../screen/file-edit/FileEditScreen';
 import SettingsScreen from '../settings/SettingsScreen';
+import { SubscriptionScreen } from '../screen/subscription/SubscriptionScreen';
 
 import { useTheme } from '../design/theme/ThemeContext';
 import { KeyboardHeightProvider } from '../contexts/KeyboardHeightContext';
@@ -88,6 +89,7 @@ function RootNavigatorContent() {
           <Stack.Screen name="FileList" component={FileListScreen} options={{ title: 'Files' }} />
           <Stack.Screen name="FileEdit" component={FileEditScreen} options={{ title: 'Edit File' }} />
           <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
+          <Stack.Screen name="Subscription" component={SubscriptionScreen} options={{ title: 'Subscription' }} />
         </Stack.Navigator>
       </NavigationContainer>
       {shouldShowChat && <ChatInputBar />}
