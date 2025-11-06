@@ -44,8 +44,8 @@ export const CHAT_CONFIG = {
   llm: {
     /** 会話履歴の最大保持件数 */
     maxHistorySize: 100,
-    /** APIリクエストのタイムアウト時間（ms） */
-    apiTimeout: 30000,
+    /** APIリクエストのタイムアウト時間（ms） - RAG処理を考慮して120秒に延長 */
+    apiTimeout: 120000,
     /** リクエスト間の最小間隔（ms） */
     minRequestInterval: 100,
     /** デフォルトのLLMプロバイダー */

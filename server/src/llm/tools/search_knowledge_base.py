@@ -132,5 +132,5 @@ def _format_search_results(query: str, results: list, stats: dict) -> str:
         result_parts.append(f"\n{content}")
         result_parts.append(f"\n{'-'*60}")
 
-    logger.info(f"Knowledge base search completed: collection={collection_name}, query={query}, results_count={len(results)}")
+    logger.info(f"Knowledge base search completed: collection={stats.get('collection_name', 'unknown')}, query={query}, results_count={len(results)}")
     return "".join(result_parts)

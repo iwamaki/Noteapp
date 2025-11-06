@@ -64,12 +64,20 @@ async def web_search_with_rag(
     4. 取得したHTMLテキストをベクトル化してRAGに保存
     5. 作成されたコレクション名を返す
 
-    返されたコレクション名を使って、search_knowledge_baseツールで
-    深いセマンティック検索が可能になります。
+    【重要】このツールの返り値から「作成されたコレクション名」を抽出し、
+    その値をsearch_knowledge_baseツールのcollection_nameパラメータに
+    渡して深いセマンティック検索を実行してください。
 
-    使用例:
-    1. このツールでWeb検索結果をRAG化: web_search_with_rag("Python async best practices")
-    2. 返されたコレクション名を使って深い検索: search_knowledge_base("asyncio event loop", collection_name="web_1762386000")
+    使用フロー（2ステップ必須）:
+    ステップ1: このツールでWeb検索結果をRAG化
+      → web_search_with_rag("Python async best practices")
+      → 返り値からコレクション名（例: "web_1762386000"）を抽出
+
+    ステップ2: 抽出したコレクション名で深い検索
+      → search_knowledge_base(
+          query="asyncio event loop",
+          collection_name="web_1762386000"  # ステップ1で取得した値
+        )
 
     Args:
         query: 検索クエリ（例: "機械学習の最新トレンド", "FastAPI チュートリアル"）
@@ -77,7 +85,7 @@ async def web_search_with_rag(
         collection_ttl_hours: コレクションのTTL（時間単位、デフォルト: 1.0）
 
     Returns:
-        作成されたコレクション名と検索結果サマリー、またはエラーメッセージ
+        作成されたコレクション名（必ず抽出すること）と検索結果サマリー、またはエラーメッセージ
     """
     logger.info(
         f"web_search_with_rag tool called: query={query}, "
@@ -341,15 +349,15 @@ def _format_rag_result(
         整形された結果文字列
     """
     result_parts = [
-        f"✓ Web検索結果をRAGコレクションに保存しました\n",
+        "✓ Web検索結果をRAGコレクションに保存しました\n",
         f"\n{'='*60}\n",
+        f"【重要】作成されたコレクション名: {collection_name}\n",
+        f"{'='*60}\n\n",
         f"検索クエリ: {query}\n",
-        f"コレクション名: {collection_name}\n",
         f"保存されたページ数: {pages_count}\n",
         f"作成されたチャンク数: {chunks_count}\n",
         f"有効期限: {ttl_hours}時間後に自動削除\n",
-        f"\n{'='*60}\n",
-        f"\n取得したページ:\n"
+        "\n取得したページ:\n"
     ]
 
     for i, result in enumerate(search_results, 1):
@@ -365,10 +373,11 @@ def _format_rag_result(
 
     result_parts.append(f"\n\n{'='*60}\n")
     result_parts.append(
-        f"\n💡 次のステップ:\n"
-        f"search_knowledge_baseツールを使って、このコレクション内を検索できます。\n"
-        f"例: search_knowledge_base(\n"
-        f"    query=\"具体的な検索クエリ\",\n"
+        f"\n【必須】次のステップ:\n"
+        f"このコレクション内を検索するには、search_knowledge_baseツールを使用してください。\n\n"
+        f"必ずcollection_nameパラメータに '{collection_name}' を指定してください：\n\n"
+        f"search_knowledge_base(\n"
+        f"    query=\"検索したい内容\",\n"
         f"    collection_name=\"{collection_name}\"\n"
         f")\n"
     )

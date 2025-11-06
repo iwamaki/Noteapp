@@ -4,7 +4,7 @@
 
 from fastapi import APIRouter, UploadFile, File, HTTPException, Query
 from fastapi.responses import JSONResponse
-from typing import Optional, List
+from typing import Optional
 import tempfile
 import shutil
 from pathlib import Path
@@ -320,7 +320,7 @@ async def create_temp_collection(request: CreateCollectionRequest):
             collection_name = manager.generate_temp_collection_name(request.prefix)
 
         # コレクション作成
-        vector_store = manager.create_collection(
+        manager.create_collection(
             name=collection_name,
             collection_type="temp",
             ttl_hours=request.ttl_hours,
