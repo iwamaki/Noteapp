@@ -716,3 +716,161 @@ async def web_search(...):
 **初期リリース**: 3週間後
 
 定数・設定ファイルは既に整備されており、すぐにPhase 1の実装を開始できる状態です。
+
+---
+
+## 📊 実装進捗状況
+
+### Phase 1: アプリ内課金（IAP）のみ - 進行中
+
+#### ✅ 完了したタスク
+
+##### Week 1: 基盤実装 (2025-11-06)
+
+**1. IAP Service層の実装** ✅
+- ファイル: `app/data/services/iapService.ts`
+- 実装内容:
+  - react-native-iap v14 の統合
+  - IAP接続の初期化・終了処理
+  - サブスクリプション商品の取得（fetchProducts）
+  - 購入フロー（purchaseSubscription）
+  - 購入履歴の復元（restorePurchases）
+  - レシート検証（Phase 1: 簡易版）
+  - プロダクトID定義（PRO_MONTHLY, PRO_YEARLY, ENTERPRISE_MONTHLY）
+- コミット: `e254378`
+
+**2. Subscription Helper関数の実装** ✅
+- ファイル: `app/utils/subscriptionHelpers.ts`
+- 実装内容:
+  - `useSubscription()`: サブスクリプション情報取得フック
+  - `useFeatureAccess()`: 機能アクセス権限チェック
+  - `useModelAccess()`: LLMモデルアクセス権限チェック
+  - `useUsageLimit()`: 使用量制限チェック
+  - `canSendLLMRequest()`, `canCreateFile()`: 操作可否判定
+  - `isFileSizeAllowed()`, `isStorageAvailable()`: 容量チェック
+  - 使用量警告レベル判定（safe/warning/danger）
+  - 期限計算・表示関数
+- コミット: `e254378`
+
+**3. Subscription UI画面の実装** ✅
+- ファイル: `app/screen/subscription/SubscriptionScreen.tsx`
+- 実装内容:
+  - プラン選択画面（Free/Pro/Enterprise）
+  - 現在のプラン表示
+  - 購入フロー統合
+  - 購入の復元機能
+  - ダウングレード確認ダイアログ
+  - エラーハンドリング（ユーザーキャンセル対応）
+- コミット: `e254378`
+
+**4. Plan Card コンポーネント** ✅
+- ファイル: `app/screen/subscription/components/PlanCard.tsx`
+- 実装内容:
+  - プラン情報カード表示
+  - 主要機能リスト（ファイル数、LLMリクエスト、ストレージ）
+  - プロ機能リスト（高度なモデル、RAG検索、Web検索）
+  - おすすめバッジ
+  - 購入ボタン（ローディング状態対応）
+  - 現在のプランハイライト
+- コミット: `e254378`
+
+**5. Navigation統合** ✅
+- ファイル: `app/navigation/RootNavigator.tsx`, `app/navigation/types.ts`
+- 実装内容:
+  - Subscriptionスクリーンの追加
+  - TypeScript型定義
+- コミット: `e254378`
+
+**6. Settings画面との統合** ✅
+- ファイル: `app/settings/SettingsScreen.tsx`
+- 実装内容:
+  - サブスクリプションセクション追加
+  - 現在のプラン表示
+  - Subscription画面への導線
+  - プラン管理/アップグレードボタン
+- コミット: `e254378`
+
+**7. 依存関係のインストール** ✅
+- `react-native-iap` v14.4.38 - IAP機能
+- `expo-dev-client` - 開発ビルド対応
+- コミット: `e254378`
+
+**8. 開発環境のセットアップ** ✅
+- EAS CLI インストール
+- EAS Build による開発ビルド作成
+- Android実機でのUI動作確認完了
+- 日付: 2025-11-06
+
+**9. コード品質** ✅
+- TypeScript型チェック: ✅ エラーなし
+- ESLint: ✅ 新規コードにエラー・警告なし
+- react-native-iap v14 API対応完了
+
+#### 🚧 進行中のタスク
+
+**既存機能のUI不整合修正**
+- 状況: Android開発ビルドで既存機能のUI不整合を発見
+- 優先度: 高（次のタスク）
+- 対応方針: エラー詳細を調査後、修正作業を実施
+
+#### 📝 次のタスク（Week 1-2）
+
+1. **既存機能のバグ修正**
+   - [ ] UI不整合の原因特定
+   - [ ] 修正実装
+   - [ ] 動作確認
+
+2. **App Store Connect / Play Console 設定**
+   - [ ] アプリ登録
+   - [ ] アプリ内商品（サブスクリプション）作成
+     - [ ] noteapp.pro.monthly (¥980/月)
+     - [ ] noteapp.pro.yearly (年間プラン)
+     - [ ] noteapp.enterprise.monthly (¥3,000/月)
+   - [ ] テストアカウント設定
+
+3. **購入フローのテスト**
+   - [ ] Sandbox環境でのテスト
+   - [ ] 購入成功フロー確認
+   - [ ] 復元機能確認
+   - [ ] エラーハンドリング確認
+
+4. **使用量トラッキング実装**
+   - [ ] LLMリクエストカウント
+   - [ ] ファイル数カウント
+   - [ ] ストレージ使用量計算
+   - [ ] 月次リセット機能
+
+5. **機能制限の適用**
+   - [ ] LLM機能でのプランチェック
+   - [ ] ファイル作成時の制限チェック
+   - [ ] アップグレードプロンプト表示
+
+#### 📅 今後のマイルストーン
+
+- **Week 2完了目標**: Sandbox環境での購入フロー完全動作
+- **Week 3完了目標**: Phase 1リリース準備完了
+- **Phase 2開始予定**: Phase 1リリース後
+
+---
+
+### 📌 既知の課題
+
+1. **レシート検証**
+   - 現状: Phase 1では簡易実装（transactionIdのみ確認）
+   - 今後: Phase 2でサーバーサイド検証を実装
+
+2. **サブスクリプション有効期限**
+   - 現状: 固定30日で仮実装
+   - 今後: 実際のレシート情報から取得
+
+3. **Expo Go 非対応**
+   - 現状: react-native-iapを使用するため、Expo Goでは動作不可
+   - 対応: EAS Build開発ビルドを使用（完了）
+
+---
+
+### 🔄 最終更新
+
+**日付**: 2025-11-06
+**更新者**: iwash
+**最新コミット**: `e254378` - feat: Add subscription/IAP functionality with UI screens
