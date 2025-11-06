@@ -264,6 +264,17 @@ function SettingsScreen() {
           />
         </ListItem.Container>
 
+        {renderSection('LLM/AI機能')}
+
+        <ListItem.Container>
+          {/* eslint-disable-next-line react-native/no-raw-text */}
+          <ListItem.Title>LLM機能を有効にする</ListItem.Title>
+          <Switch
+            value={settings.llmEnabled}
+            onValueChange={(value: boolean) => updateSettings({ llmEnabled: value })}
+          />
+        </ListItem.Container>
+
         {settings.llmEnabled && (
           <>
             {renderSection('LLM設定')}
