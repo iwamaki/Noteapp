@@ -81,6 +81,23 @@ export interface AppSettings {
   categorySortMethod: 'name' | 'fileCount';
   fileSortMethod: 'updatedAt' | 'name'; // ファイルのソート方法（更新日時順/名前順）
   showSummary: boolean; // ファイルリストに要約を表示するかどうか
+
+  // 9. サブスクリプション・課金設定
+  subscription: {
+    tier: 'free' | 'pro' | 'enterprise';
+    status: 'active' | 'canceled' | 'expired' | 'trial' | 'none';
+    expiresAt?: string; // ISO 8601 形式の日時
+    trialStartedAt?: string; // トライアル開始日時
+    autoRenew: boolean;
+  };
+
+  // 10. 使用量情報（サーバーから同期）
+  usage: {
+    monthlyLLMRequests: number; // 今月のLLMリクエスト数
+    currentFileCount: number; // 現在のファイル数
+    storageUsedMB: number; // 使用中のストレージ容量（MB）
+    lastSyncedAt?: string; // 最後に同期した日時
+  };
 }
 
 // デフォルト設定値
@@ -154,6 +171,23 @@ const defaultSettings: AppSettings = {
   categorySortMethod: 'fileCount',
   fileSortMethod: 'updatedAt',
   showSummary: true,
+
+  // サブスクリプション・課金設定
+  subscription: {
+    tier: 'free',
+    status: 'none',
+    expiresAt: undefined,
+    trialStartedAt: undefined,
+    autoRenew: false,
+  },
+
+  // 使用量情報
+  usage: {
+    monthlyLLMRequests: 0,
+    currentFileCount: 0,
+    storageUsedMB: 0,
+    lastSyncedAt: undefined,
+  },
 };
 
 interface SettingsStore {
