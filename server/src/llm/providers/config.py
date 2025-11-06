@@ -46,3 +46,7 @@ MAX_CONVERSATION_TOKENS: Final[int] = 4000
 
 PRESERVE_RECENT_MESSAGES: Final[int] = 5
 """要約時に保持する最新メッセージ数"""
+
+# 文書要約設定
+MIN_DOCUMENT_CONTENT_LENGTH: Final[int] = 100
+"""文書要約に必要な最小文字数"""

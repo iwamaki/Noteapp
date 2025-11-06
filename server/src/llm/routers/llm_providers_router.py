@@ -3,11 +3,13 @@
 # @responsibility /api/llm-providersおよび/api/healthへのGETリクエストを処理します。
 from fastapi import APIRouter
 from src.llm.models import LLMProvider
+from src.llm.routers.error_handlers import handle_route_errors
 from src.core.config import settings
 
 router = APIRouter()
 
 @router.get("/api/llm-providers")
+@handle_route_errors
 async def get_llm_providers():
     """利用可能なLLMプロバイダーを取得（Gemini専用）"""
     providers = {}
@@ -32,6 +34,7 @@ async def get_llm_providers():
     return providers
 
 @router.get("/api/health")
+@handle_route_errors
 async def health_check():
     """ヘルスチェック（Gemini専用）"""
     providers_status = {}

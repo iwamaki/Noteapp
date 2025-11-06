@@ -13,6 +13,7 @@ from src.llm.rag.vector_store import VectorStoreManager
 from src.llm.rag.collection_manager import CollectionType
 from src.llm.rag.instances import get_collection_manager, get_document_processor
 from src.llm.routers.schemas import CreateCollectionRequest, UploadTextRequest
+from src.llm.routers.error_handlers import handle_route_errors
 from src.core.logger import logger
 
 router = APIRouter()
@@ -53,6 +54,7 @@ def get_vector_store(collection_name: str = "default", create_if_missing: bool =
 
 
 @router.post("/api/knowledge-base/documents/upload")
+@handle_route_errors
 async def upload_document(
     file: UploadFile = File(...),
     collection_name: str = Query(default="default"),
@@ -131,12 +133,6 @@ async def upload_document(
             }
         })
 
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error uploading document: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"ドキュメントのアップロードに失敗しました: {str(e)}")
-
     finally:
         # 一時ファイルを削除
         if temp_file_path and Path(temp_file_path).exists():
@@ -144,6 +140,7 @@ async def upload_document(
 
 
 @router.get("/api/knowledge-base/documents/stats")
+@handle_route_errors
 async def get_knowledge_base_stats(
     collection_name: str = Query(default="default")
 ):
@@ -156,28 +153,22 @@ async def get_knowledge_base_stats(
     Returns:
         ドキュメント数、ストレージパスなどの統計情報
     """
-    try:
-        vector_store = get_vector_store(collection_name)
-        stats = vector_store.get_stats()
+    vector_store = get_vector_store(collection_name)
+    stats = vector_store.get_stats()
 
-        # コレクションメタデータも含める
-        manager = get_collection_manager()
-        metadata = manager.get_metadata(collection_name)
+    # コレクションメタデータも含める
+    manager = get_collection_manager()
+    metadata = manager.get_metadata(collection_name)
 
-        return JSONResponse(content={
-            "success": True,
-            "stats": stats,
-            "metadata": metadata.model_dump(mode="json") if metadata else None
-        })
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error getting knowledge base stats: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"統計情報の取得に失敗しました: {str(e)}")
+    return JSONResponse(content={
+        "success": True,
+        "stats": stats,
+        "metadata": metadata.model_dump(mode="json") if metadata else None
+    })
 
 
 @router.delete("/api/knowledge-base/documents/clear")
+@handle_route_errors
 async def clear_knowledge_base(
     collection_name: str = Query(default="default")
 ):
@@ -190,25 +181,19 @@ async def clear_knowledge_base(
     Returns:
         削除結果
     """
-    try:
-        vector_store = get_vector_store(collection_name)
-        vector_store.clear()
+    vector_store = get_vector_store(collection_name)
+    vector_store.clear()
 
-        logger.info(f"Knowledge base cleared: {collection_name}")
+    logger.info(f"Knowledge base cleared: {collection_name}")
 
-        return JSONResponse(content={
-            "success": True,
-            "message": f"コレクション '{collection_name}' をクリアしました"
-        })
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error clearing knowledge base: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"知識ベースのクリアに失敗しました: {str(e)}")
+    return JSONResponse(content={
+        "success": True,
+        "message": f"コレクション '{collection_name}' をクリアしました"
+    })
 
 
 @router.post("/api/knowledge-base/documents/upload-text")
+@handle_route_errors
 async def upload_text(
     request: UploadTextRequest,
     collection_name: str = Query(default="default"),
@@ -233,59 +218,53 @@ async def upload_text(
     if not text.strip():
         raise HTTPException(status_code=400, detail="テキストが空です")
 
-    try:
-        # ドキュメントを処理
-        processor = get_document_processor()
+    # ドキュメントを処理
+    processor = get_document_processor()
 
-        # 追加メタデータ
-        metadata = {}
-        if metadata_title:
-            metadata["title"] = metadata_title
-        if metadata_description:
-            metadata["description"] = metadata_description
+    # 追加メタデータ
+    metadata = {}
+    if metadata_title:
+        metadata["title"] = metadata_title
+    if metadata_description:
+        metadata["description"] = metadata_description
 
-        chunks = processor.load_from_text(text, metadata=metadata)
+    chunks = processor.load_from_text(text, metadata=metadata)
 
-        if not chunks:
-            raise HTTPException(status_code=400, detail="テキストの処理に失敗しました")
+    if not chunks:
+        raise HTTPException(status_code=400, detail="テキストの処理に失敗しました")
 
-        # ベクトルストアに追加（存在しない場合は自動作成）
-        vector_store = get_vector_store(collection_name, create_if_missing=True)
-        vector_store.add_documents(chunks, save_after_add=True)
+    # ベクトルストアに追加（存在しない場合は自動作成）
+    vector_store = get_vector_store(collection_name, create_if_missing=True)
+    vector_store.add_documents(chunks, save_after_add=True)
 
-        # 統計情報を取得
-        stats = vector_store.get_stats()
-        doc_summary = processor.get_document_summary(chunks)
+    # 統計情報を取得
+    stats = vector_store.get_stats()
+    doc_summary = processor.get_document_summary(chunks)
 
-        logger.info(
-            f"Text uploaded successfully to '{collection_name}': "
-            f"{len(chunks)} chunks, {doc_summary['total_characters']} chars"
-        )
+    logger.info(
+        f"Text uploaded successfully to '{collection_name}': "
+        f"{len(chunks)} chunks, {doc_summary['total_characters']} chars"
+    )
 
-        return JSONResponse(content={
-            "success": True,
-            "message": f"テキストをコレクション '{collection_name}' に追加しました",
-            "document": {
-                "chunks_created": len(chunks),
-                "total_characters": doc_summary["total_characters"],
-                "average_chunk_size": doc_summary["average_chunk_size"]
-            },
-            "knowledge_base": {
-                "total_documents": stats["document_count"],
-                "collection_name": stats["collection_name"]
-            }
-        })
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error uploading text: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"テキストのアップロードに失敗しました: {str(e)}")
+    return JSONResponse(content={
+        "success": True,
+        "message": f"テキストをコレクション '{collection_name}' に追加しました",
+        "document": {
+            "chunks_created": len(chunks),
+            "total_characters": doc_summary["total_characters"],
+            "average_chunk_size": doc_summary["average_chunk_size"]
+        },
+        "knowledge_base": {
+            "total_documents": stats["document_count"],
+            "collection_name": stats["collection_name"]
+        }
+    })
 
 
 # === コレクション管理エンドポイント ===
 
 @router.post("/api/knowledge-base/collections/temp")
+@handle_route_errors
 async def create_temp_collection(request: CreateCollectionRequest):
     """
     一時コレクションを作成
@@ -300,42 +279,36 @@ async def create_temp_collection(request: CreateCollectionRequest):
     Returns:
         作成されたコレクション情報
     """
-    try:
-        manager = get_collection_manager()
+    manager = get_collection_manager()
 
-        # コレクション名の決定
-        if request.name:
-            collection_name = request.name
-        else:
-            collection_name = manager.generate_temp_collection_name(request.prefix)
+    # コレクション名の決定
+    if request.name:
+        collection_name = request.name
+    else:
+        collection_name = manager.generate_temp_collection_name(request.prefix)
 
-        # コレクション作成
-        manager.create_collection(
-            name=collection_name,
-            collection_type="temp",
-            ttl_hours=request.ttl_hours,
-            description=request.description
-        )
+    # コレクション作成
+    manager.create_collection(
+        name=collection_name,
+        collection_type="temp",
+        ttl_hours=request.ttl_hours,
+        description=request.description
+    )
 
-        # メタデータ取得
-        metadata = manager.get_metadata(collection_name)
+    # メタデータ取得
+    metadata = manager.get_metadata(collection_name)
 
-        logger.info(f"Temp collection created: {collection_name}")
+    logger.info(f"Temp collection created: {collection_name}")
 
-        return JSONResponse(content={
-            "success": True,
-            "message": f"一時コレクション '{collection_name}' を作成しました",
-            "collection": metadata.model_dump(mode="json") if metadata else None
-        })
-
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        logger.error(f"Error creating temp collection: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"一時コレクションの作成に失敗しました: {str(e)}")
+    return JSONResponse(content={
+        "success": True,
+        "message": f"一時コレクション '{collection_name}' を作成しました",
+        "collection": metadata.model_dump(mode="json") if metadata else None
+    })
 
 
 @router.get("/api/knowledge-base/collections")
+@handle_route_errors
 async def list_collections(
     collection_type: Optional[CollectionType] = Query(default=None),
     include_expired: bool = Query(default=False)
@@ -350,28 +323,24 @@ async def list_collections(
     Returns:
         コレクション一覧
     """
-    try:
-        manager = get_collection_manager()
-        collections = manager.list_collections(
-            collection_type=collection_type,
-            include_expired=include_expired
-        )
+    manager = get_collection_manager()
+    collections = manager.list_collections(
+        collection_type=collection_type,
+        include_expired=include_expired
+    )
 
-        # モデルを辞書に変換
-        collections_data = [col.model_dump(mode="json") for col in collections]
+    # モデルを辞書に変換
+    collections_data = [col.model_dump(mode="json") for col in collections]
 
-        return JSONResponse(content={
-            "success": True,
-            "count": len(collections_data),
-            "collections": collections_data
-        })
-
-    except Exception as e:
-        logger.error(f"Error listing collections: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"コレクション一覧の取得に失敗しました: {str(e)}")
+    return JSONResponse(content={
+        "success": True,
+        "count": len(collections_data),
+        "collections": collections_data
+    })
 
 
 @router.delete("/api/knowledge-base/collections/{name}")
+@handle_route_errors
 async def delete_collection(name: str):
     """
     コレクションを削除
@@ -385,38 +354,32 @@ async def delete_collection(name: str):
     Notes:
         - デフォルトコレクションは削除できません
     """
-    try:
-        manager = get_collection_manager()
+    manager = get_collection_manager()
 
-        # デフォルトコレクションの削除を防止
-        if name == "default":
-            raise HTTPException(
-                status_code=400,
-                detail="デフォルトコレクションは削除できません"
-            )
+    # デフォルトコレクションの削除を防止
+    if name == "default":
+        raise HTTPException(
+            status_code=400,
+            detail="デフォルトコレクションは削除できません"
+        )
 
-        success = manager.delete_collection(name)
+    success = manager.delete_collection(name)
 
-        if success:
-            logger.info(f"Collection deleted: {name}")
-            return JSONResponse(content={
-                "success": True,
-                "message": f"コレクション '{name}' を削除しました"
-            })
-        else:
-            raise HTTPException(
-                status_code=404,
-                detail=f"コレクション '{name}' が見つかりません"
-            )
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error deleting collection: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"コレクションの削除に失敗しました: {str(e)}")
+    if success:
+        logger.info(f"Collection deleted: {name}")
+        return JSONResponse(content={
+            "success": True,
+            "message": f"コレクション '{name}' を削除しました"
+        })
+    else:
+        raise HTTPException(
+            status_code=404,
+            detail=f"コレクション '{name}' が見つかりません"
+        )
 
 
 @router.post("/api/knowledge-base/collections/cleanup")
+@handle_route_errors
 async def cleanup_expired_collections():
     """
     期限切れコレクションをクリーンアップ
@@ -424,18 +387,13 @@ async def cleanup_expired_collections():
     Returns:
         削除されたコレクション数
     """
-    try:
-        manager = get_collection_manager()
-        deleted_count = manager.cleanup_expired()
+    manager = get_collection_manager()
+    deleted_count = manager.cleanup_expired()
 
-        logger.info(f"Cleanup completed: {deleted_count} collections deleted")
+    logger.info(f"Cleanup completed: {deleted_count} collections deleted")
 
-        return JSONResponse(content={
-            "success": True,
-            "message": f"{deleted_count}個の期限切れコレクションを削除しました",
-            "deleted_count": deleted_count
-        })
-
-    except Exception as e:
-        logger.error(f"Error during cleanup: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"クリーンアップに失敗しました: {str(e)}")
+    return JSONResponse(content={
+        "success": True,
+        "message": f"{deleted_count}個の期限切れコレクションを削除しました",
+        "deleted_count": deleted_count
+    })
