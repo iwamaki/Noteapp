@@ -79,6 +79,7 @@ export interface AppSettings {
 
   // 8. ファイルリスト表示設定
   categorySortMethod: 'name' | 'fileCount';
+  fileSortMethod: 'updatedAt' | 'name'; // ファイルのソート方法（更新日時順/名前順）
   showSummary: boolean; // ファイルリストに要約を表示するかどうか
 }
 
@@ -151,6 +152,7 @@ const defaultSettings: AppSettings = {
 
   // ファイルリスト表示設定
   categorySortMethod: 'fileCount',
+  fileSortMethod: 'updatedAt',
   showSummary: true,
 };
 
@@ -189,6 +191,11 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   updateSettings: async (updates: Partial<AppSettings>) => {
     try {
       const newSettings = { ...get().settings, ...updates };
+      console.log('[SettingsStore] Updating settings:', updates);
+      console.log('[SettingsStore] New settings:', {
+        categorySortMethod: newSettings.categorySortMethod,
+        fileSortMethod: newSettings.fileSortMethod
+      });
       await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(newSettings));
       set({ settings: newSettings });
     } catch (error) {

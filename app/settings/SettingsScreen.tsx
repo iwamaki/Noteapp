@@ -184,6 +184,16 @@ function SettingsScreen() {
           (value) => updateSettings({ categorySortMethod: value as 'name' | 'fileCount' })
         )}
 
+        {renderPicker(
+          'ファイルソート方法',
+          settings.fileSortMethod,
+          [
+            { label: '名前順', value: 'name' },
+            { label: '更新日順', value: 'updatedAt' },
+          ],
+          (value) => updateSettings({ fileSortMethod: value as 'updatedAt' | 'name' })
+        )}
+
         <ListItem.Container>
           {/* eslint-disable-next-line react-native/no-raw-text */}
           <ListItem.Title>ファイルリストに要約を表示</ListItem.Title>

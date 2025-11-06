@@ -453,10 +453,10 @@ function FileListScreenFlatContent() {
    * ファイルをカテゴリーでグループ化（階層構造対応）
    * categoryGroupingService を使用
    */
-  const sections = useMemo(
-    () => groupFilesByCategoryHierarchical(state.files, settings.categorySortMethod),
-    [state.files, settings.categorySortMethod]
-  );
+  const sections = useMemo(() => {
+    console.log(`[FileListScreen] Grouping files with fileSortMethod: ${settings.fileSortMethod}`);
+    return groupFilesByCategoryHierarchical(state.files, settings.categorySortMethod, settings.fileSortMethod);
+  }, [state.files, settings.categorySortMethod, settings.fileSortMethod]);
 
   /**
    * カテゴリーの展開/折りたたみ状態管理
