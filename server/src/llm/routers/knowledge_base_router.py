@@ -63,7 +63,7 @@ class CreateCollectionRequest(BaseModel):
     description: Optional[str] = None
 
 
-@router.post("/documents/upload")
+@router.post("/api/knowledge-base/documents/upload")
 async def upload_document(
     file: UploadFile = File(...),
     collection_name: str = Query(default="default"),
@@ -154,7 +154,7 @@ async def upload_document(
             Path(temp_file_path).unlink()
 
 
-@router.get("/documents/stats")
+@router.get("/api/knowledge-base/documents/stats")
 async def get_knowledge_base_stats(
     collection_name: str = Query(default="default")
 ):
@@ -188,7 +188,7 @@ async def get_knowledge_base_stats(
         raise HTTPException(status_code=500, detail=f"統計情報の取得に失敗しました: {str(e)}")
 
 
-@router.delete("/documents/clear")
+@router.delete("/api/knowledge-base/documents/clear")
 async def clear_knowledge_base(
     collection_name: str = Query(default="default")
 ):
@@ -219,7 +219,7 @@ async def clear_knowledge_base(
         raise HTTPException(status_code=500, detail=f"知識ベースのクリアに失敗しました: {str(e)}")
 
 
-@router.post("/documents/upload-text")
+@router.post("/api/knowledge-base/documents/upload-text")
 async def upload_text(
     text: str,
     collection_name: str = Query(default="default"),
@@ -295,7 +295,7 @@ async def upload_text(
 
 # === コレクション管理エンドポイント ===
 
-@router.post("/collections/temp")
+@router.post("/api/knowledge-base/collections/temp")
 async def create_temp_collection(request: CreateCollectionRequest):
     """
     一時コレクションを作成
@@ -345,7 +345,7 @@ async def create_temp_collection(request: CreateCollectionRequest):
         raise HTTPException(status_code=500, detail=f"一時コレクションの作成に失敗しました: {str(e)}")
 
 
-@router.get("/collections")
+@router.get("/api/knowledge-base/collections")
 async def list_collections(
     collection_type: Optional[CollectionType] = Query(default=None),
     include_expired: bool = Query(default=False)
@@ -381,7 +381,7 @@ async def list_collections(
         raise HTTPException(status_code=500, detail=f"コレクション一覧の取得に失敗しました: {str(e)}")
 
 
-@router.delete("/collections/{name}")
+@router.delete("/api/knowledge-base/collections/{name}")
 async def delete_collection(name: str):
     """
     コレクションを削除
@@ -426,7 +426,7 @@ async def delete_collection(name: str):
         raise HTTPException(status_code=500, detail=f"コレクションの削除に失敗しました: {str(e)}")
 
 
-@router.post("/collections/cleanup")
+@router.post("/api/knowledge-base/collections/cleanup")
 async def cleanup_expired_collections():
     """
     期限切れコレクションをクリーンアップ

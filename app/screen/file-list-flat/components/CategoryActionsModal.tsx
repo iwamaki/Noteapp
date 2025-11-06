@@ -19,6 +19,7 @@ interface CategoryActionsModalProps {
   onDelete: (categoryPath: string) => void;
   onRename: (categoryPath: string) => void;
   onExport: (categoryPath: string) => void;
+  onCreateQA: (categoryPath: string, categoryName: string) => void;
 }
 
 export const CategoryActionsModal: React.FC<CategoryActionsModalProps> = ({
@@ -30,10 +31,19 @@ export const CategoryActionsModal: React.FC<CategoryActionsModalProps> = ({
   onDelete,
   onRename,
   onExport,
+  onCreateQA,
 }) => {
   if (!categoryPath || !categoryName) return null;
 
   const actions: ActionItem[] = [
+    {
+      icon: 'bulb-outline',
+      label: 'Q&Aを作成',
+      onPress: () => {
+        onCreateQA(categoryPath, categoryName);
+        onClose();
+      },
+    },
     {
       icon: 'share-outline',
       label: 'エクスポート',

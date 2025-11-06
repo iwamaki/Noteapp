@@ -42,6 +42,7 @@ import { useFileListHeader } from './hooks/useFileListHeader';
 import { useCategoryCollapse } from './hooks/useCategoryCollapse';
 import { useFileListChatContext } from '../../features/chat/hooks/useFileListChatContext';
 import { useImportExport } from './hooks/useImportExport';
+import { useRAGSync } from './hooks/useRAGSync';
 import { groupFilesByCategoryHierarchical } from '@data/services/categoryGroupingService';
 import { CategoryOperationsService, CategoryImpact } from '@data/services/categoryOperationsService';
 import ChatService from '../../features/chat';
@@ -56,6 +57,9 @@ function FileListScreenFlatContent() {
 
   // インポート/エクスポート機能
   const { handleImport, handleExportFile, handleExportCategory, isProcessing } = useImportExport();
+
+  // RAG同期機能
+  const { syncCategoryToRAG, isSyncing } = useRAGSync();
 
   // アクションモーダルの状態
   const [selectedFileForActions, setSelectedFileForActions] = useState<FileFlat | null>(null);
@@ -417,6 +421,14 @@ function FileListScreenFlatContent() {
   }, [handleExportCategory]);
 
   /**
+   * Q&A作成ハンドラ（RAG同期）
+   */
+  const handleCreateQA = useCallback((categoryPath: string, categoryName: string) => {
+    logger.info('file', `Creating Q&A for category: ${categoryPath}`);
+    syncCategoryToRAG(categoryPath, categoryName);
+  }, [syncCategoryToRAG]);
+
+  /**
    * 作成実行
    */
   const handleCreate = useCallback(
@@ -636,7 +648,7 @@ function FileListScreenFlatContent() {
   return (
     <MainContainer
       backgroundColor={colors.background}
-      isLoading={(state.loading && state.files.length === 0) || isProcessing}
+      isLoading={(state.loading && state.files.length === 0) || isProcessing || isSyncing}
     >
       {state.files.length === 0 && !state.loading ? (
         <View style={styles.centered}>
@@ -773,6 +785,7 @@ function FileListScreenFlatContent() {
         onDelete={handleDeleteCategory}
         onRename={handleOpenCategoryRenameModal}
         onExport={handleExportCategoryWrapper}
+        onCreateQA={handleCreateQA}
       />
 
       {/* カテゴリー名変更モーダル */}

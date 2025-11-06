@@ -71,7 +71,7 @@ async def root():
             "tools": "/api/tools",
             "health": "/api/health",
             "websocket": "/ws/{client_id}",
-            "knowledge_base": "/documents"
+            "knowledge_base": "/api/knowledge-base"
         }
     }
 
