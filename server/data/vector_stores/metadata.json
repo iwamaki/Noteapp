@@ -1,0 +1,60 @@
+{
+  "collections": {
+    "default": {
+      "name": "default",
+      "type": "persistent",
+      "created_at": "2025-11-05T23:37:34.770704Z",
+      "expires_at": null,
+      "description": "Default knowledge base",
+      "document_count": 16
+    },
+    "category_01_調べ物": {
+      "name": "category_01_調べ物",
+      "type": "persistent",
+      "created_at": "2025-11-06T04:43:46.626779Z",
+      "expires_at": null,
+      "description": "Auto-created collection for category_01_調べ物",
+      "document_count": 0
+    },
+    "category_02_開発": {
+      "name": "category_02_開発",
+      "type": "persistent",
+      "created_at": "2025-11-06T04:45:33.746844Z",
+      "expires_at": null,
+      "description": "Auto-created collection for category_02_開発",
+      "document_count": 0
+    },
+    "category_日本国憲法": {
+      "name": "category_日本国憲法",
+      "type": "persistent",
+      "created_at": "2025-11-06T04:54:56.179999Z",
+      "expires_at": null,
+      "description": "Auto-created collection for category_日本国憲法",
+      "document_count": 0
+    },
+    "category_未分類": {
+      "name": "category_未分類",
+      "type": "persistent",
+      "created_at": "2025-11-06T05:06:04.450986Z",
+      "expires_at": null,
+      "description": "Auto-created collection for category_未分類",
+      "document_count": 0
+    },
+    "category_02_開発_LLM仕様": {
+      "name": "category_02_開発_LLM仕様",
+      "type": "persistent",
+      "created_at": "2025-11-06T05:06:44.651604Z",
+      "expires_at": null,
+      "description": "Auto-created collection for category_02_開発_LLM仕様",
+      "document_count": 0
+    },
+    "category_01_調べ物あ": {
+      "name": "category_01_調べ物あ",
+      "type": "persistent",
+      "created_at": "2025-11-06T05:42:07.396644Z",
+      "expires_at": null,
+      "description": "Auto-created collection for category_01_調べ物あ",
+      "document_count": 0
+    }
+  }
+}

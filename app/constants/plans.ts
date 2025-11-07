@@ -103,7 +103,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
     name: 'pro',
     displayName: 'Pro',
     description: 'プロフェッショナル向けの高機能プラン',
-    price: 980,
+    price: 500,
     currency: 'JPY',
     billingPeriod: 'month',
     limits: {
@@ -128,9 +128,9 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
   enterprise: {
     id: 'enterprise',
     name: 'enterprise',
-    displayName: 'Enterprise',
-    description: 'チーム・企業向けの無制限プラン',
-    price: 3000,
+    displayName: 'Premium',
+    description: 'すべての機能が使える最上位プラン',
+    price: 1000,
     currency: 'JPY',
     billingPeriod: 'month',
     limits: {
