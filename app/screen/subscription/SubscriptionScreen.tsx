@@ -36,7 +36,7 @@ import {
   SUBSCRIPTION_PLANS,
   SubscriptionTier,
 } from '../../constants/plans';
-import type { Purchase } from 'react-native-iap';
+import type { Purchase, Product } from 'react-native-iap';
 
 /**
  * サブスクリプション画面
@@ -49,6 +49,7 @@ export const SubscriptionScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
+  const [availableProducts, setAvailableProducts] = useState<Product[]>([]);
 
   // 初期化: IAPの接続と利用可能な商品の取得
   useEffect(() => {
@@ -73,6 +74,9 @@ export const SubscriptionScreen: React.FC = () => {
         console.warn('[SubscriptionScreen] No products found');
         Alert.alert('警告', 'サブスクリプション商品が見つかりませんでした。Play Consoleの設定を確認してください。');
       }
+
+      // 商品情報を保存（offerToken取得のため）
+      setAvailableProducts(products);
     } catch (error) {
       console.error('[SubscriptionScreen] Failed to initialize:', error);
       Alert.alert('エラー', 'サブスクリプション情報の取得に失敗しました。');
@@ -121,11 +125,21 @@ export const SubscriptionScreen: React.FC = () => {
       return;
     }
 
+    // 商品情報からofferTokenを取得（Android用）
+    const product = availableProducts.find((p) => p.id === productId);
+    if (!product) {
+      Alert.alert('エラー', '商品情報が見つかりませんでした。画面を再読み込みしてください。');
+      return;
+    }
+
+    console.log('[SubscriptionScreen] Found product:', product);
+
     setIsPurchasing(true);
 
     try {
       await purchaseSubscription(
         productId,
+        product,
         (purchase: Purchase) => {
           // 購入成功
           handlePurchaseSuccess(purchase);

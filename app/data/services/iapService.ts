@@ -115,10 +115,12 @@ export async function getAvailableSubscriptions(): Promise<Product[]> {
  */
 export async function purchaseSubscription(
   productId: string,
+  product: Product,
   onSuccess: (purchase: Purchase) => void,
   onError: (error: PurchaseError) => void,
 ): Promise<void> {
   console.log('[IAP] purchaseSubscription called with productId:', productId);
+  console.log('[IAP] Product details:', product);
 
   // 購入更新リスナーを設定
   purchaseUpdateSubscription = purchaseUpdatedListener((purchase: Purchase) => {
@@ -146,14 +148,24 @@ export async function purchaseSubscription(
   });
 
   try {
+    // Androidの場合、offerTokenを取得
+    const productAny = product as any;
+    const offerToken = productAny.subscriptionOfferDetailsAndroid?.[0]?.offerToken;
+
+    console.log('[IAP] Extracted offerToken:', offerToken);
+
     // サブスクリプション購入リクエスト
-    const requestParams = {
-      request: {
-        ios: { sku: productId },
-        android: { skus: [productId] } as any, // Android は skus を配列で渡す必要がある
-      },
-      type: 'subs',
-    } as any;
+    const requestParams: any = {
+      sku: productId,
+    };
+
+    // Androidの場合、subscriptionOffersを追加
+    if (Platform.OS === 'android' && offerToken) {
+      requestParams.subscriptionOffers = [{
+        sku: productId,
+        offerToken: offerToken,
+      }];
+    }
 
     console.log('[IAP] Requesting purchase with params:', JSON.stringify(requestParams));
 
