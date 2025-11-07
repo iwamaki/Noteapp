@@ -164,6 +164,7 @@ export async function purchaseSubscription(
           skus: [productId],
         },
       },
+      type: 'subs', // サブスクリプション指定
     };
 
     // Androidの場合、subscriptionOffersを追加
