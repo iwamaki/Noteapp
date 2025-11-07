@@ -122,6 +122,18 @@ export async function purchaseSubscription(
   console.log('[IAP] purchaseSubscription called with productId:', productId);
   console.log('[IAP] Product details:', product);
 
+  // 既存のリスナーを解除（重複登録を防ぐ）
+  if (purchaseUpdateSubscription) {
+    console.log('[IAP] Removing existing purchase update listener');
+    purchaseUpdateSubscription.remove();
+    purchaseUpdateSubscription = null;
+  }
+  if (purchaseErrorSubscription) {
+    console.log('[IAP] Removing existing purchase error listener');
+    purchaseErrorSubscription.remove();
+    purchaseErrorSubscription = null;
+  }
+
   // 購入更新リスナーを設定
   purchaseUpdateSubscription = purchaseUpdatedListener((purchase: Purchase) => {
     console.log('[IAP] Purchase updated:', purchase);

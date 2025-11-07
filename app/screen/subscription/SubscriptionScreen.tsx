@@ -43,7 +43,7 @@ import type { Purchase, Product } from 'react-native-iap';
  */
 export const SubscriptionScreen: React.FC = () => {
   const { colors, typography } = useTheme();
-  const { settings, updateSettings } = useSettingsStore();
+  const { updateSettings } = useSettingsStore();
   const { tier, status, expiresAt } = useSubscription();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -87,30 +87,8 @@ export const SubscriptionScreen: React.FC = () => {
 
   // 購入処理
   const handlePurchase = async (targetTier: SubscriptionTier) => {
+    // Freeプランは購入対象外（現在のプランがFreeの場合のみ表示される）
     if (targetTier === 'free') {
-      // Freeプランへのダウングレード確認
-      Alert.alert(
-        'プランのダウングレード',
-        'Freeプランに変更しますか？現在のサブスクリプションをキャンセルする必要があります。',
-        [
-          { text: 'キャンセル', style: 'cancel' },
-          {
-            text: 'ダウングレード',
-            onPress: () => {
-              // TODO: サブスクリプションキャンセル処理（Phase 2で実装）
-              updateSettings({
-                subscription: {
-                  ...settings.subscription,
-                  tier: 'free',
-                  status: 'none',
-                  expiresAt: undefined,
-                },
-              });
-              Alert.alert('完了', 'Freeプランに変更しました。');
-            },
-          },
-        ],
-      );
       return;
     }
 
@@ -329,9 +307,22 @@ export const SubscriptionScreen: React.FC = () => {
         </Text>
         <Text style={[styles.noteText, typography.caption, { color: colors.textSecondary }]}>
           • サブスクリプションは自動更新されます{'\n'}
-          • いつでもキャンセル可能です{'\n'}
           • キャンセル後も期限まで利用できます{'\n'}
           • 返金はApple/Googleのポリシーに準じます
+        </Text>
+
+        <Text style={[styles.noteTitleSecondary, typography.caption, { color: colors.textSecondary }]}>
+          キャンセル・変更方法:
+        </Text>
+        <Text style={[styles.noteText, typography.caption, { color: colors.textSecondary }]}>
+          サブスクリプションのキャンセルやプラン変更は、{'\n'}
+          Google Play ストアから行ってください。{'\n'}
+          {'\n'}
+          手順:{'\n'}
+          1. Google Play ストアアプリを開く{'\n'}
+          2. プロフィール {'>'} お支払いと定期購入 {'>'} 定期購入{'\n'}
+          3. 「NoteApp」を選択{'\n'}
+          4. キャンセルまたは変更を選択
         </Text>
       </View>
     </ScrollView>
@@ -395,6 +386,11 @@ const styles = StyleSheet.create({
   noteTitle: {
     fontWeight: '600',
     marginBottom: 8,
+  },
+  noteTitleSecondary: {
+    fontWeight: '600',
+    marginBottom: 8,
+    marginTop: 16,
   },
   noteText: {
     lineHeight: 20,
