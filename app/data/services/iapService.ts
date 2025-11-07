@@ -154,14 +154,21 @@ export async function purchaseSubscription(
 
     console.log('[IAP] Extracted offerToken:', offerToken);
 
-    // サブスクリプション購入リクエスト
+    // v14 Modern API: request キーの中に platform-specific な設定を入れる
     const requestParams: any = {
-      sku: productId,
+      request: {
+        ios: {
+          sku: productId,
+        },
+        android: {
+          skus: [productId],
+        },
+      },
     };
 
     // Androidの場合、subscriptionOffersを追加
     if (Platform.OS === 'android' && offerToken) {
-      requestParams.subscriptionOffers = [{
+      requestParams.request.android.subscriptionOffers = [{
         sku: productId,
         offerToken: offerToken,
       }];
@@ -169,6 +176,7 @@ export async function purchaseSubscription(
 
     console.log('[IAP] Requesting purchase with params:', JSON.stringify(requestParams));
 
+    // v14では requestPurchase が統一API
     await requestPurchase(requestParams);
   } catch (error) {
     console.error('[IAP] Failed to request subscription:', error);
