@@ -63,7 +63,16 @@ export const SubscriptionScreen: React.FC = () => {
     try {
       setIsLoading(true);
       await initializeIAP();
-      // Note: IAP初期化のみ実行。商品情報は必要に応じて後で取得可能
+
+      // 商品情報を取得
+      const { getAvailableSubscriptions } = await import('../../data/services/iapService');
+      const products = await getAvailableSubscriptions();
+      console.log('[SubscriptionScreen] Available products:', products);
+
+      if (products.length === 0) {
+        console.warn('[SubscriptionScreen] No products found');
+        Alert.alert('警告', 'サブスクリプション商品が見つかりませんでした。Play Consoleの設定を確認してください。');
+      }
     } catch (error) {
       console.error('[SubscriptionScreen] Failed to initialize:', error);
       Alert.alert('エラー', 'サブスクリプション情報の取得に失敗しました。');
@@ -103,6 +112,10 @@ export const SubscriptionScreen: React.FC = () => {
 
     // プロダクトIDを取得
     const productId = getProductIdForTier(targetTier);
+    console.log('[SubscriptionScreen] Target tier:', targetTier);
+    console.log('[SubscriptionScreen] Product ID:', productId);
+    console.log('[SubscriptionScreen] All PRODUCT_IDS:', PRODUCT_IDS);
+
     if (!productId) {
       Alert.alert('エラー', 'このプランは現在利用できません。');
       return;

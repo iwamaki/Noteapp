@@ -118,6 +118,8 @@ export async function purchaseSubscription(
   onSuccess: (purchase: Purchase) => void,
   onError: (error: PurchaseError) => void,
 ): Promise<void> {
+  console.log('[IAP] purchaseSubscription called with productId:', productId);
+
   // 購入更新リスナーを設定
   purchaseUpdateSubscription = purchaseUpdatedListener((purchase: Purchase) => {
     console.log('[IAP] Purchase updated:', purchase);
@@ -145,13 +147,17 @@ export async function purchaseSubscription(
 
   try {
     // サブスクリプション購入リクエスト
-    await requestPurchase({
+    const requestParams = {
       request: {
         ios: { sku: productId },
-        android: { sku: productId } as any, // Android の型定義が不完全なので any でキャスト
+        android: { skus: [productId] } as any, // Android は skus を配列で渡す必要がある
       },
       type: 'subs',
-    } as any); // v14 の型定義が複雑なので any でキャスト
+    } as any;
+
+    console.log('[IAP] Requesting purchase with params:', JSON.stringify(requestParams));
+
+    await requestPurchase(requestParams);
   } catch (error) {
     console.error('[IAP] Failed to request subscription:', error);
     onError(error as PurchaseError);
