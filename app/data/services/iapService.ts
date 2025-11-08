@@ -155,7 +155,17 @@ export async function purchaseSubscription(
 
   // 購入エラーリスナーを設定
   purchaseErrorSubscription = purchaseErrorListener((error: PurchaseError) => {
-    console.error('[IAP] Purchase error:', error);
+    // ユーザーキャンセルは正常な動作なのでログレベルを分ける
+    const errorCode = String(error.code).toLowerCase();
+    if (
+      errorCode === 'e_user_cancelled' ||
+      errorCode === 'user_cancelled' ||
+      errorCode === 'user-cancelled'
+    ) {
+      console.log('[IAP] User cancelled purchase:', error);
+    } else {
+      console.error('[IAP] Purchase error:', error);
+    }
     onError(error);
   });
 

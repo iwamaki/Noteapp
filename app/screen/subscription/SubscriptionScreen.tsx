@@ -154,15 +154,19 @@ export const SubscriptionScreen: React.FC = () => {
           handlePurchaseSuccess(purchase);
         },
         (error) => {
-          // 購入エラー
-          console.error('[SubscriptionScreen] Purchase error:', error);
-
           // ユーザーがキャンセルした場合は何もしない
-          const errorCode = String(error.code);
-          if (errorCode === 'E_USER_CANCELLED' || errorCode === 'USER_CANCELLED') {
+          const errorCode = String(error.code).toLowerCase();
+          if (
+            errorCode === 'e_user_cancelled' ||
+            errorCode === 'user_cancelled' ||
+            errorCode === 'user-cancelled'
+          ) {
+            console.log('[SubscriptionScreen] User cancelled purchase');
             return;
           }
 
+          // 本当のエラーの場合のみログとアラート
+          console.error('[SubscriptionScreen] Purchase error:', error);
           Alert.alert('購入エラー', '購入処理に失敗しました。');
         },
       );
