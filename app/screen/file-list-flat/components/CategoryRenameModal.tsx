@@ -11,6 +11,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { InputFormModal } from '../../../components/InputFormModal';
 import { CategoryImpact } from '@data/services/categoryOperationsService';
+import { FILE_LIST_FLAT_CONFIG } from '../config';
 
 interface CategoryRenameModalProps {
   visible: boolean;
@@ -43,20 +44,20 @@ export const CategoryRenameModal: React.FC<CategoryRenameModalProps> = ({
   const styles = StyleSheet.create({
     impactInfo: {
       backgroundColor: colors.background,
-      borderRadius: 8,
+      borderRadius: FILE_LIST_FLAT_CONFIG.borderRadius.infoBox,
       padding: spacing.sm,
       marginTop: spacing.sm,
     },
     impactText: {
       ...typography.caption,
       color: colors.textSecondary,
-      fontSize: 12,
+      fontSize: FILE_LIST_FLAT_CONFIG.typography.caption,
       lineHeight: 18,
     },
     impactTitle: {
       ...typography.body,
       color: colors.text,
-      fontSize: 13,
+      fontSize: FILE_LIST_FLAT_CONFIG.typography.body,
       fontWeight: '600',
       marginBottom: spacing.xs,
     },

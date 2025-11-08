@@ -46,6 +46,7 @@ import { useRAGSync } from './hooks/useRAGSync';
 import { groupFilesByCategoryHierarchical } from '@data/services/categoryGroupingService';
 import { CategoryOperationsService, CategoryImpact } from '@data/services/categoryOperationsService';
 import ChatService from '../../features/chat';
+import { FILE_LIST_FLAT_CONFIG } from './config';
 
 function FileListScreenFlatContent() {
   const { colors, spacing } = useTheme();
@@ -637,7 +638,7 @@ function FileListScreenFlatContent() {
 
   const messageTextStyle = useMemo(
     () => ({
-      fontSize: 16,
+      fontSize: FILE_LIST_FLAT_CONFIG.typography.message,
       color: colors.textSecondary,
       textAlign: 'center' as const,
       paddingHorizontal: spacing.xl,
@@ -679,14 +680,14 @@ function FileListScreenFlatContent() {
       {/* eslint-disable react-native/no-inline-styles */}
       {state.isMoveMode && (
         <View style={[styles.moveBar, { backgroundColor: colors.background }]}>
-          <Text style={{ fontSize: 14, color: colors.text }}>
+          <Text style={{ fontSize: FILE_LIST_FLAT_CONFIG.typography.heading, color: colors.text }}>
             移動先をタップしてください
           </Text>
           <TouchableOpacity
             style={styles.cancelButton}
             onPress={handleCancelMove}
           >
-            <Text style={{ fontSize: 14, color: colors.primary, fontWeight: '600' }}>
+            <Text style={{ fontSize: FILE_LIST_FLAT_CONFIG.typography.heading, color: colors.primary, fontWeight: '600' }}>
               キャンセル
             </Text>
           </TouchableOpacity>
@@ -856,7 +857,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  /* eslint-disable react-native/no-color-literals */
   moveBar: {
     position: 'absolute',
     bottom: 0,
@@ -865,17 +865,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: FILE_LIST_FLAT_CONFIG.spacing.moveBar.horizontal,
+    paddingVertical: FILE_LIST_FLAT_CONFIG.spacing.moveBar.vertical,
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 5,
+    borderTopColor: FILE_LIST_FLAT_CONFIG.appearance.borderColor,
+    shadowColor: FILE_LIST_FLAT_CONFIG.appearance.shadowColor,
+    shadowOffset: FILE_LIST_FLAT_CONFIG.interaction.shadowOffset,
+    shadowOpacity: FILE_LIST_FLAT_CONFIG.appearance.transparency.shadow,
+    shadowRadius: FILE_LIST_FLAT_CONFIG.interaction.shadowRadius,
+    elevation: FILE_LIST_FLAT_CONFIG.interaction.elevation,
   },
-  /* eslint-enable react-native/no-color-literals */
   cancelButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,

@@ -13,6 +13,7 @@ import { useTheme } from '../../../design/theme/ThemeContext';
 import { FileFlat } from '@data/core/typesFlat';
 import { ListItem } from '../../../components/ListItem';
 import { useSettingsStore } from '../../../settings/settingsStore';
+import { FILE_LIST_FLAT_CONFIG } from '../config';
 
 interface FlatListItemProps {
   file: FileFlat;
@@ -43,7 +44,7 @@ export const FlatListItem: React.FC<FlatListItemProps> = ({
   const { settings } = useSettingsStore();
 
   // 階層インデント計算（親カテゴリーの子要素として、同じ階層の子カテゴリーと同じ位置）
-  const itemPaddingLeft = (level + 1) * 24;
+  const itemPaddingLeft = (level + 1) * FILE_LIST_FLAT_CONFIG.spacing.indentPerLevel;
 
   // アイコンサイズをlargeに設定
   const iconSize = iconSizes.large;
@@ -83,7 +84,7 @@ export const FlatListItem: React.FC<FlatListItemProps> = ({
         <View style={{ marginTop: spacing.xs, paddingLeft: spacing.md }}>
           <Text
             style={[typography.caption, { color: colors.textSecondary }]}
-            numberOfLines={2}
+            numberOfLines={FILE_LIST_FLAT_CONFIG.constraints.contentPreviewMaxLines}
           >
             {file.content}
           </Text>
@@ -99,7 +100,7 @@ export const FlatListItem: React.FC<FlatListItemProps> = ({
               style={[
                 styles.badge,
                 {
-                  backgroundColor: colors.primary + '70', // 70%の透明度
+                  backgroundColor: colors.primary + FILE_LIST_FLAT_CONFIG.appearance.transparency.badgeAlpha,
                   marginRight: spacing.xs,
                 },
               ]}
@@ -131,20 +132,20 @@ const styles = StyleSheet.create({
   metadataContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginTop: 4,
+    marginTop: FILE_LIST_FLAT_CONFIG.spacing.metadataContainer.marginTop,
   },
   badge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 4,
-    marginTop: 2,
+    paddingHorizontal: FILE_LIST_FLAT_CONFIG.spacing.badge.paddingHorizontal,
+    paddingVertical: FILE_LIST_FLAT_CONFIG.spacing.badge.paddingVertical,
+    borderRadius: FILE_LIST_FLAT_CONFIG.borderRadius.badge,
+    marginTop: FILE_LIST_FLAT_CONFIG.spacing.badge.marginTop,
   },
   badgeText: {
     fontWeight: '500',
   },
   /* eslint-disable react-native/no-color-literals */
   tagBadgeText: {
-    fontSize: 12,
+    fontSize: FILE_LIST_FLAT_CONFIG.typography.caption,
     color: '#FFFFFF',
   },
   /* eslint-enable react-native/no-color-literals */
