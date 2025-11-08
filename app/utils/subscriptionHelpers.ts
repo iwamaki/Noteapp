@@ -4,6 +4,7 @@
  * サブスクリプション機能に関するヘルパー関数とReactフック
  */
 
+import { useEffect } from 'react';
 import { useSettingsStore } from '../settings/settingsStore';
 import {
   SubscriptionTier,
@@ -18,10 +19,43 @@ import type { PlanLimits } from '../constants/plans';
 
 /**
  * 現在のサブスクリプション情報を取得するフック
+ * 期限切れの場合、自動的にFreeプランにダウングレード
  */
 export function useSubscription() {
-  const { settings } = useSettingsStore();
+  const { settings, updateSettings } = useSettingsStore();
   const { subscription, usage } = settings;
+
+  // 期限チェックと自動ダウングレード
+  useEffect(() => {
+    // 期限が設定されている場合のみチェック
+    if (!subscription.expiresAt) {
+      return;
+    }
+
+    // 既にexpiredの場合はスキップ
+    if (subscription.status === 'expired') {
+      return;
+    }
+
+    // 期限切れかチェック
+    const now = new Date();
+    const expiry = new Date(subscription.expiresAt);
+    const isExpired = now >= expiry;
+
+    if (isExpired) {
+      console.log('[Subscription] Subscription expired, downgrading to free plan');
+      // 自動的にFreeプランにダウングレード
+      updateSettings({
+        subscription: {
+          tier: 'free',
+          status: 'expired',
+          expiresAt: subscription.expiresAt, // 期限は保持（履歴として）
+          trialStartedAt: undefined,
+          autoRenew: false,
+        },
+      });
+    }
+  }, [subscription.expiresAt, subscription.status, updateSettings]);
 
   return {
     tier: subscription.tier,

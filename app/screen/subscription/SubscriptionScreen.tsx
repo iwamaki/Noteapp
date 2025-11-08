@@ -87,6 +87,27 @@ export const SubscriptionScreen: React.FC = () => {
 
       // 商品情報を保存（offerToken取得のため）
       setAvailableProducts(products);
+
+      // 現在のプランが有料プランの場合、実際の購入状態を確認
+      if (tier === 'pro' || tier === 'enterprise') {
+        console.log('[SubscriptionScreen] Verifying subscription status for tier:', tier);
+        const purchases = await restorePurchases();
+        console.log('[SubscriptionScreen] Active purchases:', purchases);
+
+        // 購入情報がない場合、解約済みとしてダウングレード
+        if (purchases.length === 0) {
+          console.log('[SubscriptionScreen] No active purchases found, downgrading to free');
+          updateSettings({
+            subscription: {
+              tier: 'free',
+              status: 'expired',
+              expiresAt: expiresAt, // 期限は保持（履歴として）
+              trialStartedAt: undefined,
+              autoRenew: false,
+            },
+          });
+        }
+      }
     } catch (error) {
       console.error('[SubscriptionScreen] Failed to initialize:', error);
       Alert.alert('エラー', 'サブスクリプション情報の取得に失敗しました。');
