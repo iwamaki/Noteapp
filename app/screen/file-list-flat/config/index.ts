@@ -163,6 +163,14 @@ export const FILE_LIST_FLAT_CONFIG = {
     /** ファイル名用の置換正規表現 */
     filenameSafeReplacement: /[:.]/g,
   },
+
+  // ========================================
+  // 機能フラグ（開発時にON/OFF切り替え）
+  // ========================================
+  features: {
+    /** RAG機能（Q&A作成など）の有効/無効 */
+    ragEnabled: false, // TODO: RAGが安定したらtrueに変更
+  },
 } as const;
 
 // 型エクスポート（型安全性のため）
