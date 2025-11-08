@@ -94,8 +94,16 @@ export interface AppSettings {
   // 10. 使用量情報（サーバーから同期）
   usage: {
     // 💰 コストに直結（最重要）
-    monthlyInputTokens: number;  // 今月の入力トークン数
-    monthlyOutputTokens: number; // 今月の出力トークン数
+    monthlyInputTokens: number;  // 今月の入力トークン数（全体）
+    monthlyOutputTokens: number; // 今月の出力トークン数（全体）
+
+    // モデル別のトークン使用量（コスト計算用）
+    monthlyTokensByModel: {
+      [modelId: string]: {
+        inputTokens: number;
+        outputTokens: number;
+      };
+    };
 
     // 📊 補助的な指標
     monthlyLLMRequests: number;  // 今月のLLMリクエスト数（スパム防止、UX表示用）
@@ -194,6 +202,7 @@ const defaultSettings: AppSettings = {
   usage: {
     monthlyInputTokens: 0,
     monthlyOutputTokens: 0,
+    monthlyTokensByModel: {},
     monthlyLLMRequests: 0,
     currentFileCount: 0,
     storageUsedMB: 0,
@@ -210,7 +219,7 @@ interface SettingsStore {
   resetSettings: () => Promise<void>;
 
   // 使用量トラッキング関数
-  trackTokenUsage: (inputTokens: number, outputTokens: number) => Promise<void>;
+  trackTokenUsage: (inputTokens: number, outputTokens: number, modelId: string) => Promise<void>;
   incrementLLMRequestCount: () => Promise<void>;
   incrementFileCount: () => Promise<void>;
   decrementFileCount: () => Promise<void>;
@@ -230,9 +239,10 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       if (stored) {
         const parsedSettings = JSON.parse(stored);
 
-
-
-
+        // マイグレーション: monthlyTokensByModelが存在しない場合は追加
+        if (parsedSettings.usage && !parsedSettings.usage.monthlyTokensByModel) {
+          parsedSettings.usage.monthlyTokensByModel = {};
+        }
 
         set({ settings: { ...defaultSettings, ...parsedSettings } });
       }
@@ -274,24 +284,41 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   // =========================
 
   /**
-   * トークン使用量を記録
+   * トークン使用量を記録（モデル別にも記録）
    * @param inputTokens 入力トークン数
    * @param outputTokens 出力トークン数
+   * @param modelId モデルID（例: "gemini-2.0-flash-exp", "gemini-1.5-pro"）
    */
-  trackTokenUsage: async (inputTokens: number, outputTokens: number) => {
+  trackTokenUsage: async (inputTokens: number, outputTokens: number, modelId: string) => {
     const { settings } = get();
+
+    // モデル別の使用量を更新
+    const currentModelUsage = settings.usage.monthlyTokensByModel[modelId] || {
+      inputTokens: 0,
+      outputTokens: 0,
+    };
+
+    const updatedTokensByModel = {
+      ...settings.usage.monthlyTokensByModel,
+      [modelId]: {
+        inputTokens: currentModelUsage.inputTokens + inputTokens,
+        outputTokens: currentModelUsage.outputTokens + outputTokens,
+      },
+    };
+
     const newSettings = {
       ...settings,
       usage: {
         ...settings.usage,
         monthlyInputTokens: settings.usage.monthlyInputTokens + inputTokens,
         monthlyOutputTokens: settings.usage.monthlyOutputTokens + outputTokens,
+        monthlyTokensByModel: updatedTokensByModel,
         lastSyncedAt: new Date().toISOString(),
       },
     };
     await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(newSettings));
     set({ settings: newSettings });
-    console.log(`[UsageTracking] Tokens recorded: input=${inputTokens}, output=${outputTokens}`);
+    console.log(`[UsageTracking] Tokens recorded for model ${modelId}: input=${inputTokens}, output=${outputTokens}`);
   },
 
   /**
@@ -372,6 +399,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
         ...settings.usage,
         monthlyInputTokens: 0,
         monthlyOutputTokens: 0,
+        monthlyTokensByModel: {}, // モデル別使用量もリセット
         monthlyLLMRequests: 0,
         lastResetMonth: currentMonth,
       },

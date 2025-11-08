@@ -44,7 +44,7 @@ import type { Purchase, Product } from 'react-native-iap';
 export const SubscriptionScreen: React.FC = () => {
   const { colors, typography } = useTheme();
   const { updateSettings } = useSettingsStore();
-  const { tier, status, expiresAt } = useSubscription();
+  const { tier, expiresAt } = useSubscription();
 
   const [isLoading, setIsLoading] = useState(true);
   const [isPurchasing, setIsPurchasing] = useState(false);

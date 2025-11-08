@@ -10,10 +10,12 @@
  * プラン制限値の型定義
  */
 export interface PlanLimits {
-  /** 最大ファイル数（-1 = 無制限） */
-  maxFiles: number;
+  /** 月間最大トークン数（入力+出力の合計）（-1 = 無制限） */
+  maxMonthlyTokens: number;
   /** 月間最大LLMリクエスト数（-1 = 無制限） */
   maxLLMRequests: number;
+  /** 最大ファイル数（-1 = 無制限） */
+  maxFiles: number;
   /** 最大ストレージ容量（MB）（-1 = 無制限） */
   maxStorageMB: number;
   /** 1ファイルあたりの最大サイズ（MB） */
@@ -80,8 +82,9 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
     currency: 'JPY',
     billingPeriod: 'month',
     limits: {
-      maxFiles: 50,
+      maxMonthlyTokens: 100000,  // 10万トークン/月（入力+出力）
       maxLLMRequests: 100,
+      maxFiles: 50,
       maxStorageMB: 100,
       maxFileSizeMB: 10,
     },
@@ -107,8 +110,9 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
     currency: 'JPY',
     billingPeriod: 'month',
     limits: {
-      maxFiles: 1000,
+      maxMonthlyTokens: 5000000,  // 500万トークン/月（入力+出力）
       maxLLMRequests: 1000,
+      maxFiles: 1000,
       maxStorageMB: 5000,
       maxFileSizeMB: 50,
     },
@@ -134,8 +138,9 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
     currency: 'JPY',
     billingPeriod: 'month',
     limits: {
-      maxFiles: -1,
+      maxMonthlyTokens: -1,  // 無制限
       maxLLMRequests: -1,
+      maxFiles: -1,
       maxStorageMB: -1,
       maxFileSizeMB: 100,
     },

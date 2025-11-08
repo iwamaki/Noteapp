@@ -107,6 +107,9 @@ export function useUsageLimit(limit: keyof PlanLimits): {
 
   let current = 0;
   switch (limit) {
+    case 'maxMonthlyTokens':
+      current = usage.monthlyInputTokens + usage.monthlyOutputTokens;
+      break;
     case 'maxFiles':
       current = usage.currentFileCount;
       break;

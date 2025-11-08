@@ -280,12 +280,12 @@ class ChatService {
       if (response.tokenUsage) {
         this.tokenService.updateTokenUsage(response.tokenUsage);
 
-        // 実際に使用したトークン数を記録（課金対象）
-        if (response.tokenUsage.inputTokens && response.tokenUsage.outputTokens) {
+        // 実際に使用したトークン数を記録（課金対象・モデル別）
+        if (response.tokenUsage.inputTokens && response.tokenUsage.outputTokens && response.model) {
           const { trackTokenUsage, incrementLLMRequestCount } = await import('../../settings/settingsStore').then(m => m.useSettingsStore.getState());
-          await trackTokenUsage(response.tokenUsage.inputTokens, response.tokenUsage.outputTokens);
+          await trackTokenUsage(response.tokenUsage.inputTokens, response.tokenUsage.outputTokens, response.model);
           await incrementLLMRequestCount();
-          logger.info('chatService', `Token usage tracked: input=${response.tokenUsage.inputTokens}, output=${response.tokenUsage.outputTokens}`);
+          logger.info('chatService', `Token usage tracked for model ${response.model}: input=${response.tokenUsage.inputTokens}, output=${response.tokenUsage.outputTokens}`);
         }
       }
 

@@ -33,7 +33,6 @@ interface PlanCardProps {
  */
 export const PlanCard: React.FC<PlanCardProps> = ({
   plan,
-  isCurrentPlan,
   isRecommended = false,
 }) => {
   const { colors, typography } = useTheme();

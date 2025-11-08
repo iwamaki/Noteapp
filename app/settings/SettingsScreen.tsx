@@ -23,7 +23,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/types';
 import { Ionicons } from '@expo/vector-icons';
-import { useSubscription } from '../utils/subscriptionHelpers';
+import { useSubscription, useUsageLimit, getUsageColor } from '../utils/subscriptionHelpers';
 import { SUBSCRIPTION_PLANS } from '../constants/plans';
 
 type SettingsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Settings'>;
@@ -33,6 +33,9 @@ function SettingsScreen() {
   const navigation = useNavigation<SettingsScreenNavigationProp>();
   const { tier, status } = useSubscription();
   const { settings, loadSettings, updateSettings, isLoading, checkAndResetMonthlyUsageIfNeeded } = useSettingsStore();
+
+  // トークン使用量情報を取得
+  const tokenUsage = useUsageLimit('maxMonthlyTokens');
 
   // 初期値にキャッシュを使用（キャッシュがあれば即座に表示）
   const [llmProviders, setLlmProviders] = useState<Record<string, LLMProvider>>(
@@ -161,6 +164,67 @@ function SettingsScreen() {
       subscriptionIcon: {
         marginLeft: spacing.md,
       },
+      usageContainer: {
+        backgroundColor: colors.secondary,
+        padding: spacing.md,
+        marginHorizontal: spacing.md,
+        marginBottom: spacing.md,
+        borderRadius: 12,
+      },
+      usageTitle: {
+        ...typography.subtitle,
+        color: colors.text,
+        marginBottom: spacing.sm,
+      },
+      usageStats: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: spacing.sm,
+      },
+      usageText: {
+        ...typography.body,
+        color: colors.text,
+      },
+      usagePercentage: {
+        ...typography.body,
+        fontWeight: '600',
+      },
+      progressBarContainer: {
+        height: 8,
+        backgroundColor: colors.border,
+        borderRadius: 4,
+        overflow: 'hidden',
+      },
+      progressBar: {
+        height: '100%',
+        borderRadius: 4,
+      },
+      modelBreakdownTitle: {
+        ...typography.caption,
+        color: colors.textSecondary,
+        marginTop: spacing.md,
+        marginBottom: spacing.sm,
+        fontWeight: '600',
+      },
+      modelBreakdownItem: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: spacing.sm,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
+      },
+      modelName: {
+        ...typography.caption,
+        color: colors.text,
+        flex: 1,
+      },
+      modelUsage: {
+        ...typography.caption,
+        color: colors.textSecondary,
+        fontWeight: '600',
+      },
     }),
     [colors, spacing, typography]
   );
@@ -201,6 +265,52 @@ function SettingsScreen() {
             style={styles.subscriptionIcon}
           />
         </TouchableOpacity>
+
+        {/* 月間トークン使用量 */}
+        <View style={styles.usageContainer}>
+          <Text style={styles.usageTitle}>月間トークン使用量</Text>
+          <View style={styles.usageStats}>
+            <Text style={styles.usageText}>
+              {tokenUsage.current.toLocaleString()} / {tokenUsage.max === -1 ? '無制限' : tokenUsage.max.toLocaleString()} トークン
+            </Text>
+            {tokenUsage.max !== -1 && (
+              <Text style={[styles.usagePercentage, { color: getUsageColor(tokenUsage.percentage) }]}>
+                {tokenUsage.percentage.toFixed(1)}%
+              </Text>
+            )}
+          </View>
+          {tokenUsage.max !== -1 && (
+            <View style={styles.progressBarContainer}>
+              <View
+                style={[
+                  styles.progressBar,
+                  {
+                    width: `${Math.min(tokenUsage.percentage, 100)}%`,
+                    backgroundColor: getUsageColor(tokenUsage.percentage),
+                  },
+                ]}
+              />
+            </View>
+          )}
+
+          {/* モデル別の内訳 */}
+          {Object.keys(settings.usage.monthlyTokensByModel).length > 0 && (
+            <>
+              <Text style={styles.modelBreakdownTitle}>モデル別の内訳</Text>
+              {Object.entries(settings.usage.monthlyTokensByModel).map(([modelId, usage]) => {
+                const totalTokens = usage.inputTokens + usage.outputTokens;
+                return (
+                  <View key={modelId} style={styles.modelBreakdownItem}>
+                    <Text style={styles.modelName}>{modelId}</Text>
+                    <Text style={styles.modelUsage}>
+                      {totalTokens.toLocaleString()} トークン
+                    </Text>
+                  </View>
+                );
+              })}
+            </>
+          )}
+        </View>
 
         {renderSection('表示設定')}
 
