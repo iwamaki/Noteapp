@@ -148,6 +148,34 @@ export function canSendLLMRequest(): boolean {
 }
 
 /**
+ * トークン上限内かチェック（チャット送信前の判定用）
+ * @returns トークン上限チェック結果
+ */
+export function checkTokenLimit(): {
+  canSend: boolean;
+  currentTokens: number;
+  maxTokens: number;
+  percentage: number;
+  tier: SubscriptionTier;
+} {
+  const { tier, isActive, usage } = useSubscription();
+  const effectiveTier: SubscriptionTier = isActive ? tier : 'free';
+
+  const currentTokens = usage.monthlyInputTokens + usage.monthlyOutputTokens;
+  const maxTokens = getLimit(effectiveTier, 'maxMonthlyTokens');
+  const canSend = isWithinLimit(effectiveTier, 'maxMonthlyTokens', currentTokens);
+  const percentage = maxTokens === -1 ? 0 : (currentTokens / maxTokens) * 100;
+
+  return {
+    canSend,
+    currentTokens,
+    maxTokens,
+    percentage,
+    tier: effectiveTier,
+  };
+}
+
+/**
  * 新規ファイル作成が可能かチェック
  */
 export function canCreateFile(): boolean {
