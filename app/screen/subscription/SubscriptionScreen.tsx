@@ -50,6 +50,16 @@ export const SubscriptionScreen: React.FC = () => {
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
   const [availableProducts, setAvailableProducts] = useState<Product[]>([]);
+  const [selectedTab, setSelectedTab] = useState<'pro' | 'enterprise'>('pro');
+
+  // プラン配列（ProとPremiumのみ）
+  const plans = [
+    { plan: SUBSCRIPTION_PLANS.pro, isCurrentPlan: tier === 'pro', isRecommended: false },
+    { plan: SUBSCRIPTION_PLANS.enterprise, isCurrentPlan: tier === 'enterprise', isRecommended: false },
+  ];
+
+  // 現在選択されているプラン
+  const currentPlan = plans.find(p => p.plan.id === selectedTab) || plans[0];
 
   // 初期化: IAPの接続と利用可能な商品の取得
   useEffect(() => {
@@ -225,55 +235,143 @@ export const SubscriptionScreen: React.FC = () => {
         </Text>
       </View>
 
-      {/* 現在のプラン情報 */}
-      {status !== 'none' && (
+      {/* プランカード */}
+      <View style={styles.planContainer}>
+        {/* プランカードコンテナ */}
         <View
           style={[
-            styles.currentPlanContainer,
-            { backgroundColor: colors.secondary, borderColor: colors.border },
+            styles.planCardContainer,
+            {
+              borderColor: currentPlan.isCurrentPlan
+                ? colors.primary
+                : colors.border,
+            },
           ]}
         >
-          <View style={styles.currentPlanHeader}>
+          {/* 基準カード: 親の高さを決めるため、全てのプランを非表示でレンダリング（重ねて配置） */}
+          {plans.map((item, index) => (
+            <View
+              key={`base-${item.plan.id}`}
+              style={[
+                index === 0 ? {} : { position: 'absolute', top: 0, left: 0, right: 0 },
+                { opacity: 0, pointerEvents: 'none' },
+              ]}
+            >
+              <PlanCard
+                plan={item.plan}
+                isCurrentPlan={item.isCurrentPlan}
+                isRecommended={item.isRecommended}
+              />
+            </View>
+          ))}
+
+          {/* 実際に表示するカード */}
+          {plans.map((item) => (
+            <View
+              key={item.plan.id}
+              style={[
+                styles.cardWrapper,
+                item.plan.id !== selectedTab && styles.hiddenCard,
+              ]}
+            >
+              <PlanCard
+                plan={item.plan}
+                isCurrentPlan={item.isCurrentPlan}
+                isRecommended={item.isRecommended}
+              />
+            </View>
+          ))}
+        </View>
+
+        {/* タブボタン (Pro / Premium) */}
+        <View style={styles.tabContainer}>
+          <TouchableOpacity
+            style={[
+              styles.tabButton,
+              selectedTab === 'pro' && { backgroundColor: colors.primary },
+              selectedTab !== 'pro' && { backgroundColor: colors.border },
+            ]}
+            onPress={() => setSelectedTab('pro')}
+          >
+            <Text
+              style={[
+                styles.tabButtonText,
+                typography.subtitle,
+                selectedTab === 'pro' && { color: colors.white },
+                selectedTab !== 'pro' && { color: colors.textSecondary },
+              ]}
+            >
+              Pro
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.tabButton,
+              selectedTab === 'enterprise' && { backgroundColor: colors.primary },
+              selectedTab !== 'enterprise' && { backgroundColor: colors.border },
+            ]}
+            onPress={() => setSelectedTab('enterprise')}
+          >
+            <Text
+              style={[
+                styles.tabButtonText,
+                typography.subtitle,
+                selectedTab === 'enterprise' && { color: colors.white },
+                selectedTab !== 'enterprise' && { color: colors.textSecondary },
+              ]}
+            >
+              Premium
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* 購入ボタン */}
+        {!currentPlan.isCurrentPlan ? (
+          <TouchableOpacity
+            style={[
+              styles.purchaseButton,
+              {
+                backgroundColor: colors.primary,
+              },
+              isPurchasing && styles.buttonDisabled,
+            ]}
+            onPress={() => handlePurchase(currentPlan.plan.id)}
+            disabled={isPurchasing}
+          >
+            {isPurchasing ? (
+              <ActivityIndicator color={colors.white} />
+            ) : (
+              <Text
+                style={[
+                  styles.purchaseButtonText,
+                  typography.subtitle,
+                  { color: colors.white },
+                ]}
+              >
+                {currentPlan.plan.displayName}プランを購入
+              </Text>
+            )}
+          </TouchableOpacity>
+        ) : (
+          <View
+            style={[
+              styles.currentPlanBadge,
+              { backgroundColor: colors.secondary, borderColor: colors.border },
+            ]}
+          >
             <Ionicons name="checkmark-circle" size={24} color={colors.success} />
             <Text
               style={[
-                styles.currentPlanTitle,
+                styles.currentPlanText,
                 typography.subtitle,
                 { color: colors.text },
               ]}
             >
-              現在のプラン: {SUBSCRIPTION_PLANS[tier].displayName}
+              現在のプラン
             </Text>
           </View>
-          {expiresAt && (
-            <Text style={[styles.expiryText, typography.caption, { color: colors.textSecondary }]}>
-              有効期限: {new Date(expiresAt).toLocaleDateString('ja-JP')}
-            </Text>
-          )}
-        </View>
-      )}
-
-      {/* プランカード */}
-      <View style={styles.plansContainer}>
-        <PlanCard
-          plan={SUBSCRIPTION_PLANS.free}
-          isCurrentPlan={tier === 'free'}
-          onPurchase={handlePurchase}
-          isPurchasing={isPurchasing}
-        />
-        <PlanCard
-          plan={SUBSCRIPTION_PLANS.pro}
-          isCurrentPlan={tier === 'pro'}
-          isRecommended={true}
-          onPurchase={handlePurchase}
-          isPurchasing={isPurchasing}
-        />
-        <PlanCard
-          plan={SUBSCRIPTION_PLANS.enterprise}
-          isCurrentPlan={tier === 'enterprise'}
-          onPurchase={handlePurchase}
-          isPurchasing={isPurchasing}
-        />
+        )}
       </View>
 
       {/* 復元ボタン */}
@@ -351,23 +449,73 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   subtitle: {},
-  currentPlanContainer: {
-    padding: 16,
-    borderRadius: 8,
-    borderWidth: 1,
+  planContainer: {
     marginBottom: 24,
   },
-  currentPlanHeader: {
+  planCardContainer: {
+    paddingHorizontal: 20,
+    position: 'relative',
+    borderWidth: 2,
+    borderRadius: 12,
+    marginHorizontal: 20,
+    overflow: 'hidden',
+  },
+  cardWrapper: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    justifyContent: 'center',
+  },
+  hiddenCard: {
+    opacity: 0,
+    pointerEvents: 'none',
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    marginHorizontal: 20,
+    marginTop: 16,
+    gap: 12,
+  },
+  tabButton: {
+    flex: 1,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  tabButtonText: {
+    fontWeight: '600',
+  },
+  purchaseButton: {
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginHorizontal: 20,
+    marginTop: 16,
+  },
+  purchaseButtonText: {
+    fontWeight: '600',
+  },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+  currentPlanBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    justifyContent: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 8,
+    marginHorizontal: 20,
+    marginTop: 16,
+    borderWidth: 1,
   },
-  currentPlanTitle: {
+  currentPlanText: {
     marginLeft: 8,
-  },
-  expiryText: {},
-  plansContainer: {
-    marginBottom: 24,
+    fontWeight: '600',
   },
   restoreButton: {
     flexDirection: 'row',

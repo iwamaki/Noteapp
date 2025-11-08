@@ -11,19 +11,15 @@ import {
   StyleSheet,
   View,
   Text,
-  TouchableOpacity,
-  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../design/theme/ThemeContext';
-import type { SubscriptionPlan, SubscriptionTier } from '../../../constants/plans';
+import type { SubscriptionPlan } from '../../../constants/plans';
 
 interface PlanCardProps {
   plan: SubscriptionPlan;
   isCurrentPlan: boolean;
   isRecommended?: boolean;
-  onPurchase: (tier: SubscriptionTier) => void;
-  isPurchasing?: boolean;
 }
 
 /**
@@ -39,8 +35,6 @@ export const PlanCard: React.FC<PlanCardProps> = ({
   plan,
   isCurrentPlan,
   isRecommended = false,
-  onPurchase,
-  isPurchasing = false,
 }) => {
   const { colors, typography } = useTheme();
 
@@ -81,20 +75,12 @@ export const PlanCard: React.FC<PlanCardProps> = ({
 
   const activeProFeatures = proFeatures.filter((f) => plan.features[f.key]);
 
-  const handlePurchase = () => {
-    if (!isCurrentPlan && !isPurchasing) {
-      onPurchase(plan.id);
-    }
-  };
-
   return (
     <View
       style={[
         styles.container,
-        isCurrentPlan && styles.currentPlanBorder,
         {
           backgroundColor: colors.background,
-          borderColor: isCurrentPlan ? colors.primary : colors.border,
         },
       ]}
     >
@@ -217,50 +203,14 @@ export const PlanCard: React.FC<PlanCardProps> = ({
         )}
       </View>
 
-      {/* 購入ボタン */}
-      <TouchableOpacity
-        style={[
-          styles.button,
-          {
-            backgroundColor: isCurrentPlan
-              ? colors.secondary
-              : colors.primary,
-          },
-          isPurchasing && styles.buttonDisabled,
-        ]}
-        onPress={handlePurchase}
-        disabled={isCurrentPlan || isPurchasing}
-      >
-        {isPurchasing ? (
-          <ActivityIndicator color={colors.white} />
-        ) : (
-          <Text
-            style={[
-              styles.buttonText,
-              typography.subtitle,
-              {
-                color: isCurrentPlan ? colors.textSecondary : colors.white,
-              },
-            ]}
-          >
-            {isCurrentPlan ? '現在のプラン' : plan.price === 0 ? 'ダウングレード' : '購入'}
-          </Text>
-        )}
-      </TouchableOpacity>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 12,
     padding: 20,
-    marginBottom: 16,
     position: 'relative',
-    borderWidth: 1,
-  },
-  currentPlanBorder: {
-    borderWidth: 2,
   },
   recommendedBadge: {
     position: 'absolute',
