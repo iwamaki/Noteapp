@@ -93,10 +93,19 @@ export interface AppSettings {
 
   // 10. 使用量情報（サーバーから同期）
   usage: {
-    monthlyLLMRequests: number; // 今月のLLMリクエスト数
-    currentFileCount: number; // 現在のファイル数
-    storageUsedMB: number; // 使用中のストレージ容量（MB）
-    lastSyncedAt?: string; // 最後に同期した日時
+    // 💰 コストに直結（最重要）
+    monthlyInputTokens: number;  // 今月の入力トークン数
+    monthlyOutputTokens: number; // 今月の出力トークン数
+
+    // 📊 補助的な指標
+    monthlyLLMRequests: number;  // 今月のLLMリクエスト数（スパム防止、UX表示用）
+
+    // Phase 2以降（クラウド同期時）
+    currentFileCount: number;    // 現在のファイル数
+    storageUsedMB: number;       // 使用中のストレージ容量（MB）
+
+    lastSyncedAt?: string;       // 最後に同期した日時
+    lastResetMonth?: string;     // 最後に月次リセットした月 (YYYY-MM形式)
   };
 }
 
@@ -183,10 +192,13 @@ const defaultSettings: AppSettings = {
 
   // 使用量情報
   usage: {
+    monthlyInputTokens: 0,
+    monthlyOutputTokens: 0,
     monthlyLLMRequests: 0,
     currentFileCount: 0,
     storageUsedMB: 0,
     lastSyncedAt: undefined,
+    lastResetMonth: undefined,
   },
 };
 
@@ -196,6 +208,15 @@ interface SettingsStore {
   loadSettings: () => Promise<void>;
   updateSettings: (updates: Partial<AppSettings>) => Promise<void>;
   resetSettings: () => Promise<void>;
+
+  // 使用量トラッキング関数
+  trackTokenUsage: (inputTokens: number, outputTokens: number) => Promise<void>;
+  incrementLLMRequestCount: () => Promise<void>;
+  incrementFileCount: () => Promise<void>;
+  decrementFileCount: () => Promise<void>;
+  updateStorageUsage: (sizeMB: number) => Promise<void>;
+  resetMonthlyUsage: () => Promise<void>;
+  checkAndResetMonthlyUsageIfNeeded: () => Promise<void>;
 }
 
 export const useSettingsStore = create<SettingsStore>((set, get) => ({
@@ -245,6 +266,134 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     } catch (error) {
       console.error('Failed to reset settings:', error);
       throw error;
+    }
+  },
+
+  // =========================
+  // 使用量トラッキング関数
+  // =========================
+
+  /**
+   * トークン使用量を記録
+   * @param inputTokens 入力トークン数
+   * @param outputTokens 出力トークン数
+   */
+  trackTokenUsage: async (inputTokens: number, outputTokens: number) => {
+    const { settings } = get();
+    const newSettings = {
+      ...settings,
+      usage: {
+        ...settings.usage,
+        monthlyInputTokens: settings.usage.monthlyInputTokens + inputTokens,
+        monthlyOutputTokens: settings.usage.monthlyOutputTokens + outputTokens,
+        lastSyncedAt: new Date().toISOString(),
+      },
+    };
+    await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(newSettings));
+    set({ settings: newSettings });
+    console.log(`[UsageTracking] Tokens recorded: input=${inputTokens}, output=${outputTokens}`);
+  },
+
+  /**
+   * LLMリクエスト回数をインクリメント
+   */
+  incrementLLMRequestCount: async () => {
+    const { settings } = get();
+    const newSettings = {
+      ...settings,
+      usage: {
+        ...settings.usage,
+        monthlyLLMRequests: settings.usage.monthlyLLMRequests + 1,
+        lastSyncedAt: new Date().toISOString(),
+      },
+    };
+    await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(newSettings));
+    set({ settings: newSettings });
+  },
+
+  /**
+   * ファイル数をインクリメント
+   */
+  incrementFileCount: async () => {
+    const { settings } = get();
+    const newSettings = {
+      ...settings,
+      usage: {
+        ...settings.usage,
+        currentFileCount: settings.usage.currentFileCount + 1,
+      },
+    };
+    await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(newSettings));
+    set({ settings: newSettings });
+  },
+
+  /**
+   * ファイル数をデクリメント
+   */
+  decrementFileCount: async () => {
+    const { settings } = get();
+    const newSettings = {
+      ...settings,
+      usage: {
+        ...settings.usage,
+        currentFileCount: Math.max(0, settings.usage.currentFileCount - 1),
+      },
+    };
+    await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(newSettings));
+    set({ settings: newSettings });
+  },
+
+  /**
+   * ストレージ使用量を更新
+   * @param sizeMB 使用量（MB）
+   */
+  updateStorageUsage: async (sizeMB: number) => {
+    const { settings } = get();
+    const newSettings = {
+      ...settings,
+      usage: {
+        ...settings.usage,
+        storageUsedMB: sizeMB,
+      },
+    };
+    await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(newSettings));
+    set({ settings: newSettings });
+  },
+
+  /**
+   * 月次使用量をリセット
+   */
+  resetMonthlyUsage: async () => {
+    const { settings } = get();
+    const currentMonth = new Date().toISOString().substring(0, 7); // YYYY-MM形式
+    const newSettings = {
+      ...settings,
+      usage: {
+        ...settings.usage,
+        monthlyInputTokens: 0,
+        monthlyOutputTokens: 0,
+        monthlyLLMRequests: 0,
+        lastResetMonth: currentMonth,
+      },
+    };
+    await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(newSettings));
+    set({ settings: newSettings });
+    console.log(`[UsageTracking] Monthly usage reset for ${currentMonth}`);
+  },
+
+  /**
+   * 月が変わったかチェックし、必要ならリセット
+   * アプリ起動時に呼び出す
+   */
+  checkAndResetMonthlyUsageIfNeeded: async () => {
+    const { settings, resetMonthlyUsage } = get();
+    const currentMonth = new Date().toISOString().substring(0, 7); // YYYY-MM形式
+    const lastResetMonth = settings.usage.lastResetMonth;
+
+    // 初回起動または月が変わった場合
+    if (!lastResetMonth || lastResetMonth !== currentMonth) {
+      console.log(`[UsageTracking] Month changed: ${lastResetMonth} → ${currentMonth}`);
+      await resetMonthlyUsage();
     }
   },
 }));

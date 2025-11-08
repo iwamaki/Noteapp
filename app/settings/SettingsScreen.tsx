@@ -32,7 +32,7 @@ function SettingsScreen() {
   const { colors, spacing, typography } = useTheme();
   const navigation = useNavigation<SettingsScreenNavigationProp>();
   const { tier, status } = useSubscription();
-  const { settings, loadSettings, updateSettings, isLoading } = useSettingsStore();
+  const { settings, loadSettings, updateSettings, isLoading, checkAndResetMonthlyUsageIfNeeded } = useSettingsStore();
 
   // 初期値にキャッシュを使用（キャッシュがあれば即座に表示）
   const [llmProviders, setLlmProviders] = useState<Record<string, LLMProvider>>(
@@ -44,6 +44,8 @@ function SettingsScreen() {
 
   useEffect(() => {
     loadSettings();
+    // 月次使用量のリセットチェック（月が変わったらリセット）
+    checkAndResetMonthlyUsageIfNeeded();
 
     // キャッシュがあればすぐ表示、なければ読み込み
     const cached = APIService.getCachedLLMProviders();

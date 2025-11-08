@@ -279,6 +279,14 @@ class ChatService {
       // トークン使用量情報を更新（100%超過時は自動要約がトリガーされる）
       if (response.tokenUsage) {
         this.tokenService.updateTokenUsage(response.tokenUsage);
+
+        // 実際に使用したトークン数を記録（課金対象）
+        if (response.tokenUsage.inputTokens && response.tokenUsage.outputTokens) {
+          const { trackTokenUsage, incrementLLMRequestCount } = await import('../../settings/settingsStore').then(m => m.useSettingsStore.getState());
+          await trackTokenUsage(response.tokenUsage.inputTokens, response.tokenUsage.outputTokens);
+          await incrementLLMRequestCount();
+          logger.info('chatService', `Token usage tracked: input=${response.tokenUsage.inputTokens}, output=${response.tokenUsage.outputTokens}`);
+        }
       }
 
       // コマンドの処理
