@@ -22,7 +22,7 @@ import { useSettingsStore } from '../../settings/settingsStore';
 import type { PurchaseRecord } from '../../settings/settingsStore';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { useSubscription } from '../../utils/subscriptionHelpers';
-import { PlanCard } from '../subscription/components/PlanCard';
+import { PlanCard } from './components/PlanCard';
 import {
   initializeIAP,
   getAvailableTokenPackages,
