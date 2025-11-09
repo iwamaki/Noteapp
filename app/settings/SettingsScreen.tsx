@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Switch,
+  Alert,
 } from 'react-native';
 import { useSettingsStore } from './settingsStore';
 import { useTheme } from '../design/theme/ThemeContext';
@@ -362,20 +363,12 @@ function SettingsScreen() {
         {/* Flash tokens 使用量 */}
         <View style={styles.usageContainer}>
           <Text style={styles.usageTitle}>Flash モデル</Text>
-          <View style={styles.usageStats}>
-            <Text style={styles.usageText}>
-              利用可能: {flashUsage.available === -1 ? '無制限' : flashUsage.available.toLocaleString()} トークン
-            </Text>
-          </View>
           {flashUsage.max !== -1 && flashUsage.max > 0 && (
             <>
-              <Text style={[styles.usageText, { fontSize: 12, color: '#888', marginTop: 4 }]}>
-                今月の使用量: {flashUsage.current.toLocaleString()} / {flashUsage.max.toLocaleString()} ({flashUsage.percentage.toFixed(1)}%)
-              </Text>
               {/* サブスクリプション残量バー */}
               <View style={{ marginTop: 8 }}>
                 <Text style={[styles.usageText, { fontSize: 11, color: '#666', marginBottom: 4 }]}>
-                  サブスク残量: {Math.max(0, flashUsage.max - flashUsage.current).toLocaleString()} トークン
+                  {Math.max(0, flashUsage.max - flashUsage.current).toLocaleString()} / {flashUsage.max.toLocaleString()} トークン
                 </Text>
                 <View style={styles.progressBarContainer}>
                   <View
@@ -393,7 +386,7 @@ function SettingsScreen() {
               {settings.tokenBalance.flash > 0 && (
                 <View style={{ marginTop: 12 }}>
                   <Text style={[styles.usageText, { fontSize: 11, color: '#007AFF', marginBottom: 4 }]}>
-                    購入トークン: {settings.tokenBalance.flash.toLocaleString()} トークン
+                    購入: {settings.tokenBalance.flash.toLocaleString()} トークン
                   </Text>
                   <View style={styles.progressBarContainer}>
                     <View
@@ -414,7 +407,7 @@ function SettingsScreen() {
           {(flashUsage.max === -1 || flashUsage.max === 0) && settings.tokenBalance.flash > 0 && (
             <View style={{ marginTop: 8 }}>
               <Text style={[styles.usageText, { fontSize: 11, color: '#007AFF', marginBottom: 4 }]}>
-                購入トークン: {settings.tokenBalance.flash.toLocaleString()} トークン
+                購入: {settings.tokenBalance.flash.toLocaleString()} トークン
               </Text>
               <View style={styles.progressBarContainer}>
                 <View
@@ -435,20 +428,12 @@ function SettingsScreen() {
         {(proUsage.available || settings.tokenBalance.pro > 0) && (
           <View style={styles.usageContainer}>
             <Text style={styles.usageTitle}>Pro モデル</Text>
-            <View style={styles.usageStats}>
-              <Text style={styles.usageText}>
-                利用可能: {proUsage.availableTokens === -1 ? '無制限' : proUsage.availableTokens.toLocaleString()} トークン
-              </Text>
-            </View>
             {proUsage.max !== -1 && proUsage.max > 0 && (
               <>
-                <Text style={[styles.usageText, { fontSize: 12, color: '#888', marginTop: 4 }]}>
-                  今月の使用量: {proUsage.current.toLocaleString()} / {proUsage.max.toLocaleString()} ({proUsage.percentage.toFixed(1)}%)
-                </Text>
                 {/* サブスクリプション残量バー */}
                 <View style={{ marginTop: 8 }}>
                   <Text style={[styles.usageText, { fontSize: 11, color: '#666', marginBottom: 4 }]}>
-                    サブスク残量: {Math.max(0, proUsage.max - proUsage.current).toLocaleString()} トークン
+                    {Math.max(0, proUsage.max - proUsage.current).toLocaleString()} / {proUsage.max.toLocaleString()} トークン
                   </Text>
                   <View style={styles.progressBarContainer}>
                     <View
@@ -466,7 +451,7 @@ function SettingsScreen() {
                 {settings.tokenBalance.pro > 0 && (
                   <View style={{ marginTop: 12 }}>
                     <Text style={[styles.usageText, { fontSize: 11, color: '#007AFF', marginBottom: 4 }]}>
-                      購入トークン: {settings.tokenBalance.pro.toLocaleString()} トークン
+                      購入: {settings.tokenBalance.pro.toLocaleString()} トークン
                     </Text>
                     <View style={styles.progressBarContainer}>
                       <View
@@ -487,7 +472,7 @@ function SettingsScreen() {
             {(proUsage.max === -1 || proUsage.max === 0) && settings.tokenBalance.pro > 0 && (
               <View style={{ marginTop: 8 }}>
                 <Text style={[styles.usageText, { fontSize: 11, color: '#007AFF', marginBottom: 4 }]}>
-                  購入トークン: {settings.tokenBalance.pro.toLocaleString()} トークン
+                  購入: {settings.tokenBalance.pro.toLocaleString()} トークン
                 </Text>
                 <View style={styles.progressBarContainer}>
                   <View
@@ -687,6 +672,23 @@ function SettingsScreen() {
         <Text style={styles.infoText}>
           その他の設定項目は今後のアップデートで追加予定です。
         </Text>
+
+        {/* デバッグ用リセットボタン（開発モードのみ） */}
+        {__DEV__ && (
+          <>
+            {renderSection('デバッグ機能')}
+            <TouchableOpacity
+              style={[styles.resetButton, { backgroundColor: colors.primary }]}
+              onPress={async () => {
+                const { resetTokensAndUsage } = useSettingsStore.getState();
+                await resetTokensAndUsage();
+                Alert.alert('完了', 'トークン残高と使用量をリセットしました');
+              }}
+            >
+              <Text style={styles.resetButtonText}>トークンと使用量をリセット</Text>
+            </TouchableOpacity>
+          </>
+        )}
 
         <TouchableOpacity
           style={styles.resetButton}

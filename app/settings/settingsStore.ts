@@ -254,6 +254,7 @@ interface SettingsStore {
   addTokens: (flashTokens: number, proTokens: number, purchaseRecord: PurchaseRecord) => Promise<void>;
   deductTokens: (flashTokens: number, proTokens: number) => Promise<void>;
   getPurchaseHistory: () => PurchaseRecord[];
+  resetTokensAndUsage: () => Promise<void>; // デバッグ用：トークン残高と使用量をリセット
 
   // 使用量トラッキング関数
   trackTokenUsage: (inputTokens: number, outputTokens: number, modelId: string) => Promise<void>;
@@ -385,6 +386,29 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
    */
   getPurchaseHistory: () => {
     return get().settings.purchaseHistory;
+  },
+
+  /**
+   * トークン残高と使用量をリセット（デバッグ用）
+   */
+  resetTokensAndUsage: async () => {
+    const { settings } = get();
+    const newSettings = {
+      ...settings,
+      tokenBalance: {
+        flash: 0,
+        pro: 0,
+      },
+      purchaseHistory: [],
+      usage: {
+        ...settings.usage,
+        monthlyLLMRequests: 0,
+        monthlyTokensByModel: {},
+      },
+    };
+    await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(newSettings));
+    set({ settings: newSettings });
+    console.log('[Debug] Token balance and usage reset');
   },
 
   // =========================

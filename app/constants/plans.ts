@@ -81,7 +81,7 @@ export type SubscriptionTier = 'free' | 'standard' | 'pro' | 'premium';
  * - Free: 0 tokens（トークン購入必須）
  * - Standard ¥500/月: 1.5M Flash (20% profit)
  * - Pro ¥1,500/月: 3M Flash + 200k Pro (33% profit)
- * - Premium ¥3,500/月: 6M Flash + 400k Pro (42% profit)
+ * - Premium ¥3,000/月: 6M Flash + 400k Pro (33% profit)
  */
 export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
   free: {
@@ -164,7 +164,7 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
     name: 'premium',
     displayName: 'Premium',
     description: 'すべての機能が使える最上位プラン',
-    price: 3500,
+    price: 3000,
     currency: 'JPY',
     billingPeriod: 'month',
     limits: {
