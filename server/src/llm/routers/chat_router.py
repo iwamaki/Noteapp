@@ -134,13 +134,22 @@ async def summarize_document(request: DocumentSummarizeRequest) -> DocumentSumma
         logger.warning(f"Rejected document summarization: {error_msg}")
         raise HTTPException(status_code=400, detail=error_msg)
 
-    summary = await summarization_service.summarize_document(
+    result = await summarization_service.summarize_document(
         content=request.content,
         title=request.title,
         provider=request.provider or settings.get_default_provider(),
         model=request.model
     )
 
-    logger.info(f"Document summarization complete: {len(summary)} characters")
+    logger.info(
+        f"Document summarization complete: {len(result['summary'])} characters "
+        f"(tokens: input={result.get('inputTokens')}, output={result.get('outputTokens')})"
+    )
 
-    return DocumentSummarizeResponse(summary=summary)
+    return DocumentSummarizeResponse(
+        summary=result['summary'],
+        model=result.get('model'),
+        inputTokens=result.get('inputTokens'),
+        outputTokens=result.get('outputTokens'),
+        totalTokens=result.get('totalTokens'),
+    )

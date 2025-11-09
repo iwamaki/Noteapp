@@ -23,7 +23,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/types';
 import { Ionicons } from '@expo/vector-icons';
-import { useSubscription, useUsageLimit, getUsageColor } from '../utils/subscriptionHelpers';
+import { useSubscription, useUsageLimit, getUsageColor, useMonthlyCost } from '../utils/subscriptionHelpers';
 import { SUBSCRIPTION_PLANS } from '../constants/plans';
 
 type SettingsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Settings'>;
@@ -36,6 +36,9 @@ function SettingsScreen() {
 
   // トークン使用量情報を取得
   const tokenUsage = useUsageLimit('maxMonthlyTokens');
+
+  // 月間コスト情報を取得（開発時のみ）
+  const costInfo = __DEV__ ? useMonthlyCost() : null;
 
   // 初期値にキャッシュを使用（キャッシュがあれば即座に表示）
   const [llmProviders, setLlmProviders] = useState<Record<string, LLMProvider>>(
@@ -215,15 +218,66 @@ function SettingsScreen() {
         borderBottomWidth: 1,
         borderBottomColor: colors.border,
       },
+      modelInfoLeft: {
+        flex: 1,
+      },
       modelName: {
         ...typography.caption,
         color: colors.text,
-        flex: 1,
+      },
+      tokenBreakdown: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: spacing.xs,
+        gap: spacing.sm,
+      },
+      tokenBreakdownText: {
+        ...typography.caption,
+        color: colors.textSecondary,
+      },
+      tokenBreakdownSeparator: {
+        ...typography.caption,
+        color: colors.border,
+        marginHorizontal: spacing.xs,
       },
       modelUsage: {
         ...typography.caption,
         color: colors.textSecondary,
         fontWeight: '600',
+      },
+      modelTokenDetail: {
+        ...typography.caption,
+        color: colors.textSecondary,
+        fontSize: 11,
+        marginTop: 2,
+      },
+      modelCost: {
+        ...typography.caption,
+        color: colors.primary,
+        fontWeight: '700',
+        marginLeft: spacing.md,
+      },
+      totalCostContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: spacing.md,
+        marginTop: spacing.sm,
+        borderTopWidth: 2,
+        borderTopColor: colors.primary,
+        backgroundColor: `${colors.primary}10`, // 10% opacity
+      },
+      totalCostLabel: {
+        ...typography.body,
+        color: colors.text,
+        fontWeight: '700',
+      },
+      totalCostValue: {
+        ...typography.body,
+        color: colors.primary,
+        fontWeight: '700',
+        fontSize: 16,
       },
     }),
     [colors, spacing, typography]
@@ -279,6 +333,16 @@ function SettingsScreen() {
               </Text>
             )}
           </View>
+          {/* 入力・出力トークンの内訳 */}
+          <View style={styles.tokenBreakdown}>
+            <Text style={styles.tokenBreakdownText}>
+              入力: {settings.usage.monthlyInputTokens.toLocaleString()}
+            </Text>
+            <Text style={styles.tokenBreakdownSeparator}>|</Text>
+            <Text style={styles.tokenBreakdownText}>
+              出力: {settings.usage.monthlyOutputTokens.toLocaleString()}
+            </Text>
+          </View>
           {tokenUsage.max !== -1 && (
             <View style={styles.progressBarContainer}>
               <View
@@ -299,15 +363,34 @@ function SettingsScreen() {
               <Text style={styles.modelBreakdownTitle}>モデル別の内訳</Text>
               {Object.entries(settings.usage.monthlyTokensByModel).map(([modelId, usage]) => {
                 const totalTokens = usage.inputTokens + usage.outputTokens;
+                // 開発時のみコスト情報を取得
+                const modelCost = __DEV__ && costInfo
+                  ? costInfo.costByModel.find(m => m.modelId === modelId)
+                  : null;
                 return (
                   <View key={modelId} style={styles.modelBreakdownItem}>
-                    <Text style={styles.modelName}>{modelId}</Text>
-                    <Text style={styles.modelUsage}>
-                      {totalTokens.toLocaleString()} トークン
-                    </Text>
+                    <View style={styles.modelInfoLeft}>
+                      <Text style={styles.modelName}>{modelId}</Text>
+                      <Text style={styles.modelUsage}>
+                        合計: {totalTokens.toLocaleString()}
+                      </Text>
+                      <Text style={styles.modelTokenDetail}>
+                        入力: {usage.inputTokens.toLocaleString()} | 出力: {usage.outputTokens.toLocaleString()}
+                      </Text>
+                    </View>
+                    {__DEV__ && modelCost && (
+                      <Text style={styles.modelCost}>{modelCost.formattedCost}</Text>
+                    )}
                   </View>
                 );
               })}
+              {/* 開発時のみ総コストを表示 */}
+              {__DEV__ && costInfo && costInfo.totalCost > 0 && (
+                <View style={styles.totalCostContainer}>
+                  <Text style={styles.totalCostLabel}>今月のコスト</Text>
+                  <Text style={styles.totalCostValue}>{costInfo.formattedTotalCost}</Text>
+                </View>
+              )}
             </>
           )}
         </View>

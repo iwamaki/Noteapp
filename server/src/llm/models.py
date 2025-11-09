@@ -150,6 +150,10 @@ class DocumentSummarizeRequest(BaseModel):
 class DocumentSummarizeResponse(BaseModel):
     """文書要約レスポンス
 
-    生成された要約テキストを含む。
+    生成された要約テキストと、実際に使用したトークン数を含む。
     """
     summary: str  # 生成された要約
+    model: Optional[str] = None  # 使用したモデルID
+    inputTokens: Optional[int] = None  # 入力トークン数
+    outputTokens: Optional[int] = None  # 出力トークン数
+    totalTokens: Optional[int] = None  # 合計トークン数

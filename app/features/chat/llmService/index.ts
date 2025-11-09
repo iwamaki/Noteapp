@@ -312,12 +312,12 @@ export class LLMService {
    * 文書内容を要約する
    * @param content 文書の内容
    * @param title 文書のタイトル
-   * @returns 要約テキスト
+   * @returns 要約レスポンス（要約テキストとトークン情報）
    */
   async summarizeDocument(
     content: string,
     title: string
-  ): Promise<string> {
+  ): Promise<DocumentSummarizeResponse> {
     try {
       logger.info('llm', `Summarizing document: title="${title}", content_length=${content.length}`);
 
@@ -341,9 +341,9 @@ export class LLMService {
 
       const data: DocumentSummarizeResponse = response.data;
 
-      logger.info('llm', `Document summarization complete: ${data.summary.substring(0, 100)}...`);
+      logger.info('llm', `Document summarization complete: ${data.summary.substring(0, 100)}... (tokens: input=${data.inputTokens}, output=${data.outputTokens})`);
 
-      return data.summary;
+      return data;
     } catch (error) {
       if (error instanceof LLMError) {
         throw error;

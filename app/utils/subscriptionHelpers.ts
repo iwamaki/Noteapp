@@ -16,6 +16,7 @@ import {
 } from '../constants';
 import type { FeatureKey } from '../constants/features';
 import type { PlanLimits } from '../constants/plans';
+import { calculateCost, formatCost, getModelPricing } from '../constants/pricing';
 
 /**
  * 現在のサブスクリプション情報を取得するフック
@@ -312,4 +313,69 @@ export function getExpiryText(expiresAt?: string): string {
   if (days <= 30) return `残り約${Math.ceil(days / 7)}週間`;
 
   return `残り約${Math.ceil(days / 30)}ヶ月`;
+}
+
+/**
+ * 月間コスト情報を計算
+ * @returns コスト情報
+ */
+export function calculateMonthlyCost(): {
+  totalCost: number;
+  costByModel: Array<{
+    modelId: string;
+    displayName: string;
+    inputTokens: number;
+    outputTokens: number;
+    cost: number;
+    formattedCost: string;
+  }>;
+  formattedTotalCost: string;
+} {
+  const { settings } = useSettingsStore.getState();
+  const { usage } = settings;
+
+  let totalCost = 0;
+  const costByModel: Array<{
+    modelId: string;
+    displayName: string;
+    inputTokens: number;
+    outputTokens: number;
+    cost: number;
+    formattedCost: string;
+  }> = [];
+
+  // モデル別にコストを計算
+  for (const [modelId, tokenUsage] of Object.entries(usage.monthlyTokensByModel)) {
+    const cost = calculateCost(modelId, tokenUsage.inputTokens, tokenUsage.outputTokens);
+    const pricing = getModelPricing(modelId);
+
+    costByModel.push({
+      modelId,
+      displayName: pricing?.displayName || modelId,
+      inputTokens: tokenUsage.inputTokens,
+      outputTokens: tokenUsage.outputTokens,
+      cost,
+      formattedCost: formatCost(cost),
+    });
+
+    totalCost += cost;
+  }
+
+  // コストが高い順にソート
+  costByModel.sort((a, b) => b.cost - a.cost);
+
+  return {
+    totalCost,
+    costByModel,
+    formattedTotalCost: formatCost(totalCost),
+  };
+}
+
+/**
+ * 月間コスト情報を取得するReactフック
+ */
+export function useMonthlyCost() {
+  const costInfo = calculateMonthlyCost();
+
+  return costInfo;
 }

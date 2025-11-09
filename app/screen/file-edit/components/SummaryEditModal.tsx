@@ -70,11 +70,20 @@ export const SummaryEditModal: React.FC<SummaryEditModalProps> = ({
     setError(null);
 
     try {
-      const generatedSummary = await APIService.summarizeDocument(
+      const response = await APIService.summarizeDocument(
         fileContent,
         fileTitle
       );
-      setSummary(generatedSummary);
+      setSummary(response.summary);
+
+      // トークン使用量を記録
+      if (response.inputTokens && response.outputTokens && response.model) {
+        const { useSettingsStore } = await import('../../../settings/settingsStore');
+        const { trackTokenUsage, incrementLLMRequestCount } = useSettingsStore.getState();
+        await trackTokenUsage(response.inputTokens, response.outputTokens, response.model);
+        await incrementLLMRequestCount();
+        console.log(`[SummaryEditModal] Token usage tracked for model ${response.model}: input=${response.inputTokens}, output=${response.outputTokens}`);
+      }
     } catch (err) {
       console.error('要約生成エラー:', err);
       setError('要約の生成に失敗しました。もう一度お試しください。');
