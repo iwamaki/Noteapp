@@ -42,32 +42,6 @@ export const SubscriptionSection: React.FC<SubscriptionSectionProps> = ({ render
   const costInfo = __DEV__ ? useMonthlyCost() : null;
 
   const styles = StyleSheet.create({
-    subscriptionButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      backgroundColor: colors.secondary,
-      padding: spacing.lg,
-      borderRadius: 8,
-      borderWidth: 1,
-      borderColor: colors.border,
-      marginBottom: spacing.lg,
-    },
-    subscriptionButtonContent: {
-      flex: 1,
-    },
-    subscriptionButtonTitle: {
-      ...typography.subtitle,
-      color: colors.text,
-      marginBottom: 4,
-    },
-    subscriptionButtonSubtitle: {
-      ...typography.caption,
-      color: colors.textSecondary,
-    },
-    subscriptionIcon: {
-      marginLeft: spacing.md,
-    },
     usageContainer: {
       backgroundColor: colors.secondary,
       padding: spacing.md,
@@ -179,28 +153,6 @@ export const SubscriptionSection: React.FC<SubscriptionSectionProps> = ({ render
   return (
     <>
       {renderSection('サブスクリプション')}
-
-      <TouchableOpacity
-        style={styles.subscriptionButton}
-        onPress={() => navigation.navigate('Subscription')}
-      >
-        <View style={styles.subscriptionButtonContent}>
-          <Text style={styles.subscriptionButtonTitle}>
-            現在のプラン: {SUBSCRIPTION_PLANS[tier].displayName}
-          </Text>
-          <Text style={styles.subscriptionButtonSubtitle}>
-            {status === 'active' || status === 'trial'
-              ? 'タップしてプランを管理'
-              : 'プランをアップグレード'}
-          </Text>
-        </View>
-        <Ionicons
-          name="chevron-forward"
-          size={24}
-          color={colors.textSecondary}
-          style={styles.subscriptionIcon}
-        />
-      </TouchableOpacity>
 
       {/* Flash tokens 使用量 */}
       <View style={styles.usageContainer}>
@@ -332,14 +284,14 @@ export const SubscriptionSection: React.FC<SubscriptionSectionProps> = ({ render
         </View>
       )}
 
-      {/* トークン購入ボタン */}
+      {/* 購入・プラン管理ボタン */}
       <View style={styles.usageContainer}>
         <TouchableOpacity
           style={styles.purchaseButton}
           onPress={() => navigation.navigate('TokenPurchase' as any)}
         >
           <Ionicons name="card" size={20} color="#FFFFFF" style={styles.purchaseButtonIcon} />
-          <Text style={styles.purchaseButtonText}>トークンを購入</Text>
+          <Text style={styles.purchaseButtonText}>プラン・トークンを購入</Text>
           <Ionicons name="chevron-forward" size={20} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
