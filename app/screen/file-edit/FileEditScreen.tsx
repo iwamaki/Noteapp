@@ -17,6 +17,7 @@ import { ToastMessage } from './components/ToastMessage'; // ToastMessageをイ�
 import { useToastMessage } from './hooks/useToastMessage'; // useToastMessageをインポート
 import { FeatureBar } from './components/FeatureBar'; // FeatureBarをインポート
 import { SummaryEditModal } from './components/SummaryEditModal'; // SummaryEditModalをインポート
+import { useSettingsStore } from '../../settings/settingsStore'; // 設定ストアをインポート
 
 type FileEditScreenRouteProp = RouteProp<RootStackParamList, 'FileEdit'>;
 
@@ -27,6 +28,7 @@ function FileEditScreen() {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { fileId, initialViewMode } = route.params || {};
   const { keyboardHeight, chatInputBarHeight } = useKeyboardHeight();
+  const { settings } = useSettingsStore(); // 設定を取得
 
   const {
     title,
@@ -136,6 +138,7 @@ function FileEditScreen() {
         category={category}
         onTitleChange={handleTitleChange}
         onSummaryPress={() => setIsSummaryModalVisible(true)}
+        showSummaryButton={settings.llmEnabled}
       />
       <ScrollView
         style={styles.scrollView}
