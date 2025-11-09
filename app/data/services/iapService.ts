@@ -32,6 +32,10 @@ import { TOKEN_PACKAGES } from '../../constants/tokenPackages';
  * App Store Connect / Play Console で登録するID
  */
 export const PRODUCT_IDS = {
+  STANDARD_MONTHLY: Platform.select({
+    ios: 'noteapp.standard.monthly',
+    android: 'noteapp.standard.monthly',
+  }) as string,
   PRO_MONTHLY: Platform.select({
     ios: 'noteapp.pro.monthly',
     android: 'noteapp.pro.monthly',

@@ -87,6 +87,15 @@ export default function TokenPurchaseScreen() {
         {selectedTab === 'subscription' && (
           <>
             <View style={styles.packagesContainer}>
+              {/* Standard プラン */}
+              <PlanCard
+                plan={SUBSCRIPTION_PLANS.standard}
+                product={subscriptionProducts.find((p) => p.id === PRODUCT_IDS.STANDARD_MONTHLY)}
+                isCurrentPlan={tier === 'standard'}
+                purchasing={purchasing}
+                onPurchase={handleSubscriptionPurchase}
+              />
+
               {/* Pro プラン */}
               <PlanCard
                 plan={SUBSCRIPTION_PLANS.pro}
