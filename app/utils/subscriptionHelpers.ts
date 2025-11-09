@@ -153,40 +153,6 @@ export function canSendLLMRequest(): boolean {
  * トークン上限内かチェック（チャット送信前の判定用）
  * @deprecated checkModelTokenLimit() を使用してください（Flash/Pro別）
  */
-export function checkTokenLimit(): {
-  canSend: boolean;
-  currentTokens: number;
-  maxTokens: number;
-  percentage: number;
-  tier: SubscriptionTier;
-} {
-  console.warn('[checkTokenLimit] Deprecated: Use checkModelTokenLimit() instead');
-
-  const { settings } = useSettingsStore.getState();
-  const { subscription } = settings;
-  const isActive = subscription.status === 'active' || subscription.status === 'trial';
-  const effectiveTier: SubscriptionTier = isActive ? subscription.tier : 'free';
-
-  const tokenUsage = getTokenUsageByModelType();
-  const currentTokens = tokenUsage.flash.totalTokens + tokenUsage.pro.totalTokens;
-
-  // Flash + Pro の合計上限を取得（簡易実装）
-  const flashMax = getLimit(effectiveTier, 'maxMonthlyFlashTokens');
-  const proMax = getLimit(effectiveTier, 'maxMonthlyProTokens');
-  const maxTokens = (flashMax === -1 || proMax === -1) ? -1 : flashMax + (proMax > 0 ? proMax : 0);
-
-  const canSend = currentTokens < maxTokens || maxTokens === -1;
-  const percentage = maxTokens === -1 ? 0 : (currentTokens / maxTokens) * 100;
-
-  return {
-    canSend,
-    currentTokens,
-    maxTokens,
-    percentage,
-    tier: effectiveTier,
-  };
-}
-
 /**
  * 新規ファイル作成が可能かチェック
  * @deprecated Phase 1ではファイル数制限は廃止されました
@@ -430,46 +396,92 @@ export function getTokenUsageByModelType(): {
 
 /**
  * Flash tokens の使用状況を取得（Reactフック）
+ * サブスク枠 + 購入トークン残高を含めた利用可能トークンを返す
  */
 export function useFlashTokenUsage(): {
   current: number;
   max: number;
+  available: number; // 利用可能トークン数（サブスク残り + 購入残高）
   canUse: boolean;
   percentage: number;
 } {
   const { tier, isActive } = useSubscription();
+  const tokenBalance = useSettingsStore((state) => state.settings.tokenBalance); // リアクティブに取得
+  const usage = useSettingsStore((state) => state.settings.usage); // リアクティブに取得
   const effectiveTier: SubscriptionTier = isActive ? tier : 'free';
 
-  const tokenUsage = getTokenUsageByModelType();
-  const current = tokenUsage.flash.totalTokens;
+  // Flash使用量を計算（リアクティブに）
+  let flashInput = 0;
+  let flashOutput = 0;
+  for (const [modelId, tokenUsage] of Object.entries(usage.monthlyTokensByModel)) {
+    if (isFlashModel(modelId)) {
+      flashInput += tokenUsage.inputTokens;
+      flashOutput += tokenUsage.outputTokens;
+    }
+  }
+  const current = flashInput + flashOutput;
+
   const max = getLimit(effectiveTier, 'maxMonthlyFlashTokens');
   const canUse = isWithinLimit(effectiveTier, 'maxMonthlyFlashTokens', current);
-  const percentage = max === -1 ? 0 : (current / max) * 100;
+  const percentage = max === -1 ? 0 : max > 0 ? (current / max) * 100 : 0;
 
-  return { current, max, canUse, percentage };
+  // 利用可能トークン = サブスク残り + 購入トークン残高
+  let available: number;
+  if (max === -1) {
+    // 無制限の場合
+    available = -1;
+  } else {
+    const subscriptionRemaining = Math.max(0, max - current);
+    available = subscriptionRemaining + tokenBalance.flash;
+  }
+
+  return { current, max, available, canUse, percentage };
 }
 
 /**
  * Pro tokens の使用状況を取得（Reactフック）
+ * サブスク枠 + 購入トークン残高を含めた利用可能トークンを返す
  */
 export function useProTokenUsage(): {
   current: number;
   max: number;
+  availableTokens: number; // 利用可能トークン数（サブスク残り + 購入残高）
+  available: boolean; // Pro tokens が使えるプランか（後方互換性のため残す）
   canUse: boolean;
   percentage: number;
-  available: boolean; // Pro tokens が使えるプランか
 } {
   const { tier, isActive } = useSubscription();
+  const tokenBalance = useSettingsStore((state) => state.settings.tokenBalance); // リアクティブに取得
+  const usage = useSettingsStore((state) => state.settings.usage); // リアクティブに取得
   const effectiveTier: SubscriptionTier = isActive ? tier : 'free';
 
-  const tokenUsage = getTokenUsageByModelType();
-  const current = tokenUsage.pro.totalTokens;
+  // Pro使用量を計算（リアクティブに）
+  let proInput = 0;
+  let proOutput = 0;
+  for (const [modelId, tokenUsage] of Object.entries(usage.monthlyTokensByModel)) {
+    if (isProModel(modelId)) {
+      proInput += tokenUsage.inputTokens;
+      proOutput += tokenUsage.outputTokens;
+    }
+  }
+  const current = proInput + proOutput;
+
   const max = getLimit(effectiveTier, 'maxMonthlyProTokens');
   const available = max > 0 || max === -1; // 0以外なら使用可能
   const canUse = isWithinLimit(effectiveTier, 'maxMonthlyProTokens', current);
   const percentage = max === -1 ? 0 : max > 0 ? (current / max) * 100 : 0;
 
-  return { current, max, canUse, percentage, available };
+  // 利用可能トークン = サブスク残り + 購入トークン残高
+  let availableTokens: number;
+  if (max === -1) {
+    // 無制限の場合
+    availableTokens = -1;
+  } else {
+    const subscriptionRemaining = Math.max(0, max - current);
+    availableTokens = subscriptionRemaining + tokenBalance.pro;
+  }
+
+  return { current, max, canUse, percentage, available, availableTokens };
 }
 
 /**
@@ -486,7 +498,7 @@ export function checkModelTokenLimit(modelId: string): {
   reason?: string;
 } {
   const { settings } = useSettingsStore.getState();
-  const { subscription } = settings;
+  const { subscription, tokenBalance } = settings;
 
   // サブスクリプションが有効かチェック
   const isActive = subscription.status === 'active' || subscription.status === 'trial';
@@ -497,8 +509,12 @@ export function checkModelTokenLimit(modelId: string): {
   if (isFlashModel(modelId)) {
     const current = tokenUsage.flash.totalTokens;
     const max = getLimit(effectiveTier, 'maxMonthlyFlashTokens');
-    const canUse = isWithinLimit(effectiveTier, 'maxMonthlyFlashTokens', current);
+    const withinSubscriptionLimit = isWithinLimit(effectiveTier, 'maxMonthlyFlashTokens', current);
     const percentage = max === -1 ? 0 : max > 0 ? (current / max) * 100 : 0;
+
+    // サブスクリプションの月次枠内 OR 購入トークン残高がある場合は使用可能
+    const hasPurchasedTokens = tokenBalance.flash > 0;
+    const canUse = withinSubscriptionLimit || hasPurchasedTokens;
 
     return {
       canUse,
@@ -506,13 +522,23 @@ export function checkModelTokenLimit(modelId: string): {
       max,
       percentage,
       tier: effectiveTier,
-      reason: canUse ? undefined : max === 0 ? 'Flash tokens が 0 です。トークンを購入してください。' : 'Flash tokens の上限に達しました。',
+      reason: canUse
+        ? undefined
+        : max === 0 && !hasPurchasedTokens
+        ? 'Flash tokens が 0 です。トークンを購入してください。'
+        : !withinSubscriptionLimit && !hasPurchasedTokens
+        ? 'Flash tokens の上限に達しました。トークンを購入するか、プランをアップグレードしてください。'
+        : 'Flash tokens が不足しています。',
     };
   } else if (isProModel(modelId)) {
     const current = tokenUsage.pro.totalTokens;
     const max = getLimit(effectiveTier, 'maxMonthlyProTokens');
-    const canUse = isWithinLimit(effectiveTier, 'maxMonthlyProTokens', current);
+    const withinSubscriptionLimit = isWithinLimit(effectiveTier, 'maxMonthlyProTokens', current);
     const percentage = max === -1 ? 0 : max > 0 ? (current / max) * 100 : 0;
+
+    // サブスクリプションの月次枠内 OR 購入トークン残高がある場合は使用可能
+    const hasPurchasedTokens = tokenBalance.pro > 0;
+    const canUse = withinSubscriptionLimit || hasPurchasedTokens;
 
     return {
       canUse,
@@ -520,7 +546,13 @@ export function checkModelTokenLimit(modelId: string): {
       max,
       percentage,
       tier: effectiveTier,
-      reason: canUse ? undefined : max === 0 ? 'Pro モデルは Pro プラン以上で利用可能です。' : 'Pro tokens の上限に達しました。',
+      reason: canUse
+        ? undefined
+        : max === 0 && !hasPurchasedTokens
+        ? 'Pro モデルは Pro プラン以上で利用可能です。'
+        : !withinSubscriptionLimit && !hasPurchasedTokens
+        ? 'Pro tokens の上限に達しました。トークンを購入するか、プランをアップグレードしてください。'
+        : 'Pro tokens が不足しています。',
     };
   }
 

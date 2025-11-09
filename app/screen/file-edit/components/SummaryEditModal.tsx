@@ -78,11 +78,8 @@ export const SummaryEditModal: React.FC<SummaryEditModalProps> = ({
 
       // トークン使用量を記録
       if (response.inputTokens && response.outputTokens && response.model) {
-        const { useSettingsStore } = await import('../../../settings/settingsStore');
-        const { trackTokenUsage, incrementLLMRequestCount } = useSettingsStore.getState();
-        await trackTokenUsage(response.inputTokens, response.outputTokens, response.model);
-        await incrementLLMRequestCount();
-        console.log(`[SummaryEditModal] Token usage tracked for model ${response.model}: input=${response.inputTokens}, output=${response.outputTokens}`);
+        const { trackAndDeductTokens } = await import('../../../utils/tokenTrackingHelper');
+        await trackAndDeductTokens(response.inputTokens, response.outputTokens, response.model);
       }
     } catch (err) {
       console.error('要約生成エラー:', err);

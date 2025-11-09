@@ -280,6 +280,44 @@ function SettingsScreen() {
         fontWeight: '700',
         fontSize: 16,
       },
+      balanceRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        marginBottom: spacing.md,
+      },
+      balanceItem: {
+        alignItems: 'center',
+      },
+      balanceLabel: {
+        ...typography.caption,
+        color: colors.textSecondary,
+        marginBottom: spacing.xs,
+      },
+      balanceValue: {
+        ...typography.title,
+        color: colors.primary,
+        fontWeight: '700',
+      },
+      purchaseButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: colors.primary,
+        borderRadius: 8,
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.lg,
+        marginTop: spacing.sm,
+      },
+      purchaseButtonIcon: {
+        marginRight: spacing.sm,
+      },
+      purchaseButtonText: {
+        ...typography.body,
+        color: '#FFFFFF',
+        fontWeight: '600',
+        flex: 1,
+        textAlign: 'center',
+      },
     }),
     [colors, spacing, typography]
   );
@@ -323,61 +361,83 @@ function SettingsScreen() {
 
         {/* Flash tokens 使用量 */}
         <View style={styles.usageContainer}>
-          <Text style={styles.usageTitle}>Flash モデル使用量</Text>
+          <Text style={styles.usageTitle}>Flash モデル</Text>
           <View style={styles.usageStats}>
             <Text style={styles.usageText}>
-              {flashUsage.current.toLocaleString()} / {flashUsage.max === -1 ? '無制限' : flashUsage.max === 0 ? 'トークン購入が必要' : flashUsage.max.toLocaleString()} トークン
+              利用可能: {flashUsage.available === -1 ? '無制限' : flashUsage.available.toLocaleString()} トークン
             </Text>
-            {flashUsage.max !== -1 && flashUsage.max > 0 && (
-              <Text style={[styles.usagePercentage, { color: getUsageColor(flashUsage.percentage) }]}>
-                {flashUsage.percentage.toFixed(1)}%
-              </Text>
-            )}
           </View>
           {flashUsage.max !== -1 && flashUsage.max > 0 && (
-            <View style={styles.progressBarContainer}>
-              <View
-                style={[
-                  styles.progressBar,
-                  {
-                    width: `${Math.min(flashUsage.percentage, 100)}%`,
-                    backgroundColor: getUsageColor(flashUsage.percentage),
-                  },
-                ]}
-              />
-            </View>
-          )}
-        </View>
-
-        {/* Pro tokens 使用量（使用可能な場合のみ） */}
-        {proUsage.available && (
-          <View style={styles.usageContainer}>
-            <Text style={styles.usageTitle}>Pro モデル使用量</Text>
-            <View style={styles.usageStats}>
-              <Text style={styles.usageText}>
-                {proUsage.current.toLocaleString()} / {proUsage.max === -1 ? '無制限' : proUsage.max.toLocaleString()} トークン
+            <>
+              <Text style={[styles.usageText, { fontSize: 12, color: '#888', marginTop: 4 }]}>
+                今月の使用量: {flashUsage.current.toLocaleString()} / {flashUsage.max.toLocaleString()} ({flashUsage.percentage.toFixed(1)}%)
               </Text>
-              {proUsage.max !== -1 && (
-                <Text style={[styles.usagePercentage, { color: getUsageColor(proUsage.percentage) }]}>
-                  {proUsage.percentage.toFixed(1)}%
-                </Text>
-              )}
-            </View>
-            {proUsage.max !== -1 && (
               <View style={styles.progressBarContainer}>
                 <View
                   style={[
                     styles.progressBar,
                     {
-                      width: `${Math.min(proUsage.percentage, 100)}%`,
-                      backgroundColor: getUsageColor(proUsage.percentage),
+                      width: `${Math.min(flashUsage.percentage, 100)}%`,
+                      backgroundColor: getUsageColor(flashUsage.percentage),
                     },
                   ]}
                 />
               </View>
+            </>
+          )}
+          {settings.tokenBalance.flash > 0 && (
+            <Text style={[styles.usageText, { fontSize: 12, color: '#007AFF', marginTop: 4 }]}>
+              購入トークン残高: {settings.tokenBalance.flash.toLocaleString()}
+            </Text>
+          )}
+        </View>
+
+        {/* Pro tokens 使用量（サブスクプランがあるか、購入トークンがある場合に表示） */}
+        {(proUsage.available || settings.tokenBalance.pro > 0) && (
+          <View style={styles.usageContainer}>
+            <Text style={styles.usageTitle}>Pro モデル</Text>
+            <View style={styles.usageStats}>
+              <Text style={styles.usageText}>
+                利用可能: {proUsage.availableTokens === -1 ? '無制限' : proUsage.availableTokens.toLocaleString()} トークン
+              </Text>
+            </View>
+            {proUsage.max !== -1 && proUsage.max > 0 && (
+              <>
+                <Text style={[styles.usageText, { fontSize: 12, color: '#888', marginTop: 4 }]}>
+                  今月の使用量: {proUsage.current.toLocaleString()} / {proUsage.max.toLocaleString()} ({proUsage.percentage.toFixed(1)}%)
+                </Text>
+                <View style={styles.progressBarContainer}>
+                  <View
+                    style={[
+                      styles.progressBar,
+                      {
+                        width: `${Math.min(proUsage.percentage, 100)}%`,
+                        backgroundColor: getUsageColor(proUsage.percentage),
+                      },
+                    ]}
+                  />
+                </View>
+              </>
+            )}
+            {settings.tokenBalance.pro > 0 && (
+              <Text style={[styles.usageText, { fontSize: 12, color: '#007AFF', marginTop: 4 }]}>
+                購入トークン残高: {settings.tokenBalance.pro.toLocaleString()}
+              </Text>
             )}
           </View>
         )}
+
+        {/* トークン購入ボタン */}
+        <View style={styles.usageContainer}>
+          <TouchableOpacity
+            style={styles.purchaseButton}
+            onPress={() => navigation.navigate('TokenPurchase' as any)}
+          >
+            <Ionicons name="card" size={20} color="#FFFFFF" style={styles.purchaseButtonIcon} />
+            <Text style={styles.purchaseButtonText}>トークンを購入</Text>
+            <Ionicons name="chevron-forward" size={20} color="#FFFFFF" />
+          </TouchableOpacity>
+        </View>
 
         {/* モデル別詳細（開発時のみ） */}
         {__DEV__ && Object.keys(settings.usage.monthlyTokensByModel).length > 0 && (

@@ -16,6 +16,7 @@ import FileListScreen from '../screen/file-list-flat/FileListScreenFlat';
 import FileEditScreen from '../screen/file-edit/FileEditScreen';
 import SettingsScreen from '../settings/SettingsScreen';
 import { SubscriptionScreen } from '../screen/subscription/SubscriptionScreen';
+import { TokenPurchaseScreen } from '../screen/token-purchase';
 
 import { useTheme } from '../design/theme/ThemeContext';
 import { KeyboardHeightProvider } from '../contexts/KeyboardHeightContext';
@@ -90,6 +91,7 @@ function RootNavigatorContent() {
           <Stack.Screen name="FileEdit" component={FileEditScreen} options={{ title: 'Edit File' }} />
           <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
           <Stack.Screen name="Subscription" component={SubscriptionScreen} options={{ title: 'Subscription' }} />
+          <Stack.Screen name="TokenPurchase" component={TokenPurchaseScreen} options={{ title: 'トークン購入' }} />
         </Stack.Navigator>
       </NavigationContainer>
       {shouldShowChat && <ChatInputBar />}

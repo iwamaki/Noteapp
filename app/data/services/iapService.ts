@@ -25,9 +25,10 @@ import type {
 
 import { Platform } from 'react-native';
 import { SubscriptionTier } from '../../constants/plans';
+import { TOKEN_PACKAGES } from '../../constants/tokenPackages';
 
 /**
- * プロダクトID定義
+ * サブスクリプション プロダクトID定義
  * App Store Connect / Play Console で登録するID
  */
 export const PRODUCT_IDS = {
@@ -44,6 +45,12 @@ export const PRODUCT_IDS = {
     android: 'noteapp.premium.monthly',
   }) as string,
 };
+
+/**
+ * トークン購入 プロダクトID定義
+ * TOKEN_PACKAGES から自動的に取得
+ */
+export const TOKEN_PRODUCT_IDS = TOKEN_PACKAGES.map((pkg) => pkg.productId);
 
 /**
  * IAP初期化状態
@@ -282,4 +289,104 @@ export function getPeriodString(productId: string): string {
     return '年';
   }
   return '月';
+}
+
+/**
+ * 利用可能なトークンパッケージ商品を取得
+ */
+export async function getAvailableTokenPackages(): Promise<Product[]> {
+  try {
+    const skus = TOKEN_PRODUCT_IDS.filter(Boolean) as string[];
+
+    // トークンパッケージは消費型アイテム（in-app）として取得
+    const products = await fetchProducts({ skus, type: 'in-app' });
+    console.log('[IAP] Available token packages:', products);
+    return (products as Product[]) || [];
+  } catch (error) {
+    console.error('[IAP] Failed to get token packages:', error);
+    return [];
+  }
+}
+
+/**
+ * トークンパッケージ購入フロー
+ */
+export async function purchaseTokenPackage(
+  productId: string,
+  product: Product,
+  onSuccess: (purchase: Purchase) => void,
+  onError: (error: PurchaseError) => void,
+): Promise<void> {
+  console.log('[IAP] purchaseTokenPackage called with productId:', productId);
+  console.log('[IAP] Product details:', product);
+
+  // 既存のリスナーを解除（重複登録を防ぐ）
+  if (purchaseUpdateSubscription) {
+    console.log('[IAP] Removing existing purchase update listener');
+    purchaseUpdateSubscription.remove();
+    purchaseUpdateSubscription = null;
+  }
+  if (purchaseErrorSubscription) {
+    console.log('[IAP] Removing existing purchase error listener');
+    purchaseErrorSubscription.remove();
+    purchaseErrorSubscription = null;
+  }
+
+  // 購入更新リスナーを設定
+  purchaseUpdateSubscription = purchaseUpdatedListener((purchase: Purchase) => {
+    console.log('[IAP] Token package purchase updated:', purchase);
+
+    // レシート検証（Phase 1では簡易的）
+    const receipt = purchase.transactionId;
+    if (receipt) {
+      // トランザクション完了（消費型アイテムなので isConsumable: true）
+      finishTransaction({ purchase, isConsumable: true })
+        .then(() => {
+          console.log('[IAP] Token package transaction finished');
+          onSuccess(purchase);
+        })
+        .catch((error) => {
+          console.error('[IAP] Failed to finish token package transaction:', error);
+        });
+    }
+  });
+
+  // 購入エラーリスナーを設定
+  purchaseErrorSubscription = purchaseErrorListener((error: PurchaseError) => {
+    // ユーザーキャンセルは正常な動作なのでログレベルを分ける
+    const errorCode = String(error.code).toLowerCase();
+    if (
+      errorCode === 'e_user_cancelled' ||
+      errorCode === 'user_cancelled' ||
+      errorCode === 'user-cancelled'
+    ) {
+      console.log('[IAP] User cancelled token package purchase:', error);
+    } else {
+      console.error('[IAP] Token package purchase error:', error);
+    }
+    onError(error);
+  });
+
+  try {
+    // v14 Modern API: 消費型アイテム購入
+    const requestParams: any = {
+      request: {
+        ios: {
+          sku: productId,
+        },
+        android: {
+          skus: [productId],
+        },
+      },
+      type: 'inapp', // 消費型アイテム指定
+    };
+
+    console.log('[IAP] Requesting token package purchase with params:', JSON.stringify(requestParams));
+
+    // v14では requestPurchase が統一API
+    await requestPurchase(requestParams);
+  } catch (error) {
+    console.error('[IAP] Failed to request token package purchase:', error);
+    onError(error as PurchaseError);
+  }
 }

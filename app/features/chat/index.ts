@@ -18,7 +18,7 @@ import { getOrCreateClientId } from './utils/clientId';
 import { useSettingsStore } from '../../settings/settingsStore';
 import { useChatStore } from './store/chatStore';
 import { UnifiedErrorHandler } from './utils/errorHandler';
-import { checkTokenLimit } from '../../utils/subscriptionHelpers';
+import { checkModelTokenLimit } from '../../utils/subscriptionHelpers';
 
 /**
  * シングルトンクラスとして機能し、アプリケーション全体でチャットの状態を管理します。
@@ -244,14 +244,16 @@ class ChatService {
     this.addMessage(userMessage);
     this.setLoading(true);
 
-    // トークン上限チェック
-    const tokenLimitCheck = checkTokenLimit();
+    // トークン上限チェック（現在使用中のモデルで判定）
+    const tokenLimitCheck = checkModelTokenLimit(this.llmModel);
 
-    if (!tokenLimitCheck.canSend) {
+    if (!tokenLimitCheck.canUse) {
       logger.warn('chatService', 'Token limit exceeded', {
-        current: tokenLimitCheck.currentTokens,
-        max: tokenLimitCheck.maxTokens,
+        model: this.llmModel,
+        current: tokenLimitCheck.current,
+        max: tokenLimitCheck.max,
         tier: tokenLimitCheck.tier,
+        reason: tokenLimitCheck.reason,
       });
 
       // 自然なUXのため5秒待ってからエラーメッセージを返す
@@ -259,7 +261,7 @@ class ChatService {
 
       const errorMessage: ChatMessage = {
         role: 'system',
-        content: `🚫 **月間トークン使用量の上限に達しました**\n\n現在のプラン: ${tokenLimitCheck.tier === 'free' ? 'フリー' : tokenLimitCheck.tier === 'pro' ? 'Pro' : 'Premium'}\n使用量: ${tokenLimitCheck.currentTokens.toLocaleString()} / ${tokenLimitCheck.maxTokens.toLocaleString()} トークン\n\nチャットを利用するには、以下のいずれかをお試しください：\n• 来月まで待つ（月初に使用量がリセットされます）\n• 上位プランにアップグレードする`,
+        content: `🚫 **トークン上限に達しました**\n\n${tokenLimitCheck.reason}\n\n現在のプラン: ${tokenLimitCheck.tier}\n使用量: ${tokenLimitCheck.current.toLocaleString()} / ${tokenLimitCheck.max === -1 ? '無制限' : tokenLimitCheck.max.toLocaleString()} トークン`,
         timestamp: new Date(),
       };
       this.addMessage(errorMessage);
@@ -311,10 +313,12 @@ class ChatService {
 
         // 実際に使用したトークン数を記録（課金対象・モデル別）
         if (response.tokenUsage.inputTokens && response.tokenUsage.outputTokens && response.model) {
-          const { trackTokenUsage, incrementLLMRequestCount } = await import('../../settings/settingsStore').then(m => m.useSettingsStore.getState());
-          await trackTokenUsage(response.tokenUsage.inputTokens, response.tokenUsage.outputTokens, response.model);
-          await incrementLLMRequestCount();
-          logger.info('chatService', `Token usage tracked for model ${response.model}: input=${response.tokenUsage.inputTokens}, output=${response.tokenUsage.outputTokens}`);
+          const { trackAndDeductTokens } = await import('../../utils/tokenTrackingHelper');
+          await trackAndDeductTokens(
+            response.tokenUsage.inputTokens,
+            response.tokenUsage.outputTokens,
+            response.model
+          );
         }
       }
 
@@ -567,6 +571,16 @@ class ChatService {
       error
     );
     this.addMessage(errorMessage);
+
+    // TOKEN_LIMIT_EXCEEDED エラーの場合、トークン購入の案内を追加
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'TOKEN_LIMIT_EXCEEDED') {
+      const purchaseGuidanceMessage: ChatMessage = {
+        role: 'system',
+        content: '💡 トークンを購入するには、設定画面の「トークン購入」ボタンをタップしてください。',
+        timestamp: new Date(),
+      };
+      this.addMessage(purchaseGuidanceMessage);
+    }
   }
 
   /**

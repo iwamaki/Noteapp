@@ -9,4 +9,5 @@ export type RootStackParamList = {
   FileEdit: { fileId?: string; filename?: string; content?: string; saved?: boolean; initialViewMode?: 'edit' | 'preview' };
   Settings: undefined;
   Subscription: undefined;
+  TokenPurchase: undefined;
 };

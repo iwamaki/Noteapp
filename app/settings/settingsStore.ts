@@ -10,6 +10,20 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SETTINGS_STORAGE_KEY = '@app_settings';
 
+// 購入履歴レコード
+export interface PurchaseRecord {
+  id: string; // ユニークID
+  type: 'initial' | 'addon' | 'subscription'; // 購入タイプ
+  productId: string; // プロダクトID
+  transactionId: string; // トランザクションID
+  purchaseDate: string; // 購入日時（ISO 8601）
+  amount: number; // 支払額（円）
+  tokensAdded: {
+    flash: number; // 追加されたFlashトークン数
+    pro: number; // 追加されたProトークン数
+  };
+}
+
 // アプリケーション設定の型定義
 export interface AppSettings {
   // 1. UI設定
@@ -91,13 +105,22 @@ export interface AppSettings {
     autoRenew: boolean;
   };
 
-  // 10. 使用量情報（サーバーから同期）
+  // 10. トークン残高（Phase 1: 購入したトークン）
+  tokenBalance: {
+    flash: number; // Flashモデル用トークン残高
+    pro: number; // Proモデル用トークン残高
+  };
+
+  // 11. 購入履歴
+  purchaseHistory: PurchaseRecord[];
+
+  // 12. 使用量情報（サーバーから同期）
   usage: {
-    // 💰 コストに直結（最重要）
+    // 💰 コスト計算用（レガシー）
     monthlyInputTokens: number;  // 今月の入力トークン数（全体）
     monthlyOutputTokens: number; // 今月の出力トークン数（全体）
 
-    // モデル別のトークン使用量（コスト計算用）
+    // モデル別の詳細使用量（サブスク上限チェック + コスト計算用）
     monthlyTokensByModel: {
       [modelId: string]: {
         inputTokens: number;
@@ -198,6 +221,15 @@ const defaultSettings: AppSettings = {
     autoRenew: false,
   },
 
+  // トークン残高
+  tokenBalance: {
+    flash: 0,
+    pro: 0,
+  },
+
+  // 購入履歴
+  purchaseHistory: [],
+
   // 使用量情報
   usage: {
     monthlyInputTokens: 0,
@@ -217,6 +249,11 @@ interface SettingsStore {
   loadSettings: () => Promise<void>;
   updateSettings: (updates: Partial<AppSettings>) => Promise<void>;
   resetSettings: () => Promise<void>;
+
+  // トークン残高管理関数
+  addTokens: (flashTokens: number, proTokens: number, purchaseRecord: PurchaseRecord) => Promise<void>;
+  deductTokens: (flashTokens: number, proTokens: number) => Promise<void>;
+  getPurchaseHistory: () => PurchaseRecord[];
 
   // 使用量トラッキング関数
   trackTokenUsage: (inputTokens: number, outputTokens: number, modelId: string) => Promise<void>;
@@ -294,6 +331,60 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       console.error('Failed to reset settings:', error);
       throw error;
     }
+  },
+
+  // =========================
+  // トークン残高管理関数
+  // =========================
+
+  /**
+   * トークンを追加（購入時に呼び出される）
+   * @param flashTokens 追加するFlashトークン数
+   * @param proTokens 追加するProトークン数
+   * @param purchaseRecord 購入履歴レコード
+   */
+  addTokens: async (flashTokens: number, proTokens: number, purchaseRecord: PurchaseRecord) => {
+    const { settings } = get();
+    const newSettings = {
+      ...settings,
+      tokenBalance: {
+        flash: settings.tokenBalance.flash + flashTokens,
+        pro: settings.tokenBalance.pro + proTokens,
+      },
+      purchaseHistory: [purchaseRecord, ...settings.purchaseHistory], // 最新を先頭に
+    };
+    await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(newSettings));
+    set({ settings: newSettings });
+    console.log(`[TokenBalance] Added tokens: Flash=${flashTokens}, Pro=${proTokens}. New balance: Flash=${newSettings.tokenBalance.flash}, Pro=${newSettings.tokenBalance.pro}`);
+  },
+
+  /**
+   * トークンを消費（LLM使用時に呼び出される）
+   * @param flashTokens 消費するFlashトークン数
+   * @param proTokens 消費するProトークン数
+   */
+  deductTokens: async (flashTokens: number, proTokens: number) => {
+    const { settings } = get();
+    const newFlashBalance = Math.max(0, settings.tokenBalance.flash - flashTokens);
+    const newProBalance = Math.max(0, settings.tokenBalance.pro - proTokens);
+
+    const newSettings = {
+      ...settings,
+      tokenBalance: {
+        flash: newFlashBalance,
+        pro: newProBalance,
+      },
+    };
+    await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(newSettings));
+    set({ settings: newSettings });
+    console.log(`[TokenBalance] Deducted tokens: Flash=${flashTokens}, Pro=${proTokens}. New balance: Flash=${newFlashBalance}, Pro=${newProBalance}`);
+  },
+
+  /**
+   * 購入履歴を取得
+   */
+  getPurchaseHistory: () => {
+    return get().settings.purchaseHistory;
   },
 
   // =========================
