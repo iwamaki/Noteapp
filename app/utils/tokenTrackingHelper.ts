@@ -61,8 +61,6 @@ export async function trackAndDeductTokens(
     useSettingsStore.getState();
 
   try {
-    const totalTokens = inputTokens + outputTokens;
-
     // サブスクリプション情報を取得
     const { subscription } = settings;
     const isActive = subscription.status === 'active' || subscription.status === 'trial';

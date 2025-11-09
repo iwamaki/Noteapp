@@ -18,8 +18,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { RootStackParamList } from '../../navigation/types';
-import { useSubscription, getUsageColor, useMonthlyCost, useFlashTokenUsage, useProTokenUsage } from '../../utils/subscriptionHelpers';
-import { SUBSCRIPTION_PLANS } from '../../constants/plans';
+import { getUsageColor, useMonthlyCost, useFlashTokenUsage, useProTokenUsage } from '../../utils/subscriptionHelpers';
 import { useSettingsStore } from '../settingsStore';
 
 type SettingsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Settings'>;
@@ -31,7 +30,6 @@ interface SubscriptionSectionProps {
 export const SubscriptionSection: React.FC<SubscriptionSectionProps> = ({ renderSection }) => {
   const { colors, spacing, typography } = useTheme();
   const navigation = useNavigation<SettingsScreenNavigationProp>();
-  const { tier, status } = useSubscription();
   const { settings } = useSettingsStore();
 
   // Flash/Pro 別のトークン使用量情報を取得

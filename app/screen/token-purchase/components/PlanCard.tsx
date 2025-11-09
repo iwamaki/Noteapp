@@ -1,271 +1,159 @@
 /**
  * @file PlanCard.tsx
- * @summary サブスクリプションプランカードコンポーネント
- * @description
- * 各プラン（Free/Pro/Enterprise）の情報を表示するカード。
- * 現在のプランはハイライト表示され、購入ボタンを表示。
+ * @summary Subscription plan card component
+ * @description Displays a subscription plan with features and purchase button
  */
 
 import React from 'react';
-import {
-  StyleSheet,
-  View,
-  Text,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '../../../design/theme/ThemeContext';
+import type { Product } from 'react-native-iap';
 import type { SubscriptionPlan } from '../../../constants/plans';
+import { formatFlashTokenLimit, formatProTokenLimit } from '../utils/formatters';
+import { sharedStyles } from '../styles/sharedStyles';
+import type { SubscriptionTier } from '../../../constants/plans';
 
 interface PlanCardProps {
   plan: SubscriptionPlan;
+  product?: Product;
   isCurrentPlan: boolean;
-  isRecommended?: boolean;
+  purchasing: boolean;
+  onPurchase: (tier: SubscriptionTier) => void;
 }
 
-/**
- * プランカード
- *
- * 機能:
- * - プラン名と価格表示
- * - 主要機能のリスト
- * - 購入ボタン（現在のプランの場合は「現在のプラン」表示）
- * - おすすめバッジ表示
- */
 export const PlanCard: React.FC<PlanCardProps> = ({
   plan,
-  isRecommended = false,
+  product,
+  isCurrentPlan,
+  purchasing,
+  onPurchase,
 }) => {
-  const { colors, typography } = useTheme();
-
-  // 主要機能のリスト（表示用）
-  const mainFeatures = [
-    {
-      key: 'flash',
-      label: 'Flash tokens',
-      value:
-        plan.limits.maxMonthlyFlashTokens === -1
-          ? '無制限'
-          : plan.limits.maxMonthlyFlashTokens === 0
-          ? 'トークン購入が必要'
-          : `${(plan.limits.maxMonthlyFlashTokens / 1000000).toFixed(1)}M/月`,
-    },
-    {
-      key: 'pro',
-      label: 'Pro tokens',
-      value:
-        plan.limits.maxMonthlyProTokens === -1
-          ? '無制限'
-          : plan.limits.maxMonthlyProTokens === 0
-          ? '利用不可'
-          : `${(plan.limits.maxMonthlyProTokens / 1000).toFixed(0)}k/月`,
-    },
-  ];
-
-  // プロ機能
-  const proFeatures: { key: keyof typeof plan.features; label: string }[] = [
-    { key: 'advancedModels', label: '高度なLLMモデル' },
-    { key: 'ragSearch', label: 'RAG検索' },
-    { key: 'webSearch', label: 'Web検索' },
-  ];
-
-  const activeProFeatures = proFeatures.filter((f) => plan.features[f.key]);
+  // トークン情報を整形
+  const flashTokenDisplay = formatFlashTokenLimit(plan.limits.maxMonthlyFlashTokens);
+  const proTokenDisplay = formatProTokenLimit(plan.limits.maxMonthlyProTokens);
 
   return (
-    <View
-      style={[
-        styles.container,
-        {
-          backgroundColor: colors.background,
-        },
-      ]}
-    >
-      {/* おすすめバッジ */}
-      {isRecommended && (
-        <View
-          style={[
-            styles.recommendedBadge,
-            { backgroundColor: colors.primary },
-          ]}
-        >
-          <Text style={[styles.recommendedText, { color: colors.white }]}>
-            おすすめ
-          </Text>
+    <View style={[sharedStyles.baseCard, styles.card]}>
+      {isCurrentPlan && (
+        <View style={[sharedStyles.badge, styles.currentBadge]}>
+          <Text style={sharedStyles.badgeText}>現在のプラン</Text>
         </View>
       )}
 
-      {/* プラン名 */}
-      <Text style={[styles.planName, typography.title, { color: colors.text }]}>
-        {plan.displayName}
-      </Text>
+      <Text style={sharedStyles.cardTitle}>{plan.displayName}</Text>
+      <Text style={sharedStyles.cardDescription}>{plan.description}</Text>
 
-      {/* 価格 */}
-      <View style={styles.priceContainer}>
-        {plan.price === 0 ? (
-          <Text
-            style={[styles.priceText, typography.title, { color: colors.text }]}
-          >
-            無料
-          </Text>
-        ) : (
-          <>
-            <Text
-              style={[
-                styles.priceText,
-                typography.title,
-                { color: colors.text },
-              ]}
-            >
-              ¥{plan.price.toLocaleString()}
-            </Text>
-            <Text
-              style={[
-                styles.pricePeriod,
-                typography.caption,
-                { color: colors.textSecondary },
-              ]}
-            >
-              /月
-            </Text>
-          </>
-        )}
+      {/* トークン情報 */}
+      <View style={styles.tokensContainer}>
+        <View style={styles.tokenItem}>
+          <Ionicons name="flash" size={16} color="#007AFF" />
+          <Text style={styles.tokenText}>Flash: {flashTokenDisplay}</Text>
+        </View>
+        <View style={styles.tokenItem}>
+          <Ionicons name="rocket" size={16} color="#FF9500" />
+          <Text style={styles.tokenText}>Pro: {proTokenDisplay}</Text>
+        </View>
       </View>
-
-      {/* 説明 */}
-      {plan.description && (
-        <Text
-          style={[
-            styles.description,
-            typography.body,
-            { color: colors.textSecondary },
-          ]}
-        >
-          {plan.description}
-        </Text>
-      )}
 
       {/* 主要機能 */}
       <View style={styles.featuresContainer}>
-        {mainFeatures.map((feature) => (
-          <View key={feature.key} style={styles.featureRow}>
-            <Ionicons
-              name="checkmark-circle"
-              size={20}
-              color={colors.success}
-            />
-            <Text
-              style={[
-                styles.featureText,
-                typography.body,
-                { color: colors.text },
-              ]}
-            >
-              {feature.label}: {feature.value}
-            </Text>
+        {plan.features.advancedModels && (
+          <View style={styles.featureRow}>
+            <Ionicons name="checkmark-circle" size={18} color="#28a745" />
+            <Text style={styles.featureText}>高度なLLMモデル</Text>
           </View>
-        ))}
-
-        {/* プロ機能 */}
-        {activeProFeatures.length > 0 && (
-          <View style={[styles.proFeaturesSection, { borderTopColor: colors.border }]}>
-            <Text
-              style={[
-                styles.proFeaturesTitle,
-                typography.caption,
-                { color: colors.textSecondary },
-              ]}
-            >
-              プロ機能:
-            </Text>
-            {activeProFeatures.map((feature) => (
-              <View key={feature.key} style={styles.featureRow}>
-                <Ionicons
-                  name="checkmark-circle"
-                  size={20}
-                  color={colors.primary}
-                />
-                <Text
-                  style={[
-                    styles.featureText,
-                    typography.body,
-                    { color: colors.text },
-                  ]}
-                >
-                  {feature.label}
-                </Text>
-              </View>
-            ))}
+        )}
+        {plan.features.ragSearch && (
+          <View style={styles.featureRow}>
+            <Ionicons name="checkmark-circle" size={18} color="#28a745" />
+            <Text style={styles.featureText}>RAG検索</Text>
+          </View>
+        )}
+        {plan.features.webSearch && (
+          <View style={styles.featureRow}>
+            <Ionicons name="checkmark-circle" size={18} color="#28a745" />
+            <Text style={styles.featureText}>Web検索</Text>
           </View>
         )}
       </View>
 
+      <Text style={sharedStyles.cardPrice}>
+        {product ? (product as any).localizedPrice || `¥${plan.price}/月` : `¥${plan.price}/月`}
+      </Text>
+
+      {isCurrentPlan ? (
+        <View style={styles.currentPlanButton}>
+          <Ionicons name="checkmark-circle" size={20} color="#28a745" />
+          <Text style={styles.currentPlanButtonText}>利用中</Text>
+        </View>
+      ) : (
+        <TouchableOpacity
+          style={[
+            sharedStyles.primaryButton,
+            purchasing && sharedStyles.primaryButtonDisabled,
+          ]}
+          onPress={() => onPurchase(plan.id as SubscriptionTier)}
+          disabled={purchasing}
+        >
+          <Text style={sharedStyles.primaryButtonText}>
+            {purchasing ? '購入中...' : `${plan.displayName}を購入`}
+          </Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 20,
+  card: {
     position: 'relative',
   },
-  recommendedBadge: {
-    position: 'absolute',
-    top: -8,
-    right: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
+  currentBadge: {
+    backgroundColor: '#28a745',
   },
-  recommendedText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  planName: {
-    marginBottom: 8,
-  },
-  priceContainer: {
+  tokensContainer: {
     flexDirection: 'row',
-    alignItems: 'baseline',
-    marginBottom: 8,
+    gap: 12,
+    marginBottom: 12,
   },
-  priceText: {
-    fontWeight: 'bold',
+  tokenItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
-  pricePeriod: {
-    marginLeft: 4,
-  },
-  description: {
-    marginBottom: 16,
+  tokenText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#333',
   },
   featuresContainer: {
-    marginBottom: 16,
+    marginBottom: 12,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
   },
   featureRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
+    gap: 6,
   },
   featureText: {
-    marginLeft: 8,
-    flex: 1,
+    fontSize: 13,
+    color: '#555',
   },
-  proFeaturesSection: {
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-  },
-  proFeaturesTitle: {
-    marginBottom: 8,
-    fontWeight: '600',
-  },
-  button: {
-    paddingVertical: 12,
-    borderRadius: 8,
+  currentPlanButton: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#E8F5E9',
+    borderRadius: 8,
+    paddingVertical: 12,
+    gap: 6,
   },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
+  currentPlanButtonText: {
+    color: '#28a745',
+    fontSize: 16,
     fontWeight: '600',
   },
 });
