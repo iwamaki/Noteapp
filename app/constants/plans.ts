@@ -118,8 +118,8 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
     currency: 'JPY',
     billingPeriod: 'month',
     limits: {
-      maxMonthlyFlashTokens: 1500000,  // 1.5M Flash tokens
-      maxMonthlyProTokens: 0,           // Pro使用不可
+      maxMonthlyFlashTokens: 1000000,  // 1.0M Flash tokens
+      maxMonthlyProTokens: 50000,      // 0.05M Pro tokens
     },
     features: {
       ragSearch: false,
@@ -143,8 +143,8 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
     currency: 'JPY',
     billingPeriod: 'month',
     limits: {
-      maxMonthlyFlashTokens: 3000000,  // 3M Flash tokens
-      maxMonthlyProTokens: 200000,     // 200k Pro tokens
+      maxMonthlyFlashTokens: 3000000,  // 3.0M Flash tokens
+      maxMonthlyProTokens: 300000,     // 0.3M Pro tokens
     },
     features: {
       ragSearch: false,  // Phase 2以降
@@ -168,8 +168,8 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTier, SubscriptionPlan> = {
     currency: 'JPY',
     billingPeriod: 'month',
     limits: {
-      maxMonthlyFlashTokens: 6000000,  // 6M Flash tokens
-      maxMonthlyProTokens: 400000,     // 400k Pro tokens
+      maxMonthlyFlashTokens: 5000000,  // 5.0M Flash tokens
+      maxMonthlyProTokens: 1000000,    // 1.0M Pro tokens
     },
     features: {
       ragSearch: false,  // Phase 2以降

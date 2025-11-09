@@ -35,7 +35,7 @@ export const TOKEN_PACKAGES: TokenPackage[] = [
     description: '初めてのトークン購入 - 低コストモデル用',
     price: 300,
     tokens: {
-      flash: 500000, // 500k Flash tokens
+      flash: 1000000, // 1.0M Flash tokens
       pro: 0,
     },
     productId: Platform.select({
@@ -53,7 +53,7 @@ export const TOKEN_PACKAGES: TokenPackage[] = [
     description: '少量のFlashトークンが必要な方に',
     price: 300,
     tokens: {
-      flash: 500000, // 500k Flash tokens
+      flash: 500000, // 0.5M Flash tokens
       pro: 0,
     },
     productId: Platform.select({
@@ -67,7 +67,7 @@ export const TOKEN_PACKAGES: TokenPackage[] = [
     description: 'Flashモデルの標準的な使用量に対応',
     price: 500,
     tokens: {
-      flash: 1000000, // 1M Flash tokens
+      flash: 1000000, // 1.0M Flash tokens
       pro: 0,
     },
     productId: Platform.select({
@@ -82,7 +82,7 @@ export const TOKEN_PACKAGES: TokenPackage[] = [
     description: 'Flashモデルのヘビーユーザー向け',
     price: 1000,
     tokens: {
-      flash: 2500000, // 2.5M Flash tokens
+      flash: 3000000, // 3.0M Flash tokens
       pro: 0,
     },
     productId: Platform.select({
@@ -100,7 +100,7 @@ export const TOKEN_PACKAGES: TokenPackage[] = [
     price: 300,
     tokens: {
       flash: 0,
-      pro: 100000, // 100k Pro tokens (Flashの1/5の量で同価格)
+      pro: 100000, // 0.1M Pro tokens
     },
     productId: Platform.select({
       ios: 'noteapp.tokens.pro.small',
@@ -114,7 +114,7 @@ export const TOKEN_PACKAGES: TokenPackage[] = [
     price: 500,
     tokens: {
       flash: 0,
-      pro: 250000, // 250k Pro tokens
+      pro: 200000, // 0.2M Pro tokens
     },
     productId: Platform.select({
       ios: 'noteapp.tokens.pro.regular',
@@ -129,7 +129,7 @@ export const TOKEN_PACKAGES: TokenPackage[] = [
     price: 1000,
     tokens: {
       flash: 0,
-      pro: 600000, // 600k Pro tokens
+      pro: 700000, // 0.7M Pro tokens
     },
     productId: Platform.select({
       ios: 'noteapp.tokens.pro.large',
