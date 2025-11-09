@@ -50,12 +50,12 @@ export const SubscriptionScreen: React.FC = () => {
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
   const [availableProducts, setAvailableProducts] = useState<Product[]>([]);
-  const [selectedTab, setSelectedTab] = useState<'pro' | 'enterprise'>('pro');
+  const [selectedTab, setSelectedTab] = useState<'pro' | 'premium'>('pro');
 
   // プラン配列（ProとPremiumのみ）
   const plans = [
     { plan: SUBSCRIPTION_PLANS.pro, isCurrentPlan: tier === 'pro', isRecommended: false },
-    { plan: SUBSCRIPTION_PLANS.enterprise, isCurrentPlan: tier === 'enterprise', isRecommended: false },
+    { plan: SUBSCRIPTION_PLANS.premium, isCurrentPlan: tier === 'premium', isRecommended: false },
   ];
 
   // 現在選択されているプラン
@@ -89,7 +89,7 @@ export const SubscriptionScreen: React.FC = () => {
       setAvailableProducts(products);
 
       // 現在のプランが有料プランの場合、実際の購入状態を確認
-      if (tier === 'pro' || tier === 'enterprise') {
+      if (tier === 'pro' || tier === 'premium') {
         console.log('[SubscriptionScreen] Verifying subscription status for tier:', tier);
         const purchases = await restorePurchases();
         console.log('[SubscriptionScreen] Active purchases:', purchases);
@@ -227,8 +227,8 @@ export const SubscriptionScreen: React.FC = () => {
     switch (targetTier) {
       case 'pro':
         return PRODUCT_IDS.PRO_MONTHLY;
-      case 'enterprise':
-        return PRODUCT_IDS.ENTERPRISE_MONTHLY;
+      case 'premium':
+        return PRODUCT_IDS.PREMIUM_MONTHLY;
       default:
         return null;
     }
@@ -333,17 +333,17 @@ export const SubscriptionScreen: React.FC = () => {
           <TouchableOpacity
             style={[
               styles.tabButton,
-              selectedTab === 'enterprise' && { backgroundColor: colors.primary },
-              selectedTab !== 'enterprise' && { backgroundColor: colors.border },
+              selectedTab === 'premium' && { backgroundColor: colors.primary },
+              selectedTab !== 'premium' && { backgroundColor: colors.border },
             ]}
-            onPress={() => setSelectedTab('enterprise')}
+            onPress={() => setSelectedTab('premium')}
           >
             <Text
               style={[
                 styles.tabButtonText,
                 typography.subtitle,
-                selectedTab === 'enterprise' && { color: colors.white },
-                selectedTab !== 'enterprise' && { color: colors.textSecondary },
+                selectedTab === 'premium' && { color: colors.white },
+                selectedTab !== 'premium' && { color: colors.textSecondary },
               ]}
             >
               Premium

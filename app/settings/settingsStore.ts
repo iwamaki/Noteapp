@@ -84,7 +84,7 @@ export interface AppSettings {
 
   // 9. サブスクリプション・課金設定
   subscription: {
-    tier: 'free' | 'pro' | 'enterprise';
+    tier: 'free' | 'standard' | 'pro' | 'premium';
     status: 'active' | 'canceled' | 'expired' | 'trial' | 'none';
     expiresAt?: string; // ISO 8601 形式の日時
     trialStartedAt?: string; // トライアル開始日時
@@ -239,15 +239,32 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       if (stored) {
         const parsedSettings = JSON.parse(stored);
 
-        // マイグレーション: monthlyTokensByModelが存在しない場合は追加
+        // マイグレーション1: monthlyTokensByModelが存在しない場合は追加
         if (parsedSettings.usage && !parsedSettings.usage.monthlyTokensByModel) {
           parsedSettings.usage.monthlyTokensByModel = {};
+        }
+
+        // マイグレーション2: 'enterprise' → 'premium' に変換
+        if (parsedSettings.subscription) {
+          const oldTier = parsedSettings.subscription.tier as string;
+          if (oldTier === 'enterprise') {
+            console.log('[SettingsStore] Migrating tier: enterprise → premium');
+            parsedSettings.subscription.tier = 'premium';
+          }
+          // 無効なtier値の場合はfreeにリセット
+          const validTiers = ['free', 'standard', 'pro', 'premium'];
+          if (!validTiers.includes(parsedSettings.subscription.tier)) {
+            console.warn(`[SettingsStore] Invalid tier detected: ${parsedSettings.subscription.tier}, resetting to free`);
+            parsedSettings.subscription.tier = 'free';
+          }
         }
 
         set({ settings: { ...defaultSettings, ...parsedSettings } });
       }
     } catch (error) {
       console.error('Failed to load settings:', error);
+      // エラー時はデフォルト設定を使用
+      set({ settings: defaultSettings });
     } finally {
       set({ isLoading: false });
     }

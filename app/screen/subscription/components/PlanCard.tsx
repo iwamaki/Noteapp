@@ -40,28 +40,24 @@ export const PlanCard: React.FC<PlanCardProps> = ({
   // 主要機能のリスト（表示用）
   const mainFeatures = [
     {
-      key: 'files',
-      label: 'ファイル数',
+      key: 'flash',
+      label: 'Flash tokens',
       value:
-        plan.limits.maxFiles === -1
+        plan.limits.maxMonthlyFlashTokens === -1
           ? '無制限'
-          : `${plan.limits.maxFiles.toLocaleString()}個`,
+          : plan.limits.maxMonthlyFlashTokens === 0
+          ? 'トークン購入が必要'
+          : `${(plan.limits.maxMonthlyFlashTokens / 1000000).toFixed(1)}M/月`,
     },
     {
-      key: 'llm',
-      label: 'LLMリクエスト',
+      key: 'pro',
+      label: 'Pro tokens',
       value:
-        plan.limits.maxLLMRequests === -1
+        plan.limits.maxMonthlyProTokens === -1
           ? '無制限'
-          : `${plan.limits.maxLLMRequests.toLocaleString()}回/月`,
-    },
-    {
-      key: 'storage',
-      label: 'ストレージ',
-      value:
-        plan.limits.maxStorageMB === -1
-          ? '無制限'
-          : `${(plan.limits.maxStorageMB / 1000).toFixed(1)}GB`,
+          : plan.limits.maxMonthlyProTokens === 0
+          ? '利用不可'
+          : `${(plan.limits.maxMonthlyProTokens / 1000).toFixed(0)}k/月`,
     },
   ];
 

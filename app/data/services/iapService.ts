@@ -39,9 +39,9 @@ export const PRODUCT_IDS = {
     ios: 'noteapp.pro.yearly',
     android: 'noteapp.pro.yearly',
   }) as string,
-  ENTERPRISE_MONTHLY: Platform.select({
-    ios: 'noteapp.enterprise.monthly',
-    android: 'noteapp.enterprise.monthly',
+  PREMIUM_MONTHLY: Platform.select({
+    ios: 'noteapp.premium.monthly',
+    android: 'noteapp.premium.monthly',
   }) as string,
 };
 
@@ -227,11 +227,14 @@ export async function restorePurchases(): Promise<Purchase[]> {
  * Phase 1での簡易実装
  */
 export function getTierFromProductId(productId: string): SubscriptionTier {
-  if (productId.includes('enterprise')) {
-    return 'enterprise';
+  if (productId.includes('premium')) {
+    return 'premium';
   }
   if (productId.includes('pro')) {
     return 'pro';
+  }
+  if (productId.includes('standard')) {
+    return 'standard';
   }
   return 'free';
 }

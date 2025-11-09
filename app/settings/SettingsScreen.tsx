@@ -23,7 +23,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/types';
 import { Ionicons } from '@expo/vector-icons';
-import { useSubscription, useUsageLimit, getUsageColor, useMonthlyCost } from '../utils/subscriptionHelpers';
+import { useSubscription, getUsageColor, useMonthlyCost, useFlashTokenUsage, useProTokenUsage } from '../utils/subscriptionHelpers';
 import { SUBSCRIPTION_PLANS } from '../constants/plans';
 
 type SettingsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Settings'>;
@@ -34,8 +34,9 @@ function SettingsScreen() {
   const { tier, status } = useSubscription();
   const { settings, loadSettings, updateSettings, isLoading, checkAndResetMonthlyUsageIfNeeded } = useSettingsStore();
 
-  // トークン使用量情報を取得
-  const tokenUsage = useUsageLimit('maxMonthlyTokens');
+  // Flash/Pro 別のトークン使用量情報を取得
+  const flashUsage = useFlashTokenUsage();
+  const proUsage = useProTokenUsage();
 
   // 月間コスト情報を取得（開発時のみ）
   const costInfo = __DEV__ ? useMonthlyCost() : null;
@@ -320,80 +321,100 @@ function SettingsScreen() {
           />
         </TouchableOpacity>
 
-        {/* 月間トークン使用量 */}
+        {/* Flash tokens 使用量 */}
         <View style={styles.usageContainer}>
-          <Text style={styles.usageTitle}>月間トークン使用量</Text>
+          <Text style={styles.usageTitle}>Flash モデル使用量</Text>
           <View style={styles.usageStats}>
             <Text style={styles.usageText}>
-              {tokenUsage.current.toLocaleString()} / {tokenUsage.max === -1 ? '無制限' : tokenUsage.max.toLocaleString()} トークン
+              {flashUsage.current.toLocaleString()} / {flashUsage.max === -1 ? '無制限' : flashUsage.max === 0 ? 'トークン購入が必要' : flashUsage.max.toLocaleString()} トークン
             </Text>
-            {tokenUsage.max !== -1 && (
-              <Text style={[styles.usagePercentage, { color: getUsageColor(tokenUsage.percentage) }]}>
-                {tokenUsage.percentage.toFixed(1)}%
+            {flashUsage.max !== -1 && flashUsage.max > 0 && (
+              <Text style={[styles.usagePercentage, { color: getUsageColor(flashUsage.percentage) }]}>
+                {flashUsage.percentage.toFixed(1)}%
               </Text>
             )}
           </View>
-          {/* 入力・出力トークンの内訳 */}
-          <View style={styles.tokenBreakdown}>
-            <Text style={styles.tokenBreakdownText}>
-              入力: {settings.usage.monthlyInputTokens.toLocaleString()}
-            </Text>
-            <Text style={styles.tokenBreakdownSeparator}>|</Text>
-            <Text style={styles.tokenBreakdownText}>
-              出力: {settings.usage.monthlyOutputTokens.toLocaleString()}
-            </Text>
-          </View>
-          {tokenUsage.max !== -1 && (
+          {flashUsage.max !== -1 && flashUsage.max > 0 && (
             <View style={styles.progressBarContainer}>
               <View
                 style={[
                   styles.progressBar,
                   {
-                    width: `${Math.min(tokenUsage.percentage, 100)}%`,
-                    backgroundColor: getUsageColor(tokenUsage.percentage),
+                    width: `${Math.min(flashUsage.percentage, 100)}%`,
+                    backgroundColor: getUsageColor(flashUsage.percentage),
                   },
                 ]}
               />
             </View>
           )}
-
-          {/* モデル別の内訳 */}
-          {Object.keys(settings.usage.monthlyTokensByModel).length > 0 && (
-            <>
-              <Text style={styles.modelBreakdownTitle}>モデル別の内訳</Text>
-              {Object.entries(settings.usage.monthlyTokensByModel).map(([modelId, usage]) => {
-                const totalTokens = usage.inputTokens + usage.outputTokens;
-                // 開発時のみコスト情報を取得
-                const modelCost = __DEV__ && costInfo
-                  ? costInfo.costByModel.find(m => m.modelId === modelId)
-                  : null;
-                return (
-                  <View key={modelId} style={styles.modelBreakdownItem}>
-                    <View style={styles.modelInfoLeft}>
-                      <Text style={styles.modelName}>{modelId}</Text>
-                      <Text style={styles.modelUsage}>
-                        合計: {totalTokens.toLocaleString()}
-                      </Text>
-                      <Text style={styles.modelTokenDetail}>
-                        入力: {usage.inputTokens.toLocaleString()} | 出力: {usage.outputTokens.toLocaleString()}
-                      </Text>
-                    </View>
-                    {__DEV__ && modelCost && (
-                      <Text style={styles.modelCost}>{modelCost.formattedCost}</Text>
-                    )}
-                  </View>
-                );
-              })}
-              {/* 開発時のみ総コストを表示 */}
-              {__DEV__ && costInfo && costInfo.totalCost > 0 && (
-                <View style={styles.totalCostContainer}>
-                  <Text style={styles.totalCostLabel}>今月のコスト</Text>
-                  <Text style={styles.totalCostValue}>{costInfo.formattedTotalCost}</Text>
-                </View>
-              )}
-            </>
-          )}
         </View>
+
+        {/* Pro tokens 使用量（使用可能な場合のみ） */}
+        {proUsage.available && (
+          <View style={styles.usageContainer}>
+            <Text style={styles.usageTitle}>Pro モデル使用量</Text>
+            <View style={styles.usageStats}>
+              <Text style={styles.usageText}>
+                {proUsage.current.toLocaleString()} / {proUsage.max === -1 ? '無制限' : proUsage.max.toLocaleString()} トークン
+              </Text>
+              {proUsage.max !== -1 && (
+                <Text style={[styles.usagePercentage, { color: getUsageColor(proUsage.percentage) }]}>
+                  {proUsage.percentage.toFixed(1)}%
+                </Text>
+              )}
+            </View>
+            {proUsage.max !== -1 && (
+              <View style={styles.progressBarContainer}>
+                <View
+                  style={[
+                    styles.progressBar,
+                    {
+                      width: `${Math.min(proUsage.percentage, 100)}%`,
+                      backgroundColor: getUsageColor(proUsage.percentage),
+                    },
+                  ]}
+                />
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* モデル別詳細（開発時のみ） */}
+        {__DEV__ && Object.keys(settings.usage.monthlyTokensByModel).length > 0 && (
+          <View style={styles.usageContainer}>
+            <Text style={styles.modelBreakdownTitle}>モデル別詳細（開発用）</Text>
+            {Object.entries(settings.usage.monthlyTokensByModel).map(([modelId, usage]) => {
+              const totalTokens = usage.inputTokens + usage.outputTokens;
+              // 開発時のみコスト情報を取得
+              const modelCost = costInfo
+                ? costInfo.costByModel.find(m => m.modelId === modelId)
+                : null;
+              return (
+                <View key={modelId} style={styles.modelBreakdownItem}>
+                  <View style={styles.modelInfoLeft}>
+                    <Text style={styles.modelName}>{modelId}</Text>
+                    <Text style={styles.modelUsage}>
+                      合計: {totalTokens.toLocaleString()}
+                    </Text>
+                    <Text style={styles.modelTokenDetail}>
+                      入力: {usage.inputTokens.toLocaleString()} | 出力: {usage.outputTokens.toLocaleString()}
+                    </Text>
+                  </View>
+                  {modelCost && (
+                    <Text style={styles.modelCost}>{modelCost.formattedCost}</Text>
+                  )}
+                </View>
+              );
+            })}
+            {/* 開発時のみ総コストを表示 */}
+            {costInfo && costInfo.totalCost > 0 && (
+              <View style={styles.totalCostContainer}>
+                <Text style={styles.totalCostLabel}>今月のコスト</Text>
+                <Text style={styles.totalCostValue}>{costInfo.formattedTotalCost}</Text>
+              </View>
+            )}
+          </View>
+        )}
 
         {renderSection('表示設定')}
 
