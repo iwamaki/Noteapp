@@ -10,8 +10,9 @@ import { Ionicons } from '@expo/vector-icons';
 import type { Product } from 'react-native-iap';
 import type { SubscriptionPlan } from '../../../constants/plans';
 import { formatFlashTokenLimit, formatProTokenLimit } from '../utils/formatters';
-import { sharedStyles } from '../styles/sharedStyles';
+import { getSharedStyles } from '../styles/sharedStyles';
 import type { SubscriptionTier } from '../../../constants/plans';
+import { useTheme } from '../../../design/theme/ThemeContext';
 
 interface PlanCardProps {
   plan: SubscriptionPlan;
@@ -28,6 +29,9 @@ export const PlanCard: React.FC<PlanCardProps> = ({
   purchasing,
   onPurchase,
 }) => {
+  const theme = useTheme();
+  const sharedStyles = getSharedStyles(theme);
+
   // トークン情報を整形
   const flashTokenDisplay = formatFlashTokenLimit(plan.limits.maxMonthlyFlashTokens);
   const proTokenDisplay = formatProTokenLimit(plan.limits.maxMonthlyProTokens);
@@ -46,12 +50,12 @@ export const PlanCard: React.FC<PlanCardProps> = ({
       {/* トークン情報 */}
       <View style={styles.tokensContainer}>
         <View style={styles.tokenItem}>
-          <Ionicons name="flash" size={16} color="#007AFF" />
-          <Text style={styles.tokenText}>Flash: {flashTokenDisplay}</Text>
+          <Ionicons name="flash" size={theme.iconSizes.small} color={theme.colors.primary} />
+          <Text style={sharedStyles.tokenInfo}>Flash: {flashTokenDisplay}</Text>
         </View>
         <View style={styles.tokenItem}>
-          <Ionicons name="rocket" size={16} color="#FF9500" />
-          <Text style={styles.tokenText}>Pro: {proTokenDisplay}</Text>
+          <Ionicons name="rocket" size={theme.iconSizes.small} color="#FF9500" />
+          <Text style={sharedStyles.tokenInfo}>Pro: {proTokenDisplay}</Text>
         </View>
       </View>
 
@@ -92,17 +96,12 @@ const styles = StyleSheet.create({
   tokensContainer: {
     flexDirection: 'row',
     gap: 12,
-    marginBottom: 16,
+    marginBottom: 12,
   },
   tokenItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-  },
-  tokenText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#333',
   },
   currentPlanButton: {
     flexDirection: 'row',

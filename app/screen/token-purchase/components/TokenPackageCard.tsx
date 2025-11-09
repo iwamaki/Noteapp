@@ -9,7 +9,8 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import type { Product } from 'react-native-iap';
 import type { TokenPackage } from '../../../constants/tokenPackages';
 import { formatTokenAmount } from '../../../constants/tokenPackages';
-import { sharedStyles } from '../styles/sharedStyles';
+import { getSharedStyles } from '../styles/sharedStyles';
+import { useTheme } from '../../../design/theme/ThemeContext';
 
 interface TokenPackageCardProps {
   package: TokenPackage;
@@ -24,6 +25,9 @@ export const TokenPackageCard: React.FC<TokenPackageCardProps> = ({
   purchasing,
   onPurchase,
 }) => {
+  const theme = useTheme();
+  const sharedStyles = getSharedStyles(theme);
+
   // Flash or Pro トークンの表示を決定
   const tokenDisplay = pkg.tokens.flash > 0
     ? `${formatTokenAmount(pkg.tokens.flash)} Flash トークン`
@@ -38,7 +42,7 @@ export const TokenPackageCard: React.FC<TokenPackageCardProps> = ({
       )}
       <Text style={sharedStyles.cardTitle}>{pkg.name}</Text>
       <Text style={sharedStyles.cardDescription}>{pkg.description}</Text>
-      <Text style={styles.tokens}>{tokenDisplay}</Text>
+      <Text style={sharedStyles.tokenInfo}>{tokenDisplay}</Text>
       <Text style={sharedStyles.cardPrice}>
         {product ? (product as any).localizedPrice || `¥${pkg.price}` : `¥${pkg.price}`}
       </Text>
@@ -61,11 +65,5 @@ export const TokenPackageCard: React.FC<TokenPackageCardProps> = ({
 const styles = StyleSheet.create({
   card: {
     position: 'relative',
-  },
-  tokens: {
-    fontSize: 18,
-    fontWeight: '500',
-    color: '#007AFF',
-    marginBottom: 8,
   },
 });

@@ -15,7 +15,6 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-import { useSettingsStore } from '../../settings/settingsStore';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { useSubscription } from '../../utils/subscriptionHelpers';
 import { SUBSCRIPTION_PLANS } from '../../constants/plans';
@@ -25,7 +24,6 @@ import { PRODUCT_IDS } from '../../data/services/iapService';
 import { PlanCard } from './components/PlanCard';
 import { TokenPackageCard } from './components/TokenPackageCard';
 import { TabSelector } from './components/TabSelector';
-import { BalanceDisplay } from './components/BalanceDisplay';
 import { NoticeCard } from './components/NoticeCard';
 
 // Hooks
@@ -36,7 +34,6 @@ type TabType = 'subscription' | 'tokens';
 
 export default function TokenPurchaseScreen() {
   const { colors } = useTheme();
-  const { settings } = useSettingsStore();
   const { tier } = useSubscription();
 
   // タブ選択
@@ -77,9 +74,6 @@ export default function TokenPurchaseScreen() {
       <TabSelector
         selectedTab={selectedTab}
         onTabChange={setSelectedTab}
-        primaryColor={colors.primary}
-        secondaryColor={colors.secondary}
-        textSecondaryColor={colors.textSecondary}
       />
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
@@ -144,58 +138,44 @@ export default function TokenPurchaseScreen() {
         {/* トークンパッケージタブの内容 */}
         {selectedTab === 'tokens' && (
           <>
-            {/* トークン残高表示 */}
-            <BalanceDisplay
-              flashBalance={settings.tokenBalance.flash}
-              proBalance={settings.tokenBalance.pro}
-            />
-
             {/* Flash トークンパッケージ */}
             {availablePackages.filter(pkg => pkg.tokens.flash > 0).length > 0 && (
-              <>
-                <Text style={styles.sectionTitle}>Flash トークン</Text>
-                <Text style={styles.hint}>低コストモデル用（gemini-flash など）</Text>
-                <View style={styles.packagesContainer}>
-                  {availablePackages
-                    .filter(pkg => pkg.tokens.flash > 0)
-                    .map((pkg) => (
-                      <TokenPackageCard
-                        key={pkg.id}
-                        package={pkg}
-                        product={tokenProducts.find((p) => (p as any).id === pkg.productId)}
-                        purchasing={purchasing}
-                        onPurchase={handleTokenPurchase}
-                      />
-                    ))}
-                </View>
-              </>
+              <View style={styles.packagesContainer}>
+                {availablePackages
+                  .filter(pkg => pkg.tokens.flash > 0)
+                  .map((pkg) => (
+                    <TokenPackageCard
+                      key={pkg.id}
+                      package={pkg}
+                      product={tokenProducts.find((p) => (p as any).id === pkg.productId)}
+                      purchasing={purchasing}
+                      onPurchase={handleTokenPurchase}
+                    />
+                  ))}
+              </View>
             )}
 
             {/* Pro トークンパッケージ */}
             {availablePackages.filter(pkg => pkg.tokens.pro > 0).length > 0 && (
-              <>
-                <Text style={[styles.sectionTitle, styles.sectionTitleMargin]}>Pro トークン</Text>
-                <Text style={styles.hint}>高性能モデル用（gemini-pro など）</Text>
-                <View style={styles.packagesContainer}>
-                  {availablePackages
-                    .filter(pkg => pkg.tokens.pro > 0)
-                    .map((pkg) => (
-                      <TokenPackageCard
-                        key={pkg.id}
-                        package={pkg}
-                        product={tokenProducts.find((p) => (p as any).id === pkg.productId)}
-                        purchasing={purchasing}
-                        onPurchase={handleTokenPurchase}
-                      />
-                    ))}
-                </View>
-              </>
+              <View style={styles.packagesContainer}>
+                {availablePackages
+                  .filter(pkg => pkg.tokens.pro > 0)
+                  .map((pkg) => (
+                    <TokenPackageCard
+                      key={pkg.id}
+                      package={pkg}
+                      product={tokenProducts.find((p) => (p as any).id === pkg.productId)}
+                      purchasing={purchasing}
+                      onPurchase={handleTokenPurchase}
+                    />
+                  ))}
+              </View>
             )}
 
             {/* 注意事項 */}
             <NoticeCard
               title="ご注意"
-              text="• トークンは購入後すぐに残高に追加されます&#10;• 購入したトークンに有効期限はありません&#10;• トークンの返金はできません&#10;• Flash トークンは低コストのモデルで使用できます&#10;• Pro トークンは高性能モデルで使用できます"
+              text="• トークンは購入後すぐに残高に追加されます&#10;• 購入したトークンに有効期限はありません&#10;• トークンの返金はできません"
             />
           </>
         )}
@@ -234,20 +214,5 @@ const styles = StyleSheet.create({
   restoreText: {
     marginLeft: 8,
     fontSize: 16,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-  },
-  sectionTitleMargin: {
-    marginTop: 24,
-  },
-  hint: {
-    fontSize: 14,
-    color: '#888',
-    fontStyle: 'italic',
-    marginBottom: 12,
   },
 });

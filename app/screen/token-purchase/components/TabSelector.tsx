@@ -6,39 +6,36 @@
 
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useTheme } from '../../../design/theme/ThemeContext';
 
 type TabType = 'subscription' | 'tokens';
 
 interface TabSelectorProps {
   selectedTab: TabType;
   onTabChange: (tab: TabType) => void;
-  primaryColor: string;
-  secondaryColor: string;
-  textSecondaryColor: string;
 }
 
 export const TabSelector: React.FC<TabSelectorProps> = ({
   selectedTab,
   onTabChange,
-  primaryColor,
-  secondaryColor,
-  textSecondaryColor,
 }) => {
+  const theme = useTheme();
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingHorizontal: theme.spacing.lg }]}>
       <TouchableOpacity
         style={[
           styles.tab,
-          selectedTab === 'subscription' && [styles.activeTab, { backgroundColor: primaryColor }],
-          selectedTab !== 'subscription' && { backgroundColor: secondaryColor },
+          selectedTab === 'subscription' && [styles.activeTab, { backgroundColor: theme.colors.primary }],
+          selectedTab !== 'subscription' && { backgroundColor: theme.colors.secondary },
         ]}
         onPress={() => onTabChange('subscription')}
       >
         <Text
           style={[
-            styles.tabText,
-            selectedTab === 'subscription' && { color: '#FFFFFF' },
-            selectedTab !== 'subscription' && { color: textSecondaryColor },
+            { fontSize: theme.typography.subtitle.fontSize, fontWeight: '600' },
+            selectedTab === 'subscription' && { color: theme.colors.white },
+            selectedTab !== 'subscription' && { color: theme.colors.textSecondary },
           ]}
         >
           サブスクリプション
@@ -48,16 +45,16 @@ export const TabSelector: React.FC<TabSelectorProps> = ({
       <TouchableOpacity
         style={[
           styles.tab,
-          selectedTab === 'tokens' && [styles.activeTab, { backgroundColor: primaryColor }],
-          selectedTab !== 'tokens' && { backgroundColor: secondaryColor },
+          selectedTab === 'tokens' && [styles.activeTab, { backgroundColor: theme.colors.primary }],
+          selectedTab !== 'tokens' && { backgroundColor: theme.colors.secondary },
         ]}
         onPress={() => onTabChange('tokens')}
       >
         <Text
           style={[
-            styles.tabText,
-            selectedTab === 'tokens' && { color: '#FFFFFF' },
-            selectedTab !== 'tokens' && { color: textSecondaryColor },
+            { fontSize: theme.typography.subtitle.fontSize, fontWeight: '600' },
+            selectedTab === 'tokens' && { color: theme.colors.white },
+            selectedTab !== 'tokens' && { color: theme.colors.textSecondary },
           ]}
         >
           トークンパッケージ
@@ -70,7 +67,6 @@ export const TabSelector: React.FC<TabSelectorProps> = ({
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 8,
     gap: 12,
@@ -82,8 +78,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   activeTab: {},
-  tabText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
 });

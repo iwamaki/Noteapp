@@ -6,7 +6,8 @@
 
 import React from 'react';
 import { View, Text } from 'react-native';
-import { sharedStyles } from '../styles/sharedStyles';
+import { getSharedStyles } from '../styles/sharedStyles';
+import { useTheme } from '../../../design/theme/ThemeContext';
 
 interface NoticeCardProps {
   title: string;
@@ -14,6 +15,9 @@ interface NoticeCardProps {
 }
 
 export const NoticeCard: React.FC<NoticeCardProps> = ({ title, text }) => {
+  const theme = useTheme();
+  const sharedStyles = getSharedStyles(theme);
+
   return (
     <View style={sharedStyles.noteCard}>
       <Text style={sharedStyles.noteTitle}>{title}</Text>

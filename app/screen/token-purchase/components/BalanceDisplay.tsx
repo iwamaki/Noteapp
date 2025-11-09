@@ -7,7 +7,8 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { formatTokenAmount } from '../../../constants/tokenPackages';
-import { sharedStyles } from '../styles/sharedStyles';
+import { getSharedStyles } from '../styles/sharedStyles';
+import { useTheme } from '../../../design/theme/ThemeContext';
 
 interface BalanceDisplayProps {
   flashBalance: number;
@@ -18,18 +19,25 @@ export const BalanceDisplay: React.FC<BalanceDisplayProps> = ({
   flashBalance,
   proBalance,
 }) => {
+  const theme = useTheme();
+  const sharedStyles = getSharedStyles(theme);
+
   return (
     <View style={[sharedStyles.baseCard, styles.container]}>
-      <Text style={styles.title}>現在のトークン残高</Text>
+      <Text style={[sharedStyles.cardTitle, styles.title]}>現在のトークン残高</Text>
       <View style={styles.balanceRow}>
         <View style={styles.balanceItem}>
-          <Text style={styles.label}>Flash トークン</Text>
-          <Text style={styles.value}>{formatTokenAmount(flashBalance)}</Text>
+          <Text style={sharedStyles.cardDescription}>Flash トークン</Text>
+          <Text style={[styles.value, { color: theme.colors.primary }]}>
+            {formatTokenAmount(flashBalance)}
+          </Text>
         </View>
         {proBalance > 0 && (
           <View style={styles.balanceItem}>
-            <Text style={styles.label}>Pro トークン</Text>
-            <Text style={styles.value}>{formatTokenAmount(proBalance)}</Text>
+            <Text style={sharedStyles.cardDescription}>Pro トークン</Text>
+            <Text style={[styles.value, { color: theme.colors.primary }]}>
+              {formatTokenAmount(proBalance)}
+            </Text>
           </View>
         )}
       </View>
@@ -42,9 +50,6 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   title: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
     marginBottom: 16,
   },
   balanceRow: {
@@ -54,14 +59,8 @@ const styles = StyleSheet.create({
   balanceItem: {
     alignItems: 'center',
   },
-  label: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 8,
-  },
   value: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#007AFF',
   },
 });

@@ -1,22 +1,26 @@
 /**
  * @file sharedStyles.ts
  * @summary Shared styles for token purchase components
- * @description Common style definitions for cards, badges, and buttons
+ * @description Common style definitions for cards, badges, and buttons using theme
  */
 
 import { StyleSheet } from 'react-native';
 
-export const sharedStyles = StyleSheet.create({
+/**
+ * Get shared styles based on theme
+ */
+export const getSharedStyles = (theme: {
+  colors: any;
+  typography: any;
+  shadows: any;
+  spacing: any;
+}) => StyleSheet.create({
   // Card styles
   baseCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.white,
     borderRadius: 12,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    padding: theme.spacing.xl,
+    ...theme.shadows.small,
   },
 
   // Badge styles
@@ -30,33 +34,41 @@ export const sharedStyles = StyleSheet.create({
     borderRadius: 12,
   },
   badgeText: {
-    color: '#FFFFFF',
-    fontSize: 12,
+    color: theme.colors.white,
+    fontSize: theme.typography.caption.fontSize,
     fontWeight: '600',
   },
 
   // Text styles
   cardTitle: {
-    fontSize: 20,
+    fontSize: theme.typography.title.fontSize,
     fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
+    color: theme.colors.text,
+    marginBottom: theme.spacing.sm,
   },
   cardDescription: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 12,
+    fontSize: theme.typography.body.fontSize,
+    color: theme.colors.textSecondary,
+    marginBottom: theme.spacing.md,
   },
   cardPrice: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 16,
+    color: theme.colors.text,
+    marginBottom: theme.spacing.lg,
+  },
+
+  // Token info text (unified for both cards)
+  tokenInfo: {
+    fontSize: theme.typography.subtitle.fontSize,
+    fontWeight: '500',
+    color: theme.colors.primary,
+    marginBottom: theme.spacing.sm,
   },
 
   // Button styles
   primaryButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: theme.colors.primary,
     borderRadius: 8,
     paddingVertical: 12,
     alignItems: 'center',
@@ -65,8 +77,8 @@ export const sharedStyles = StyleSheet.create({
     backgroundColor: '#CCC',
   },
   primaryButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
+    color: theme.colors.white,
+    fontSize: theme.typography.subtitle.fontSize,
     fontWeight: '600',
   },
 
@@ -74,20 +86,20 @@ export const sharedStyles = StyleSheet.create({
   noteCard: {
     backgroundColor: '#FFF9E6',
     borderRadius: 12,
-    padding: 16,
-    marginTop: 24,
+    padding: theme.spacing.lg,
+    marginTop: theme.spacing.xxl,
     borderWidth: 1,
     borderColor: '#FFD700',
   },
   noteTitle: {
-    fontSize: 16,
+    fontSize: theme.typography.subtitle.fontSize,
     fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
+    color: theme.colors.text,
+    marginBottom: theme.spacing.sm,
   },
   noteText: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
+    fontSize: theme.typography.body.fontSize,
+    color: theme.colors.textSecondary,
+    lineHeight: theme.typography.body.lineHeight,
   },
 });
