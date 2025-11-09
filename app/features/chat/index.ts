@@ -18,6 +18,7 @@ import { getOrCreateClientId } from './utils/clientId';
 import { useSettingsStore } from '../../settings/settingsStore';
 import { useChatStore } from './store/chatStore';
 import { UnifiedErrorHandler } from './utils/errorHandler';
+import { checkTokenLimit } from '../../utils/subscriptionHelpers';
 
 /**
  * シングルトンクラスとして機能し、アプリケーション全体でチャットの状態を管理します。
@@ -230,26 +231,6 @@ class ChatService {
       return;
     }
 
-    // トークン上限チェック
-    const { checkTokenLimit } = await import('../../utils/subscriptionHelpers');
-    const tokenLimitCheck = checkTokenLimit();
-
-    if (!tokenLimitCheck.canSend) {
-      logger.warn('chatService', 'Token limit exceeded', {
-        current: tokenLimitCheck.currentTokens,
-        max: tokenLimitCheck.maxTokens,
-        tier: tokenLimitCheck.tier,
-      });
-
-      const errorMessage: ChatMessage = {
-        role: 'system',
-        content: `🚫 **月間トークン使用量の上限に達しました**\n\n現在のプラン: ${tokenLimitCheck.tier === 'free' ? 'フリー' : tokenLimitCheck.tier === 'pro' ? 'Pro' : 'Premium'}\n使用量: ${tokenLimitCheck.currentTokens.toLocaleString()} / ${tokenLimitCheck.maxTokens.toLocaleString()} トークン\n\nチャットを利用するには、以下のいずれかをお試しください：\n• 来月まで待つ（月初に使用量がリセットされます）\n• 上位プランにアップグレードする`,
-        timestamp: new Date(),
-      };
-      this.addMessage(errorMessage);
-      return;
-    }
-
     // 現在の添付ファイルを取得
     const attachedFiles = this.attachmentService.getAttachedFiles();
 
@@ -262,6 +243,34 @@ class ChatService {
     };
     this.addMessage(userMessage);
     this.setLoading(true);
+
+    // トークン上限チェック
+    const tokenLimitCheck = checkTokenLimit();
+
+    if (!tokenLimitCheck.canSend) {
+      logger.warn('chatService', 'Token limit exceeded', {
+        current: tokenLimitCheck.currentTokens,
+        max: tokenLimitCheck.maxTokens,
+        tier: tokenLimitCheck.tier,
+      });
+
+      // 自然なUXのため5秒待ってからエラーメッセージを返す
+      await new Promise(resolve => setTimeout(resolve, 5000));
+
+      const errorMessage: ChatMessage = {
+        role: 'system',
+        content: `🚫 **月間トークン使用量の上限に達しました**\n\n現在のプラン: ${tokenLimitCheck.tier === 'free' ? 'フリー' : tokenLimitCheck.tier === 'pro' ? 'Pro' : 'Premium'}\n使用量: ${tokenLimitCheck.currentTokens.toLocaleString()} / ${tokenLimitCheck.maxTokens.toLocaleString()} トークン\n\nチャットを利用するには、以下のいずれかをお試しください：\n• 来月まで待つ（月初に使用量がリセットされます）\n• 上位プランにアップグレードする`,
+        timestamp: new Date(),
+      };
+      this.addMessage(errorMessage);
+      this.setLoading(false);
+
+      // 添付ファイルをクリア
+      if (this.attachmentService.getAttachedFiles().length > 0) {
+        this.clearAttachedFiles();
+      }
+      return;
+    }
 
     try {
       // 現在のコンテキストプロバイダーから画面コンテキストを取得

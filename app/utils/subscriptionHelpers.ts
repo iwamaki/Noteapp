@@ -149,6 +149,7 @@ export function canSendLLMRequest(): boolean {
 
 /**
  * トークン上限内かチェック（チャット送信前の判定用）
+ * 非React環境（ChatServiceなど）から呼び出し可能
  * @returns トークン上限チェック結果
  */
 export function checkTokenLimit(): {
@@ -158,8 +159,13 @@ export function checkTokenLimit(): {
   percentage: number;
   tier: SubscriptionTier;
 } {
-  const { tier, isActive, usage } = useSubscription();
-  const effectiveTier: SubscriptionTier = isActive ? tier : 'free';
+  // Zustandストアから直接状態を取得（Reactフックを使わない）
+  const { settings } = useSettingsStore.getState();
+  const { subscription, usage } = settings;
+
+  // サブスクリプションが有効かチェック
+  const isActive = subscription.status === 'active' || subscription.status === 'trial';
+  const effectiveTier: SubscriptionTier = isActive ? subscription.tier : 'free';
 
   const currentTokens = usage.monthlyInputTokens + usage.monthlyOutputTokens;
   const maxTokens = getLimit(effectiveTier, 'maxMonthlyTokens');
