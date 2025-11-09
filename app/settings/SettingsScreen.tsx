@@ -372,23 +372,62 @@ function SettingsScreen() {
               <Text style={[styles.usageText, { fontSize: 12, color: '#888', marginTop: 4 }]}>
                 今月の使用量: {flashUsage.current.toLocaleString()} / {flashUsage.max.toLocaleString()} ({flashUsage.percentage.toFixed(1)}%)
               </Text>
+              {/* サブスクリプション残量バー */}
+              <View style={{ marginTop: 8 }}>
+                <Text style={[styles.usageText, { fontSize: 11, color: '#666', marginBottom: 4 }]}>
+                  サブスク残量: {Math.max(0, flashUsage.max - flashUsage.current).toLocaleString()} トークン
+                </Text>
+                <View style={styles.progressBarContainer}>
+                  <View
+                    style={[
+                      styles.progressBar,
+                      {
+                        width: `${100 - Math.min(flashUsage.percentage, 100)}%`,
+                        backgroundColor: getUsageColor(flashUsage.percentage),
+                      },
+                    ]}
+                  />
+                </View>
+              </View>
+              {/* 購入トークン残高バー（ある場合のみ） */}
+              {settings.tokenBalance.flash > 0 && (
+                <View style={{ marginTop: 12 }}>
+                  <Text style={[styles.usageText, { fontSize: 11, color: '#007AFF', marginBottom: 4 }]}>
+                    購入トークン: {settings.tokenBalance.flash.toLocaleString()} トークン
+                  </Text>
+                  <View style={styles.progressBarContainer}>
+                    <View
+                      style={[
+                        styles.progressBar,
+                        {
+                          width: `${Math.min(100, (settings.tokenBalance.flash / flashUsage.max) * 100)}%`,
+                          backgroundColor: '#007AFF',
+                        },
+                      ]}
+                    />
+                  </View>
+                </View>
+              )}
+            </>
+          )}
+          {/* サブスクなしで購入トークンのみある場合 */}
+          {(flashUsage.max === -1 || flashUsage.max === 0) && settings.tokenBalance.flash > 0 && (
+            <View style={{ marginTop: 8 }}>
+              <Text style={[styles.usageText, { fontSize: 11, color: '#007AFF', marginBottom: 4 }]}>
+                購入トークン: {settings.tokenBalance.flash.toLocaleString()} トークン
+              </Text>
               <View style={styles.progressBarContainer}>
                 <View
                   style={[
                     styles.progressBar,
                     {
-                      width: `${Math.min(flashUsage.percentage, 100)}%`,
-                      backgroundColor: getUsageColor(flashUsage.percentage),
+                      width: '100%',
+                      backgroundColor: '#007AFF',
                     },
                   ]}
                 />
               </View>
-            </>
-          )}
-          {settings.tokenBalance.flash > 0 && (
-            <Text style={[styles.usageText, { fontSize: 12, color: '#007AFF', marginTop: 4 }]}>
-              購入トークン残高: {settings.tokenBalance.flash.toLocaleString()}
-            </Text>
+            </View>
           )}
         </View>
 
@@ -406,23 +445,62 @@ function SettingsScreen() {
                 <Text style={[styles.usageText, { fontSize: 12, color: '#888', marginTop: 4 }]}>
                   今月の使用量: {proUsage.current.toLocaleString()} / {proUsage.max.toLocaleString()} ({proUsage.percentage.toFixed(1)}%)
                 </Text>
+                {/* サブスクリプション残量バー */}
+                <View style={{ marginTop: 8 }}>
+                  <Text style={[styles.usageText, { fontSize: 11, color: '#666', marginBottom: 4 }]}>
+                    サブスク残量: {Math.max(0, proUsage.max - proUsage.current).toLocaleString()} トークン
+                  </Text>
+                  <View style={styles.progressBarContainer}>
+                    <View
+                      style={[
+                        styles.progressBar,
+                        {
+                          width: `${100 - Math.min(proUsage.percentage, 100)}%`,
+                          backgroundColor: getUsageColor(proUsage.percentage),
+                        },
+                      ]}
+                    />
+                  </View>
+                </View>
+                {/* 購入トークン残高バー（ある場合のみ） */}
+                {settings.tokenBalance.pro > 0 && (
+                  <View style={{ marginTop: 12 }}>
+                    <Text style={[styles.usageText, { fontSize: 11, color: '#007AFF', marginBottom: 4 }]}>
+                      購入トークン: {settings.tokenBalance.pro.toLocaleString()} トークン
+                    </Text>
+                    <View style={styles.progressBarContainer}>
+                      <View
+                        style={[
+                          styles.progressBar,
+                          {
+                            width: `${Math.min(100, (settings.tokenBalance.pro / proUsage.max) * 100)}%`,
+                            backgroundColor: '#007AFF',
+                          },
+                        ]}
+                      />
+                    </View>
+                  </View>
+                )}
+              </>
+            )}
+            {/* サブスクなしで購入トークンのみある場合 */}
+            {(proUsage.max === -1 || proUsage.max === 0) && settings.tokenBalance.pro > 0 && (
+              <View style={{ marginTop: 8 }}>
+                <Text style={[styles.usageText, { fontSize: 11, color: '#007AFF', marginBottom: 4 }]}>
+                  購入トークン: {settings.tokenBalance.pro.toLocaleString()} トークン
+                </Text>
                 <View style={styles.progressBarContainer}>
                   <View
                     style={[
                       styles.progressBar,
                       {
-                        width: `${Math.min(proUsage.percentage, 100)}%`,
-                        backgroundColor: getUsageColor(proUsage.percentage),
+                        width: '100%',
+                        backgroundColor: '#007AFF',
                       },
                     ]}
                   />
                 </View>
-              </>
-            )}
-            {settings.tokenBalance.pro > 0 && (
-              <Text style={[styles.usageText, { fontSize: 12, color: '#007AFF', marginTop: 4 }]}>
-                購入トークン残高: {settings.tokenBalance.pro.toLocaleString()}
-              </Text>
+              </View>
             )}
           </View>
         )}
