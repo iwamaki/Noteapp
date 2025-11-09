@@ -55,28 +55,6 @@ export const PlanCard: React.FC<PlanCardProps> = ({
         </View>
       </View>
 
-      {/* 主要機能 */}
-      <View style={styles.featuresContainer}>
-        {plan.features.advancedModels && (
-          <View style={styles.featureRow}>
-            <Ionicons name="checkmark-circle" size={18} color="#28a745" />
-            <Text style={styles.featureText}>高度なLLMモデル</Text>
-          </View>
-        )}
-        {plan.features.ragSearch && (
-          <View style={styles.featureRow}>
-            <Ionicons name="checkmark-circle" size={18} color="#28a745" />
-            <Text style={styles.featureText}>RAG検索</Text>
-          </View>
-        )}
-        {plan.features.webSearch && (
-          <View style={styles.featureRow}>
-            <Ionicons name="checkmark-circle" size={18} color="#28a745" />
-            <Text style={styles.featureText}>Web検索</Text>
-          </View>
-        )}
-      </View>
-
       <Text style={sharedStyles.cardPrice}>
         {product ? (product as any).localizedPrice || `¥${plan.price}/月` : `¥${plan.price}/月`}
       </Text>
@@ -114,7 +92,7 @@ const styles = StyleSheet.create({
   tokensContainer: {
     flexDirection: 'row',
     gap: 12,
-    marginBottom: 12,
+    marginBottom: 16,
   },
   tokenItem: {
     flexDirection: 'row',
@@ -125,22 +103,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     color: '#333',
-  },
-  featuresContainer: {
-    marginBottom: 12,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
-  },
-  featureRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
-    gap: 6,
-  },
-  featureText: {
-    fontSize: 13,
-    color: '#555',
   },
   currentPlanButton: {
     flexDirection: 'row',
