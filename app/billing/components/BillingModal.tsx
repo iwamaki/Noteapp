@@ -4,7 +4,7 @@
  * @description Flash/Proトークンのパッケージ購入をシンプルに行うモーダル
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,8 @@ import {
   ScrollView,
 } from 'react-native';
 import { CustomModal } from '../../components/CustomModal';
+import { PurchaseConfirmModal } from '../../components/PurchaseConfirmModal';
+import type { PurchaseDetail } from '../../components/PurchaseConfirmModal';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { useSettingsStore } from '../../settings/settingsStore';
 import { getAvailablePackages, formatTokenAmount, TokenPackage } from '../constants/tokenPackages';
@@ -42,6 +44,10 @@ export const BillingModal: React.FC<BillingModalProps> = ({
   const [purchasing, setPurchasing] = useState(false);
   const [tokenProducts, setTokenProducts] = useState<Product[]>([]);
   const [availablePackages, setAvailablePackages] = useState<TokenPackage[]>([]);
+
+  // 購入確認モーダル用のステート
+  const [selectedPackage, setSelectedPackage] = useState<TokenPackage | null>(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   // モーダルが開いたときに初期化
   useEffect(() => {
@@ -74,8 +80,56 @@ export const BillingModal: React.FC<BillingModalProps> = ({
     selectedTab === 'flash' ? pkg.tokens.flash > 0 : pkg.tokens.pro > 0
   );
 
-  // 購入処理
-  const handlePurchase = async (pkg: TokenPackage) => {
+  // パッケージカードをタップしたときに確認モーダルを表示
+  const handlePackagePress = (pkg: TokenPackage) => {
+    setSelectedPackage(pkg);
+    setShowConfirmModal(true);
+  };
+
+  // 確認モーダルを閉じる
+  const handleCancelPurchase = () => {
+    setShowConfirmModal(false);
+    setSelectedPackage(null);
+  };
+
+  // 確認モーダルから購入を確定
+  const handleConfirmPurchase = async () => {
+    if (selectedPackage) {
+      setShowConfirmModal(false);
+      await executePurchase(selectedPackage);
+      setSelectedPackage(null);
+    }
+  };
+
+  // モーダルに表示する購入詳細
+  const purchaseDetails: PurchaseDetail[] = useMemo(() => {
+    if (!selectedPackage) return [];
+
+    const product = tokenProducts.find((p) => (p as any).id === selectedPackage.productId);
+    const priceDisplay = product
+      ? (product as any).localizedPrice || `¥${selectedPackage.price}`
+      : `¥${selectedPackage.price}`;
+
+    const tokenAmount = selectedPackage.tokens.flash > 0
+      ? `${formatTokenAmount(selectedPackage.tokens.flash)} Flash トークン`
+      : `${formatTokenAmount(selectedPackage.tokens.pro)} Pro トークン`;
+
+    return [
+      {
+        label: 'トークン数:',
+        value: tokenAmount,
+        isPrimary: false,
+      },
+      {
+        label: '価格:',
+        value: priceDisplay,
+        isPrimary: true,
+      },
+    ];
+  }, [selectedPackage, tokenProducts]);
+
+  // 実際の購入処理を実行
+  const executePurchase = async (pkg: TokenPackage) => {
     // 開発モード: モック購入
     if (__DEV__ && tokenProducts.length === 0) {
       Alert.alert(
@@ -336,7 +390,7 @@ export const BillingModal: React.FC<BillingModalProps> = ({
               <TouchableOpacity
                 key={pkg.id}
                 style={styles.packageCard}
-                onPress={() => handlePurchase(pkg)}
+                onPress={() => handlePackagePress(pkg)}
                 disabled={purchasing}
               >
                 <View style={styles.packageHeader}>
@@ -366,19 +420,34 @@ export const BillingModal: React.FC<BillingModalProps> = ({
   };
 
   return (
-    <CustomModal
-      isVisible={isVisible}
-      title="💰 トークンパッケージ購入"
-      buttons={[
-        {
-          text: 'キャンセル',
-          style: 'cancel',
-          onPress: onClose,
-        },
-      ]}
-      onClose={onClose}
-    >
-      {renderContent()}
-    </CustomModal>
+    <>
+      <CustomModal
+        isVisible={isVisible}
+        title="💰 トークンパッケージ購入"
+        buttons={[
+          {
+            text: 'キャンセル',
+            style: 'cancel',
+            onPress: onClose,
+          },
+        ]}
+        onClose={onClose}
+      >
+        {renderContent()}
+      </CustomModal>
+
+      {/* 購入確認モーダル */}
+      {selectedPackage && (
+        <PurchaseConfirmModal
+          isVisible={showConfirmModal}
+          onClose={handleCancelPurchase}
+          onConfirm={handleConfirmPurchase}
+          title="購入確認"
+          message={`${selectedPackage.name}を購入しますか？`}
+          details={purchaseDetails}
+          purchasing={purchasing}
+        />
+      )}
+    </>
   );
 };

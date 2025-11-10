@@ -1,7 +1,7 @@
 /**
  * @file TokenPackageCard.tsx
  * @summary Token package card component
- * @description Displays a single token package with purchase button using ListItem
+ * @description Displays a single token package as a tappable card using ListItem
  */
 
 import React from 'react';
@@ -15,15 +15,13 @@ import { useTheme } from '../../../design/theme/ThemeContext';
 interface TokenPackageCardProps {
   package: TokenPackage;
   product?: Product;
-  purchasing: boolean;
-  onPurchase: (pkg: TokenPackage) => void;
+  onPress: (pkg: TokenPackage) => void;
 }
 
 export const TokenPackageCard: React.FC<TokenPackageCardProps> = ({
   package: pkg,
   product,
-  purchasing,
-  onPurchase,
+  onPress,
 }) => {
   const { colors, spacing, typography } = useTheme();
 
@@ -71,24 +69,14 @@ export const TokenPackageCard: React.FC<TokenPackageCardProps> = ({
       fontWeight: '700',
       color: colors.primary,
     },
-    button: {
-      backgroundColor: colors.primary,
-      borderRadius: 8,
-      paddingVertical: spacing.sm,
-      paddingHorizontal: spacing.lg,
-    },
-    buttonDisabled: {
-      opacity: 0.6,
-    },
-    buttonText: {
-      color: colors.white,
-      fontSize: typography.body.fontSize,
-      fontWeight: '600',
-    },
   });
 
   return (
-    <View style={styles.container}>
+    <TouchableOpacity
+      style={styles.container}
+      onPress={() => onPress(pkg)}
+      activeOpacity={0.7}
+    >
       {pkg.badge && (
         <View style={styles.badge}>
           <Text style={styles.badgeText}>{pkg.badge}</Text>
@@ -99,21 +87,9 @@ export const TokenPackageCard: React.FC<TokenPackageCardProps> = ({
       <ListItem.Description numberOfLines={2}>{pkg.description}</ListItem.Description>
 
       <View style={styles.infoRow}>
-        <View>
-          <Text style={styles.tokenInfo}>{tokenDisplay}</Text>
-          <Text style={styles.price}>{priceDisplay}</Text>
-        </View>
-
-        <TouchableOpacity
-          style={[styles.button, purchasing && styles.buttonDisabled]}
-          onPress={() => onPurchase(pkg)}
-          disabled={purchasing}
-        >
-          <Text style={styles.buttonText}>
-            {purchasing ? '購入中...' : '購入する'}
-          </Text>
-        </TouchableOpacity>
+        <Text style={styles.tokenInfo}>{tokenDisplay}</Text>
+        <Text style={styles.price}>{priceDisplay}</Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
