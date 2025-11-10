@@ -6,7 +6,7 @@
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { formatTokenAmount } from '../../../constants/tokenPackages';
+import { formatTokenAmount } from '../../../billing/constants/tokenPackages';
 import { getSharedStyles } from '../styles/sharedStyles';
 import { useTheme } from '../../../design/theme/ThemeContext';
 

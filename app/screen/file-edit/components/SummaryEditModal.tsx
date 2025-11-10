@@ -78,7 +78,7 @@ export const SummaryEditModal: React.FC<SummaryEditModalProps> = ({
 
       // トークン使用量を記録
       if (response.inputTokens && response.outputTokens && response.model) {
-        const { trackAndDeductTokens } = await import('../../../utils/tokenTrackingHelper');
+        const { trackAndDeductTokens } = await import('../../../billing/utils/tokenTrackingHelper');
         await trackAndDeductTokens(response.inputTokens, response.outputTokens, response.model);
       }
     } catch (err) {

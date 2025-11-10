@@ -8,16 +8,17 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { Product } from 'react-native-iap';
-import type { SubscriptionPlan } from '../../../constants/plans';
+import type { SubscriptionPlan } from '../../../billing/constants/plans';
 import { formatFlashTokenLimit, formatProTokenLimit } from '../utils/formatters';
 import { getSharedStyles } from '../styles/sharedStyles';
-import type { SubscriptionTier } from '../../../constants/plans';
+import type { SubscriptionTier } from '../../../billing/constants/plans';
 import { useTheme } from '../../../design/theme/ThemeContext';
 
 interface PlanCardProps {
   plan: SubscriptionPlan;
   product?: Product;
   isCurrentPlan: boolean;
+  isCanceled?: boolean;
   purchasing: boolean;
   onPurchase: (tier: SubscriptionTier) => void;
 }
@@ -26,6 +27,7 @@ export const PlanCard: React.FC<PlanCardProps> = ({
   plan,
   product,
   isCurrentPlan,
+  isCanceled = false,
   purchasing,
   onPurchase,
 }) => {
@@ -38,9 +40,14 @@ export const PlanCard: React.FC<PlanCardProps> = ({
 
   return (
     <View style={[sharedStyles.baseCard, styles.card]}>
-      {isCurrentPlan && (
+      {isCurrentPlan && !isCanceled && (
         <View style={[sharedStyles.badge, styles.currentBadge]}>
           <Text style={sharedStyles.badgeText}>現在のプラン</Text>
+        </View>
+      )}
+      {isCanceled && (
+        <View style={[sharedStyles.badge, styles.canceledBadge]}>
+          <Text style={sharedStyles.badgeText}>キャンセル済み（期限まで利用可能）</Text>
         </View>
       )}
 
@@ -63,10 +70,15 @@ export const PlanCard: React.FC<PlanCardProps> = ({
         {product ? (product as any).localizedPrice || `¥${plan.price}/月` : `¥${plan.price}/月`}
       </Text>
 
-      {isCurrentPlan ? (
+      {isCurrentPlan && !isCanceled ? (
         <View style={styles.currentPlanButton}>
           <Ionicons name="checkmark-circle" size={20} color="#28a745" />
           <Text style={styles.currentPlanButtonText}>利用中</Text>
+        </View>
+      ) : isCanceled ? (
+        <View style={styles.canceledPlanButton}>
+          <Ionicons name="time" size={20} color="#FF9500" />
+          <Text style={styles.canceledPlanButtonText}>期限まで利用可能</Text>
         </View>
       ) : (
         <TouchableOpacity
@@ -93,6 +105,9 @@ const styles = StyleSheet.create({
   currentBadge: {
     backgroundColor: '#28a745',
   },
+  canceledBadge: {
+    backgroundColor: '#FF9500',
+  },
   tokensContainer: {
     flexDirection: 'row',
     gap: 12,
@@ -114,6 +129,20 @@ const styles = StyleSheet.create({
   },
   currentPlanButtonText: {
     color: '#28a745',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  canceledPlanButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFF3E0',
+    borderRadius: 8,
+    paddingVertical: 12,
+    gap: 6,
+  },
+  canceledPlanButtonText: {
+    color: '#FF9500',
     fontSize: 16,
     fontWeight: '600',
   },

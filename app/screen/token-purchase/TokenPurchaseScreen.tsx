@@ -16,9 +16,9 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 
 import { useTheme } from '../../design/theme/ThemeContext';
-import { useSubscription } from '../../utils/subscriptionHelpers';
-import { SUBSCRIPTION_PLANS } from '../../constants/plans';
-import { PRODUCT_IDS } from '../../data/services/iapService';
+import { useSubscription } from '../../billing/utils/subscriptionHelpers';
+import { SUBSCRIPTION_PLANS } from '../../billing/constants/plans';
+import { PRODUCT_IDS } from '../../billing/services/iapService';
 
 // Components
 import { PlanCard } from './components/PlanCard';
@@ -34,7 +34,7 @@ type TabType = 'subscription' | 'tokens';
 
 export default function TokenPurchaseScreen() {
   const { colors } = useTheme();
-  const { tier } = useSubscription();
+  const { tier, status, isActive } = useSubscription();
 
   // タブ選択
   const [selectedTab, setSelectedTab] = useState<TabType>('subscription');
@@ -85,7 +85,8 @@ export default function TokenPurchaseScreen() {
               <PlanCard
                 plan={SUBSCRIPTION_PLANS.standard}
                 product={subscriptionProducts.find((p) => p.id === PRODUCT_IDS.STANDARD_MONTHLY)}
-                isCurrentPlan={tier === 'standard'}
+                isCurrentPlan={tier === 'standard' && isActive}
+                isCanceled={tier === 'standard' && status === 'canceled'}
                 purchasing={purchasing}
                 onPurchase={handleSubscriptionPurchase}
               />
@@ -94,7 +95,8 @@ export default function TokenPurchaseScreen() {
               <PlanCard
                 plan={SUBSCRIPTION_PLANS.pro}
                 product={subscriptionProducts.find((p) => p.id === PRODUCT_IDS.PRO_MONTHLY)}
-                isCurrentPlan={tier === 'pro'}
+                isCurrentPlan={tier === 'pro' && isActive}
+                isCanceled={tier === 'pro' && status === 'canceled'}
                 purchasing={purchasing}
                 onPurchase={handleSubscriptionPurchase}
               />
@@ -103,7 +105,8 @@ export default function TokenPurchaseScreen() {
               <PlanCard
                 plan={SUBSCRIPTION_PLANS.premium}
                 product={subscriptionProducts.find((p) => p.id === PRODUCT_IDS.PREMIUM_MONTHLY)}
-                isCurrentPlan={tier === 'premium'}
+                isCurrentPlan={tier === 'premium' && isActive}
+                isCanceled={tier === 'premium' && status === 'canceled'}
                 purchasing={purchasing}
                 onPurchase={handleSubscriptionPurchase}
               />

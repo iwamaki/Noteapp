@@ -4,7 +4,7 @@
  * @responsibility トークン使用量の計算、アイコン選択、色選択などの重複ロジックを集約
  */
 
-import { ChatMessage, TokenUsageInfo } from '../llmService/types/types';
+import { ChatMessage, TokenUsageInfo } from '../../features/chat/llmService/types/types';
 
 /**
  * メッセージまたは現在のトークン使用量から使用率を取得

@@ -8,6 +8,7 @@ from src.llm.routers import chat_router
 from src.llm.routers import llm_providers_router
 from src.llm.routers import tools_router
 from src.llm.routers import knowledge_base_router
+from src.payment import router as payment_router
 from src.llm.rag.collection_manager import CollectionManager
 from src.llm.rag.cleanup_job import start_cleanup_job, stop_cleanup_job
 from src.api.websocket import manager
@@ -57,6 +58,7 @@ app.include_router(chat_router.router)
 app.include_router(llm_providers_router.router)
 app.include_router(tools_router.router)
 app.include_router(knowledge_base_router.router)
+app.include_router(payment_router.router)
 
 # ルートエンドポイント
 @app.get("/")
@@ -71,7 +73,8 @@ async def root():
             "tools": "/api/tools",
             "health": "/api/health",
             "websocket": "/ws/{client_id}",
-            "knowledge_base": "/api/knowledge-base"
+            "knowledge_base": "/api/knowledge-base",
+            "payment": "/api/payment"
         }
     }
 

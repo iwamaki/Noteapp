@@ -7,8 +7,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import type { Product } from 'react-native-iap';
-import type { TokenPackage } from '../../../constants/tokenPackages';
-import { formatTokenAmount } from '../../../constants/tokenPackages';
+import type { TokenPackage } from '../../../billing/constants/tokenPackages';
+import { formatTokenAmount } from '../../../billing/constants/tokenPackages';
 import { getSharedStyles } from '../styles/sharedStyles';
 import { useTheme } from '../../../design/theme/ThemeContext';
 

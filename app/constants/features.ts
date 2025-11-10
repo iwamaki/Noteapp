@@ -5,7 +5,7 @@
  * 機能の追加や変更時は、このファイルを更新してください。
  */
 
-import { SubscriptionTier } from './plans';
+import { SubscriptionTier } from '../billing/constants/plans';
 
 /**
  * 機能キーの型定義

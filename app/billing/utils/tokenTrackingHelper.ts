@@ -6,10 +6,10 @@
  * 重複コードを排除し、トークン管理を一元化します。
  */
 
-import { useSettingsStore } from '../settings/settingsStore';
+import { useSettingsStore } from '../../settings/settingsStore';
 import { isFlashModel, isProModel, getTokenUsageByModelType } from './subscriptionHelpers';
-import { getLimit, type SubscriptionTier } from '../constants';
-import { logger } from './logger';
+import { getLimit, type SubscriptionTier } from '../../constants';
+import { logger } from '../../utils/logger';
 
 /**
  * トークン使用を記録・消費する統合ヘルパー関数

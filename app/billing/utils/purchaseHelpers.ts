@@ -4,8 +4,8 @@
  * @description Helper functions for purchase error handling and product ID mapping
  */
 
-import { PRODUCT_IDS } from '../../../data/services/iapService';
-import { SubscriptionTier } from '../../../constants/plans';
+import { PRODUCT_IDS } from '../services/iapService';
+import { SubscriptionTier } from '../constants/plans';
 
 /**
  * Check if an error is a user cancellation

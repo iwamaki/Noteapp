@@ -16,11 +16,13 @@ import {
   restorePurchases,
   getTierFromProductId,
   getSubscriptionExpiry,
-} from '../../../data/services/iapService';
-import { SUBSCRIPTION_PLANS, SubscriptionTier } from '../../../constants/plans';
-import type { TokenPackage } from '../../../constants/tokenPackages';
-import { formatTokenAmount } from '../../../constants/tokenPackages';
-import { isUserCancelledError, getProductIdForTier } from '../utils/purchaseHelpers';
+} from '../../../billing/services/iapService';
+import { finishTransaction } from 'react-native-iap';
+import { SUBSCRIPTION_PLANS, SubscriptionTier } from '../../../billing/constants/plans';
+import type { TokenPackage } from '../../../billing/constants/tokenPackages';
+import { formatTokenAmount } from '../../../billing/constants/tokenPackages';
+import { isUserCancelledError, getProductIdForTier } from '../../../billing/utils/purchaseHelpers';
+import { verifyAndSyncPurchase } from '../../../billing/services/subscriptionSyncService';
 
 interface UsePurchaseHandlersProps {
   subscriptionProducts: Product[];
@@ -45,24 +47,62 @@ export const usePurchaseHandlers = ({
   const [isRestoring, setIsRestoring] = useState(false);
 
   // サブスクリプション購入成功時の処理
-  const handleSubscriptionPurchaseSuccess = (purchase: Purchase) => {
+  const handleSubscriptionPurchaseSuccess = async (purchase: Purchase) => {
     const newTier = getTierFromProductId(purchase.productId);
-    const expiryDate = getSubscriptionExpiry(purchase);
 
-    updateSettings({
-      subscription: {
-        tier: newTier,
-        status: 'active',
-        expiresAt: expiryDate.toISOString(),
-        trialStartedAt: undefined,
-        autoRenew: true,
-      },
-    });
+    try {
+      // Phase 2: バックエンドでレシート検証
+      console.log('[usePurchaseHandlers] Verifying receipt with backend...');
+      const verified = await verifyAndSyncPurchase(purchase);
 
-    Alert.alert(
-      '購入完了',
-      `${SUBSCRIPTION_PLANS[newTier].displayName}プランへようこそ！`,
-    );
+      if (verified) {
+        console.log('[usePurchaseHandlers] Receipt verified successfully');
+
+        // 検証成功後にトランザクションを完了
+        await finishTransaction({ purchase, isConsumable: false });
+        console.log('[usePurchaseHandlers] Transaction finished after verification');
+
+        Alert.alert(
+          '購入完了',
+          `${SUBSCRIPTION_PLANS[newTier].displayName}プランへようこそ！`,
+        );
+      } else {
+        // 検証失敗時はローカルで更新（フォールバック）
+        console.warn('[usePurchaseHandlers] Backend verification failed, using local update');
+        const expiryDate = getSubscriptionExpiry(purchase);
+
+        await updateSettings({
+          subscription: {
+            tier: newTier,
+            status: 'active',
+            expiresAt: expiryDate.toISOString(),
+            trialStartedAt: undefined,
+            autoRenew: true,
+          },
+        });
+
+        // フォールバックの場合もトランザクションを完了
+        await finishTransaction({ purchase, isConsumable: false });
+        console.log('[usePurchaseHandlers] Transaction finished after fallback');
+
+        Alert.alert(
+          '購入完了',
+          `${SUBSCRIPTION_PLANS[newTier].displayName}プランへようこそ！\n\n（オフラインモード）`,
+        );
+      }
+    } catch (error) {
+      console.error('[usePurchaseHandlers] Error in handleSubscriptionPurchaseSuccess:', error);
+
+      // エラーが発生してもトランザクションは完了させる（購入は成功しているため）
+      try {
+        await finishTransaction({ purchase, isConsumable: false });
+        console.log('[usePurchaseHandlers] Transaction finished after error');
+      } catch (finishError) {
+        console.error('[usePurchaseHandlers] Failed to finish transaction:', finishError);
+      }
+
+      Alert.alert('エラー', '購入処理中にエラーが発生しました。アプリを再起動してください。');
+    }
   };
 
   // サブスクリプション購入処理
@@ -89,10 +129,13 @@ export const usePurchaseHandlers = ({
       await purchaseSubscription(
         productId,
         product,
-        (purchase: Purchase) => {
-          handleSubscriptionPurchaseSuccess(purchase);
+        async (purchase: Purchase) => {
+          await handleSubscriptionPurchaseSuccess(purchase);
+          setPurchasing(false);
         },
         (error) => {
+          setPurchasing(false);
+
           if (isUserCancelledError(error)) {
             console.log('[usePurchaseHandlers] User cancelled subscription purchase');
             return;
@@ -105,7 +148,6 @@ export const usePurchaseHandlers = ({
     } catch (error) {
       console.error('[usePurchaseHandlers] Subscription purchase failed:', error);
       Alert.alert('エラー', '購入リクエストに失敗しました。');
-    } finally {
       setPurchasing(false);
     }
   };
@@ -248,7 +290,7 @@ export const usePurchaseHandlers = ({
       }
 
       const latestPurchase = purchases[0];
-      handleSubscriptionPurchaseSuccess(latestPurchase as any);
+      await handleSubscriptionPurchaseSuccess(latestPurchase as any);
     } catch (error) {
       console.error('[usePurchaseHandlers] Restore failed:', error);
       Alert.alert('エラー', '購入の復元に失敗しました。');

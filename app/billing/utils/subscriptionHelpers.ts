@@ -5,7 +5,7 @@
  */
 
 import { useEffect } from 'react';
-import { useSettingsStore } from '../settings/settingsStore';
+import { useSettingsStore } from '../../settings/settingsStore';
 import {
   SubscriptionTier,
   hasFeatureAccess,
@@ -13,10 +13,10 @@ import {
   getLimit,
   SUBSCRIPTION_PLANS,
   hasModelAccess,
-} from '../constants';
-import type { FeatureKey } from '../constants/features';
+} from '../../constants';
+import type { FeatureKey } from '../../constants/features';
 import type { PlanLimits } from '../constants/plans';
-import { calculateCost, formatCost, getModelPricing } from '../constants/pricing';
+import { calculateCost, formatCost, getModelPricing } from '../../constants/pricing';
 
 /**
  * 現在のサブスクリプション情報を取得するフック
@@ -58,11 +58,17 @@ export function useSubscription() {
     }
   }, [subscription.expiresAt, subscription.status, updateSettings]);
 
+  // サブスクが有効かどうかの判定を修正
+  // active, trial, canceled の場合でも、期限内であることが必要
+  const isActiveStatus = subscription.status === 'active' || subscription.status === 'trial' || subscription.status === 'canceled';
+  const isWithinExpiry = subscription.expiresAt ? new Date() < new Date(subscription.expiresAt) : true; // 期限未設定の場合は有効とみなす
+  const isActive = isActiveStatus && isWithinExpiry;
+
   return {
     tier: subscription.tier,
     status: subscription.status,
     expiresAt: subscription.expiresAt,
-    isActive: subscription.status === 'active' || subscription.status === 'trial',
+    isActive,
     isTrial: subscription.status === 'trial',
     isExpired: subscription.status === 'expired',
     autoRenew: subscription.autoRenew,
@@ -501,7 +507,10 @@ export function checkModelTokenLimit(modelId: string): {
   const { subscription, tokenBalance } = settings;
 
   // サブスクリプションが有効かチェック
-  const isActive = subscription.status === 'active' || subscription.status === 'trial';
+  // active, trial, canceled の場合でも、期限内であることが必要
+  const isActiveStatus = subscription.status === 'active' || subscription.status === 'trial' || subscription.status === 'canceled';
+  const isWithinExpiry = subscription.expiresAt ? new Date() < new Date(subscription.expiresAt) : true; // 期限未設定の場合は有効とみなす
+  const isActive = isActiveStatus && isWithinExpiry;
   const effectiveTier: SubscriptionTier = isActive ? subscription.tier : 'free';
 
   const tokenUsage = getTokenUsageByModelType();

@@ -24,8 +24,8 @@ import type {
 } from 'react-native-iap';
 
 import { Platform } from 'react-native';
-import { SubscriptionTier } from '../../constants/plans';
-import { TOKEN_PACKAGES } from '../../constants/tokenPackages';
+import { SubscriptionTier } from '../constants/plans';
+import { TOKEN_PACKAGES } from '../constants/tokenPackages';
 
 /**
  * サブスクリプション プロダクトID定義
@@ -149,18 +149,11 @@ export async function purchaseSubscription(
   purchaseUpdateSubscription = purchaseUpdatedListener((purchase: Purchase) => {
     console.log('[IAP] Purchase updated:', purchase);
 
-    // レシート検証（Phase 1では簡易的、Phase 2でサーバー検証）
+    // レシート検証（Phase 2ではonSuccess側で検証後にfinishTransactionを呼ぶ）
     const receipt = purchase.transactionId;
     if (receipt) {
-      // トランザクション完了
-      finishTransaction({ purchase, isConsumable: false })
-        .then(() => {
-          console.log('[IAP] Transaction finished');
-          onSuccess(purchase);
-        })
-        .catch((error) => {
-          console.error('[IAP] Failed to finish transaction:', error);
-        });
+      // Phase 2: onSuccessでバックエンド検証後にfinishTransactionを呼ぶため、ここでは呼ばない
+      onSuccess(purchase);
     }
   });
 

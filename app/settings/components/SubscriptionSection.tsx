@@ -18,7 +18,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { RootStackParamList } from '../../navigation/types';
-import { getUsageColor, useMonthlyCost, useFlashTokenUsage, useProTokenUsage } from '../../utils/subscriptionHelpers';
+import { getUsageColor, useMonthlyCost, useFlashTokenUsage, useProTokenUsage } from '../../billing/utils/subscriptionHelpers';
 import { useSettingsStore } from '../settingsStore';
 
 type SettingsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Settings'>;
