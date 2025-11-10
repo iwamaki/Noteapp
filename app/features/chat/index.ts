@@ -261,7 +261,7 @@ class ChatService {
 
       const errorMessage: ChatMessage = {
         role: 'system',
-        content: `🚫 **トークン上限に達しました**\n\n${tokenLimitCheck.reason}\n\n現在のプラン: ${tokenLimitCheck.tier}\n使用量: ${tokenLimitCheck.current.toLocaleString()} / ${tokenLimitCheck.max === -1 ? '無制限' : tokenLimitCheck.max.toLocaleString()} トークン`,
+        content: `🚫 **トークンがありません**\n\n${tokenLimitCheck.reason}`,
         timestamp: new Date(),
       };
       this.addMessage(errorMessage);

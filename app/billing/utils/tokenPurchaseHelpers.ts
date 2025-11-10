@@ -175,11 +175,7 @@ export function checkModelTokenLimit(modelId: string): {
       tier: effectiveTier,
       reason: canUse
         ? undefined
-        : max === 0 && !hasPurchasedTokens
-        ? 'Flash tokens が 0 です。トークンを購入してください。'
-        : !withinSubscriptionLimit && !hasPurchasedTokens
-        ? 'Flash tokens の上限に達しました。トークンを購入するか、プランをアップグレードしてください。'
-        : 'Flash tokens が不足しています。',
+        : 'Flash トークンがありません。トークンを購入してください。',
     };
   } else if (isProModel(modelId)) {
     const current = tokenUsage.pro.totalTokens;
@@ -199,11 +195,7 @@ export function checkModelTokenLimit(modelId: string): {
       tier: effectiveTier,
       reason: canUse
         ? undefined
-        : max === 0 && !hasPurchasedTokens
-        ? 'Pro モデルは Pro プラン以上で利用可能です。'
-        : !withinSubscriptionLimit && !hasPurchasedTokens
-        ? 'Pro tokens の上限に達しました。トークンを購入するか、プランをアップグレードしてください。'
-        : 'Pro tokens が不足しています。',
+        : 'Pro トークンがありません。トークンを購入してください。',
     };
   }
 
