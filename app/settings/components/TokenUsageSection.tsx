@@ -1,8 +1,8 @@
 /**
- * @file SubscriptionSection.tsx
- * @summary 設定画面のサブスクリプションセクションコンポーネント
+ * @file TokenUsageSection.tsx
+ * @summary 設定画面のトークン残高・使用量セクションコンポーネント
  * @description
- * サブスクリプション情報、トークン使用量、購入ボタンなどを表示する独立したコンポーネント。
+ * トークン使用量、残高、購入ボタンなどを表示する独立したコンポーネント。
  * SettingsScreenから分離して責任を明確化。
  */
 
@@ -24,16 +24,16 @@ import { useSettingsStore } from '../settingsStore';
 
 type SettingsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Settings'>;
 
-interface SubscriptionSectionProps {
+interface TokenUsageSectionProps {
   renderSection: (title: string) => React.ReactElement;
 }
 
-export const SubscriptionSection: React.FC<SubscriptionSectionProps> = ({ renderSection }) => {
+export const TokenUsageSection: React.FC<TokenUsageSectionProps> = ({ renderSection }) => {
   const { colors, spacing, typography } = useTheme();
   const navigation = useNavigation<SettingsScreenNavigationProp>();
   const { settings } = useSettingsStore();
 
-  // サブスクリプション情報を取得
+  // トークン使用量情報を取得
   const { tier, isActive } = useSubscription();
 
   // Flash/Pro 別のトークン使用量情報を取得（購入トークン残高も含む）
@@ -154,14 +154,14 @@ export const SubscriptionSection: React.FC<SubscriptionSectionProps> = ({ render
 
   return (
     <>
-      {renderSection('サブスクリプション')}
+      {renderSection('トークン残高・使用量')}
 
       {/* Flash tokens 使用量 */}
       <View style={styles.usageContainer}>
         <Text style={styles.usageTitle}>Flash モデル</Text>
         {flashUsage.max !== -1 && flashUsage.max > 0 && (
           <>
-            {/* サブスクリプション残量バー */}
+            {/* 月次割当残量バー */}
             <View style={{ marginTop: 8 }}>
               <Text style={[styles.usageText, { fontSize: 11, color: '#666', marginBottom: 4 }]}>
                 {Math.max(0, flashUsage.max - flashUsage.current).toLocaleString()} / {flashUsage.max.toLocaleString()} トークン
@@ -199,7 +199,7 @@ export const SubscriptionSection: React.FC<SubscriptionSectionProps> = ({ render
             )}
           </>
         )}
-        {/* サブスクなしで購入トークンのみある場合 */}
+        {/* 月次割当なしで購入トークンのみある場合 */}
         {(flashUsage.max === -1 || flashUsage.max === 0) && settings.tokenBalance.flash > 0 && (
           <View style={{ marginTop: 8 }}>
             <Text style={[styles.usageText, { fontSize: 11, color: '#007AFF', marginBottom: 4 }]}>
@@ -220,13 +220,13 @@ export const SubscriptionSection: React.FC<SubscriptionSectionProps> = ({ render
         )}
       </View>
 
-      {/* Pro tokens 使用量（サブスクプランがあるか、購入トークンがある場合に表示） */}
+      {/* Pro tokens 使用量（月次割当があるか、購入トークンがある場合に表示） */}
       {(proUsage.available || settings.tokenBalance.pro > 0) && (
         <View style={styles.usageContainer}>
           <Text style={styles.usageTitle}>Pro モデル</Text>
           {proUsage.max !== -1 && proUsage.max > 0 && (
             <>
-              {/* サブスクリプション残量バー */}
+              {/* 月次割当残量バー */}
               <View style={{ marginTop: 8 }}>
                 <Text style={[styles.usageText, { fontSize: 11, color: '#666', marginBottom: 4 }]}>
                   {Math.max(0, proUsage.max - proUsage.current).toLocaleString()} / {proUsage.max.toLocaleString()} トークン
@@ -264,7 +264,7 @@ export const SubscriptionSection: React.FC<SubscriptionSectionProps> = ({ render
               )}
             </>
           )}
-          {/* サブスクなしで購入トークンのみある場合 */}
+          {/* 月次割当なしで購入トークンのみある場合 */}
           {(proUsage.max === -1 || proUsage.max === 0) && settings.tokenBalance.pro > 0 && (
             <View style={{ marginTop: 8 }}>
               <Text style={[styles.usageText, { fontSize: 11, color: '#007AFF', marginBottom: 4 }]}>

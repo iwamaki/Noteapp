@@ -20,7 +20,7 @@ import { useSettingsHeader } from './hooks/useSettingsHeader';
 import APIService from '../features/chat/llmService/api';
 import { LLMProvider } from '../features/chat/llmService/types/types';
 import { ListItem } from '../components/ListItem';
-import { SubscriptionSection } from './components/SubscriptionSection';
+import { TokenUsageSection } from './components/TokenUsageSection';
 import { MainContainer } from '../components/MainContainer';
 
 function SettingsScreen() {
@@ -264,8 +264,8 @@ function SettingsScreen() {
               </>
             )}
 
-            {/* サブスクリプションセクション（LLM設定の後に表示） */}
-            <SubscriptionSection renderSection={renderSection} />
+            {/* トークン残高・使用量セクション（LLM設定の後に表示） */}
+            <TokenUsageSection renderSection={renderSection} />
           </>
         )}
 
