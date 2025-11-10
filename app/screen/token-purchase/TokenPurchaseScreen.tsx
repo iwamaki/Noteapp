@@ -41,7 +41,6 @@ export default function TokenPurchaseScreen() {
     purchasing,
     handleTokenPurchase,
   } = usePurchaseHandlers({
-    subscriptionProducts: [],
     tokenProducts,
   });
 
@@ -101,5 +100,6 @@ const styles = StyleSheet.create({
   },
   packagesContainer: {
     gap: 16,
+    marginBottom: 16,
   },
 });

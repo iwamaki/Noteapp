@@ -1,12 +1,12 @@
 /**
  * @file NoticeCard.tsx
  * @summary Notice card component
- * @description Displays important information or warnings
+ * @description Displays important information or warnings using ListItem
  */
 
 import React from 'react';
-import { View, Text } from 'react-native';
-import { getSharedStyles } from '../styles/sharedStyles';
+import { View, StyleSheet } from 'react-native';
+import { ListItem } from '../../../components/ListItem';
 import { useTheme } from '../../../design/theme/ThemeContext';
 
 interface NoticeCardProps {
@@ -15,13 +15,21 @@ interface NoticeCardProps {
 }
 
 export const NoticeCard: React.FC<NoticeCardProps> = ({ title, text }) => {
-  const theme = useTheme();
-  const sharedStyles = getSharedStyles(theme);
+  const { colors, spacing } = useTheme();
+
+  const styles = StyleSheet.create({
+    container: {
+      backgroundColor: colors.secondary,
+      borderRadius: 12,
+      padding: spacing.md,
+      marginTop: spacing.lg,
+    },
+  });
 
   return (
-    <View style={sharedStyles.noteCard}>
-      <Text style={sharedStyles.noteTitle}>{title}</Text>
-      <Text style={sharedStyles.noteText}>{text}</Text>
+    <View style={styles.container}>
+      <ListItem.Title style={{ marginBottom: spacing.xs }}>{title}</ListItem.Title>
+      <ListItem.Description numberOfLines={10}>{text}</ListItem.Description>
     </View>
   );
 };

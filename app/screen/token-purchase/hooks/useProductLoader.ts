@@ -1,21 +1,19 @@
 /**
  * @file useProductLoader.ts
- * @summary Custom hook for loading IAP products
- * @description Handles loading and filtering of token packages and subscriptions
+ * @summary Custom hook for loading token packages
+ * @description Handles loading and filtering of token packages from IAP
  */
 
 import { useState, useEffect } from 'react';
 import { Alert } from 'react-native';
 import type { Product } from 'react-native-iap';
 import { initializeTokenIAP, getAvailableTokenPackages } from '../../../billing/services/tokenIapService';
-import { getAvailableSubscriptions } from '../../../billing/services/subscriptionIapService';
 import { TOKEN_PACKAGES } from '../../../billing/constants/tokenPackages';
 import type { TokenPackage } from '../../../billing/constants/tokenPackages';
 
 interface UseProductLoaderReturn {
   loading: boolean;
   tokenProducts: Product[];
-  subscriptionProducts: Product[];
   availablePackages: TokenPackage[];
   reload: () => Promise<void>;
 }
@@ -23,7 +21,6 @@ interface UseProductLoaderReturn {
 export const useProductLoader = (): UseProductLoaderReturn => {
   const [loading, setLoading] = useState(true);
   const [tokenProducts, setTokenProducts] = useState<Product[]>([]);
-  const [subscriptionProducts, setSubscriptionProducts] = useState<Product[]>([]);
   const [availablePackages, setAvailablePackages] = useState<TokenPackage[]>([]);
 
   const loadProducts = async () => {
@@ -57,16 +54,6 @@ export const useProductLoader = (): UseProductLoaderReturn => {
       }
 
       setTokenProducts(loadedProducts);
-
-      // サブスクリプション商品の読み込み
-      const subProducts = await getAvailableSubscriptions();
-      console.log('[useProductLoader] Loaded subscription products:', subProducts);
-
-      if (subProducts.length === 0) {
-        console.warn('[useProductLoader] No subscription products found');
-      }
-
-      setSubscriptionProducts(subProducts);
     } catch (error) {
       console.error('[useProductLoader] Failed to load products:', error);
       Alert.alert('エラー', '商品情報の読み込みに失敗しました');
@@ -82,7 +69,6 @@ export const useProductLoader = (): UseProductLoaderReturn => {
   return {
     loading,
     tokenProducts,
-    subscriptionProducts,
     availablePackages,
     reload: loadProducts,
   };
