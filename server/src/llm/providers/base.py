@@ -283,7 +283,8 @@ class BaseAgentLLMProvider(BaseLLMProvider):
         # トークン使用情報を計算
         token_usage = self._calculate_token_usage(
             conversation_history,
-            provider_name
+            provider_name,
+            messages  # AIMessageを渡して実際のトークン使用量を取得
         )
 
         return ChatResponse(
@@ -384,13 +385,15 @@ class BaseAgentLLMProvider(BaseLLMProvider):
     def _calculate_token_usage(
         self,
         conversation_history: List[Dict[str, Any]],
-        provider_name: str
+        provider_name: str,
+        messages: Optional[List[BaseMessage]] = None
     ) -> Optional[TokenUsageInfo]:
         """会話履歴のトークン使用情報を計算する
 
         Args:
             conversation_history: 会話履歴
             provider_name: プロバイダー名
+            messages: エージェントの実行結果メッセージ（実際のトークン使用量取得用）
 
         Returns:
             TokenUsageInfo or None
@@ -399,13 +402,36 @@ class BaseAgentLLMProvider(BaseLLMProvider):
             # 推奨最大トークン数
             max_tokens = MAX_CONVERSATION_TOKENS
 
+            # 実際に使用したトークン数を取得（LangChainのAIMessageから）
+            input_tokens = None
+            output_tokens = None
+            total_tokens = None
+
+            if messages:
+                # 最後のAIMessageからusage_metadataを取得
+                for msg in reversed(messages):
+                    if isinstance(msg, AIMessage) and hasattr(msg, 'usage_metadata'):
+                        usage_metadata = msg.usage_metadata
+                        if usage_metadata:
+                            input_tokens = usage_metadata.get('input_tokens')
+                            output_tokens = usage_metadata.get('output_tokens')
+                            total_tokens = usage_metadata.get('total_tokens')
+                            logger.debug(
+                                f"Actual token usage from API: "
+                                f"input={input_tokens}, output={output_tokens}, total={total_tokens}"
+                            )
+                            break
+
             # 会話履歴が空の場合でも初期状態を返す
             if not conversation_history:
                 return TokenUsageInfo(
                     currentTokens=0,
                     maxTokens=max_tokens,
                     usageRatio=0.0,
-                    needsSummary=False
+                    needsSummary=False,
+                    inputTokens=input_tokens,
+                    outputTokens=output_tokens,
+                    totalTokens=total_tokens
                 )
 
             # 現在のトークン数を計算
@@ -430,7 +456,10 @@ class BaseAgentLLMProvider(BaseLLMProvider):
                 currentTokens=current_tokens,
                 maxTokens=max_tokens,
                 usageRatio=usage_ratio,
-                needsSummary=needs_summary
+                needsSummary=needs_summary,
+                inputTokens=input_tokens,
+                outputTokens=output_tokens,
+                totalTokens=total_tokens
             )
 
         except Exception as e:

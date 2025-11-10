@@ -71,11 +71,17 @@ class TokenUsageInfo(BaseModel):
     """トークン使用量情報
 
     フロントエンドで要約が必要かどうかを判断するための情報。
+    また、今回のリクエストで実際に使用した入出力トークン数も含む。
     """
     currentTokens: int  # 現在の会話履歴のトークン数
     maxTokens: int  # 推奨される最大トークン数
     usageRatio: float  # 使用率（0.0-1.0）
     needsSummary: bool  # 要約が推奨されるかどうか
+
+    # 今回のリクエストで実際に使用したトークン数（課金対象）
+    inputTokens: Optional[int] = None  # 入力トークン数
+    outputTokens: Optional[int] = None  # 出力トークン数
+    totalTokens: Optional[int] = None  # 合計トークン数
 
 
 class ChatResponse(BaseModel):
@@ -144,6 +150,10 @@ class DocumentSummarizeRequest(BaseModel):
 class DocumentSummarizeResponse(BaseModel):
     """文書要約レスポンス
 
-    生成された要約テキストを含む。
+    生成された要約テキストと、実際に使用したトークン数を含む。
     """
     summary: str  # 生成された要約
+    model: Optional[str] = None  # 使用したモデルID
+    inputTokens: Optional[int] = None  # 入力トークン数
+    outputTokens: Optional[int] = None  # 出力トークン数
+    totalTokens: Optional[int] = None  # 合計トークン数

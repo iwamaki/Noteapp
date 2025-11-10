@@ -3,7 +3,7 @@
 長い会話履歴を圧縮して、重要な情報を保持したまま
 トークン数を削減するためのサービス。
 """
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 from datetime import datetime
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage
@@ -35,6 +35,10 @@ class SummarizationService:
                 raise ValueError("Gemini API key is not configured")
 
             model_name = model or settings.get_default_model("gemini")
+            logger.info(
+                f"Creating LLM instance: provider={provider}, "
+                f"requested_model={model}, final_model={model_name}"
+            )
             return ChatGoogleGenerativeAI(
                 api_key=settings.gemini_api_key,
                 model=model_name,
@@ -254,7 +258,7 @@ class SummarizationService:
         title: str,
         provider: Optional[str] = None,
         model: Optional[str] = None
-    ) -> str:
+    ) -> Dict[str, Any]:
         """文書内容を要約する
 
         Args:
@@ -264,7 +268,7 @@ class SummarizationService:
             model: 要約に使用するモデル（Noneの場合はデフォルト）
 
         Returns:
-            要約テキスト
+            要約情報を含む辞書（summary, model, inputTokens, outputTokens, totalTokens）
         """
         # プロバイダーのデフォルト値を設定
         if provider is None:
@@ -277,10 +281,23 @@ class SummarizationService:
 
         try:
             llm = self._get_llm_instance(provider, model)
-            summary_text = await self._create_document_summary(llm, title, content)
+            summary_text, token_info = await self._create_document_summary(llm, title, content)
 
-            logger.info(f"Document summarization complete: {summary_text[:100]}...")
-            return summary_text
+            # モデルIDを取得（llmインスタンスから）
+            model_id = model if model else getattr(llm, 'model_name', None)
+
+            logger.info(
+                f"Document summarization complete: {summary_text[:100]}... "
+                f"(tokens: input={token_info.get('inputTokens')}, output={token_info.get('outputTokens')})"
+            )
+
+            return {
+                'summary': summary_text,
+                'model': model_id,
+                'inputTokens': token_info.get('inputTokens'),
+                'outputTokens': token_info.get('outputTokens'),
+                'totalTokens': token_info.get('totalTokens'),
+            }
 
         except Exception as e:
             logger.error(f"Error during document summarization: {str(e)}")
@@ -291,7 +308,7 @@ class SummarizationService:
         llm,
         title: str,
         content: str
-    ) -> str:
+    ) -> Tuple[str, Dict[str, Optional[int]]]:
         """LLMを使用して文書の要約を生成する
 
         Args:
@@ -300,7 +317,7 @@ class SummarizationService:
             content: 文書の内容
 
         Returns:
-            要約テキスト
+            タプル（要約テキスト, トークン情報の辞書）
         """
         # 要約プロンプトを構築
         summary_prompt = self._build_document_summary_prompt(title, content)
@@ -309,12 +326,31 @@ class SummarizationService:
         response = await llm.ainvoke([HumanMessage(content=summary_prompt)])
 
         # レスポンスからテキストを抽出
+        summary_text: str
         if hasattr(response, 'content'):
-            summary_text = response.content
+            summary_text = str(response.content)
         else:
             summary_text = str(response)
 
-        return summary_text.strip()
+        # トークン使用情報を抽出
+        token_info: Dict[str, Optional[int]] = {
+            'inputTokens': None,
+            'outputTokens': None,
+            'totalTokens': None,
+        }
+
+        if hasattr(response, 'usage_metadata'):
+            usage_metadata = response.usage_metadata
+            if usage_metadata:
+                token_info['inputTokens'] = usage_metadata.get('input_tokens')
+                token_info['outputTokens'] = usage_metadata.get('output_tokens')
+                token_info['totalTokens'] = usage_metadata.get('total_tokens')
+                logger.debug(
+                    f"Document summary token usage: "
+                    f"input={token_info['inputTokens']}, output={token_info['outputTokens']}, total={token_info['totalTokens']}"
+                )
+
+        return summary_text.strip(), token_info
 
     def _build_document_summary_prompt(self, title: str, content: str) -> str:
         """文書要約用のプロンプトを構築する
