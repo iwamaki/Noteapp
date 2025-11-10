@@ -7,6 +7,8 @@ from .delete_file import delete_file
 from .rename_file import rename_file
 from .search_files import search_files
 from .web_search import web_search
+from .web_search_with_rag import web_search_with_rag
+from .search_knowledge_base import search_knowledge_base
 
 AVAILABLE_TOOLS: list[BaseTool] = [
     # フラット構造用ツール
@@ -18,4 +20,6 @@ AVAILABLE_TOOLS: list[BaseTool] = [
     rename_file, # type: ignore
     search_files, # type: ignore
     web_search, # type: ignore
+    web_search_with_rag, # type: ignore
+    search_knowledge_base, # type: ignore
 ]

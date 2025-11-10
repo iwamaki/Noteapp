@@ -4,6 +4,7 @@
 from pydantic import SecretStr
 from langchain_google_genai import ChatGoogleGenerativeAI
 from .base import BaseAgentLLMProvider
+from src.core.config import settings
 
 
 class GeminiProvider(BaseAgentLLMProvider):
@@ -26,13 +27,17 @@ class GeminiProvider(BaseAgentLLMProvider):
 
         Args:
             api_key: Google API Key
-            model: 使用するモデル名（デフォルト: gemini-1.5-flash）
+            model: 使用するモデル名（デフォルトは設定ファイルから取得）
 
         Returns:
             ChatGoogleGenerativeAI: Gemini用のLangchainチャットモデル
         """
+        # モデル名の検証：geminiで始まる場合はそのまま、そうでない場合はデフォルトを使用
+        if not model.startswith("gemini"):
+            model = settings.get_default_model("gemini")
+
         return ChatGoogleGenerativeAI(
-            model=model if model.startswith("gemini") else "gemini-1.5-flash",
+            model=model,
             google_api_key=SecretStr(api_key),
             temperature=0.7,
             # Note: convert_system_message_to_humanは非推奨のため削除

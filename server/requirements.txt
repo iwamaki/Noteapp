@@ -4,13 +4,11 @@ websockets==12.0
 pydantic==2.7.4
 python-dotenv==1.0.0
 langchain==1.0.3
-langchain-openai==1.0.1
 langchain-google-genai==3.0.0
 langchain-community==0.4.1
 python-multipart==0.0.6
 requests==2.32.5
 beautifulsoup4==4.12.3
-tiktoken==0.7.0
 google-cloud-secret-manager
 pytest
 pytest-asyncio
@@ -18,6 +16,14 @@ mypy
 ruff
 
 # Web検索機能の依存関係
-langchain-tavily==0.2.12
-duckduckgo-search
-ddgs
+httpx==0.27.0
+
+# RAG機能の依存関係
+faiss-cpu==1.12.0  # NumPy 2.x対応版
+pypdf==3.17.4
+
+# Payment/Subscription機能の依存関係
+google-api-python-client==2.108.0  # Google Play Developer API
+google-auth==2.25.2
+google-auth-oauthlib==1.2.0
+google-auth-httplib2==0.2.0

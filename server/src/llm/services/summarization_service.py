@@ -3,10 +3,8 @@
 長い会話履歴を圧縮して、重要な情報を保持したまま
 トークン数を削減するためのサービス。
 """
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 from datetime import datetime
-from pydantic import SecretStr
-from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage
 
@@ -23,31 +21,24 @@ class SummarizationService:
         pass
 
     def _get_llm_instance(self, provider: str, model: Optional[str]):
-        """LLMインスタンスを取得する
+        """LLMインスタンスを取得する（Gemini専用）
 
         Args:
-            provider: LLMプロバイダー（"openai" or "gemini"）
+            provider: LLMプロバイダー（"gemini"のみサポート）
             model: モデル名（Noneの場合はデフォルト）
 
         Returns:
             LangChain LLM instance
         """
-        if provider == "openai":
-            if not settings.openai_api_key:
-                raise ValueError("OpenAI API key is not configured")
-
-            model_name = model or "gpt-3.5-turbo"
-            return ChatOpenAI(
-                api_key=SecretStr(settings.openai_api_key),
-                model=model_name,
-                temperature=0.3,  # 要約は一貫性を重視
-            )
-
-        elif provider == "gemini":
+        if provider == "gemini":
             if not settings.gemini_api_key:
                 raise ValueError("Gemini API key is not configured")
 
-            model_name = model or "gemini-1.5-flash"
+            model_name = model or settings.get_default_model("gemini")
+            logger.info(
+                f"Creating LLM instance: provider={provider}, "
+                f"requested_model={model}, final_model={model_name}"
+            )
             return ChatGoogleGenerativeAI(
                 api_key=settings.gemini_api_key,
                 model=model_name,
@@ -55,14 +46,14 @@ class SummarizationService:
             )
 
         else:
-            raise ValueError(f"Unknown provider: {provider}")
+            raise ValueError(f"Unsupported provider: {provider}. Only 'gemini' is supported.")
 
     async def summarize(
         self,
         conversation_history: List[Dict[str, Any]],
         max_tokens: int = 4000,
         preserve_recent: int = 10,
-        provider: str = "openai",
+        provider: Optional[str] = None,
         model: Optional[str] = None
     ) -> SummarizeResponse:
         """会話履歴を要約する
@@ -71,22 +62,26 @@ class SummarizationService:
             conversation_history: 要約対象の会話履歴
             max_tokens: 圧縮後の最大トークン数
             preserve_recent: 保持する最新メッセージ数
-            provider: 要約に使用するLLMプロバイダー
-            model: 要約に使用するモデル
+            provider: 要約に使用するLLMプロバイダー（Noneの場合はデフォルト）
+            model: 要約に使用するモデル（Noneの場合はデフォルト）
 
         Returns:
             SummarizeResponse: 要約結果
         """
+        # プロバイダーのデフォルト値を設定
+        if provider is None:
+            provider = settings.get_default_provider()
+
         logger.info(
             f"Starting summarization: {len(conversation_history)} messages, "
-            f"preserve_recent={preserve_recent}, max_tokens={max_tokens}"
+            f"preserve_recent={preserve_recent}, max_tokens={max_tokens}, provider={provider}"
         )
 
         # 元のトークン数を計算
         original_tokens = count_message_tokens(
             conversation_history,
             provider=provider,
-            model=model or ("gpt-3.5-turbo" if provider == "openai" else "gemini-1.5-flash")
+            model=model or settings.get_default_model(provider)
         )
 
         # メッセージを分割: 古いメッセージ vs 最新メッセージ
@@ -135,15 +130,29 @@ class SummarizationService:
             compressed_tokens = count_message_tokens(
                 compressed_messages,
                 provider=provider,
-                model=model or ("gpt-3.5-turbo" if provider == "openai" else "gemini-1.5-flash")
+                model=model or settings.get_default_model(provider)
             )
 
             compression_ratio = compressed_tokens / original_tokens if original_tokens > 0 else 1.0
 
-            logger.info(
-                f"Summarization complete: {original_tokens} -> {compressed_tokens} tokens "
-                f"(compression ratio: {compression_ratio:.2%})"
-            )
+            # 要約が逆効果（トークンが増えた）または効果が小さい場合は警告
+            if compression_ratio >= 1.0:
+                logger.warning(
+                    f"Summarization increased token count: {original_tokens} -> {compressed_tokens} tokens "
+                    f"(compression ratio: {compression_ratio:.2%}). "
+                    f"This likely means too few messages were summarized (preserve_recent={preserve_recent})."
+                )
+            elif compression_ratio > 0.95:
+                logger.warning(
+                    f"Summarization had minimal effect: {original_tokens} -> {compressed_tokens} tokens "
+                    f"(compression ratio: {compression_ratio:.2%})"
+                )
+            else:
+                logger.info(
+                    f"Summarization complete: {original_tokens} -> {compressed_tokens} tokens "
+                    f"(compression ratio: {compression_ratio:.2%})"
+                )
+
             logger.info(f"Generated summary: {summary_text[:200]}..." if len(summary_text) > 200 else f"Generated summary: {summary_text}")
 
             return SummarizeResponse(
@@ -241,4 +250,132 @@ class SummarizationService:
 4. 未完了事項: ...
 5. 決定事項: ...
 """
+        return prompt
+
+    async def summarize_document(
+        self,
+        content: str,
+        title: str,
+        provider: Optional[str] = None,
+        model: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """文書内容を要約する
+
+        Args:
+            content: 文書の内容
+            title: 文書のタイトル（コンテキスト用）
+            provider: 要約に使用するLLMプロバイダー（Noneの場合はデフォルト）
+            model: 要約に使用するモデル（Noneの場合はデフォルト）
+
+        Returns:
+            要約情報を含む辞書（summary, model, inputTokens, outputTokens, totalTokens）
+        """
+        # プロバイダーのデフォルト値を設定
+        if provider is None:
+            provider = settings.get_default_provider()
+
+        logger.info(
+            f"Starting document summarization: title='{title}', "
+            f"content_length={len(content)}, provider={provider}"
+        )
+
+        try:
+            llm = self._get_llm_instance(provider, model)
+            summary_text, token_info = await self._create_document_summary(llm, title, content)
+
+            # モデルIDを取得（llmインスタンスから）
+            model_id = model if model else getattr(llm, 'model_name', None)
+
+            logger.info(
+                f"Document summarization complete: {summary_text[:100]}... "
+                f"(tokens: input={token_info.get('inputTokens')}, output={token_info.get('outputTokens')})"
+            )
+
+            return {
+                'summary': summary_text,
+                'model': model_id,
+                'inputTokens': token_info.get('inputTokens'),
+                'outputTokens': token_info.get('outputTokens'),
+                'totalTokens': token_info.get('totalTokens'),
+            }
+
+        except Exception as e:
+            logger.error(f"Error during document summarization: {str(e)}")
+            raise
+
+    async def _create_document_summary(
+        self,
+        llm,
+        title: str,
+        content: str
+    ) -> Tuple[str, Dict[str, Optional[int]]]:
+        """LLMを使用して文書の要約を生成する
+
+        Args:
+            llm: LangChain LLM instance
+            title: 文書のタイトル
+            content: 文書の内容
+
+        Returns:
+            タプル（要約テキスト, トークン情報の辞書）
+        """
+        # 要約プロンプトを構築
+        summary_prompt = self._build_document_summary_prompt(title, content)
+
+        # LLMに要約を依頼
+        response = await llm.ainvoke([HumanMessage(content=summary_prompt)])
+
+        # レスポンスからテキストを抽出
+        summary_text: str
+        if hasattr(response, 'content'):
+            summary_text = str(response.content)
+        else:
+            summary_text = str(response)
+
+        # トークン使用情報を抽出
+        token_info: Dict[str, Optional[int]] = {
+            'inputTokens': None,
+            'outputTokens': None,
+            'totalTokens': None,
+        }
+
+        if hasattr(response, 'usage_metadata'):
+            usage_metadata = response.usage_metadata
+            if usage_metadata:
+                token_info['inputTokens'] = usage_metadata.get('input_tokens')
+                token_info['outputTokens'] = usage_metadata.get('output_tokens')
+                token_info['totalTokens'] = usage_metadata.get('total_tokens')
+                logger.debug(
+                    f"Document summary token usage: "
+                    f"input={token_info['inputTokens']}, output={token_info['outputTokens']}, total={token_info['totalTokens']}"
+                )
+
+        return summary_text.strip(), token_info
+
+    def _build_document_summary_prompt(self, title: str, content: str) -> str:
+        """文書要約用のプロンプトを構築する
+
+        Args:
+            title: 文書のタイトル
+            content: 文書の内容
+
+        Returns:
+            要約プロンプト
+        """
+        prompt = f"""以下の文書を簡潔に要約してください。
+
+文書タイトル: {title}
+
+文書内容:
+{content}
+
+要件:
+- 「本文書は」という書き出しから始める
+- 文書の主要なトピックや目的を明確にする
+- 重要なポイントを漏らさず含める
+- 簡潔でありながら、文書の全体像が分かる内容にする
+- 自然な文章で記述する（箇条書きや記号は使わない）
+- 200文字程度で要約する
+
+要約:"""
         return prompt

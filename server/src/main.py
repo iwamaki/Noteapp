@@ -1,15 +1,48 @@
 # @file main.py
 # @summary アプリケーションのメインエントリポイント。FastAPIアプリを初期化し、ルーターを結合します。
 # @responsibility FastAPIアプリケーションのインスタンス化、CORSミドルウェアの設定、および各ルーターのインクルードを行います。
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from src.llm.routers import chat_router
 from src.llm.routers import llm_providers_router
 from src.llm.routers import tools_router
+from src.llm.routers import knowledge_base_router
+from src.payment import router as payment_router
+from src.llm.rag.collection_manager import CollectionManager
+from src.llm.rag.cleanup_job import start_cleanup_job, stop_cleanup_job
 from src.api.websocket import manager
 from src.core.logger import logger
 
-app = FastAPI(title="LLM File App API")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """アプリケーションのライフスパン管理
+
+    起動時とシャットダウン時に実行される処理を定義します。
+    """
+    # 起動時の処理
+    logger.info("Application startup...")
+
+    # コレクションマネージャーを初期化
+    collection_manager = CollectionManager()
+
+    # クリーンアップジョブを開始（10分間隔）
+    await start_cleanup_job(collection_manager, interval_minutes=10)
+    logger.info("Cleanup job started")
+
+    yield
+
+    # シャットダウン時の処理
+    logger.info("Application shutdown...")
+    await stop_cleanup_job()
+    logger.info("Cleanup job stopped")
+
+
+app = FastAPI(
+    title="LLM File App API",
+    lifespan=lifespan
+)
 
 # CORS設定
 app.add_middleware(
@@ -24,6 +57,8 @@ app.add_middleware(
 app.include_router(chat_router.router)
 app.include_router(llm_providers_router.router)
 app.include_router(tools_router.router)
+app.include_router(knowledge_base_router.router)
+app.include_router(payment_router.router)
 
 # ルートエンドポイント
 @app.get("/")
@@ -37,7 +72,9 @@ async def root():
             "providers": "/api/llm-providers",
             "tools": "/api/tools",
             "health": "/api/health",
-            "websocket": "/ws/{client_id}"
+            "websocket": "/ws/{client_id}",
+            "knowledge_base": "/api/knowledge-base",
+            "payment": "/api/payment"
         }
     }
 

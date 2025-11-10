@@ -5,6 +5,8 @@
 # APIリクエストとレスポンスのバリデーションおよびシリアライゼーションをPydanticによって自動化します。
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any, List, Union, Literal
+from src.llm.providers.config import MAX_CONVERSATION_TOKENS, PRESERVE_RECENT_MESSAGES
+from src.core.config import settings
 
 
 class ChatMessage(BaseModel):
@@ -42,8 +44,8 @@ class ChatContext(BaseModel):
 
 class ChatRequest(BaseModel):
     message: str
-    provider: str = "openai"
-    model: str = "gpt-3.5-turbo"
+    provider: str = Field(default_factory=lambda: settings.get_default_provider())
+    model: str = Field(default_factory=lambda: settings.get_default_model())
     context: Optional[ChatContext] = None
     client_id: Optional[str] = None  # WebSocket接続のクライアントID
 
@@ -69,11 +71,17 @@ class TokenUsageInfo(BaseModel):
     """トークン使用量情報
 
     フロントエンドで要約が必要かどうかを判断するための情報。
+    また、今回のリクエストで実際に使用した入出力トークン数も含む。
     """
     currentTokens: int  # 現在の会話履歴のトークン数
     maxTokens: int  # 推奨される最大トークン数
     usageRatio: float  # 使用率（0.0-1.0）
     needsSummary: bool  # 要約が推奨されるかどうか
+
+    # 今回のリクエストで実際に使用したトークン数（課金対象）
+    inputTokens: Optional[int] = None  # 入力トークン数
+    outputTokens: Optional[int] = None  # 出力トークン数
+    totalTokens: Optional[int] = None  # 合計トークン数
 
 
 class ChatResponse(BaseModel):
@@ -99,9 +107,9 @@ class SummarizeRequest(BaseModel):
     トークン数を削減するためのリクエストモデル。
     """
     conversationHistory: List[Dict[str, Any]]  # 要約対象の会話履歴
-    max_tokens: Optional[int] = 500  # 圧縮後の最大トークン数（テスト用に小さく設定）
-    preserve_recent: Optional[int] = 3  # 保持する最新メッセージ数（テスト用に小さく設定）
-    provider: Optional[str] = "openai"  # 要約に使用するLLMプロバイダー
+    max_tokens: Optional[int] = MAX_CONVERSATION_TOKENS  # 圧縮後の最大トークン数
+    preserve_recent: Optional[int] = PRESERVE_RECENT_MESSAGES  # 保持する最新メッセージ数
+    provider: Optional[str] = Field(default_factory=lambda: settings.get_default_provider())  # 要約に使用するLLMプロバイダー
     model: Optional[str] = None  # 要約に使用するモデル（Noneの場合はデフォルト）
 
 
@@ -126,3 +134,26 @@ class SummarizeResponse(BaseModel):
     compressionRatio: float  # 圧縮率（0.0-1.0）
     originalTokens: int  # 元のトークン数
     compressedTokens: int  # 圧縮後のトークン数
+
+
+class DocumentSummarizeRequest(BaseModel):
+    """文書要約リクエスト
+
+    文書の内容をLLMで要約するためのリクエストモデル。
+    """
+    content: str  # 文書の内容
+    title: str  # 文書のタイトル（コンテキスト用）
+    provider: Optional[str] = Field(default_factory=lambda: settings.get_default_provider())  # 要約に使用するLLMプロバイダー
+    model: Optional[str] = None  # 要約に使用するモデル（Noneの場合はデフォルト）
+
+
+class DocumentSummarizeResponse(BaseModel):
+    """文書要約レスポンス
+
+    生成された要約テキストと、実際に使用したトークン数を含む。
+    """
+    summary: str  # 生成された要約
+    model: Optional[str] = None  # 使用したモデルID
+    inputTokens: Optional[int] = None  # 入力トークン数
+    outputTokens: Optional[int] = None  # 出力トークン数
+    totalTokens: Optional[int] = None  # 合計トークン数
