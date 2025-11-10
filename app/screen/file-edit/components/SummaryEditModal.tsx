@@ -66,6 +66,16 @@ export const SummaryEditModal: React.FC<SummaryEditModalProps> = ({
       return;
     }
 
+    // トークン残量チェック
+    const { checkModelTokenLimit } = await import('../../../billing/utils/tokenPurchaseHelpers');
+    const currentModel = APIService.getCurrentLLMModel();
+    const tokenLimitCheck = checkModelTokenLimit(currentModel);
+
+    if (!tokenLimitCheck.canUse) {
+      setError(tokenLimitCheck.reason || 'トークンが不足しています。トークンを購入するか、プランをアップグレードしてください。');
+      return;
+    }
+
     setIsGenerating(true);
     setError(null);
 
