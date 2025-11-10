@@ -5,7 +5,7 @@
  * 機能の追加や変更時は、このファイルを更新してください。
  */
 
-import { SubscriptionTier } from './plans';
+import { SubscriptionTier } from '../billing/constants/plans';
 
 /**
  * 機能キーの型定義
@@ -88,24 +88,29 @@ export const FEATURE_REQUIREMENTS = {
   /** メールサポート */
   'support.email': 'pro',
   /** 優先サポート */
-  'support.priority': 'enterprise',
+  'support.priority': 'premium',
 } as const;
 
 /**
  * LLMモデルの要件定義
  *
  * 各モデルが必要とするプランを定義します。
+ *
+ * Flash系: Free/Standard プランから利用可能
+ * Pro系: Pro/Premium プランから利用可能
  */
 export const MODEL_REQUIREMENTS: Record<string, SubscriptionTier> = {
-  // Gemini モデル
+  // Gemini Quick モデル（低コスト: ¥265/M tokens）
   'gemini-2.5-flash': 'free',
+  'gemini-1.5-flash': 'free',
+
+  // Gemini Think モデル（高コスト: ¥1,063/M tokens）
   'gemini-2.5-pro': 'pro',
   'gemini-1.5-pro': 'pro',
-  'gemini-1.5-flash': 'free',
 
   // 将来追加予定のモデル
   // 'gpt-4': 'pro',
-  // 'claude-3-opus': 'enterprise',
+  // 'claude-3-opus': 'premium',
 };
 
 /**
@@ -150,7 +155,7 @@ function hasMinimumTier(
   userTier: SubscriptionTier,
   requiredTier: SubscriptionTier
 ): boolean {
-  const tierOrder: SubscriptionTier[] = ['free', 'pro', 'enterprise'];
+  const tierOrder: SubscriptionTier[] = ['free', 'standard', 'pro', 'premium'];
   const userIndex = tierOrder.indexOf(userTier);
   const requiredIndex = tierOrder.indexOf(requiredTier);
   return userIndex >= requiredIndex;
@@ -166,8 +171,9 @@ export function getRequiredPlanName(feature: FeatureKey): string {
   const requiredTier = FEATURE_REQUIREMENTS[feature] as SubscriptionTier;
   const planNames: Record<SubscriptionTier, string> = {
     free: 'フリー',
+    standard: 'Standard',
     pro: 'Pro',
-    enterprise: 'Enterprise',
+    premium: 'Premium',
   };
   return planNames[requiredTier];
 }

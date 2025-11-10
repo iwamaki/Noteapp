@@ -18,6 +18,7 @@ import { getOrCreateClientId } from './utils/clientId';
 import { useSettingsStore } from '../../settings/settingsStore';
 import { useChatStore } from './store/chatStore';
 import { UnifiedErrorHandler } from './utils/errorHandler';
+import { checkModelTokenLimit } from '../../billing/utils/tokenPurchaseHelpers';
 
 /**
  * シングルトンクラスとして機能し、アプリケーション全体でチャットの状態を管理します。
@@ -243,6 +244,36 @@ class ChatService {
     this.addMessage(userMessage);
     this.setLoading(true);
 
+    // トークン上限チェック（現在使用中のモデルで判定）
+    const tokenLimitCheck = checkModelTokenLimit(this.llmModel);
+
+    if (!tokenLimitCheck.canUse) {
+      logger.warn('chatService', 'Token limit exceeded', {
+        model: this.llmModel,
+        current: tokenLimitCheck.current,
+        max: tokenLimitCheck.max,
+        tier: tokenLimitCheck.tier,
+        reason: tokenLimitCheck.reason,
+      });
+
+      // 自然なUXのため5秒待ってからエラーメッセージを返す
+      await new Promise(resolve => setTimeout(resolve, 5000));
+
+      const errorMessage: ChatMessage = {
+        role: 'system',
+        content: `🚫 **トークンがありません**\n\n${tokenLimitCheck.reason}`,
+        timestamp: new Date(),
+      };
+      this.addMessage(errorMessage);
+      this.setLoading(false);
+
+      // 添付ファイルをクリア
+      if (this.attachmentService.getAttachedFiles().length > 0) {
+        this.clearAttachedFiles();
+      }
+      return;
+    }
+
     try {
       // 現在のコンテキストプロバイダーから画面コンテキストを取得
       let screenContext: ActiveScreenContext | null = null;
@@ -279,6 +310,16 @@ class ChatService {
       // トークン使用量情報を更新（100%超過時は自動要約がトリガーされる）
       if (response.tokenUsage) {
         this.tokenService.updateTokenUsage(response.tokenUsage);
+
+        // 実際に使用したトークン数を記録（課金対象・モデル別）
+        if (response.tokenUsage.inputTokens && response.tokenUsage.outputTokens && response.model) {
+          const { trackAndDeductTokens } = await import('../../billing/utils/tokenTrackingHelper');
+          await trackAndDeductTokens(
+            response.tokenUsage.inputTokens,
+            response.tokenUsage.outputTokens,
+            response.model
+          );
+        }
       }
 
       // コマンドの処理
@@ -530,6 +571,16 @@ class ChatService {
       error
     );
     this.addMessage(errorMessage);
+
+    // TOKEN_LIMIT_EXCEEDED エラーの場合、トークン購入の案内を追加
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'TOKEN_LIMIT_EXCEEDED') {
+      const purchaseGuidanceMessage: ChatMessage = {
+        role: 'system',
+        content: '💡 トークンを購入するには、設定画面の「トークン購入」ボタンをタップしてください。',
+        timestamp: new Date(),
+      };
+      this.addMessage(purchaseGuidanceMessage);
+    }
   }
 
   /**

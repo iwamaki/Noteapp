@@ -11,6 +11,7 @@ import { CustomInlineInput } from '../../../components/CustomInlineInput';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { useChatUI } from '../contexts/ChatUIContext';
 import { CHAT_CONFIG } from '../config/chatConfig';
+import { useSettingsStore } from '../../../settings/settingsStore';
 
 interface MessageInputProps {
   inputText: string;
@@ -23,6 +24,16 @@ interface MessageInputProps {
 export const MessageInput: React.FC<MessageInputProps> = ({ inputText, setInputText }) => {
   const { colors, iconSizes } = useTheme();
   const { sendMessage, isLoading } = useChatUI();
+  const { settings, updateSettings } = useSettingsStore();
+
+  // 現在のモデルがquickかthinkか判定
+  const isFlashModel = settings.llmModel.toLowerCase().includes('flash');
+
+  // モデルを切り替える
+  const toggleModel = async () => {
+    const newModel = isFlashModel ? 'gemini-2.5-pro' : 'gemini-2.5-flash';
+    await updateSettings({ llmModel: newModel });
+  };
 
   // メッセージ送信処理
   const handleSendMessage = async () => {
@@ -50,6 +61,17 @@ export const MessageInput: React.FC<MessageInputProps> = ({ inputText, setInputT
       maxHeight: CHAT_CONFIG.components.input.maxHeight,
       marginRight: CHAT_CONFIG.components.spacing.lg,
       minHeight: CHAT_CONFIG.components.input.minHeight,
+    },
+    modelToggleButton: {
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: colors.background,
+      borderRadius: CHAT_CONFIG.components.border.radius.pill,
+      width: CHAT_CONFIG.components.input.buttonSize,
+      height: CHAT_CONFIG.components.input.buttonSize,
+      marginRight: CHAT_CONFIG.components.spacing.sm,
+      borderWidth: 1,
+      borderColor: colors.tertiary,
     },
     sendButton: {
       justifyContent: 'center',
@@ -82,6 +104,17 @@ export const MessageInput: React.FC<MessageInputProps> = ({ inputText, setInputT
         blurOnSubmit={false}
         borderColor={colors.background}
       />
+      <TouchableOpacity
+        style={styles.modelToggleButton}
+        onPress={toggleModel}
+        disabled={isLoading}
+      >
+        <MaterialCommunityIcons
+          name={isFlashModel ? 'speedometer' : 'speedometer-slow'}
+          size={iconSizes.medium}
+          color={isFlashModel ? '#FFC107' : '#4CAF50'}
+        />
+      </TouchableOpacity>
       <TouchableOpacity
         style={[styles.sendButton, !canSendMessage && styles.disabledButton]}
         onPress={handleSendMessage}

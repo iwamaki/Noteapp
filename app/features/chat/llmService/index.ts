@@ -74,6 +74,22 @@ export class LLMService {
     const requestId = await this.requestManager.startRequest();
 
     try {
+      // トークン上限チェック（Flash/Pro別、購入トークン残高も考慮）
+      const currentModel = this.providerManager.getCurrentModel();
+      const { checkModelTokenLimit } = await import('../../../billing/utils/tokenPurchaseHelpers');
+      const tokenLimitCheck = checkModelTokenLimit(currentModel);
+
+      if (!tokenLimitCheck.canUse) {
+        logger.error('llm', `Request #${requestId} - Token limit exceeded: ${tokenLimitCheck.reason}`);
+        throw new LLMError(
+          tokenLimitCheck.reason || 'トークン上限に達しました',
+          'TOKEN_LIMIT_EXCEEDED',
+          429  // HTTP 429 Too Many Requests
+        );
+      }
+
+      logger.debug('llm', `Request #${requestId} - Token limit check passed: ${tokenLimitCheck.current}/${tokenLimitCheck.max} (${tokenLimitCheck.percentage.toFixed(1)}%)`);
+
       // 会話履歴をコンテキストに追加
       const history = this.conversationHistory.getHistory().map(msg => ({
         role: msg.role,
@@ -312,21 +328,24 @@ export class LLMService {
    * 文書内容を要約する
    * @param content 文書の内容
    * @param title 文書のタイトル
-   * @returns 要約テキスト
+   * @returns 要約レスポンス（要約テキストとトークン情報）
    */
   async summarizeDocument(
     content: string,
     title: string
-  ): Promise<string> {
+  ): Promise<DocumentSummarizeResponse> {
     try {
-      logger.info('llm', `Summarizing document: title="${title}", content_length=${content.length}`);
+      const currentProvider = this.providerManager.getCurrentProvider();
+      const currentModel = this.providerManager.getCurrentModel();
+
+      logger.info('llm', `Summarizing document: title="${title}", content_length=${content.length}, provider=${currentProvider}, model=${currentModel}`);
 
       // 要約リクエストを送信
       const request: DocumentSummarizeRequest = {
         content,
         title,
-        provider: this.providerManager.getCurrentProvider(),
-        model: this.providerManager.getCurrentModel(),
+        provider: currentProvider,
+        model: currentModel,
       };
 
       const response = await this.httpClient.post('/api/document/summarize', request);
@@ -341,9 +360,9 @@ export class LLMService {
 
       const data: DocumentSummarizeResponse = response.data;
 
-      logger.info('llm', `Document summarization complete: ${data.summary.substring(0, 100)}...`);
+      logger.info('llm', `Document summarization complete: ${data.summary.substring(0, 100)}... (tokens: input=${data.inputTokens}, output=${data.outputTokens})`);
 
-      return data.summary;
+      return data;
     } catch (error) {
       if (error instanceof LLMError) {
         throw error;

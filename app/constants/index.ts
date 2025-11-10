@@ -18,14 +18,14 @@ export {
   getLimit,
   isWithinLimit,
   canUpgradeTo,
-} from './plans';
+} from '../billing/constants/plans';
 
 export type {
   SubscriptionTier,
   SubscriptionPlan,
   PlanLimits,
   PlanFeatures,
-} from './plans';
+} from '../billing/constants/plans';
 
 // 機能要件
 export {

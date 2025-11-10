@@ -24,6 +24,7 @@ interface FeatureBarProps {
   category: string;
   onTitleChange: (title: string) => void;
   onSummaryPress: () => void;
+  showSummaryButton?: boolean;
 }
 
 export const FeatureBar: React.FC<FeatureBarProps> = ({
@@ -31,6 +32,7 @@ export const FeatureBar: React.FC<FeatureBarProps> = ({
   category,
   onTitleChange,
   onSummaryPress,
+  showSummaryButton = true,
 }) => {
   const { colors, spacing, typography, iconSizes } = useTheme();
   const [localTitle, setLocalTitle] = useState(title);
@@ -149,14 +151,16 @@ export const FeatureBar: React.FC<FeatureBarProps> = ({
           numberOfLines={1}
         />
       </View>
-      <TouchableOpacity
-        style={styles.button}
-        onPress={onSummaryPress}
-        activeOpacity={0.7}
-      >
-        <Ionicons name="document-text-outline" size={iconSizes.small} color={colors.white} />
-        <Text style={styles.buttonText}>要約</Text>
-      </TouchableOpacity>
+      {showSummaryButton && (
+        <TouchableOpacity
+          style={styles.button}
+          onPress={onSummaryPress}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="document-text-outline" size={iconSizes.small} color={colors.white} />
+          <Text style={styles.buttonText}>要約</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 };

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Modal,
   View,
@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Keyboard,
 } from 'react-native';
 import { useTheme } from '../design/theme/ThemeContext';
 import { responsive } from '../design/styles/responsive';
@@ -28,6 +29,7 @@ interface CustomModalProps {
   onClose: () => void;
   children?: React.ReactNode;
   fixedFooter?: React.ReactNode; // スクロールエリア外に固定表示する要素
+  keyboardVerticalOffset?: number; // キーボードとの間隔（px）、デフォルト: 20
 }
 
 export const CustomModal: React.FC<CustomModalProps> = ({
@@ -38,15 +40,36 @@ export const CustomModal: React.FC<CustomModalProps> = ({
   onClose,
   children,
   fixedFooter,
+  keyboardVerticalOffset = 20, // デフォルト: キーボードの上20px
 }) => {
   const { colors, typography, spacing } = useTheme();
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      'keyboardDidShow',
+      () => setIsKeyboardVisible(true)
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      'keyboardDidHide',
+      () => setIsKeyboardVisible(false)
+    );
+
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, []);
 
   const styles = StyleSheet.create({
     centeredView: {
       flex: 1,
-      justifyContent: 'center',
+      justifyContent: isKeyboardVisible ? 'flex-end' : 'center', // キーボード表示時は下寄せ、非表示時は中央
       alignItems: 'center',
       backgroundColor: colors.overlay, // Semi-transparent overlay
+      paddingHorizontal: spacing.xl,
+      paddingBottom: isKeyboardVisible ? spacing.xl : 0, // キーボード表示時のみ下部余白
+      paddingVertical: isKeyboardVisible ? 0 : spacing.xl, // 中央配置時は上下余白
     },
     modalView: {
       backgroundColor: colors.background,
@@ -135,10 +158,6 @@ export const CustomModal: React.FC<CustomModalProps> = ({
     },
     keyboardAvoidingView: {
       flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      paddingHorizontal: spacing.xl,
-      paddingVertical: spacing.xl,
       width: '100%',
     },
   });
@@ -170,11 +189,12 @@ export const CustomModal: React.FC<CustomModalProps> = ({
       visible={isVisible}
       onRequestClose={onClose}
     >
-      <Pressable style={styles.centeredView} onPress={onClose}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.keyboardAvoidingView}
-        >
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardAvoidingView}
+        keyboardVerticalOffset={keyboardVerticalOffset}
+      >
+        <Pressable style={styles.centeredView} onPress={onClose}>
           <Pressable style={styles.modalView} onPress={(e) => e.stopPropagation()}>
             <Text style={styles.modalTitle}>{title}</Text>
             {message && <Text style={styles.modalMessage}>{message}</Text>}
@@ -217,8 +237,8 @@ export const CustomModal: React.FC<CustomModalProps> = ({
               })}
             </View>
           </Pressable>
-        </KeyboardAvoidingView>
-      </Pressable>
+        </Pressable>
+      </KeyboardAvoidingView>
     </Modal>
   );
 };

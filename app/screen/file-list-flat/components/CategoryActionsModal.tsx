@@ -9,6 +9,7 @@
 
 import React from 'react';
 import { ActionsListModal, ActionItem } from '../../../components/ActionsListModal';
+import { FILE_LIST_FLAT_CONFIG } from '../config';
 
 interface CategoryActionsModalProps {
   visible: boolean;
@@ -35,15 +36,23 @@ export const CategoryActionsModal: React.FC<CategoryActionsModalProps> = ({
 }) => {
   if (!categoryPath || !categoryName) return null;
 
-  const actions: ActionItem[] = [
-    {
+  // 機能フラグに基づいてアクションリストを構築
+  const actions: ActionItem[] = [];
+
+  // RAG機能が有効な場合のみQ&A作成を表示
+  if (FILE_LIST_FLAT_CONFIG.features.ragEnabled) {
+    actions.push({
       icon: 'bulb-outline',
       label: 'Q&Aを作成',
       onPress: () => {
         onCreateQA(categoryPath, categoryName);
         onClose();
       },
-    },
+    });
+  }
+
+  // 常に表示するアクション
+  actions.push(
     {
       icon: 'share-outline',
       label: 'エクスポート',
@@ -68,8 +77,8 @@ export const CategoryActionsModal: React.FC<CategoryActionsModalProps> = ({
         onClose();
       },
       destructive: true,
-    },
-  ];
+    }
+  );
 
   return (
     <ActionsListModal

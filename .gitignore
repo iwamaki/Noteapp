@@ -55,6 +55,7 @@ server/data/  # RAGベクトルストアのデータファイル
 # API keys and credentials
 key.json
 *.key
+server/secrets/
 
 # build
 build/

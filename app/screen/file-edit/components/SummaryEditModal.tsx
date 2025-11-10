@@ -66,15 +66,31 @@ export const SummaryEditModal: React.FC<SummaryEditModalProps> = ({
       return;
     }
 
+    // トークン残量チェック
+    const { checkModelTokenLimit } = await import('../../../billing/utils/tokenPurchaseHelpers');
+    const currentModel = APIService.getCurrentLLMModel();
+    const tokenLimitCheck = checkModelTokenLimit(currentModel);
+
+    if (!tokenLimitCheck.canUse) {
+      setError(tokenLimitCheck.reason || 'トークンが不足しています。トークンを購入するか、プランをアップグレードしてください。');
+      return;
+    }
+
     setIsGenerating(true);
     setError(null);
 
     try {
-      const generatedSummary = await APIService.summarizeDocument(
+      const response = await APIService.summarizeDocument(
         fileContent,
         fileTitle
       );
-      setSummary(generatedSummary);
+      setSummary(response.summary);
+
+      // トークン使用量を記録
+      if (response.inputTokens && response.outputTokens && response.model) {
+        const { trackAndDeductTokens } = await import('../../../billing/utils/tokenTrackingHelper');
+        await trackAndDeductTokens(response.inputTokens, response.outputTokens, response.model);
+      }
     } catch (err) {
       console.error('要約生成エラー:', err);
       setError('要約の生成に失敗しました。もう一度お試しください。');

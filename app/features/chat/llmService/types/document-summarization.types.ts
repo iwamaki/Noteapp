@@ -18,4 +18,8 @@ export interface DocumentSummarizeRequest {
  */
 export interface DocumentSummarizeResponse {
   summary: string;
+  model?: string;
+  inputTokens?: number;
+  outputTokens?: number;
+  totalTokens?: number;
 }
