@@ -1,10 +1,10 @@
 /**
- * IAP (In-App Purchase) Service
+ * Subscription IAP Service
  *
- * アプリ内課金の処理を管理するサービス
- * - 購入フロー
- * - レシート検証
- * - 購入履歴の復元
+ * サブスクリプション購入専用のIAPサービス
+ * - サブスクリプション購入フロー
+ * - サブスクリプションレシート検証
+ * - サブスクリプション購入履歴の復元
  */
 
 import {
@@ -12,7 +12,6 @@ import {
   endConnection,
   fetchProducts,
   requestPurchase,
-  finishTransaction,
   purchaseUpdatedListener,
   purchaseErrorListener,
   getAvailablePurchases,
@@ -25,13 +24,12 @@ import type {
 
 import { Platform } from 'react-native';
 import { SubscriptionTier } from '../constants/plans';
-import { TOKEN_PACKAGES } from '../constants/tokenPackages';
 
 /**
  * サブスクリプション プロダクトID定義
  * App Store Connect / Play Console で登録するID
  */
-export const PRODUCT_IDS = {
+export const SUBSCRIPTION_PRODUCT_IDS = {
   STANDARD_MONTHLY: Platform.select({
     ios: 'noteapp.standard.monthly',
     android: 'noteapp.standard.monthly',
@@ -51,12 +49,6 @@ export const PRODUCT_IDS = {
 };
 
 /**
- * トークン購入 プロダクトID定義
- * TOKEN_PACKAGES から自動的に取得
- */
-export const TOKEN_PRODUCT_IDS = TOKEN_PACKAGES.map((pkg) => pkg.productId);
-
-/**
  * IAP初期化状態
  */
 let isInitialized = false;
@@ -67,7 +59,7 @@ let purchaseErrorSubscription: any = null;
  * IAP接続の初期化
  * アプリ起動時または購入画面表示時に呼び出す
  */
-export async function initializeIAP(): Promise<void> {
+export async function initializeSubscriptionIAP(): Promise<void> {
   if (isInitialized) {
     return;
   }
@@ -75,9 +67,9 @@ export async function initializeIAP(): Promise<void> {
   try {
     await initConnection();
     isInitialized = true;
-    console.log('[IAP] Connection initialized');
+    console.log('[Subscription IAP] Connection initialized');
   } catch (error) {
-    console.error('[IAP] Failed to initialize connection:', error);
+    console.error('[Subscription IAP] Failed to initialize connection:', error);
     throw error;
   }
 }
@@ -86,7 +78,7 @@ export async function initializeIAP(): Promise<void> {
  * IAP接続の終了
  * アプリ終了時に呼び出す
  */
-export async function disconnectIAP(): Promise<void> {
+export async function disconnectSubscriptionIAP(): Promise<void> {
   try {
     // リスナーを解除
     if (purchaseUpdateSubscription) {
@@ -100,9 +92,9 @@ export async function disconnectIAP(): Promise<void> {
 
     await endConnection();
     isInitialized = false;
-    console.log('[IAP] Connection ended');
+    console.log('[Subscription IAP] Connection ended');
   } catch (error) {
-    console.error('[IAP] Failed to end connection:', error);
+    console.error('[Subscription IAP] Failed to end connection:', error);
   }
 }
 
@@ -111,12 +103,12 @@ export async function disconnectIAP(): Promise<void> {
  */
 export async function getAvailableSubscriptions(): Promise<Product[]> {
   try {
-    const skus = Object.values(PRODUCT_IDS).filter(Boolean) as string[];
+    const skus = Object.values(SUBSCRIPTION_PRODUCT_IDS).filter(Boolean) as string[];
     const subscriptions = await fetchProducts({ skus, type: 'subs' });
-    console.log('[IAP] Available subscriptions:', subscriptions);
+    console.log('[Subscription IAP] Available subscriptions:', subscriptions);
     return (subscriptions as Product[]) || [];
   } catch (error) {
-    console.error('[IAP] Failed to get subscriptions:', error);
+    console.error('[Subscription IAP] Failed to get subscriptions:', error);
     return [];
   }
 }
@@ -130,24 +122,24 @@ export async function purchaseSubscription(
   onSuccess: (purchase: Purchase) => void,
   onError: (error: PurchaseError) => void,
 ): Promise<void> {
-  console.log('[IAP] purchaseSubscription called with productId:', productId);
-  console.log('[IAP] Product details:', product);
+  console.log('[Subscription IAP] purchaseSubscription called with productId:', productId);
+  console.log('[Subscription IAP] Product details:', product);
 
   // 既存のリスナーを解除（重複登録を防ぐ）
   if (purchaseUpdateSubscription) {
-    console.log('[IAP] Removing existing purchase update listener');
+    console.log('[Subscription IAP] Removing existing purchase update listener');
     purchaseUpdateSubscription.remove();
     purchaseUpdateSubscription = null;
   }
   if (purchaseErrorSubscription) {
-    console.log('[IAP] Removing existing purchase error listener');
+    console.log('[Subscription IAP] Removing existing purchase error listener');
     purchaseErrorSubscription.remove();
     purchaseErrorSubscription = null;
   }
 
   // 購入更新リスナーを設定
   purchaseUpdateSubscription = purchaseUpdatedListener((purchase: Purchase) => {
-    console.log('[IAP] Purchase updated:', purchase);
+    console.log('[Subscription IAP] Purchase updated:', purchase);
 
     // レシート検証（Phase 2ではonSuccess側で検証後にfinishTransactionを呼ぶ）
     const receipt = purchase.transactionId;
@@ -166,9 +158,9 @@ export async function purchaseSubscription(
       errorCode === 'user_cancelled' ||
       errorCode === 'user-cancelled'
     ) {
-      console.log('[IAP] User cancelled purchase:', error);
+      console.log('[Subscription IAP] User cancelled purchase:', error);
     } else {
-      console.error('[IAP] Purchase error:', error);
+      console.error('[Subscription IAP] Purchase error:', error);
     }
     onError(error);
   });
@@ -178,7 +170,7 @@ export async function purchaseSubscription(
     const productAny = product as any;
     const offerToken = productAny.subscriptionOfferDetailsAndroid?.[0]?.offerToken;
 
-    console.log('[IAP] Extracted offerToken:', offerToken);
+    console.log('[Subscription IAP] Extracted offerToken:', offerToken);
 
     // v14 Modern API: request キーの中に platform-specific な設定を入れる
     const requestParams: any = {
@@ -201,27 +193,34 @@ export async function purchaseSubscription(
       }];
     }
 
-    console.log('[IAP] Requesting purchase with params:', JSON.stringify(requestParams));
+    console.log('[Subscription IAP] Requesting purchase with params:', JSON.stringify(requestParams));
 
     // v14では requestPurchase が統一API
     await requestPurchase(requestParams);
   } catch (error) {
-    console.error('[IAP] Failed to request subscription:', error);
+    console.error('[Subscription IAP] Failed to request subscription:', error);
     onError(error as PurchaseError);
   }
 }
 
 /**
- * 購入履歴の復元
+ * サブスクリプション購入履歴の復元
  * アプリ再インストール時や複数デバイス間での同期に使用
  */
-export async function restorePurchases(): Promise<Purchase[]> {
+export async function restoreSubscriptions(): Promise<Purchase[]> {
   try {
     const purchases = await getAvailablePurchases();
-    console.log('[IAP] Restored purchases:', purchases);
-    return purchases;
+    console.log('[Subscription IAP] Restored purchases:', purchases);
+
+    // サブスクリプションのみをフィルタリング
+    const subscriptionPurchases = purchases.filter((purchase) => {
+      const productId = purchase.productId;
+      return Object.values(SUBSCRIPTION_PRODUCT_IDS).includes(productId);
+    });
+
+    return subscriptionPurchases;
   } catch (error) {
-    console.error('[IAP] Failed to restore purchases:', error);
+    console.error('[Subscription IAP] Failed to restore purchases:', error);
     return [];
   }
 }
@@ -272,7 +271,7 @@ export function isSubscriptionActive(expiresAt?: string): boolean {
 /**
  * プロダクトIDから価格表示用の文字列を生成
  */
-export function formatPrice(product: Product): string {
+export function formatSubscriptionPrice(product: Product): string {
   // Productの型から価格情報を取得
   const productAny = product as any;
   return productAny.localizedPrice || productAny.price || '¥0';
@@ -281,109 +280,9 @@ export function formatPrice(product: Product): string {
 /**
  * プロダクトIDから期間表示用の文字列を生成
  */
-export function getPeriodString(productId: string): string {
+export function getSubscriptionPeriodString(productId: string): string {
   if (productId.includes('yearly')) {
     return '年';
   }
   return '月';
-}
-
-/**
- * 利用可能なトークンパッケージ商品を取得
- */
-export async function getAvailableTokenPackages(): Promise<Product[]> {
-  try {
-    const skus = TOKEN_PRODUCT_IDS.filter(Boolean) as string[];
-
-    // トークンパッケージは消費型アイテム（in-app）として取得
-    const products = await fetchProducts({ skus, type: 'in-app' });
-    console.log('[IAP] Available token packages:', products);
-    return (products as Product[]) || [];
-  } catch (error) {
-    console.error('[IAP] Failed to get token packages:', error);
-    return [];
-  }
-}
-
-/**
- * トークンパッケージ購入フロー
- */
-export async function purchaseTokenPackage(
-  productId: string,
-  product: Product,
-  onSuccess: (purchase: Purchase) => void,
-  onError: (error: PurchaseError) => void,
-): Promise<void> {
-  console.log('[IAP] purchaseTokenPackage called with productId:', productId);
-  console.log('[IAP] Product details:', product);
-
-  // 既存のリスナーを解除（重複登録を防ぐ）
-  if (purchaseUpdateSubscription) {
-    console.log('[IAP] Removing existing purchase update listener');
-    purchaseUpdateSubscription.remove();
-    purchaseUpdateSubscription = null;
-  }
-  if (purchaseErrorSubscription) {
-    console.log('[IAP] Removing existing purchase error listener');
-    purchaseErrorSubscription.remove();
-    purchaseErrorSubscription = null;
-  }
-
-  // 購入更新リスナーを設定
-  purchaseUpdateSubscription = purchaseUpdatedListener((purchase: Purchase) => {
-    console.log('[IAP] Token package purchase updated:', purchase);
-
-    // レシート検証（Phase 1では簡易的）
-    const receipt = purchase.transactionId;
-    if (receipt) {
-      // トランザクション完了（消費型アイテムなので isConsumable: true）
-      finishTransaction({ purchase, isConsumable: true })
-        .then(() => {
-          console.log('[IAP] Token package transaction finished');
-          onSuccess(purchase);
-        })
-        .catch((error) => {
-          console.error('[IAP] Failed to finish token package transaction:', error);
-        });
-    }
-  });
-
-  // 購入エラーリスナーを設定
-  purchaseErrorSubscription = purchaseErrorListener((error: PurchaseError) => {
-    // ユーザーキャンセルは正常な動作なのでログレベルを分ける
-    const errorCode = String(error.code).toLowerCase();
-    if (
-      errorCode === 'e_user_cancelled' ||
-      errorCode === 'user_cancelled' ||
-      errorCode === 'user-cancelled'
-    ) {
-      console.log('[IAP] User cancelled token package purchase:', error);
-    } else {
-      console.error('[IAP] Token package purchase error:', error);
-    }
-    onError(error);
-  });
-
-  try {
-    // v14 Modern API: 消費型アイテム購入
-    const requestParams: any = {
-      request: {
-        ios: {
-          sku: productId,
-        },
-        android: {
-          skus: [productId],
-        },
-      },
-      type: 'inapp', // 消費型アイテム指定
-    };
-
-    console.log('[IAP] Requesting token package purchase with params:', JSON.stringify(requestParams));
-
-    // v14では requestPurchase が統一API
-    await requestPurchase(requestParams);
-  } catch (error) {
-    console.error('[IAP] Failed to request token package purchase:', error);
-    onError(error as PurchaseError);
-  }
 }

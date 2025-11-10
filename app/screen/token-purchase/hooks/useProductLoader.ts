@@ -7,7 +7,8 @@
 import { useState, useEffect } from 'react';
 import { Alert } from 'react-native';
 import type { Product } from 'react-native-iap';
-import { initializeIAP, getAvailableTokenPackages } from '../../../billing/services/iapService';
+import { initializeTokenIAP, getAvailableTokenPackages } from '../../../billing/services/tokenIapService';
+import { getAvailableSubscriptions } from '../../../billing/services/subscriptionIapService';
 import { TOKEN_PACKAGES } from '../../../billing/constants/tokenPackages';
 import type { TokenPackage } from '../../../billing/constants/tokenPackages';
 
@@ -28,7 +29,7 @@ export const useProductLoader = (): UseProductLoaderReturn => {
   const loadProducts = async () => {
     try {
       setLoading(true);
-      await initializeIAP();
+      await initializeTokenIAP();
 
       // トークンパッケージの読み込み
       const loadedProducts = await getAvailableTokenPackages();
@@ -58,7 +59,6 @@ export const useProductLoader = (): UseProductLoaderReturn => {
       setTokenProducts(loadedProducts);
 
       // サブスクリプション商品の読み込み
-      const { getAvailableSubscriptions } = await import('../../../billing/services/iapService');
       const subProducts = await getAvailableSubscriptions();
       console.log('[useProductLoader] Loaded subscription products:', subProducts);
 

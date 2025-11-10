@@ -4,7 +4,7 @@
  * @description Helper functions for purchase error handling and product ID mapping
  */
 
-import { PRODUCT_IDS } from '../services/iapService';
+import { SUBSCRIPTION_PRODUCT_IDS } from '../services/subscriptionIapService';
 import { SubscriptionTier } from '../constants/plans';
 
 /**
@@ -25,11 +25,11 @@ export const isUserCancelledError = (error: any): boolean => {
 export const getProductIdForTier = (targetTier: SubscriptionTier): string | null => {
   switch (targetTier) {
     case 'standard':
-      return PRODUCT_IDS.STANDARD_MONTHLY;
+      return SUBSCRIPTION_PRODUCT_IDS.STANDARD_MONTHLY;
     case 'pro':
-      return PRODUCT_IDS.PRO_MONTHLY;
+      return SUBSCRIPTION_PRODUCT_IDS.PRO_MONTHLY;
     case 'premium':
-      return PRODUCT_IDS.PREMIUM_MONTHLY;
+      return SUBSCRIPTION_PRODUCT_IDS.PREMIUM_MONTHLY;
     default:
       return null;
   }

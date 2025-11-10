@@ -18,7 +18,7 @@ import { getOrCreateClientId } from './utils/clientId';
 import { useSettingsStore } from '../../settings/settingsStore';
 import { useChatStore } from './store/chatStore';
 import { UnifiedErrorHandler } from './utils/errorHandler';
-import { checkModelTokenLimit } from '../../billing/utils/subscriptionHelpers';
+import { checkModelTokenLimit } from '../../billing/utils/tokenPurchaseHelpers';
 
 /**
  * シングルトンクラスとして機能し、アプリケーション全体でチャットの状態を管理します。

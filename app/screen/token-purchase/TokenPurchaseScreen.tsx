@@ -18,7 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { useSubscription } from '../../billing/utils/subscriptionHelpers';
 import { SUBSCRIPTION_PLANS } from '../../billing/constants/plans';
-import { PRODUCT_IDS } from '../../billing/services/iapService';
+import { SUBSCRIPTION_PRODUCT_IDS as PRODUCT_IDS } from '../../billing/services/subscriptionIapService';
 
 // Components
 import { PlanCard } from './components/PlanCard';

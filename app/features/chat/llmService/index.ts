@@ -74,9 +74,9 @@ export class LLMService {
     const requestId = await this.requestManager.startRequest();
 
     try {
-      // トークン上限チェック（Flash/Pro別）
+      // トークン上限チェック（Flash/Pro別、購入トークン残高も考慮）
       const currentModel = this.providerManager.getCurrentModel();
-      const { checkModelTokenLimit } = await import('../../../billing/utils/subscriptionHelpers');
+      const { checkModelTokenLimit } = await import('../../../billing/utils/tokenPurchaseHelpers');
       const tokenLimitCheck = checkModelTokenLimit(currentModel);
 
       if (!tokenLimitCheck.canUse) {

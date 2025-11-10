@@ -12,11 +12,11 @@ import { useSettingsStore } from '../../../settings/settingsStore';
 import type { PurchaseRecord } from '../../../settings/settingsStore';
 import {
   purchaseSubscription,
-  purchaseTokenPackage,
-  restorePurchases,
   getTierFromProductId,
   getSubscriptionExpiry,
-} from '../../../billing/services/iapService';
+  restoreSubscriptions,
+} from '../../../billing/services/subscriptionIapService';
+import { purchaseTokenPackage } from '../../../billing/services/tokenIapService';
 import { finishTransaction } from 'react-native-iap';
 import { SUBSCRIPTION_PLANS, SubscriptionTier } from '../../../billing/constants/plans';
 import type { TokenPackage } from '../../../billing/constants/tokenPackages';
@@ -282,7 +282,7 @@ export const usePurchaseHandlers = ({
     setIsRestoring(true);
 
     try {
-      const purchases = await restorePurchases();
+      const purchases = await restoreSubscriptions();
 
       if (purchases.length === 0) {
         Alert.alert('復元結果', '復元可能な購入が見つかりませんでした。');

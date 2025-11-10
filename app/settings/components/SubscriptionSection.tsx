@@ -18,7 +18,8 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { RootStackParamList } from '../../navigation/types';
-import { getUsageColor, useMonthlyCost, useFlashTokenUsage, useProTokenUsage } from '../../billing/utils/subscriptionHelpers';
+import { getUsageColor, useMonthlyCost, useSubscription } from '../../billing/utils/subscriptionHelpers';
+import { useFlashTokenUsage, useProTokenUsage } from '../../billing/utils/tokenPurchaseHelpers';
 import { useSettingsStore } from '../settingsStore';
 
 type SettingsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Settings'>;
@@ -32,9 +33,12 @@ export const SubscriptionSection: React.FC<SubscriptionSectionProps> = ({ render
   const navigation = useNavigation<SettingsScreenNavigationProp>();
   const { settings } = useSettingsStore();
 
-  // Flash/Pro 別のトークン使用量情報を取得
-  const flashUsage = useFlashTokenUsage();
-  const proUsage = useProTokenUsage();
+  // サブスクリプション情報を取得
+  const { tier, isActive } = useSubscription();
+
+  // Flash/Pro 別のトークン使用量情報を取得（購入トークン残高も含む）
+  const flashUsage = useFlashTokenUsage(tier, isActive);
+  const proUsage = useProTokenUsage(tier, isActive);
 
   // 月間コスト情報を取得（開発時のみ）
   const costInfo = __DEV__ ? useMonthlyCost() : null;
