@@ -4,10 +4,11 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  ScrollView,
+  FlatList,
   ActivityIndicator,
   Animated,
   PanResponderInstance,
+  ListRenderItem,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { ChatMessage, TokenUsageInfo } from '../llmService/index';
@@ -39,7 +40,7 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
   tokenUsage,
 }) => {
   const { colors, typography, iconSizes } = useTheme();
-  const scrollViewRef = useRef<ScrollView>(null);
+  const flatListRef = useRef<FlatList>(null);
   const [billingModalVisible, setBillingModalVisible] = useState(false);
 
   // 要約ボタンを有効にする条件: トークン使用量が75%超
@@ -48,10 +49,20 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
   useEffect(() => {
     if (messages.length > 0) {
       setTimeout(() => {
-        scrollViewRef.current?.scrollToEnd({ animated: true });
+        flatListRef.current?.scrollToEnd({ animated: true });
       }, 100);
     }
   }, [messages]);
+
+  const renderMessage: ListRenderItem<ChatMessage> = ({ item }) => (
+    <MessageItem
+      message={item}
+      tokenUsage={tokenUsage}
+      isLoading={isLoading}
+    />
+  );
+
+  const keyExtractor = (item: ChatMessage, index: number) => `message-${index}`;
 
   // トークン使用量インジケーターのレンダリング
   const renderTokenUsageIndicator = () => {
@@ -151,20 +162,6 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
       height: '100%',
       borderRadius: 2,
     },
-    tokenUsageInfo: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-    },
-    tokenUsageText: {
-      fontSize: 10,
-      color: colors.textSecondary,
-    },
-    summaryWarning: {
-      fontSize: 10,
-      color: colors.danger,
-      fontWeight: '600',
-    },
   });
 
   return (
@@ -213,26 +210,27 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
       {/* トークン使用量インジケーター */}
       {renderTokenUsageIndicator()}
 
-      <ScrollView
-        ref={scrollViewRef}
+      <FlatList
+        ref={flatListRef}
+        data={messages}
+        renderItem={renderMessage}
+        keyExtractor={keyExtractor}
         style={styles.messagesScrollView}
         contentContainerStyle={styles.messagesContent}
-      >
-        {messages.map((msg, index) => (
-          <MessageItem
-            key={index}
-            message={msg}
-            tokenUsage={tokenUsage}
-            isLoading={isLoading}
-          />
-        ))}
-        {isLoading && (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="small" color={colors.primary} />
-            <Text style={styles.loadingText}>AI が処理中です...</Text>
-          </View>
-        )}
-      </ScrollView>
+        ListFooterComponent={
+          isLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color={colors.primary} />
+              <Text style={styles.loadingText}>AI が処理中です...</Text>
+            </View>
+          ) : null
+        }
+        onContentSizeChange={() => {
+          if (messages.length > 0) {
+            flatListRef.current?.scrollToEnd({ animated: true });
+          }
+        }}
+      />
 
       {/* BillingModal */}
       <BillingModal

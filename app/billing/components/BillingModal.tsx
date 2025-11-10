@@ -24,7 +24,6 @@ import { initializeTokenIAP, getAvailableTokenPackages, purchaseTokenPackage } f
 import { isUserCancelledError } from '../utils/purchaseHelpers';
 import type { Product, Purchase } from 'react-native-iap';
 import type { PurchaseRecord } from '../../settings/settingsStore';
-import { finishTransaction } from 'react-native-iap';
 import { Alert } from 'react-native';
 
 type TokenType = 'flash' | 'pro';

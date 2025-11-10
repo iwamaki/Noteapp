@@ -18,8 +18,8 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { RootStackParamList } from '../../navigation/types';
-import { getUsageColor, useMonthlyCost, useSubscription } from '../../billing/utils/subscriptionHelpers';
-import { useFlashTokenUsage, useProTokenUsage } from '../../billing/utils/tokenPurchaseHelpers';
+import { useMonthlyCost, useSubscription } from '../../billing/utils/subscriptionHelpers';
+import { useProTokenUsage } from '../../billing/utils/tokenPurchaseHelpers';
 import { useSettingsStore } from '../settingsStore';
 
 type SettingsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Settings'>;
@@ -36,8 +36,7 @@ export const TokenUsageSection: React.FC<TokenUsageSectionProps> = ({ renderSect
   // トークン使用量情報を取得
   const { tier, isActive } = useSubscription();
 
-  // Flash/Pro 別のトークン使用量情報を取得（購入トークン残高も含む）
-  const flashUsage = useFlashTokenUsage(tier, isActive);
+  // Pro トークン使用量情報を取得（購入トークン残高も含む）
   const proUsage = useProTokenUsage(tier, isActive);
 
   // 月間コスト情報を取得（開発時のみ）
@@ -73,20 +72,6 @@ export const TokenUsageSection: React.FC<TokenUsageSectionProps> = ({ renderSect
       fontSize: typography.body.fontSize,
       color: colors.textSecondary,
       marginTop: spacing.xs,
-    },
-    usageText: {
-      ...typography.body,
-      color: colors.text,
-    },
-    progressBarContainer: {
-      height: 8,
-      backgroundColor: colors.border,
-      borderRadius: 4,
-      overflow: 'hidden',
-    },
-    progressBar: {
-      height: '100%',
-      borderRadius: 4,
     },
     purchaseButton: {
       flexDirection: 'row',

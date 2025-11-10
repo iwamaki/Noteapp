@@ -9,7 +9,7 @@ services:
       - .:/app
     environment:
       - PYTHONUNBUFFERED=1
-      - GOOGLE_APPLICATION_CREDENTIALS=/app/key.json
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/.secrets/geapi/key.json
       - GCP_PROJECT_ID=${GCP_PROJECT_ID}
       - OPENAI_API_SECRET_ID=${OPENAI_API_SECRET_ID}
       - GEMINI_API_SECRET_ID=${GEMINI_API_SECRET_ID}

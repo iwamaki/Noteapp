@@ -13,7 +13,7 @@ interface MessageItemProps {
   isLoading: boolean;
 }
 
-export const MessageItem: React.FC<MessageItemProps> = ({ message, tokenUsage, isLoading }) => {
+const MessageItemComponent: React.FC<MessageItemProps> = ({ message, tokenUsage, isLoading }) => {
   const { colors, iconSizes } = useTheme();
 
   // トークン使用量に応じたアイコンを選択
@@ -179,3 +179,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, tokenUsage, i
     </>
   );
 };
+
+MessageItemComponent.displayName = 'MessageItem';
+
+export const MessageItem = React.memo(MessageItemComponent);

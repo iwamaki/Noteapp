@@ -6,7 +6,7 @@
  * 共通のListItemコンポーネントを使用して見た目を統一。
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { StyleSheet, View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../design/theme/ThemeContext';
@@ -32,7 +32,7 @@ interface FlatListItemProps {
  * - children: タイトル + カテゴリー・タグバッジ
  * - 選択状態は背景色で表現（チェックボックスなし）
  */
-export const FlatListItem: React.FC<FlatListItemProps> = ({
+const FlatListItemComponent: React.FC<FlatListItemProps> = ({
   file,
   level,
   isSelected,
@@ -49,17 +49,28 @@ export const FlatListItem: React.FC<FlatListItemProps> = ({
   // アイコンサイズをlargeに設定
   const iconSize = iconSizes.large;
 
+  // メモ化されたスタイル
+  const containerStyle = useMemo(() => ({ paddingLeft: itemPaddingLeft }), [itemPaddingLeft]);
+  const summaryContainerStyle = useMemo(() => ({ marginTop: spacing.xs }), [spacing.xs]);
+  const contentContainerStyle = useMemo(() => ({ marginTop: spacing.xs, paddingLeft: spacing.md }), [spacing.xs, spacing.md]);
+  const badgeStyle = useMemo(() => ({
+    backgroundColor: colors.primary + FILE_LIST_FLAT_CONFIG.appearance.transparency.badgeAlpha,
+    marginRight: spacing.xs,
+  }), [colors.primary, spacing.xs]);
+  const summaryTextStyle = useMemo(() => [typography.caption, { color: colors.textSecondary }, styles.summaryText], [typography.caption, colors.textSecondary]);
+  const contentTextStyle = useMemo(() => [typography.caption, { color: colors.textSecondary }], [typography.caption, colors.textSecondary]);
+
   // 左側要素：ファイルアイコン
-  const leftElement = (
+  const leftElement = useMemo(() => (
     <Ionicons
       name="document-text-outline"
       size={iconSize}
       color={colors.text}
     />
-  );
+  ), [iconSize, colors.text]);
 
   return (
-    <View style={{ paddingLeft: itemPaddingLeft }}>
+    <View style={containerStyle}>
       <ListItem.Container
         onPress={onPress}
         onLongPress={onLongPress}
@@ -71,8 +82,8 @@ export const FlatListItem: React.FC<FlatListItemProps> = ({
 
       {/* 要約コンテナ */}
       {settings.showSummary && file.summary && (
-        <View style={{ marginTop: spacing.xs }}>
-          <Text style={[typography.caption, { color: colors.textSecondary }, styles.summaryText]}>
+        <View style={summaryContainerStyle}>
+          <Text style={summaryTextStyle}>
             <Text style={styles.label}>要約：</Text>
             {file.summary}
           </Text>
@@ -81,9 +92,9 @@ export const FlatListItem: React.FC<FlatListItemProps> = ({
 
       {/* 本文コンテナ */}
       {file.content && (
-        <View style={{ marginTop: spacing.xs, paddingLeft: spacing.md }}>
+        <View style={contentContainerStyle}>
           <Text
-            style={[typography.caption, { color: colors.textSecondary }]}
+            style={contentTextStyle}
             numberOfLines={FILE_LIST_FLAT_CONFIG.constraints.contentPreviewMaxLines}
           >
             {file.content}
@@ -97,13 +108,7 @@ export const FlatListItem: React.FC<FlatListItemProps> = ({
           {file.tags.map((tag, index) => (
             <View
               key={`tag-${index}`}
-              style={[
-                styles.badge,
-                {
-                  backgroundColor: colors.primary + FILE_LIST_FLAT_CONFIG.appearance.transparency.badgeAlpha,
-                  marginRight: spacing.xs,
-                },
-              ]}
+              style={[styles.badge, badgeStyle]}
             >
               <Text
                 style={[
@@ -121,6 +126,10 @@ export const FlatListItem: React.FC<FlatListItemProps> = ({
     </View>
   );
 };
+
+FlatListItemComponent.displayName = 'FlatListItem';
+
+export const FlatListItem = React.memo(FlatListItemComponent);
 
 const styles = StyleSheet.create({
   label: {

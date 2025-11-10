@@ -23,7 +23,6 @@ import type {
   PurchaseError,
 } from 'react-native-iap';
 
-import { Platform } from 'react-native';
 import { TOKEN_PACKAGES } from '../constants/tokenPackages';
 
 /**
