@@ -213,8 +213,6 @@ function SettingsScreen() {
 
         {settings.llmEnabled && (
           <>
-            {renderSection('LLM設定')}
-
             {isLoadingProviders ? (
               <ListItem.Container>
                 <View style={styles.loadingContent}>
@@ -253,14 +251,15 @@ function SettingsScreen() {
                   )
                 )}
 
+                {/* ノートの文脈情報をLLMに送信機能は非表示
                 <ListItem.Container>
-                  {/* eslint-disable-next-line react-native/no-raw-text */}
                   <ListItem.Title>ノートの文脈情報をLLMに送信</ListItem.Title>
                   <Switch
                     value={settings.sendFileContextToLLM}
                     onValueChange={(value: boolean) => updateSettings({ sendFileContextToLLM: value })}
                   />
                 </ListItem.Container>
+                */}
               </>
             )}
           </>
