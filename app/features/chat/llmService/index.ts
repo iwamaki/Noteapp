@@ -335,14 +335,17 @@ export class LLMService {
     title: string
   ): Promise<DocumentSummarizeResponse> {
     try {
-      logger.info('llm', `Summarizing document: title="${title}", content_length=${content.length}`);
+      const currentProvider = this.providerManager.getCurrentProvider();
+      const currentModel = this.providerManager.getCurrentModel();
+
+      logger.info('llm', `Summarizing document: title="${title}", content_length=${content.length}, provider=${currentProvider}, model=${currentModel}`);
 
       // 要約リクエストを送信
       const request: DocumentSummarizeRequest = {
         content,
         title,
-        provider: this.providerManager.getCurrentProvider(),
-        model: this.providerManager.getCurrentModel(),
+        provider: currentProvider,
+        model: currentModel,
       };
 
       const response = await this.httpClient.post('/api/document/summarize', request);

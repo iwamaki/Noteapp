@@ -125,7 +125,7 @@ async def summarize_document(request: DocumentSummarizeRequest) -> DocumentSumma
     logger.info(
         f"Received document summarization request: "
         f"title='{request.title}', content_length={len(request.content)}, "
-        f"provider={request.provider}"
+        f"provider={request.provider}, model={request.model}"
     )
 
     # 最低文字数チェック
@@ -134,11 +134,19 @@ async def summarize_document(request: DocumentSummarizeRequest) -> DocumentSumma
         logger.warning(f"Rejected document summarization: {error_msg}")
         raise HTTPException(status_code=400, detail=error_msg)
 
+    provider = request.provider or settings.get_default_provider()
+    model = request.model
+
+    logger.info(
+        f"Using for summarization: provider={provider}, model={model} "
+        f"(model is None: {model is None})"
+    )
+
     result = await summarization_service.summarize_document(
         content=request.content,
         title=request.title,
-        provider=request.provider or settings.get_default_provider(),
-        model=request.model
+        provider=provider,
+        model=model
     )
 
     logger.info(

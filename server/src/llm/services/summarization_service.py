@@ -35,6 +35,10 @@ class SummarizationService:
                 raise ValueError("Gemini API key is not configured")
 
             model_name = model or settings.get_default_model("gemini")
+            logger.info(
+                f"Creating LLM instance: provider={provider}, "
+                f"requested_model={model}, final_model={model_name}"
+            )
             return ChatGoogleGenerativeAI(
                 api_key=settings.gemini_api_key,
                 model=model_name,
