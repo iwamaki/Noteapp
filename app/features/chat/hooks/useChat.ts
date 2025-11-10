@@ -31,23 +31,24 @@ export const useChat = () => {
   const [isResizing, setIsResizing] = useState(false);
 
   const chatAreaHeight = useRef(new Animated.Value(CHAT_CONFIG.ui.chatAreaInitialHeight)).current;
-  const heightValue = useRef(CHAT_CONFIG.ui.chatAreaInitialHeight);
+  const gestureStartHeight = useRef(CHAT_CONFIG.ui.chatAreaInitialHeight);
+  const currentHeightValue = useRef(CHAT_CONFIG.ui.chatAreaInitialHeight);
 
   useEffect(() => {
     const listenerId = chatAreaHeight.addListener(({ value }) => {
-      heightValue.current = value;
+      currentHeightValue.current = value;
     });
     return () => {
       chatAreaHeight.removeListener(listenerId);
     };
   }, [chatAreaHeight]);
 
-  const gestureStartHeight = useRef(0);
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onPanResponderGrant: () => {
-        gestureStartHeight.current = heightValue.current;
+        // ドラッグ開始時の高さを記録（現在の実際の値を使用）
+        gestureStartHeight.current = currentHeightValue.current;
         setIsResizing(true);
       },
       onPanResponderMove: (_, gestureState) => {
@@ -60,7 +61,9 @@ export const useChat = () => {
           clampedHeight = CHAT_CONFIG.ui.chatAreaMaxHeight;
         }
 
+        // 値を更新
         chatAreaHeight.setValue(clampedHeight);
+        currentHeightValue.current = clampedHeight;
       },
       onPanResponderRelease: () => {
         setIsResizing(false);
