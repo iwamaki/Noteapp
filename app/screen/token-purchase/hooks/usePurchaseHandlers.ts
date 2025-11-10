@@ -64,8 +64,8 @@ export const usePurchaseHandlers = ({
                 await addTokens(pkg.tokens.flash, pkg.tokens.pro, mockPurchaseRecord);
 
                 const tokenMsg = pkg.tokens.flash > 0
-                  ? `${formatTokenAmount(pkg.tokens.flash)} Flash トークンを追加しました`
-                  : `${formatTokenAmount(pkg.tokens.pro)} Pro トークンを追加しました`;
+                  ? `${formatTokenAmount(pkg.tokens.flash)} Quick トークンを追加しました`
+                  : `${formatTokenAmount(pkg.tokens.pro)} Think トークンを追加しました`;
 
                 Alert.alert(
                   '購入完了（開発モード）',
@@ -123,8 +123,8 @@ export const usePurchaseHandlers = ({
 
           // 成功メッセージ
           const tokenMsg = pkg.tokens.flash > 0
-            ? `${formatTokenAmount(pkg.tokens.flash)} Flash トークンを追加しました`
-            : `${formatTokenAmount(pkg.tokens.pro)} Pro トークンを追加しました`;
+            ? `${formatTokenAmount(pkg.tokens.flash)} Quick トークンを追加しました`
+            : `${formatTokenAmount(pkg.tokens.pro)} Think トークンを追加しました`;
 
           Alert.alert(
             '購入完了',

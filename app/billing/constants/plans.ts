@@ -14,13 +14,13 @@
  * Flash と Pro のトークンを分けて管理します。
  * 価格差が約4倍あるため、別枠での管理が必須です。
  *
- * - Flash: ¥265/M tokens (混合コスト)
- * - Pro:   ¥1,063/M tokens (混合コスト)
+ * - Quick (Flash): ¥265/M tokens (混合コスト)
+ * - Think (Pro):   ¥1,063/M tokens (混合コスト)
  */
 export interface PlanLimits {
-  /** Flash モデルの月間最大トークン数（入力+出力の合計）（-1 = 無制限） */
+  /** Quick モデルの月間最大トークン数（入力+出力の合計）（-1 = 無制限） */
   maxMonthlyFlashTokens: number;
-  /** Pro モデルの月間最大トークン数（入力+出力の合計）（0 = 使用不可、-1 = 無制限） */
+  /** Think モデルの月間最大トークン数（入力+出力の合計）（0 = 使用不可、-1 = 無制限） */
   maxMonthlyProTokens: number;
 }
 

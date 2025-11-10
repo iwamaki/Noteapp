@@ -77,8 +77,8 @@ export default function TokenPurchaseScreen() {
     const priceDisplay = product ? (product as any).localizedPrice || `¥${selectedPackage.price}` : `¥${selectedPackage.price}`;
 
     const tokenAmount = selectedPackage.tokens.flash > 0
-      ? `${formatTokenAmount(selectedPackage.tokens.flash)} Flash トークン`
-      : `${formatTokenAmount(selectedPackage.tokens.pro)} Pro トークン`;
+      ? `${formatTokenAmount(selectedPackage.tokens.flash)} Quick トークン`
+      : `${formatTokenAmount(selectedPackage.tokens.pro)} Think トークン`;
 
     return [
       {
@@ -97,7 +97,7 @@ export default function TokenPurchaseScreen() {
   return (
     <MainContainer isLoading={loading}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        {/* Flash トークンパッケージ */}
+        {/* Quick トークンパッケージ */}
         {availablePackages.filter(pkg => pkg.tokens.flash > 0).length > 0 && (
           <View style={styles.packagesContainer}>
             {availablePackages
@@ -113,7 +113,7 @@ export default function TokenPurchaseScreen() {
           </View>
         )}
 
-        {/* Pro トークンパッケージ */}
+        {/* Think トークンパッケージ */}
         {availablePackages.filter(pkg => pkg.tokens.pro > 0).length > 0 && (
           <View style={styles.packagesContainer}>
             {availablePackages

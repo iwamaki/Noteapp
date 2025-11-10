@@ -263,11 +263,11 @@ function SettingsScreen() {
                 </ListItem.Container>
               </>
             )}
-
-            {/* トークン残高・使用量セクション（LLM設定の後に表示） */}
-            <TokenUsageSection renderSection={renderSection} />
           </>
         )}
+
+        {/* トークン残高・使用量セクション（LLM機能のオン/オフに関係なく常に表示） */}
+        <TokenUsageSection renderSection={renderSection} />
 
         <Text style={styles.infoText}>
           その他の設定項目は今後のアップデートで追加予定です。

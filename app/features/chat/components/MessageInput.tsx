@@ -26,7 +26,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({ inputText, setInputT
   const { sendMessage, isLoading } = useChatUI();
   const { settings, updateSettings } = useSettingsStore();
 
-  // 現在のモデルがflashかproか判定
+  // 現在のモデルがquickかthinkか判定
   const isFlashModel = settings.llmModel.toLowerCase().includes('flash');
 
   // モデルを切り替える

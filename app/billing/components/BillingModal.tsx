@@ -1,7 +1,7 @@
 /**
  * @file BillingModal.tsx
  * @summary トークン購入用のモーダル
- * @description Flash/Proトークンのパッケージ購入をシンプルに行うモーダル
+ * @description Quick/Thinkトークンのパッケージ購入をシンプルに行うモーダル
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -13,6 +13,7 @@ import {
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { CustomModal } from '../../components/CustomModal';
 import { PurchaseConfirmModal } from '../../components/PurchaseConfirmModal';
 import type { PurchaseDetail } from '../../components/PurchaseConfirmModal';
@@ -111,8 +112,8 @@ export const BillingModal: React.FC<BillingModalProps> = ({
       : `¥${selectedPackage.price}`;
 
     const tokenAmount = selectedPackage.tokens.flash > 0
-      ? `${formatTokenAmount(selectedPackage.tokens.flash)} Flash トークン`
-      : `${formatTokenAmount(selectedPackage.tokens.pro)} Pro トークン`;
+      ? `${formatTokenAmount(selectedPackage.tokens.flash)} Quick トークン`
+      : `${formatTokenAmount(selectedPackage.tokens.pro)} Think トークン`;
 
     return [
       {
@@ -158,8 +159,8 @@ export const BillingModal: React.FC<BillingModalProps> = ({
                 await addTokens(pkg.tokens.flash, pkg.tokens.pro, mockPurchaseRecord);
 
                 const tokenMsg = pkg.tokens.flash > 0
-                  ? `${formatTokenAmount(pkg.tokens.flash)} Flash トークンを追加しました`
-                  : `${formatTokenAmount(pkg.tokens.pro)} Pro トークンを追加しました`;
+                  ? `${formatTokenAmount(pkg.tokens.flash)} Quick トークンを追加しました`
+                  : `${formatTokenAmount(pkg.tokens.pro)} Think トークンを追加しました`;
 
                 Alert.alert('購入完了（開発モード）', tokenMsg, [
                   { text: 'OK', onPress: onClose },
@@ -209,8 +210,8 @@ export const BillingModal: React.FC<BillingModalProps> = ({
           await addTokens(pkg.tokens.flash, pkg.tokens.pro, purchaseRecord);
 
           const tokenMsg = pkg.tokens.flash > 0
-            ? `${formatTokenAmount(pkg.tokens.flash)} Flash トークンを追加しました`
-            : `${formatTokenAmount(pkg.tokens.pro)} Pro トークンを追加しました`;
+            ? `${formatTokenAmount(pkg.tokens.flash)} Quick トークンを追加しました`
+            : `${formatTokenAmount(pkg.tokens.pro)} Think トークンを追加しました`;
 
           Alert.alert('購入完了', tokenMsg, [{ text: 'OK', onPress: onClose }]);
           setPurchasing(false);
@@ -245,19 +246,27 @@ export const BillingModal: React.FC<BillingModalProps> = ({
       paddingVertical: spacing.sm,
       borderRadius: 8,
       alignItems: 'center',
+      borderWidth: 2,
     },
     tabSelected: {
-      backgroundColor: colors.primary,
+      backgroundColor: colors.secondary,
+      borderColor: colors.primary,
     },
     tabUnselected: {
       backgroundColor: colors.secondary,
+      borderColor: 'transparent',
+    },
+    tabContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     tabText: {
       fontSize: typography.body.fontSize,
       fontWeight: '600',
     },
     tabTextSelected: {
-      color: colors.white,
+      color: colors.text,
     },
     tabTextUnselected: {
       color: colors.textSecondary,
@@ -342,14 +351,22 @@ export const BillingModal: React.FC<BillingModalProps> = ({
             ]}
             onPress={() => setSelectedTab('flash')}
           >
-            <Text
-              style={[
-                styles.tabText,
-                selectedTab === 'flash' ? styles.tabTextSelected : styles.tabTextUnselected,
-              ]}
-            >
-              ⚡ Flash
-            </Text>
+            <View style={styles.tabContent}>
+              <MaterialCommunityIcons
+                name="speedometer"
+                size={20}
+                color={selectedTab === 'flash' ? '#FFC107' : colors.textSecondary}
+                style={{ marginRight: 6 }}
+              />
+              <Text
+                style={[
+                  styles.tabText,
+                  selectedTab === 'flash' ? styles.tabTextSelected : styles.tabTextUnselected,
+                ]}
+              >
+                Quick
+              </Text>
+            </View>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -359,22 +376,29 @@ export const BillingModal: React.FC<BillingModalProps> = ({
             ]}
             onPress={() => setSelectedTab('pro')}
           >
-            <Text
-              style={[
-                styles.tabText,
-                selectedTab === 'pro' ? styles.tabTextSelected : styles.tabTextUnselected,
-              ]}
-            >
-              🎯 Pro
-            </Text>
+            <View style={styles.tabContent}>
+              <MaterialCommunityIcons
+                name="speedometer-slow"
+                size={20}
+                color={selectedTab === 'pro' ? '#4CAF50' : colors.textSecondary}
+                style={{ marginRight: 6 }}
+              />
+              <Text
+                style={[
+                  styles.tabText,
+                  selectedTab === 'pro' ? styles.tabTextSelected : styles.tabTextUnselected,
+                ]}
+              >
+                Think
+              </Text>
+            </View>
           </TouchableOpacity>
         </View>
 
         {/* 現在の残高 */}
         <View style={styles.balanceContainer}>
           <Text style={styles.balanceText}>
-            現在の残高: {selectedTab === 'flash' ? '⚡' : '🎯'}{' '}
-            {formatTokenAmount(
+            現在の残高: {formatTokenAmount(
               selectedTab === 'flash' ? settings.tokenBalance.flash : settings.tokenBalance.pro
             )}{' '}
             トークン
@@ -395,7 +419,6 @@ export const BillingModal: React.FC<BillingModalProps> = ({
               >
                 <View style={styles.packageHeader}>
                   <Text style={styles.packageName}>
-                    {selectedTab === 'flash' ? '⚡' : '🎯'}{' '}
                     {formatTokenAmount(
                       selectedTab === 'flash' ? pkg.tokens.flash : pkg.tokens.pro
                     )}{' '}

@@ -100,11 +100,11 @@ export const FEATURE_REQUIREMENTS = {
  * Pro系: Pro/Premium プランから利用可能
  */
 export const MODEL_REQUIREMENTS: Record<string, SubscriptionTier> = {
-  // Gemini Flash モデル（低コスト: ¥265/M tokens）
+  // Gemini Quick モデル（低コスト: ¥265/M tokens）
   'gemini-2.5-flash': 'free',
   'gemini-1.5-flash': 'free',
 
-  // Gemini Pro モデル（高コスト: ¥1,063/M tokens）
+  // Gemini Think モデル（高コスト: ¥1,063/M tokens）
   'gemini-2.5-pro': 'pro',
   'gemini-1.5-pro': 'pro',
 

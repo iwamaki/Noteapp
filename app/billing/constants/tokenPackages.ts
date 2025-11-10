@@ -15,8 +15,8 @@ export interface TokenPackage {
   description: string; // パッケージの説明
   price: number; // 価格（円）
   tokens: {
-    flash: number; // 付与されるFlashトークン数
-    pro: number; // 付与されるProトークン数
+    flash: number; // 付与されるQuickトークン数
+    pro: number; // 付与されるThinkトークン数
   };
   productId: string; // IAP プロダクトID
   isInitial?: boolean; // 初回購入専用パッケージかどうか
@@ -25,17 +25,17 @@ export interface TokenPackage {
 
 /**
  * トークンパッケージ定義
- * Flash トークンと Pro トークンの両方を購入可能
+ * Quick トークンと Think トークンの両方を購入可能
  */
 export const TOKEN_PACKAGES: TokenPackage[] = [
-  // Flash トークン - 初回購入パッケージ（初回のみ表示）
+  // Quick トークン - 初回購入パッケージ（初回のみ表示）
   {
     id: 'initial',
-    name: '初回購入 (Flash)',
+    name: '初回購入 (Quick)',
     description: '初めてのトークン購入 - 低コストモデル用',
     price: 300,
     tokens: {
-      flash: 1000000, // 1.0M Flash tokens
+      flash: 1000000, // 1.0M Quick tokens
       pro: 0,
     },
     productId: Platform.select({
@@ -46,14 +46,14 @@ export const TOKEN_PACKAGES: TokenPackage[] = [
     badge: '初回限定',
   },
 
-  // Flash トークン - 通常パッケージ
+  // Quick トークン - 通常パッケージ
   {
     id: 'small',
-    name: 'Flash スモール',
-    description: '少量のFlashトークンが必要な方に',
+    name: 'Quick スモール',
+    description: '少量のQuickトークンが必要な方に',
     price: 300,
     tokens: {
-      flash: 500000, // 0.5M Flash tokens
+      flash: 500000, // 0.5M Quick tokens
       pro: 0,
     },
     productId: Platform.select({
@@ -63,11 +63,11 @@ export const TOKEN_PACKAGES: TokenPackage[] = [
   },
   {
     id: 'regular',
-    name: 'Flash レギュラー',
-    description: 'Flashモデルの標準的な使用量に対応',
+    name: 'Quick レギュラー',
+    description: 'Quickモデルの標準的な使用量に対応',
     price: 500,
     tokens: {
-      flash: 1000000, // 1.0M Flash tokens
+      flash: 1000000, // 1.0M Quick tokens
       pro: 0,
     },
     productId: Platform.select({
@@ -78,11 +78,11 @@ export const TOKEN_PACKAGES: TokenPackage[] = [
   },
   {
     id: 'large',
-    name: 'Flash ラージ',
-    description: 'Flashモデルのヘビーユーザー向け',
+    name: 'Quick ラージ',
+    description: 'Quickモデルのヘビーユーザー向け',
     price: 1000,
     tokens: {
-      flash: 3000000, // 3.0M Flash tokens
+      flash: 3000000, // 3.0M Quick tokens
       pro: 0,
     },
     productId: Platform.select({
@@ -92,15 +92,15 @@ export const TOKEN_PACKAGES: TokenPackage[] = [
     badge: 'お得',
   },
 
-  // Pro トークン - 通常パッケージ
+  // Think トークン - 通常パッケージ
   {
     id: 'pro_small',
-    name: 'Pro スモール',
-    description: '少量のProトークンが必要な方に',
+    name: 'Think スモール',
+    description: '少量のThinkトークンが必要な方に',
     price: 300,
     tokens: {
       flash: 0,
-      pro: 100000, // 0.1M Pro tokens
+      pro: 100000, // 0.1M Think tokens
     },
     productId: Platform.select({
       ios: 'noteapp.tokens.pro.small',
@@ -109,12 +109,12 @@ export const TOKEN_PACKAGES: TokenPackage[] = [
   },
   {
     id: 'pro_regular',
-    name: 'Pro レギュラー',
-    description: 'Proモデルの標準的な使用量に対応',
+    name: 'Think レギュラー',
+    description: 'Thinkモデルの標準的な使用量に対応',
     price: 500,
     tokens: {
       flash: 0,
-      pro: 200000, // 0.2M Pro tokens
+      pro: 200000, // 0.2M Think tokens
     },
     productId: Platform.select({
       ios: 'noteapp.tokens.pro.regular',
@@ -124,12 +124,12 @@ export const TOKEN_PACKAGES: TokenPackage[] = [
   },
   {
     id: 'pro_large',
-    name: 'Pro ラージ',
-    description: 'Proモデルのヘビーユーザー向け',
+    name: 'Think ラージ',
+    description: 'Thinkモデルのヘビーユーザー向け',
     price: 1000,
     tokens: {
       flash: 0,
-      pro: 700000, // 0.7M Pro tokens
+      pro: 700000, // 0.7M Think tokens
     },
     productId: Platform.select({
       ios: 'noteapp.tokens.pro.large',

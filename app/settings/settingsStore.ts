@@ -19,8 +19,8 @@ export interface PurchaseRecord {
   purchaseDate: string; // 購入日時（ISO 8601）
   amount: number; // 支払額（円）
   tokensAdded: {
-    flash: number; // 追加されたFlashトークン数
-    pro: number; // 追加されたProトークン数
+    flash: number; // 追加されたQuickトークン数
+    pro: number; // 追加されたThinkトークン数
   };
 }
 
@@ -107,8 +107,8 @@ export interface AppSettings {
 
   // 10. トークン残高（Phase 1: 購入したトークン）
   tokenBalance: {
-    flash: number; // Flashモデル用トークン残高
-    pro: number; // Proモデル用トークン残高
+    flash: number; // Quickモデル用トークン残高
+    pro: number; // Thinkモデル用トークン残高
   };
 
   // 11. 購入履歴
@@ -355,8 +355,8 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
 
   /**
    * トークンを追加（購入時に呼び出される）
-   * @param flashTokens 追加するFlashトークン数
-   * @param proTokens 追加するProトークン数
+   * @param flashTokens 追加するQuickトークン数
+   * @param proTokens 追加するThinkトークン数
    * @param purchaseRecord 購入履歴レコード
    */
   addTokens: async (flashTokens: number, proTokens: number, purchaseRecord: PurchaseRecord) => {
@@ -376,8 +376,8 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
 
   /**
    * トークンを消費（LLM使用時に呼び出される）
-   * @param flashTokens 消費するFlashトークン数
-   * @param proTokens 消費するProトークン数
+   * @param flashTokens 消費するQuickトークン数
+   * @param proTokens 消費するThinkトークン数
    */
   deductTokens: async (flashTokens: number, proTokens: number) => {
     const { settings } = get();

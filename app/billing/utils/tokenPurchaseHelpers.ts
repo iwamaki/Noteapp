@@ -23,7 +23,7 @@ export function useTokenBalance() {
 }
 
 /**
- * Flash トークン残高を取得（非React環境から呼び出し可能）
+ * Quick トークン残高を取得（非React環境から呼び出し可能）
  */
 export function getFlashTokenBalance(): number {
   const { settings } = useSettingsStore.getState();
@@ -31,7 +31,7 @@ export function getFlashTokenBalance(): number {
 }
 
 /**
- * Pro トークン残高を取得（非React環境から呼び出し可能）
+ * Think トークン残高を取得（非React環境から呼び出し可能）
  */
 export function getProTokenBalance(): number {
   const { settings } = useSettingsStore.getState();
@@ -175,7 +175,7 @@ export function checkModelTokenLimit(modelId: string): {
       tier: effectiveTier,
       reason: canUse
         ? undefined
-        : 'Flash トークンがありません。トークンを購入してください。',
+        : 'Quick トークンがありません。トークンを購入してください。',
     };
   } else if (isProModel(modelId)) {
     const current = tokenUsage.pro.totalTokens;
@@ -195,7 +195,7 @@ export function checkModelTokenLimit(modelId: string): {
       tier: effectiveTier,
       reason: canUse
         ? undefined
-        : 'Pro トークンがありません。トークンを購入してください。',
+        : 'Think トークンがありません。トークンを購入してください。',
     };
   }
 

@@ -362,7 +362,7 @@ export function isProModel(modelId: string): boolean {
 }
 
 /**
- * Flash/Pro別のトークン使用量を取得（非React環境から呼び出し可能）
+ * Quick/Think別のトークン使用量を取得（非React環境から呼び出し可能）
  */
 export function getTokenUsageByModelType(): {
   flash: { inputTokens: number; outputTokens: number; totalTokens: number };

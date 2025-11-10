@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { RootStackParamList } from '../../navigation/types';
 import { getUsageColor, useMonthlyCost, useSubscription } from '../../billing/utils/subscriptionHelpers';
@@ -51,10 +51,28 @@ export const TokenUsageSection: React.FC<TokenUsageSectionProps> = ({ renderSect
       marginBottom: spacing.md,
       borderRadius: 12,
     },
+    modelTitleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: spacing.sm,
+    },
     usageTitle: {
       ...typography.subtitle,
       color: colors.text,
-      marginBottom: spacing.sm,
+    },
+    balanceDisplay: {
+      alignItems: 'center',
+      paddingVertical: spacing.lg,
+    },
+    balanceAmount: {
+      fontSize: 36,
+      fontWeight: 'bold',
+      color: colors.text,
+    },
+    balanceLabel: {
+      fontSize: typography.body.fontSize,
+      color: colors.textSecondary,
+      marginTop: spacing.xs,
     },
     usageText: {
       ...typography.body,
@@ -156,133 +174,43 @@ export const TokenUsageSection: React.FC<TokenUsageSectionProps> = ({ renderSect
     <>
       {renderSection('トークン残高・使用量')}
 
-      {/* Flash tokens 使用量 */}
+      {/* Quick tokens 使用量 */}
       <View style={styles.usageContainer}>
-        <Text style={styles.usageTitle}>Flash モデル</Text>
-        {flashUsage.max !== -1 && flashUsage.max > 0 && (
-          <>
-            {/* 月次割当残量バー */}
-            <View style={{ marginTop: 8 }}>
-              <Text style={[styles.usageText, { fontSize: 11, color: '#666', marginBottom: 4 }]}>
-                {Math.max(0, flashUsage.max - flashUsage.current).toLocaleString()} / {flashUsage.max.toLocaleString()} トークン
-              </Text>
-              <View style={styles.progressBarContainer}>
-                <View
-                  style={[
-                    styles.progressBar,
-                    {
-                      width: `${100 - Math.min(flashUsage.percentage, 100)}%`,
-                      backgroundColor: getUsageColor(flashUsage.percentage),
-                    },
-                  ]}
-                />
-              </View>
-            </View>
-            {/* 購入トークン残高バー（ある場合のみ） */}
-            {settings.tokenBalance.flash > 0 && (
-              <View style={{ marginTop: 12 }}>
-                <Text style={[styles.usageText, { fontSize: 11, color: '#007AFF', marginBottom: 4 }]}>
-                  購入: {settings.tokenBalance.flash.toLocaleString()} トークン
-                </Text>
-                <View style={styles.progressBarContainer}>
-                  <View
-                    style={[
-                      styles.progressBar,
-                      {
-                        width: `${Math.min(100, (settings.tokenBalance.flash / flashUsage.max) * 100)}%`,
-                        backgroundColor: '#007AFF',
-                      },
-                    ]}
-                  />
-                </View>
-              </View>
-            )}
-          </>
-        )}
-        {/* 月次割当なしで購入トークンのみある場合 */}
-        {(flashUsage.max === -1 || flashUsage.max === 0) && settings.tokenBalance.flash > 0 && (
-          <View style={{ marginTop: 8 }}>
-            <Text style={[styles.usageText, { fontSize: 11, color: '#007AFF', marginBottom: 4 }]}>
-              購入: {settings.tokenBalance.flash.toLocaleString()} トークン
-            </Text>
-            <View style={styles.progressBarContainer}>
-              <View
-                style={[
-                  styles.progressBar,
-                  {
-                    width: '100%',
-                    backgroundColor: '#007AFF',
-                  },
-                ]}
-              />
-            </View>
-          </View>
-        )}
+        <View style={styles.modelTitleRow}>
+          <MaterialCommunityIcons
+            name="speedometer"
+            size={20}
+            color="#FFC107"
+            style={{ marginRight: 8 }}
+          />
+          <Text style={styles.usageTitle}>Quick モデル</Text>
+        </View>
+        <View style={styles.balanceDisplay}>
+          <Text style={styles.balanceAmount}>
+            {settings.tokenBalance.flash.toLocaleString()}
+          </Text>
+          <Text style={styles.balanceLabel}>トークン</Text>
+        </View>
       </View>
 
-      {/* Pro tokens 使用量（月次割当があるか、購入トークンがある場合に表示） */}
+      {/* Think tokens 使用量（月次割当があるか、購入トークンがある場合に表示） */}
       {(proUsage.available || settings.tokenBalance.pro > 0) && (
         <View style={styles.usageContainer}>
-          <Text style={styles.usageTitle}>Pro モデル</Text>
-          {proUsage.max !== -1 && proUsage.max > 0 && (
-            <>
-              {/* 月次割当残量バー */}
-              <View style={{ marginTop: 8 }}>
-                <Text style={[styles.usageText, { fontSize: 11, color: '#666', marginBottom: 4 }]}>
-                  {Math.max(0, proUsage.max - proUsage.current).toLocaleString()} / {proUsage.max.toLocaleString()} トークン
-                </Text>
-                <View style={styles.progressBarContainer}>
-                  <View
-                    style={[
-                      styles.progressBar,
-                      {
-                        width: `${100 - Math.min(proUsage.percentage, 100)}%`,
-                        backgroundColor: getUsageColor(proUsage.percentage),
-                      },
-                    ]}
-                  />
-                </View>
-              </View>
-              {/* 購入トークン残高バー（ある場合のみ） */}
-              {settings.tokenBalance.pro > 0 && (
-                <View style={{ marginTop: 12 }}>
-                  <Text style={[styles.usageText, { fontSize: 11, color: '#007AFF', marginBottom: 4 }]}>
-                    購入: {settings.tokenBalance.pro.toLocaleString()} トークン
-                  </Text>
-                  <View style={styles.progressBarContainer}>
-                    <View
-                      style={[
-                        styles.progressBar,
-                        {
-                          width: `${Math.min(100, (settings.tokenBalance.pro / proUsage.max) * 100)}%`,
-                          backgroundColor: '#007AFF',
-                        },
-                      ]}
-                    />
-                  </View>
-                </View>
-              )}
-            </>
-          )}
-          {/* 月次割当なしで購入トークンのみある場合 */}
-          {(proUsage.max === -1 || proUsage.max === 0) && settings.tokenBalance.pro > 0 && (
-            <View style={{ marginTop: 8 }}>
-              <Text style={[styles.usageText, { fontSize: 11, color: '#007AFF', marginBottom: 4 }]}>
-                購入: {settings.tokenBalance.pro.toLocaleString()} トークン
-              </Text>
-              <View style={styles.progressBarContainer}>
-                <View
-                  style={[
-                    styles.progressBar,
-                    {
-                      width: '100%',
-                      backgroundColor: '#007AFF',
-                    },
-                  ]}
-                />
-              </View>
-            </View>
-          )}
+          <View style={styles.modelTitleRow}>
+            <MaterialCommunityIcons
+              name="speedometer-slow"
+              size={20}
+              color="#4CAF50"
+              style={{ marginRight: 8 }}
+            />
+            <Text style={styles.usageTitle}>Think モデル</Text>
+          </View>
+          <View style={styles.balanceDisplay}>
+            <Text style={styles.balanceAmount}>
+              {settings.tokenBalance.pro.toLocaleString()}
+            </Text>
+            <Text style={styles.balanceLabel}>トークン</Text>
+          </View>
         </View>
       )}
 
