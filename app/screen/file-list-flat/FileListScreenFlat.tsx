@@ -41,9 +41,12 @@ import { CategoryRenameModal } from './components/CategoryRenameModal';
 import { useFileListHeader } from './hooks/useFileListHeader';
 import { useCategoryCollapse } from './hooks/useCategoryCollapse';
 import { useFileListChatContext } from '../../features/chat/hooks/useFileListChatContext';
+import { useImportExport } from './hooks/useImportExport';
+import { useRAGSync } from './hooks/useRAGSync';
 import { groupFilesByCategoryHierarchical } from '@data/services/categoryGroupingService';
 import { CategoryOperationsService, CategoryImpact } from '@data/services/categoryOperationsService';
 import ChatService from '../../features/chat';
+import { FILE_LIST_FLAT_CONFIG } from './config';
 
 function FileListScreenFlatContent() {
   const { colors, spacing } = useTheme();
@@ -52,6 +55,12 @@ function FileListScreenFlatContent() {
   const { settings } = useSettingsStore();
 
   const { state, dispatch, actions } = useFlatListContext();
+
+  // インポート/エクスポート機能
+  const { handleImport, handleExportFile, handleExportCategory, isProcessing } = useImportExport();
+
+  // RAG同期機能
+  const { syncCategoryToRAG, isSyncing } = useRAGSync();
 
   // アクションモーダルの状態
   const [selectedFileForActions, setSelectedFileForActions] = useState<FileFlat | null>(null);
@@ -397,6 +406,30 @@ function FileListScreenFlatContent() {
   }, []);
 
   /**
+   * ファイルエクスポートハンドラ
+   */
+  const handleExportFileWrapper = useCallback((file: FileFlat) => {
+    logger.info('file', `Exporting file: ${file.id} (${file.title})`);
+    handleExportFile(file.id);
+  }, [handleExportFile]);
+
+  /**
+   * カテゴリーエクスポートハンドラ
+   */
+  const handleExportCategoryWrapper = useCallback((categoryPath: string) => {
+    logger.info('file', `Exporting category: ${categoryPath}`);
+    handleExportCategory(categoryPath);
+  }, [handleExportCategory]);
+
+  /**
+   * Q&A作成ハンドラ（RAG同期）
+   */
+  const handleCreateQA = useCallback((categoryPath: string, categoryName: string) => {
+    logger.info('file', `Creating Q&A for category: ${categoryPath}`);
+    syncCategoryToRAG(categoryPath, categoryName);
+  }, [syncCategoryToRAG]);
+
+  /**
    * 作成実行
    */
   const handleCreate = useCallback(
@@ -421,10 +454,10 @@ function FileListScreenFlatContent() {
    * ファイルをカテゴリーでグループ化（階層構造対応）
    * categoryGroupingService を使用
    */
-  const sections = useMemo(
-    () => groupFilesByCategoryHierarchical(state.files, settings.categorySortMethod),
-    [state.files, settings.categorySortMethod]
-  );
+  const sections = useMemo(() => {
+    console.log(`[FileListScreen] Grouping files with fileSortMethod: ${settings.fileSortMethod}`);
+    return groupFilesByCategoryHierarchical(state.files, settings.categorySortMethod, settings.fileSortMethod);
+  }, [state.files, settings.categorySortMethod, settings.fileSortMethod]);
 
   /**
    * カテゴリーの展開/折りたたみ状態管理
@@ -504,10 +537,20 @@ function FileListScreenFlatContent() {
     [chatBarOffset, spacing.md]
   );
 
-  // ヘッダー設定（新規作成ボタンと設定ボタン）
+  /**
+   * インポート実行（データ再取得付き）
+   */
+  const handleImportWithRefresh = useCallback(async () => {
+    await handleImport();
+    // インポート完了後にデータを再取得
+    await actions.refreshData();
+  }, [handleImport, actions.refreshData]);
+
+  // ヘッダー設定（新規作成、インポート、設定ボタン）
   useFileListHeader({
     onCreateNew: () => dispatch({ type: 'OPEN_CREATE_MODAL' }),
     onSettings: () => navigation.navigate('Settings'),
+    onImport: handleImportWithRefresh,
   });
 
   // チャットコンテキスト（フラット構造版）
@@ -595,7 +638,7 @@ function FileListScreenFlatContent() {
 
   const messageTextStyle = useMemo(
     () => ({
-      fontSize: 16,
+      fontSize: FILE_LIST_FLAT_CONFIG.typography.message,
       color: colors.textSecondary,
       textAlign: 'center' as const,
       paddingHorizontal: spacing.xl,
@@ -606,7 +649,7 @@ function FileListScreenFlatContent() {
   return (
     <MainContainer
       backgroundColor={colors.background}
-      isLoading={state.loading && state.files.length === 0}
+      isLoading={(state.loading && state.files.length === 0) || isProcessing || isSyncing}
     >
       {state.files.length === 0 && !state.loading ? (
         <View style={styles.centered}>
@@ -637,14 +680,14 @@ function FileListScreenFlatContent() {
       {/* eslint-disable react-native/no-inline-styles */}
       {state.isMoveMode && (
         <View style={[styles.moveBar, { backgroundColor: colors.background }]}>
-          <Text style={{ fontSize: 14, color: colors.text }}>
+          <Text style={{ fontSize: FILE_LIST_FLAT_CONFIG.typography.heading, color: colors.text }}>
             移動先をタップしてください
           </Text>
           <TouchableOpacity
             style={styles.cancelButton}
             onPress={handleCancelMove}
           >
-            <Text style={{ fontSize: 14, color: colors.primary, fontWeight: '600' }}>
+            <Text style={{ fontSize: FILE_LIST_FLAT_CONFIG.typography.heading, color: colors.primary, fontWeight: '600' }}>
               キャンセル
             </Text>
           </TouchableOpacity>
@@ -679,6 +722,7 @@ function FileListScreenFlatContent() {
         onEditTags={handleOpenTagEditModal}
         onMove={handleStartMove}
         onAttachToChat={handleAttachToChat}
+        onExport={handleExportFileWrapper}
       />
 
       <CustomModal
@@ -741,6 +785,8 @@ function FileListScreenFlatContent() {
         onClose={() => setSelectedCategoryForActions(null)}
         onDelete={handleDeleteCategory}
         onRename={handleOpenCategoryRenameModal}
+        onExport={handleExportCategoryWrapper}
+        onCreateQA={handleCreateQA}
       />
 
       {/* カテゴリー名変更モーダル */}
@@ -811,7 +857,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  /* eslint-disable react-native/no-color-literals */
   moveBar: {
     position: 'absolute',
     bottom: 0,
@@ -820,17 +865,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: FILE_LIST_FLAT_CONFIG.spacing.moveBar.horizontal,
+    paddingVertical: FILE_LIST_FLAT_CONFIG.spacing.moveBar.vertical,
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 5,
+    borderTopColor: FILE_LIST_FLAT_CONFIG.appearance.borderColor,
+    shadowColor: FILE_LIST_FLAT_CONFIG.appearance.shadowColor,
+    shadowOffset: FILE_LIST_FLAT_CONFIG.interaction.shadowOffset,
+    shadowOpacity: FILE_LIST_FLAT_CONFIG.appearance.transparency.shadow,
+    shadowRadius: FILE_LIST_FLAT_CONFIG.interaction.shadowRadius,
+    elevation: FILE_LIST_FLAT_CONFIG.interaction.elevation,
   },
-  /* eslint-enable react-native/no-color-literals */
   cancelButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,

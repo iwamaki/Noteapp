@@ -19,6 +19,7 @@ import { useTheme } from '../../../design/theme/ThemeContext';
 import { CustomModal } from '../../../components/CustomModal';
 import { CustomInlineInput } from '../../../components/CustomInlineInput';
 import { FileRepository } from '../../../data/repositories/fileRepository';
+import { FILE_LIST_FLAT_CONFIG } from '../config';
 
 interface CreateFileModalProps {
   visible: boolean;
@@ -241,15 +242,15 @@ export const CreateFileModal: React.FC<CreateFileModalProps> = ({
 
 const styles = StyleSheet.create({
   label: {
-    fontSize: 14,
+    fontSize: FILE_LIST_FLAT_CONFIG.typography.heading,
     fontWeight: '500',
   },
   suggestLabel: {
-    fontSize: 12,
+    fontSize: FILE_LIST_FLAT_CONFIG.typography.caption,
     fontWeight: '500',
   },
   categoryScrollView: {
-    maxHeight: 70, // 2行分の高さ（各ボタン30px + 余白）
+    maxHeight: FILE_LIST_FLAT_CONFIG.constraints.categoryScrollMaxHeight,
   },
   categoryScrollContent: {
     flexDirection: 'row',
@@ -258,16 +259,16 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   categoryButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
+    paddingHorizontal: FILE_LIST_FLAT_CONFIG.spacing.categoryButton.paddingHorizontal,
+    paddingVertical: FILE_LIST_FLAT_CONFIG.spacing.categoryButton.paddingVertical,
+    borderRadius: FILE_LIST_FLAT_CONFIG.borderRadius.categoryButton,
     borderWidth: 1,
-    marginRight: 8,
-    marginBottom: 8,
-    maxWidth: 150,
+    marginRight: FILE_LIST_FLAT_CONFIG.spacing.categoryButton.marginRight,
+    marginBottom: FILE_LIST_FLAT_CONFIG.spacing.categoryButton.marginBottom,
+    maxWidth: FILE_LIST_FLAT_CONFIG.constraints.categoryButtonMaxWidth,
   },
   categoryButtonText: {
-    fontSize: 12,
+    fontSize: FILE_LIST_FLAT_CONFIG.typography.caption,
     fontWeight: '500',
   },
 });

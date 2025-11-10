@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Switch,
+  Alert,
 } from 'react-native';
 import { useSettingsStore } from './settingsStore';
 import { useTheme } from '../design/theme/ThemeContext';
@@ -19,10 +20,12 @@ import { useSettingsHeader } from './hooks/useSettingsHeader';
 import APIService from '../features/chat/llmService/api';
 import { LLMProvider } from '../features/chat/llmService/types/types';
 import { ListItem } from '../components/ListItem';
+import { TokenUsageSection } from './components/TokenUsageSection';
+import { MainContainer } from '../components/MainContainer';
 
 function SettingsScreen() {
   const { colors, spacing, typography } = useTheme();
-  const { settings, loadSettings, updateSettings, isLoading } = useSettingsStore();
+  const { settings, loadSettings, updateSettings, isLoading, checkAndResetMonthlyUsageIfNeeded } = useSettingsStore();
 
   // 初期値にキャッシュを使用（キャッシュがあれば即座に表示）
   const [llmProviders, setLlmProviders] = useState<Record<string, LLMProvider>>(
@@ -34,6 +37,8 @@ function SettingsScreen() {
 
   useEffect(() => {
     loadSettings();
+    // 月次使用量のリセットチェック（月が変わったらリセット）
+    checkAndResetMonthlyUsageIfNeeded();
 
     // キャッシュがあればすぐ表示、なければ読み込み
     const cached = APIService.getCachedLLMProviders();
@@ -83,9 +88,8 @@ function SettingsScreen() {
   /* eslint-disable react-native/no-unused-styles */
   const styles = useMemo(
     () => StyleSheet.create({
-      container: {
+      scrollView: {
         flex: 1,
-        backgroundColor: colors.background,
       },
       content: {
         padding: spacing.lg,
@@ -128,16 +132,9 @@ function SettingsScreen() {
   );
   /* eslint-enable react-native/no-unused-styles */
 
-  if (isLoading) {
-    return (
-      <View style={styles.container}>
-        <Text>読み込み中...</Text>
-      </View>
-    );
-  };
-
   return (
-    <ScrollView style={styles.container}>
+    <MainContainer isLoading={isLoading}>
+      <ScrollView style={styles.scrollView}>
       <View style={styles.content}>
         {renderSection('表示設定')}
 
@@ -183,6 +180,36 @@ function SettingsScreen() {
           ],
           (value) => updateSettings({ categorySortMethod: value as 'name' | 'fileCount' })
         )}
+
+        {renderPicker(
+          'ファイルソート方法',
+          settings.fileSortMethod,
+          [
+            { label: '名前順', value: 'name' },
+            { label: '更新日順', value: 'updatedAt' },
+          ],
+          (value) => updateSettings({ fileSortMethod: value as 'updatedAt' | 'name' })
+        )}
+
+        <ListItem.Container>
+          {/* eslint-disable-next-line react-native/no-raw-text */}
+          <ListItem.Title>ファイルリストに要約を表示</ListItem.Title>
+          <Switch
+            value={settings.showSummary}
+            onValueChange={(value: boolean) => updateSettings({ showSummary: value })}
+          />
+        </ListItem.Container>
+
+        {renderSection('LLM/AI機能')}
+
+        <ListItem.Container>
+          {/* eslint-disable-next-line react-native/no-raw-text */}
+          <ListItem.Title>LLM機能を有効にする</ListItem.Title>
+          <Switch
+            value={settings.llmEnabled}
+            onValueChange={(value: boolean) => updateSettings({ llmEnabled: value })}
+          />
+        </ListItem.Container>
 
         {settings.llmEnabled && (
           <>
@@ -239,9 +266,47 @@ function SettingsScreen() {
           </>
         )}
 
+        {/* トークン残高・使用量セクション（LLM機能のオン/オフに関係なく常に表示） */}
+        <TokenUsageSection renderSection={renderSection} />
+
         <Text style={styles.infoText}>
           その他の設定項目は今後のアップデートで追加予定です。
         </Text>
+
+        {/* デバッグ用リセットボタン（開発モードのみ） */}
+        {__DEV__ && (
+          <>
+            {renderSection('デバッグ機能')}
+            <TouchableOpacity
+              style={[styles.resetButton, { backgroundColor: colors.primary }]}
+              onPress={async () => {
+                const { resetTokensAndUsage } = useSettingsStore.getState();
+                await resetTokensAndUsage();
+                Alert.alert('完了', 'トークン残高と使用量をリセットしました');
+              }}
+            >
+              <Text style={styles.resetButtonText}>トークンと使用量をリセット</Text>
+            </TouchableOpacity>
+
+            {settings.subscription.status === 'active' && (
+              <TouchableOpacity
+                style={[styles.resetButton, { backgroundColor: '#FF9500' }]}
+                onPress={async () => {
+                  const { updateSettings } = useSettingsStore.getState();
+                  await updateSettings({
+                    subscription: {
+                      ...settings.subscription,
+                      status: 'canceled',
+                    },
+                  });
+                  Alert.alert('完了', 'サブスクをキャンセル済みに変更しました');
+                }}
+              >
+                <Text style={styles.resetButtonText}>サブスクをキャンセル済みにする</Text>
+              </TouchableOpacity>
+            )}
+          </>
+        )}
 
         <TouchableOpacity
           style={styles.resetButton}
@@ -253,7 +318,8 @@ function SettingsScreen() {
           <Text style={styles.resetButtonText}>設定をリセット</Text>
         </TouchableOpacity>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </MainContainer>
   );
 }
 

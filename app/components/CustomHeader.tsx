@@ -35,7 +35,7 @@ export const CustomHeader: React.FC<HeaderConfig> = ({
   title,
   leftButtons = [],
   rightButtons = [],
-  flexRatio = { left: 1, center: 3, right: 4 },
+  flexRatio = { left: 1, center: 3, right: 5 },
 }) => {
   const { colors, typography } = useTheme();
   const insets = useSafeAreaInsets();
@@ -69,7 +69,7 @@ export const CustomHeader: React.FC<HeaderConfig> = ({
       alignItems: 'flex-end',
       justifyContent: 'flex-end',
       flexDirection: 'row',
-      gap: 8,
+      gap: 4,
     },
     titleText: {
       color: colors.text,

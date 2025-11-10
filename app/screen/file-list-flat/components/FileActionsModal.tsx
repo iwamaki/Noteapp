@@ -22,6 +22,7 @@ interface FileActionsModalProps {
   onEditTags: (file: FileFlat) => void;
   onMove: (file: FileFlat) => void;
   onAttachToChat: (file: FileFlat) => void;
+  onExport: (file: FileFlat) => void;
 }
 
 export const FileActionsModal: React.FC<FileActionsModalProps> = ({
@@ -35,6 +36,7 @@ export const FileActionsModal: React.FC<FileActionsModalProps> = ({
   onEditTags,
   onMove,
   onAttachToChat,
+  onExport,
 }) => {
   if (!file) return null;
 
@@ -56,6 +58,14 @@ export const FileActionsModal: React.FC<FileActionsModalProps> = ({
       label: 'チャットに添付',
       onPress: () => {
         onAttachToChat(file);
+        onClose();
+      },
+    },
+    {
+      icon: 'share-outline',
+      label: 'エクスポート',
+      onPress: () => {
+        onExport(file);
         onClose();
       },
     },

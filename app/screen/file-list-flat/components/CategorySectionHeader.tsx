@@ -14,6 +14,7 @@ import { StyleSheet, TouchableOpacity, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { FileCategorySectionHierarchical } from '@data/core/typesFlat';
+import { FILE_LIST_FLAT_CONFIG } from '../config';
 
 interface CategorySectionHeaderProps {
   section: FileCategorySectionHierarchical;
@@ -52,8 +53,8 @@ export const CategorySectionHeader: React.FC<CategorySectionHeaderProps> = ({
 }) => {
   const { colors, spacing, typography, themeMode } = useTheme();
 
-  // 階層レベルに応じたインデント（レベル0はインデントなし、以降24pxずつ増加）
-  const indentOffset = section.level * 24;
+  // 階層レベルに応じたインデント（レベル0はインデントなし、以降設定値pxずつ増加）
+  const indentOffset = section.level * FILE_LIST_FLAT_CONFIG.spacing.indentPerLevel;
 
   /**
    * 階層レベルに応じた背景色を計算
@@ -69,7 +70,10 @@ export const CategorySectionHeader: React.FC<CategorySectionHeaderProps> = ({
     const b = parseInt(hex.substring(4, 6), 16);
 
     // レベルに応じた色変化の係数
-    const changeFactor = Math.min(level * 0.15, 0.6); // 最大60%まで変化させる
+    const changeFactor = Math.min(
+      level * FILE_LIST_FLAT_CONFIG.category.colorChange.multiplier,
+      FILE_LIST_FLAT_CONFIG.category.colorChange.max
+    );
 
     let newR: number, newG: number, newB: number;
 
@@ -118,7 +122,7 @@ export const CategorySectionHeader: React.FC<CategorySectionHeaderProps> = ({
       ]}
       onPress={handlePress}
       onLongPress={handleLongPress}
-      activeOpacity={0.7}
+      activeOpacity={FILE_LIST_FLAT_CONFIG.interaction.activeOpacity}
     >
       <View
         style={[
@@ -162,8 +166,8 @@ const styles = StyleSheet.create({
     // 内側のコンテナ - 背景色と実際のコンテンツを表示
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+    paddingVertical: FILE_LIST_FLAT_CONFIG.spacing.sectionHeader.vertical,
+    paddingHorizontal: FILE_LIST_FLAT_CONFIG.spacing.sectionHeader.horizontal,
     borderBottomWidth: 1,
   },
   sectionHeaderText: {

@@ -1,0 +1,107 @@
+<svg width="400" height="700" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="400" height="700" fill="#f5f5f5"/>
+
+  <!-- Modal Container -->
+  <rect x="20" y="30" width="360" height="640" fill="#ffffff" rx="12" stroke="#e0e0e0" stroke-width="1"/>
+
+  <!-- Header -->
+  <text x="200" y="65" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#333" text-anchor="middle">💰 トークンパッケージ購入</text>
+
+  <!-- Divider -->
+  <line x1="30" y1="85" x2="370" y2="85" stroke="#e0e0e0" stroke-width="1"/>
+
+  <!-- Filter Tabs -->
+  <g id="filter-tabs">
+    <!-- Tab: All (Selected) -->
+    <rect x="40" y="100" width="80" height="36" fill="#4A90E2" rx="8"/>
+    <text x="80" y="123" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#ffffff" text-anchor="middle">全て</text>
+
+    <!-- Tab: Flash -->
+    <rect x="135" y="100" width="80" height="36" fill="#f0f0f0" rx="8"/>
+    <text x="175" y="123" font-family="Arial, sans-serif" font-size="14" fill="#666" text-anchor="middle">Flash</text>
+
+    <!-- Tab: Pro -->
+    <rect x="230" y="100" width="80" height="36" fill="#f0f0f0" rx="8"/>
+    <text x="270" y="123" font-family="Arial, sans-serif" font-size="14" fill="#666" text-anchor="middle">Pro</text>
+  </g>
+
+  <!-- Selected Indicator -->
+  <text x="80" y="153" font-family="Arial, sans-serif" font-size="11" fill="#999" text-anchor="middle">(選択中)</text>
+
+  <!-- Divider -->
+  <line x1="30" y1="165" x2="370" y2="165" stroke="#e0e0e0" stroke-width="1"/>
+
+  <!-- Package List -->
+  <g id="package-list">
+    <!-- Package 1: Flash 5,000 -->
+    <g id="package-1">
+      <rect x="35" y="180" width="330" height="60" fill="#fafafa" rx="8" stroke="#e0e0e0" stroke-width="1"/>
+      <text x="50" y="203" font-family="Arial, sans-serif" font-size="15" font-weight="bold" fill="#333">⚡ Flash 5,000トークン</text>
+      <text x="280" y="203" font-family="Arial, sans-serif" font-size="15" font-weight="bold" fill="#4A90E2" text-anchor="end">¥490</text>
+      <text x="295" y="203" font-family="Arial, sans-serif" font-size="15" fill="#999">→</text>
+      <text x="50" y="225" font-family="Arial, sans-serif" font-size="12" fill="#999">お試しにぴったり</text>
+    </g>
+
+    <!-- Package 2: Flash 15,000 (Recommended) -->
+    <g id="package-2">
+      <rect x="35" y="250" width="330" height="60" fill="#fff8e1" rx="8" stroke="#ffc107" stroke-width="2"/>
+      <text x="50" y="273" font-family="Arial, sans-serif" font-size="15" font-weight="bold" fill="#333">⚡ Flash 15,000トークン</text>
+      <text x="265" y="273" font-family="Arial, sans-serif" font-size="15" font-weight="bold" fill="#4A90E2" text-anchor="end">¥1,480</text>
+      <text x="295" y="273" font-family="Arial, sans-serif" font-size="15" fill="#999">→</text>
+      <text x="50" y="295" font-family="Arial, sans-serif" font-size="12" fill="#999">おすすめ 💎</text>
+    </g>
+
+    <!-- Package 3: Flash 50,000 -->
+    <g id="package-3">
+      <rect x="35" y="320" width="330" height="60" fill="#fafafa" rx="8" stroke="#e0e0e0" stroke-width="1"/>
+      <text x="50" y="343" font-family="Arial, sans-serif" font-size="15" font-weight="bold" fill="#333">⚡ Flash 50,000トークン</text>
+      <text x="265" y="343" font-family="Arial, sans-serif" font-size="15" font-weight="bold" fill="#4A90E2" text-anchor="end">¥4,800</text>
+      <text x="295" y="343" font-family="Arial, sans-serif" font-size="15" fill="#999">→</text>
+      <text x="50" y="365" font-family="Arial, sans-serif" font-size="12" fill="#999">大容量でお得</text>
+    </g>
+
+    <!-- Package 4: Pro 1,000 -->
+    <g id="package-4">
+      <rect x="35" y="390" width="330" height="60" fill="#fafafa" rx="8" stroke="#e0e0e0" stroke-width="1"/>
+      <text x="50" y="413" font-family="Arial, sans-serif" font-size="15" font-weight="bold" fill="#333">🎯 Pro 1,000トークン</text>
+      <text x="280" y="413" font-family="Arial, sans-serif" font-size="15" font-weight="bold" fill="#4A90E2" text-anchor="end">¥980</text>
+      <text x="295" y="413" font-family="Arial, sans-serif" font-size="15" fill="#999">→</text>
+      <text x="50" y="435" font-family="Arial, sans-serif" font-size="12" fill="#999">高度な推論が必要な時に</text>
+    </g>
+
+    <!-- Package 5: Pro 3,000 (Recommended) -->
+    <g id="package-5">
+      <rect x="35" y="460" width="330" height="60" fill="#fff8e1" rx="8" stroke="#ffc107" stroke-width="2"/>
+      <text x="50" y="483" font-family="Arial, sans-serif" font-size="15" font-weight="bold" fill="#333">🎯 Pro 3,000トークン</text>
+      <text x="265" y="483" font-family="Arial, sans-serif" font-size="15" font-weight="bold" fill="#4A90E2" text-anchor="end">¥2,940</text>
+      <text x="295" y="483" font-family="Arial, sans-serif" font-size="15" fill="#999">→</text>
+      <text x="50" y="505" font-family="Arial, sans-serif" font-size="12" fill="#999">おすすめ 💎</text>
+    </g>
+  </g>
+
+  <!-- Divider -->
+  <line x1="30" y1="540" x2="370" y2="540" stroke="#e0e0e0" stroke-width="1"/>
+
+  <!-- Current Balance -->
+  <text x="200" y="565" font-family="Arial, sans-serif" font-size="13" fill="#666" text-anchor="middle">現在の残高</text>
+  <text x="200" y="585" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#333" text-anchor="middle">⚡ Flash: 1,250  |  🎯 Pro: 350</text>
+
+  <!-- Notice -->
+  <rect x="35" y="600" width="330" height="30" fill="#f0f8ff" rx="6"/>
+  <text x="200" y="620" font-family="Arial, sans-serif" font-size="11" fill="#666" text-anchor="middle">ℹ️ トークンは購入後すぐに残高に追加されます</text>
+
+  <!-- Divider -->
+  <line x1="30" y1="640" x2="370" y2="640" stroke="#e0e0e0" stroke-width="1"/>
+
+  <!-- Footer Buttons -->
+  <g id="footer-buttons">
+    <!-- Cancel Button -->
+    <rect x="50" y="650" width="120" height="36" fill="#f0f0f0" rx="8" stroke="#ccc" stroke-width="1"/>
+    <text x="110" y="673" font-family="Arial, sans-serif" font-size="14" fill="#666" text-anchor="middle">キャンセル</text>
+
+    <!-- Restore Button -->
+    <rect x="210" y="650" width="120" height="36" fill="#f0f0f0" rx="8" stroke="#ccc" stroke-width="1"/>
+    <text x="270" y="673" font-family="Arial, sans-serif" font-size="14" fill="#666" text-anchor="middle">購入を復元</text>
+  </g>
+</svg>

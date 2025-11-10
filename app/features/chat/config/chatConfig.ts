@@ -44,8 +44,8 @@ export const CHAT_CONFIG = {
   llm: {
     /** 会話履歴の最大保持件数 */
     maxHistorySize: 100,
-    /** APIリクエストのタイムアウト時間（ms） */
-    apiTimeout: 30000,
+    /** APIリクエストのタイムアウト時間（ms） - RAG処理を考慮して120秒に延長 */
+    apiTimeout: 120000,
     /** リクエスト間の最小間隔（ms） */
     minRequestInterval: 100,
     /** デフォルトのLLMプロバイダー */
@@ -69,10 +69,10 @@ export const CHAT_CONFIG = {
     /** スペーシング（padding/margin） */
     spacing: {
       xs: 2,
-      sm: 4,
+      sm: 6,
       md: 8,
       lg: 10,
-      xl: 12,
+      xl: 10,
       xxl: 16,
     },
 
@@ -133,5 +133,19 @@ export const CHAT_CONFIG = {
       /** ファイルアイテムの余白 */
       itemSpacing: 6,
     },
+  },
+
+  /**
+   * マークダウンレンダリングの設定
+   */
+  markdown: {
+    /** 画像の最大幅比率（画面幅に対する割合） */
+    imageMaxWidthRatio: 0.8,
+    /** 画像ローディング時のデフォルト高さ */
+    imageLoadingHeight: 200,
+    /** 画像の角丸 */
+    imageBorderRadius: 8,
+    /** 画像の上下マージン */
+    imageVerticalMargin: 8,
   },
 };

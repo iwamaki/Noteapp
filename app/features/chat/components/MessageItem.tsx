@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, StyleSheet, Text } from 'react-native';
-import Markdown from 'react-native-markdown-display';
 import { ChatMessage, TokenUsageInfo } from '../llmService/index';
 import { useTheme } from '../../../design/theme/ThemeContext';
+import { MarkdownRenderer } from '../../../design/markdown/MarkdownRenderer';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { getTokenUsageRatio, getAIIconName } from '../utils/tokenUsageHelpers';
+import { getTokenUsageRatio, getAIIconName } from '../../../billing/utils/tokenUsageHelpers';
 import { CHAT_CONFIG } from '../config/chatConfig';
 
 interface MessageItemProps {
@@ -14,16 +14,13 @@ interface MessageItemProps {
 }
 
 export const MessageItem: React.FC<MessageItemProps> = ({ message, tokenUsage, isLoading }) => {
-  const { colors, typography, iconSizes } = useTheme();
+  const { colors, iconSizes } = useTheme();
 
   // トークン使用量に応じたアイコンを選択
   const usageRatio = getTokenUsageRatio(message, tokenUsage);
   const aiIconName = getAIIconName(usageRatio, isLoading);
 
   const styles = StyleSheet.create({
-    aiMarkdownText: {
-      color: colors.text,
-    },
     aiMessage: {
       backgroundColor: colors.secondary,
       borderBottomLeftRadius: CHAT_CONFIG.components.border.radius.small,
@@ -41,17 +38,9 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, tokenUsage, i
       marginRight: CHAT_CONFIG.components.spacing.md,
       marginBottom: CHAT_CONFIG.components.spacing.sm,
     },
-    baseText: {
-      fontSize: typography.body.fontSize,
-      lineHeight: typography.body.fontSize * 1.4,
-    },
     message: {
       borderRadius: CHAT_CONFIG.components.border.radius.large,
-      paddingHorizontal: CHAT_CONFIG.components.spacing.xl,
-      paddingVertical: 5,
-    },
-    systemMarkdownText: {
-      color: colors.text,
+      padding: CHAT_CONFIG.components.spacing.xl,
     },
     systemMessage: {
       alignSelf: 'stretch',  // 横幅いっぱいに広がる
@@ -61,14 +50,12 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, tokenUsage, i
       marginVertical: CHAT_CONFIG.components.spacing.sm,
       marginHorizontal: CHAT_CONFIG.components.spacing.xxl,  // 左右に余白を確保
     },
-    userMarkdownText: {
-      color: colors.white,
-    },
     userMessage: {
       alignSelf: 'flex-end',
       backgroundColor: colors.primary,
       borderBottomRightRadius: CHAT_CONFIG.components.border.radius.small,
       marginVertical: CHAT_CONFIG.components.spacing.sm,
+      marginRight: 4,
       maxWidth: CHAT_CONFIG.components.message.maxWidth,
     },
 
@@ -79,7 +66,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, tokenUsage, i
       paddingHorizontal: CHAT_CONFIG.components.spacing.md,
       paddingVertical: CHAT_CONFIG.components.spacing.xs,
       borderRadius: CHAT_CONFIG.components.border.radius.medium,
-      marginTop: CHAT_CONFIG.components.spacing.xs,
+      marginTop: 0,
       marginBottom: CHAT_CONFIG.components.spacing.sm,
       borderWidth: CHAT_CONFIG.components.border.width,
       borderColor: `${colors.primary}40`,
@@ -102,35 +89,24 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, tokenUsage, i
   });
 
   let containerStyle: any[] = [styles.message];
-  let markdownTextStyle: any[] = [styles.baseText];
+  let textColor: string;
 
   switch (message.role) {
     case 'user':
       containerStyle.push(styles.userMessage);
-      markdownTextStyle.push(styles.userMarkdownText);
+      textColor = colors.white;
       break;
     case 'ai':
       containerStyle.push(styles.aiMessage);
-      markdownTextStyle.push(styles.aiMarkdownText);
+      textColor = colors.text;
       break;
     case 'system':
       containerStyle.push(styles.systemMessage);
-      markdownTextStyle.push(styles.systemMarkdownText);
+      textColor = colors.text;
       break;
+    default:
+      textColor = colors.text;
   }
-
-  const markdownStyles = {
-    body: StyleSheet.flatten(markdownTextStyle),
-  };
-
-  const markdownRules = {
-    image: (node: any) => {
-      // 画像表示機能が未実装のため、ここでは何もレンダリングしない
-      // 必要に応じて、ここにプレースホルダーや代替テキストを表示するロジックを追加
-      console.warn('Image rendering is not implemented yet. Image source:', node.attributes.src);
-      return null;
-    },
-  };
 
   // 要約済みメッセージのスタイル（薄く表示）
   const summarizedStyle = message.isSummarized ? { opacity: CHAT_CONFIG.components.opacity.summarized } : {};
@@ -147,7 +123,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, tokenUsage, i
             style={styles.aiIcon}
           />
           <View style={containerStyle}>
-            <Markdown style={markdownStyles} rules={markdownRules}>{message.content}</Markdown>
+            <MarkdownRenderer content={message.content} textColor={textColor} />
           </View>
         </View>
         {message.attachedFiles && message.attachedFiles.length > 0 && (
@@ -178,7 +154,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, tokenUsage, i
   return (
     <>
       <View style={[containerStyle, summarizedStyle]}>
-        <Markdown style={markdownStyles} rules={markdownRules}>{message.content}</Markdown>
+        <MarkdownRenderer content={message.content} textColor={textColor} />
       </View>
       {message.attachedFiles && message.attachedFiles.length > 0 && (
         <>

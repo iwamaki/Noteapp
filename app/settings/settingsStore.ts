@@ -10,6 +10,20 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SETTINGS_STORAGE_KEY = '@app_settings';
 
+// 購入履歴レコード
+export interface PurchaseRecord {
+  id: string; // ユニークID
+  type: 'initial' | 'addon' | 'subscription'; // 購入タイプ
+  productId: string; // プロダクトID
+  transactionId: string; // トランザクションID
+  purchaseDate: string; // 購入日時（ISO 8601）
+  amount: number; // 支払額（円）
+  tokensAdded: {
+    flash: number; // 追加されたQuickトークン数
+    pro: number; // 追加されたThinkトークン数
+  };
+}
+
 // アプリケーション設定の型定義
 export interface AppSettings {
   // 1. UI設定
@@ -79,6 +93,51 @@ export interface AppSettings {
 
   // 8. ファイルリスト表示設定
   categorySortMethod: 'name' | 'fileCount';
+  fileSortMethod: 'updatedAt' | 'name'; // ファイルのソート方法（更新日時順/名前順）
+  showSummary: boolean; // ファイルリストに要約を表示するかどうか
+
+  // 9. サブスクリプション・課金設定
+  subscription: {
+    tier: 'free' | 'standard' | 'pro' | 'premium';
+    status: 'active' | 'canceled' | 'expired' | 'trial' | 'none';
+    expiresAt?: string; // ISO 8601 形式の日時
+    trialStartedAt?: string; // トライアル開始日時
+    autoRenew: boolean;
+  };
+
+  // 10. トークン残高（Phase 1: 購入したトークン）
+  tokenBalance: {
+    flash: number; // Quickモデル用トークン残高
+    pro: number; // Thinkモデル用トークン残高
+  };
+
+  // 11. 購入履歴
+  purchaseHistory: PurchaseRecord[];
+
+  // 12. 使用量情報（サーバーから同期）
+  usage: {
+    // 💰 コスト計算用（レガシー）
+    monthlyInputTokens: number;  // 今月の入力トークン数（全体）
+    monthlyOutputTokens: number; // 今月の出力トークン数（全体）
+
+    // モデル別の詳細使用量（サブスク上限チェック + コスト計算用）
+    monthlyTokensByModel: {
+      [modelId: string]: {
+        inputTokens: number;
+        outputTokens: number;
+      };
+    };
+
+    // 📊 補助的な指標
+    monthlyLLMRequests: number;  // 今月のLLMリクエスト数（スパム防止、UX表示用）
+
+    // Phase 2以降（クラウド同期時）
+    currentFileCount: number;    // 現在のファイル数
+    storageUsedMB: number;       // 使用中のストレージ容量（MB）
+
+    lastSyncedAt?: string;       // 最後に同期した日時
+    lastResetMonth?: string;     // 最後に月次リセットした月 (YYYY-MM形式)
+  };
 }
 
 // デフォルト設定値
@@ -150,6 +209,38 @@ const defaultSettings: AppSettings = {
 
   // ファイルリスト表示設定
   categorySortMethod: 'fileCount',
+  fileSortMethod: 'updatedAt',
+  showSummary: true,
+
+  // サブスクリプション・課金設定
+  subscription: {
+    tier: 'free',
+    status: 'none',
+    expiresAt: undefined,
+    trialStartedAt: undefined,
+    autoRenew: false,
+  },
+
+  // トークン残高
+  tokenBalance: {
+    flash: 0,
+    pro: 0,
+  },
+
+  // 購入履歴
+  purchaseHistory: [],
+
+  // 使用量情報
+  usage: {
+    monthlyInputTokens: 0,
+    monthlyOutputTokens: 0,
+    monthlyTokensByModel: {},
+    monthlyLLMRequests: 0,
+    currentFileCount: 0,
+    storageUsedMB: 0,
+    lastSyncedAt: undefined,
+    lastResetMonth: undefined,
+  },
 };
 
 interface SettingsStore {
@@ -158,6 +249,21 @@ interface SettingsStore {
   loadSettings: () => Promise<void>;
   updateSettings: (updates: Partial<AppSettings>) => Promise<void>;
   resetSettings: () => Promise<void>;
+
+  // トークン残高管理関数
+  addTokens: (flashTokens: number, proTokens: number, purchaseRecord: PurchaseRecord) => Promise<void>;
+  deductTokens: (flashTokens: number, proTokens: number) => Promise<void>;
+  getPurchaseHistory: () => PurchaseRecord[];
+  resetTokensAndUsage: () => Promise<void>; // デバッグ用：トークン残高と使用量をリセット
+
+  // 使用量トラッキング関数
+  trackTokenUsage: (inputTokens: number, outputTokens: number, modelId: string) => Promise<void>;
+  incrementLLMRequestCount: () => Promise<void>;
+  incrementFileCount: () => Promise<void>;
+  decrementFileCount: () => Promise<void>;
+  updateStorageUsage: (sizeMB: number) => Promise<void>;
+  resetMonthlyUsage: () => Promise<void>;
+  checkAndResetMonthlyUsageIfNeeded: () => Promise<void>;
 }
 
 export const useSettingsStore = create<SettingsStore>((set, get) => ({
@@ -171,14 +277,32 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       if (stored) {
         const parsedSettings = JSON.parse(stored);
 
+        // マイグレーション1: monthlyTokensByModelが存在しない場合は追加
+        if (parsedSettings.usage && !parsedSettings.usage.monthlyTokensByModel) {
+          parsedSettings.usage.monthlyTokensByModel = {};
+        }
 
-
-
+        // マイグレーション2: 'enterprise' → 'premium' に変換
+        if (parsedSettings.subscription) {
+          const oldTier = parsedSettings.subscription.tier as string;
+          if (oldTier === 'enterprise') {
+            console.log('[SettingsStore] Migrating tier: enterprise → premium');
+            parsedSettings.subscription.tier = 'premium';
+          }
+          // 無効なtier値の場合はfreeにリセット
+          const validTiers = ['free', 'standard', 'pro', 'premium'];
+          if (!validTiers.includes(parsedSettings.subscription.tier)) {
+            console.warn(`[SettingsStore] Invalid tier detected: ${parsedSettings.subscription.tier}, resetting to free`);
+            parsedSettings.subscription.tier = 'free';
+          }
+        }
 
         set({ settings: { ...defaultSettings, ...parsedSettings } });
       }
     } catch (error) {
       console.error('Failed to load settings:', error);
+      // エラー時はデフォルト設定を使用
+      set({ settings: defaultSettings });
     } finally {
       set({ isLoading: false });
     }
@@ -187,8 +311,28 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   updateSettings: async (updates: Partial<AppSettings>) => {
     try {
       const newSettings = { ...get().settings, ...updates };
+      console.log('[SettingsStore] Updating settings:', updates);
+      console.log('[SettingsStore] New settings:', {
+        categorySortMethod: newSettings.categorySortMethod,
+        fileSortMethod: newSettings.fileSortMethod
+      });
       await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(newSettings));
       set({ settings: newSettings });
+
+      // LLM設定が変更された場合、APIServiceにも反映
+      if (updates.llmProvider !== undefined || updates.llmModel !== undefined) {
+        const { default: APIService } = await import('../features/chat/llmService/api');
+
+        if (updates.llmProvider !== undefined) {
+          APIService.setLLMProvider(updates.llmProvider);
+          console.log('[SettingsStore] Updated LLM provider in APIService:', updates.llmProvider);
+        }
+
+        if (updates.llmModel !== undefined) {
+          APIService.setLLMModel(updates.llmModel);
+          console.log('[SettingsStore] Updated LLM model in APIService:', updates.llmModel);
+        }
+      }
     } catch (error) {
       console.error('Failed to update settings:', error);
       throw error;
@@ -202,6 +346,229 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     } catch (error) {
       console.error('Failed to reset settings:', error);
       throw error;
+    }
+  },
+
+  // =========================
+  // トークン残高管理関数
+  // =========================
+
+  /**
+   * トークンを追加（購入時に呼び出される）
+   * @param flashTokens 追加するQuickトークン数
+   * @param proTokens 追加するThinkトークン数
+   * @param purchaseRecord 購入履歴レコード
+   */
+  addTokens: async (flashTokens: number, proTokens: number, purchaseRecord: PurchaseRecord) => {
+    const { settings } = get();
+    const newSettings = {
+      ...settings,
+      tokenBalance: {
+        flash: settings.tokenBalance.flash + flashTokens,
+        pro: settings.tokenBalance.pro + proTokens,
+      },
+      purchaseHistory: [purchaseRecord, ...settings.purchaseHistory], // 最新を先頭に
+    };
+    await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(newSettings));
+    set({ settings: newSettings });
+    console.log(`[TokenBalance] Added tokens: Flash=${flashTokens}, Pro=${proTokens}. New balance: Flash=${newSettings.tokenBalance.flash}, Pro=${newSettings.tokenBalance.pro}`);
+  },
+
+  /**
+   * トークンを消費（LLM使用時に呼び出される）
+   * @param flashTokens 消費するQuickトークン数
+   * @param proTokens 消費するThinkトークン数
+   */
+  deductTokens: async (flashTokens: number, proTokens: number) => {
+    const { settings } = get();
+    const newFlashBalance = Math.max(0, settings.tokenBalance.flash - flashTokens);
+    const newProBalance = Math.max(0, settings.tokenBalance.pro - proTokens);
+
+    const newSettings = {
+      ...settings,
+      tokenBalance: {
+        flash: newFlashBalance,
+        pro: newProBalance,
+      },
+    };
+    await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(newSettings));
+    set({ settings: newSettings });
+    console.log(`[TokenBalance] Deducted tokens: Flash=${flashTokens}, Pro=${proTokens}. New balance: Flash=${newFlashBalance}, Pro=${newProBalance}`);
+  },
+
+  /**
+   * 購入履歴を取得
+   */
+  getPurchaseHistory: () => {
+    return get().settings.purchaseHistory;
+  },
+
+  /**
+   * トークン残高と使用量をリセット（デバッグ用）
+   */
+  resetTokensAndUsage: async () => {
+    const { settings } = get();
+    const newSettings = {
+      ...settings,
+      tokenBalance: {
+        flash: 0,
+        pro: 0,
+      },
+      purchaseHistory: [],
+      usage: {
+        ...settings.usage,
+        monthlyLLMRequests: 0,
+        monthlyTokensByModel: {},
+      },
+    };
+    await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(newSettings));
+    set({ settings: newSettings });
+    console.log('[Debug] Token balance and usage reset');
+  },
+
+  // =========================
+  // 使用量トラッキング関数
+  // =========================
+
+  /**
+   * トークン使用量を記録（モデル別にも記録）
+   * @param inputTokens 入力トークン数
+   * @param outputTokens 出力トークン数
+   * @param modelId モデルID（例: "gemini-2.0-flash-exp", "gemini-1.5-pro"）
+   */
+  trackTokenUsage: async (inputTokens: number, outputTokens: number, modelId: string) => {
+    const { settings } = get();
+
+    // モデル別の使用量を更新
+    const currentModelUsage = settings.usage.monthlyTokensByModel[modelId] || {
+      inputTokens: 0,
+      outputTokens: 0,
+    };
+
+    const updatedTokensByModel = {
+      ...settings.usage.monthlyTokensByModel,
+      [modelId]: {
+        inputTokens: currentModelUsage.inputTokens + inputTokens,
+        outputTokens: currentModelUsage.outputTokens + outputTokens,
+      },
+    };
+
+    const newSettings = {
+      ...settings,
+      usage: {
+        ...settings.usage,
+        monthlyInputTokens: settings.usage.monthlyInputTokens + inputTokens,
+        monthlyOutputTokens: settings.usage.monthlyOutputTokens + outputTokens,
+        monthlyTokensByModel: updatedTokensByModel,
+        lastSyncedAt: new Date().toISOString(),
+      },
+    };
+    await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(newSettings));
+    set({ settings: newSettings });
+    console.log(`[UsageTracking] Tokens recorded for model ${modelId}: input=${inputTokens}, output=${outputTokens}`);
+  },
+
+  /**
+   * LLMリクエスト回数をインクリメント
+   */
+  incrementLLMRequestCount: async () => {
+    const { settings } = get();
+    const newSettings = {
+      ...settings,
+      usage: {
+        ...settings.usage,
+        monthlyLLMRequests: settings.usage.monthlyLLMRequests + 1,
+        lastSyncedAt: new Date().toISOString(),
+      },
+    };
+    await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(newSettings));
+    set({ settings: newSettings });
+  },
+
+  /**
+   * ファイル数をインクリメント
+   */
+  incrementFileCount: async () => {
+    const { settings } = get();
+    const newSettings = {
+      ...settings,
+      usage: {
+        ...settings.usage,
+        currentFileCount: settings.usage.currentFileCount + 1,
+      },
+    };
+    await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(newSettings));
+    set({ settings: newSettings });
+  },
+
+  /**
+   * ファイル数をデクリメント
+   */
+  decrementFileCount: async () => {
+    const { settings } = get();
+    const newSettings = {
+      ...settings,
+      usage: {
+        ...settings.usage,
+        currentFileCount: Math.max(0, settings.usage.currentFileCount - 1),
+      },
+    };
+    await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(newSettings));
+    set({ settings: newSettings });
+  },
+
+  /**
+   * ストレージ使用量を更新
+   * @param sizeMB 使用量（MB）
+   */
+  updateStorageUsage: async (sizeMB: number) => {
+    const { settings } = get();
+    const newSettings = {
+      ...settings,
+      usage: {
+        ...settings.usage,
+        storageUsedMB: sizeMB,
+      },
+    };
+    await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(newSettings));
+    set({ settings: newSettings });
+  },
+
+  /**
+   * 月次使用量をリセット
+   */
+  resetMonthlyUsage: async () => {
+    const { settings } = get();
+    const currentMonth = new Date().toISOString().substring(0, 7); // YYYY-MM形式
+    const newSettings = {
+      ...settings,
+      usage: {
+        ...settings.usage,
+        monthlyInputTokens: 0,
+        monthlyOutputTokens: 0,
+        monthlyTokensByModel: {}, // モデル別使用量もリセット
+        monthlyLLMRequests: 0,
+        lastResetMonth: currentMonth,
+      },
+    };
+    await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(newSettings));
+    set({ settings: newSettings });
+    console.log(`[UsageTracking] Monthly usage reset for ${currentMonth}`);
+  },
+
+  /**
+   * 月が変わったかチェックし、必要ならリセット
+   * アプリ起動時に呼び出す
+   */
+  checkAndResetMonthlyUsageIfNeeded: async () => {
+    const { settings, resetMonthlyUsage } = get();
+    const currentMonth = new Date().toISOString().substring(0, 7); // YYYY-MM形式
+    const lastResetMonth = settings.usage.lastResetMonth;
+
+    // 初回起動または月が変わった場合
+    if (!lastResetMonth || lastResetMonth !== currentMonth) {
+      console.log(`[UsageTracking] Month changed: ${lastResetMonth} → ${currentMonth}`);
+      await resetMonthlyUsage();
     }
   },
 }));

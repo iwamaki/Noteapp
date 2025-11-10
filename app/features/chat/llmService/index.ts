@@ -14,6 +14,8 @@ import type {
   SummarizeRequest,
   SummarizeResponse,
   ChatMessage,
+  DocumentSummarizeRequest,
+  DocumentSummarizeResponse,
 } from './types/types';
 import { LLMError } from './types/LLMError';
 import { ConversationHistory } from './core/ConversationHistory';
@@ -24,7 +26,7 @@ import { ProviderManager } from './core/ProviderManager';
 import { CHAT_CONFIG } from '../config/chatConfig';
 
 // Re-export types
-export type { ChatMessage, ChatContext, LLMProvider, LLMResponse, LLMHealthStatus, LLMConfig, LLMCommand, TokenUsageInfo, SummarizeRequest, SummarizeResponse, SummaryResult } from './types/types';
+export type { ChatMessage, ChatContext, LLMProvider, LLMResponse, LLMHealthStatus, LLMConfig, LLMCommand, TokenUsageInfo, SummarizeRequest, SummarizeResponse, SummaryResult, DocumentSummarizeRequest, DocumentSummarizeResponse } from './types/types';
 export { LLMError } from './types/LLMError';
 export { ConversationHistory } from './core/ConversationHistory';
 
@@ -72,6 +74,22 @@ export class LLMService {
     const requestId = await this.requestManager.startRequest();
 
     try {
+      // トークン上限チェック（Flash/Pro別、購入トークン残高も考慮）
+      const currentModel = this.providerManager.getCurrentModel();
+      const { checkModelTokenLimit } = await import('../../../billing/utils/tokenPurchaseHelpers');
+      const tokenLimitCheck = checkModelTokenLimit(currentModel);
+
+      if (!tokenLimitCheck.canUse) {
+        logger.error('llm', `Request #${requestId} - Token limit exceeded: ${tokenLimitCheck.reason}`);
+        throw new LLMError(
+          tokenLimitCheck.reason || 'トークン上限に達しました',
+          'TOKEN_LIMIT_EXCEEDED',
+          429  // HTTP 429 Too Many Requests
+        );
+      }
+
+      logger.debug('llm', `Request #${requestId} - Token limit check passed: ${tokenLimitCheck.current}/${tokenLimitCheck.max} (${tokenLimitCheck.percentage.toFixed(1)}%)`);
+
       // 会話履歴をコンテキストに追加
       const history = this.conversationHistory.getHistory().map(msg => ({
         role: msg.role,
@@ -303,6 +321,54 @@ export class LLMService {
         throw error;
       }
       throw new LLMError('要約の作成に失敗しました', 'SUMMARIZATION_ERROR');
+    }
+  }
+
+  /**
+   * 文書内容を要約する
+   * @param content 文書の内容
+   * @param title 文書のタイトル
+   * @returns 要約レスポンス（要約テキストとトークン情報）
+   */
+  async summarizeDocument(
+    content: string,
+    title: string
+  ): Promise<DocumentSummarizeResponse> {
+    try {
+      const currentProvider = this.providerManager.getCurrentProvider();
+      const currentModel = this.providerManager.getCurrentModel();
+
+      logger.info('llm', `Summarizing document: title="${title}", content_length=${content.length}, provider=${currentProvider}, model=${currentModel}`);
+
+      // 要約リクエストを送信
+      const request: DocumentSummarizeRequest = {
+        content,
+        title,
+        provider: currentProvider,
+        model: currentModel,
+      };
+
+      const response = await this.httpClient.post('/api/document/summarize', request);
+
+      if (response.status < 200 || response.status >= 300) {
+        throw new LLMError(
+          `HTTP error! status: ${response.status}`,
+          'HTTP_ERROR',
+          response.status
+        );
+      }
+
+      const data: DocumentSummarizeResponse = response.data;
+
+      logger.info('llm', `Document summarization complete: ${data.summary.substring(0, 100)}... (tokens: input=${data.inputTokens}, output=${data.outputTokens})`);
+
+      return data;
+    } catch (error) {
+      if (error instanceof LLMError) {
+        throw error;
+      }
+      logger.error('llm', 'Failed to summarize document:', error);
+      throw new LLMError('文書要約の作成に失敗しました', 'DOCUMENT_SUMMARIZATION_ERROR');
     }
   }
 }

@@ -25,28 +25,38 @@ interface CategoryNode {
 export type CategorySortMethod = 'name' | 'fileCount';
 
 /**
+ * ファイルソート方法
+ */
+export type FileSortMethod = 'updatedAt' | 'name';
+
+/**
  * ファイルを階層的なカテゴリー構造でグループ化
  *
  * @param files - グループ化するファイルの配列
  * @param sortMethod - カテゴリーのソート方法（'name': 名前順、'fileCount': ファイル数順）
+ * @param fileSortMethod - ファイルのソート方法（'updatedAt': 更新日時順、'name': 名前順）
  * @returns 階層構造を持つカテゴリーセクション配列
  *
  * @example
- * const sections = groupFilesByCategoryHierarchical(files, 'name');
+ * const sections = groupFilesByCategoryHierarchical(files, 'name', 'updatedAt');
  *
  * @remarks
  * - カテゴリー名に "/" を含む場合、階層構造として解釈（例: "研究/AI"）
  * - 親カテゴリーは自動生成（"研究/AI" があれば "研究" も存在）
  * - fileCount は直接属するファイル + 子孫カテゴリーのファイル総数
  * - directFiles は直接そのカテゴリーに属するファイルのみ
- * - ソート順:
+ * - カテゴリーソート順:
  *   - sortMethod='name': 名前順（五十音/ABC順）
  *   - sortMethod='fileCount': ファイル数降順
+ * - ファイルソート順:
+ *   - fileSortMethod='updatedAt': 更新日時の新しい順
+ *   - fileSortMethod='name': あいうえお順/アルファベット順
  * - 「未分類」は常に最後
  */
 export function groupFilesByCategoryHierarchical(
   files: FileFlat[],
-  sortMethod: CategorySortMethod = 'fileCount'
+  sortMethod: CategorySortMethod = 'fileCount',
+  fileSortMethod: FileSortMethod = 'updatedAt'
 ): FileCategorySectionHierarchical[] {
   const uncategorizedKey = '未分類';
   const categoryNodes = new Map<string, CategoryNode>();
@@ -115,14 +125,22 @@ export function groupFilesByCategoryHierarchical(
       .map(id => fileMap.get(id)!)
       .filter(Boolean)
       .sort((a, b) => {
-        // orderフィールドが存在する場合はorder順にソート
-        const orderA = a.order ?? Number.MAX_SAFE_INTEGER;
-        const orderB = b.order ?? Number.MAX_SAFE_INTEGER;
-        if (orderA !== orderB) {
-          return orderA - orderB;
+        // デバッグログ
+        console.log(`[FileSort] Category: ${fullPath}, Method: ${fileSortMethod}`);
+        if (fullPath === Array.from(categoryNodes.keys())[0] && node.directFileIds.size > 0) {
+          console.log(`[FileSort] Sample files: "${a.title}" (${a.updatedAt.toISOString()}) vs "${b.title}" (${b.updatedAt.toISOString()})`);
         }
-        // orderが同じ場合は更新日時の新しい順
-        return b.updatedAt.getTime() - a.updatedAt.getTime();
+
+        if (fileSortMethod === 'name') {
+          // 名前順（英数字→ひらがな→カタカナ→漢字）
+          // numeric: true で数字を自然順にソート、sensitivity: 'base' で大文字小文字を区別しない
+          return a.title.localeCompare(b.title, 'ja', { numeric: true, sensitivity: 'base' });
+        } else {
+          // 更新日時順（新しい順）
+          const result = b.updatedAt.getTime() - a.updatedAt.getTime();
+          console.log(`[FileSort] updatedAt comparison result: ${result}`);
+          return result;
+        }
       });
 
     sectionsArray.push({
