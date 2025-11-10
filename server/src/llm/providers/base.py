@@ -97,6 +97,10 @@ class BaseAgentLLMProvider(BaseLLMProvider):
         LangChain 1.0のcreate_agent APIを使用してエージェントを作成します。
         create_agentはCompiledStateGraphを返し、これがエージェント実行を管理します。
         """
+        # 有効なツールのリストをログ出力
+        tool_names = [tool.name for tool in AVAILABLE_TOOLS]
+        logger.info(f"Setting up agent with {len(AVAILABLE_TOOLS)} enabled tools: {tool_names}")
+
         # LangChain 1.0: create_agentを使用
         # プロンプトテンプレートは不要で、system_promptを直接指定
         self.agent: Any = create_agent(
