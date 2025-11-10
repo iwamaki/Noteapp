@@ -186,14 +186,8 @@ export function getPackageByProductId(productId: string): TokenPackage | undefin
 /**
  * トークン数を読みやすい形式にフォーマット
  * @param tokens トークン数
- * @returns フォーマットされた文字列（例: "500k", "1M"）
+ * @returns フォーマットされた文字列（例: "500,000", "1,000,000"）
  */
 export function formatTokenAmount(tokens: number): string {
-  if (tokens >= 1000000) {
-    return `${(tokens / 1000000).toFixed(1)}M`;
-  }
-  if (tokens >= 1000) {
-    return `${(tokens / 1000).toFixed(0)}k`;
-  }
-  return tokens.toString();
+  return tokens.toLocaleString('ja-JP');
 }

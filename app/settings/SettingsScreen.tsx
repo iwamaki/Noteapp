@@ -21,6 +21,7 @@ import APIService from '../features/chat/llmService/api';
 import { LLMProvider } from '../features/chat/llmService/types/types';
 import { ListItem } from '../components/ListItem';
 import { SubscriptionSection } from './components/SubscriptionSection';
+import { MainContainer } from '../components/MainContainer';
 
 function SettingsScreen() {
   const { colors, spacing, typography } = useTheme();
@@ -87,9 +88,8 @@ function SettingsScreen() {
   /* eslint-disable react-native/no-unused-styles */
   const styles = useMemo(
     () => StyleSheet.create({
-      container: {
+      scrollView: {
         flex: 1,
-        backgroundColor: colors.background,
       },
       content: {
         padding: spacing.lg,
@@ -132,16 +132,9 @@ function SettingsScreen() {
   );
   /* eslint-enable react-native/no-unused-styles */
 
-  if (isLoading) {
-    return (
-      <View style={styles.container}>
-        <Text>読み込み中...</Text>
-      </View>
-    );
-  };
-
   return (
-    <ScrollView style={styles.container}>
+    <MainContainer isLoading={isLoading}>
+      <ScrollView style={styles.scrollView}>
       <View style={styles.content}>
         {renderSection('表示設定')}
 
@@ -325,7 +318,8 @@ function SettingsScreen() {
           <Text style={styles.resetButtonText}>設定をリセット</Text>
         </TouchableOpacity>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </MainContainer>
   );
 }
 

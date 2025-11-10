@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import { useTheme } from '../../../design/theme/ThemeContext';
 import { MessageItem } from './MessageItem';
 import { ToggleTabButton } from './ToggleTabButton';
 import { getTokenUsageBarColor } from '../../../billing/utils/tokenUsageHelpers';
+import { BillingModal } from '../../../billing/components/BillingModal';
 
 interface ChatHistoryProps {
   messages: ChatMessage[];
@@ -39,6 +40,7 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
 }) => {
   const { colors, typography, iconSizes } = useTheme();
   const scrollViewRef = useRef<ScrollView>(null);
+  const [billingModalVisible, setBillingModalVisible] = useState(false);
 
   // 要約ボタンを有効にする条件: トークン使用量が75%超
   const canSummarize = tokenUsage ? tokenUsage.usageRatio > 0.75 : false;
@@ -178,6 +180,16 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
         <Text style={styles.messagesHeaderTitle}>チャット履歴</Text>
         <View style={styles.headerButtonContainer}>
           <TouchableOpacity
+            onPress={() => setBillingModalVisible(true)}
+            style={styles.resetButton}
+          >
+            <Ionicons
+              name="wallet-outline"
+              size={iconSizes.medium}
+              color={colors.text}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
             onPress={onSummarize}
             style={styles.resetButton}
             disabled={!canSummarize}
@@ -221,6 +233,12 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
           </View>
         )}
       </ScrollView>
+
+      {/* BillingModal */}
+      <BillingModal
+        isVisible={billingModalVisible}
+        onClose={() => setBillingModalVisible(false)}
+      />
     </Animated.View>
   );
 };

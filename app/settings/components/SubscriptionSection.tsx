@@ -293,7 +293,7 @@ export const SubscriptionSection: React.FC<SubscriptionSectionProps> = ({ render
           onPress={() => navigation.navigate('TokenPurchase' as any)}
         >
           <Ionicons name="card" size={20} color="#FFFFFF" style={styles.purchaseButtonIcon} />
-          <Text style={styles.purchaseButtonText}>プラン・トークンを購入</Text>
+          <Text style={styles.purchaseButtonText}>トークンを購入</Text>
           <Ionicons name="chevron-forward" size={20} color="#FFFFFF" />
         </TouchableOpacity>
       </View>

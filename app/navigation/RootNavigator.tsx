@@ -89,7 +89,7 @@ function RootNavigatorContent() {
           <Stack.Screen name="FileList" component={FileListScreen} options={{ title: 'Files' }} />
           <Stack.Screen name="FileEdit" component={FileEditScreen} options={{ title: 'Edit File' }} />
           <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
-          <Stack.Screen name="TokenPurchase" component={TokenPurchaseScreen} options={{ title: 'プラン・トークン購入' }} />
+          <Stack.Screen name="TokenPurchase" component={TokenPurchaseScreen} />
         </Stack.Navigator>
       </NavigationContainer>
       {shouldShowChat && <ChatInputBar />}

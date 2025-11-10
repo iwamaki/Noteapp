@@ -1,0 +1,384 @@
+/**
+ * @file BillingModal.tsx
+ * @summary トークン購入用のモーダル
+ * @description Flash/Proトークンのパッケージ購入をシンプルに行うモーダル
+ */
+
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
+  ScrollView,
+} from 'react-native';
+import { CustomModal } from '../../components/CustomModal';
+import { useTheme } from '../../design/theme/ThemeContext';
+import { useSettingsStore } from '../../settings/settingsStore';
+import { getAvailablePackages, formatTokenAmount, TokenPackage } from '../constants/tokenPackages';
+import { initializeTokenIAP, getAvailableTokenPackages, purchaseTokenPackage } from '../services/tokenIapService';
+import { isUserCancelledError } from '../utils/purchaseHelpers';
+import type { Product, Purchase } from 'react-native-iap';
+import type { PurchaseRecord } from '../../settings/settingsStore';
+import { finishTransaction } from 'react-native-iap';
+import { Alert } from 'react-native';
+
+type TokenType = 'flash' | 'pro';
+
+interface BillingModalProps {
+  isVisible: boolean;
+  onClose: () => void;
+}
+
+export const BillingModal: React.FC<BillingModalProps> = ({
+  isVisible,
+  onClose,
+}) => {
+  const { colors, typography, spacing } = useTheme();
+  const { settings, addTokens } = useSettingsStore();
+  const [selectedTab, setSelectedTab] = useState<TokenType>('flash');
+  const [loading, setLoading] = useState(false);
+  const [purchasing, setPurchasing] = useState(false);
+  const [tokenProducts, setTokenProducts] = useState<Product[]>([]);
+  const [availablePackages, setAvailablePackages] = useState<TokenPackage[]>([]);
+
+  // モーダルが開いたときに初期化
+  useEffect(() => {
+    if (isVisible) {
+      loadProducts();
+    }
+  }, [isVisible]);
+
+  // 商品情報を読み込む
+  const loadProducts = async () => {
+    setLoading(true);
+    try {
+      await initializeTokenIAP();
+      const products = await getAvailableTokenPackages();
+      setTokenProducts(products);
+
+      // 購入履歴に基づいて利用可能なパッケージを取得
+      const packages = getAvailablePackages(settings.purchaseHistory);
+      setAvailablePackages(packages);
+    } catch (error) {
+      console.error('[BillingModal] Failed to load products:', error);
+      Alert.alert('エラー', '商品情報の読み込みに失敗しました');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 選択されたタブに応じてフィルタリング
+  const filteredPackages = availablePackages.filter((pkg) =>
+    selectedTab === 'flash' ? pkg.tokens.flash > 0 : pkg.tokens.pro > 0
+  );
+
+  // 購入処理
+  const handlePurchase = async (pkg: TokenPackage) => {
+    // 開発モード: モック購入
+    if (__DEV__ && tokenProducts.length === 0) {
+      Alert.alert(
+        '開発モード - モック購入',
+        `${pkg.name}（${pkg.price}円）の購入をシミュレートしますか？\n\n実際の課金は発生しません。`,
+        [
+          { text: 'キャンセル', style: 'cancel' },
+          {
+            text: '購入',
+            onPress: async () => {
+              setPurchasing(true);
+              try {
+                const mockPurchaseRecord: PurchaseRecord = {
+                  id: `mock_${Date.now()}`,
+                  type: pkg.isInitial ? 'initial' : 'addon',
+                  productId: pkg.productId,
+                  transactionId: `mock_transaction_${Date.now()}`,
+                  purchaseDate: new Date().toISOString(),
+                  amount: pkg.price,
+                  tokensAdded: {
+                    flash: pkg.tokens.flash,
+                    pro: pkg.tokens.pro,
+                  },
+                };
+
+                await addTokens(pkg.tokens.flash, pkg.tokens.pro, mockPurchaseRecord);
+
+                const tokenMsg = pkg.tokens.flash > 0
+                  ? `${formatTokenAmount(pkg.tokens.flash)} Flash トークンを追加しました`
+                  : `${formatTokenAmount(pkg.tokens.pro)} Pro トークンを追加しました`;
+
+                Alert.alert('購入完了（開発モード）', tokenMsg, [
+                  { text: 'OK', onPress: onClose },
+                ]);
+              } catch (error) {
+                console.error('[BillingModal] Mock purchase error:', error);
+                Alert.alert('エラー', 'モック購入中にエラーが発生しました');
+              } finally {
+                setPurchasing(false);
+              }
+            },
+          },
+        ]
+      );
+      return;
+    }
+
+    const product = tokenProducts.find((p) => (p as any).id === pkg.productId);
+    if (!product) {
+      Alert.alert('エラー', 'この商品は現在購入できません');
+      return;
+    }
+
+    setPurchasing(true);
+
+    try {
+      await purchaseTokenPackage(
+        pkg.productId,
+        product,
+        // onSuccess
+        async (purchase: Purchase) => {
+          console.log('[BillingModal] Purchase successful:', purchase);
+
+          const purchaseRecord: PurchaseRecord = {
+            id: purchase.transactionId || `${Date.now()}`,
+            type: pkg.isInitial ? 'initial' : 'addon',
+            productId: pkg.productId,
+            transactionId: purchase.transactionId || '',
+            purchaseDate: new Date(purchase.transactionDate).toISOString(),
+            amount: pkg.price,
+            tokensAdded: {
+              flash: pkg.tokens.flash,
+              pro: pkg.tokens.pro,
+            },
+          };
+
+          await addTokens(pkg.tokens.flash, pkg.tokens.pro, purchaseRecord);
+
+          const tokenMsg = pkg.tokens.flash > 0
+            ? `${formatTokenAmount(pkg.tokens.flash)} Flash トークンを追加しました`
+            : `${formatTokenAmount(pkg.tokens.pro)} Pro トークンを追加しました`;
+
+          Alert.alert('購入完了', tokenMsg, [{ text: 'OK', onPress: onClose }]);
+          setPurchasing(false);
+        },
+        // onError
+        (error) => {
+          console.error('[BillingModal] Purchase failed:', error);
+          setPurchasing(false);
+
+          if (isUserCancelledError(error)) {
+            return;
+          }
+
+          Alert.alert('購入エラー', '購入処理中にエラーが発生しました');
+        }
+      );
+    } catch (error) {
+      console.error('[BillingModal] Unexpected error:', error);
+      setPurchasing(false);
+      Alert.alert('エラー', '予期しないエラーが発生しました');
+    }
+  };
+
+  const styles = StyleSheet.create({
+    tabContainer: {
+      flexDirection: 'row',
+      gap: spacing.md,
+      marginBottom: spacing.md,
+    },
+    tab: {
+      flex: 1,
+      paddingVertical: spacing.sm,
+      borderRadius: 8,
+      alignItems: 'center',
+    },
+    tabSelected: {
+      backgroundColor: colors.primary,
+    },
+    tabUnselected: {
+      backgroundColor: colors.secondary,
+    },
+    tabText: {
+      fontSize: typography.body.fontSize,
+      fontWeight: '600',
+    },
+    tabTextSelected: {
+      color: colors.white,
+    },
+    tabTextUnselected: {
+      color: colors.textSecondary,
+    },
+    packageCard: {
+      backgroundColor: colors.background,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: spacing.md,
+      marginBottom: spacing.sm,
+    },
+    packageHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: spacing.xs,
+    },
+    packageName: {
+      fontSize: typography.body.fontSize,
+      fontWeight: 'bold',
+      color: colors.text,
+    },
+    packagePrice: {
+      fontSize: typography.body.fontSize,
+      fontWeight: 'bold',
+      color: colors.primary,
+    },
+    packageDescription: {
+      fontSize: typography.caption.fontSize,
+      color: colors.textSecondary,
+    },
+    balanceContainer: {
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.md,
+      backgroundColor: colors.secondary,
+      borderRadius: 8,
+      marginBottom: spacing.sm,
+    },
+    balanceText: {
+      fontSize: typography.body.fontSize,
+      color: colors.text,
+      textAlign: 'center',
+    },
+    noticeContainer: {
+      padding: spacing.sm,
+      marginTop: spacing.sm,
+    },
+    noticeText: {
+      fontSize: typography.caption.fontSize,
+      color: colors.textSecondary,
+    },
+    loadingContainer: {
+      padding: spacing.xl,
+      alignItems: 'center',
+    },
+    emptyText: {
+      textAlign: 'center',
+      color: colors.textSecondary,
+      fontSize: typography.body.fontSize,
+      paddingVertical: spacing.lg,
+    },
+  });
+
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      );
+    }
+
+    return (
+      <>
+        {/* タブ選択 */}
+        <View style={styles.tabContainer}>
+          <TouchableOpacity
+            style={[
+              styles.tab,
+              selectedTab === 'flash' ? styles.tabSelected : styles.tabUnselected,
+            ]}
+            onPress={() => setSelectedTab('flash')}
+          >
+            <Text
+              style={[
+                styles.tabText,
+                selectedTab === 'flash' ? styles.tabTextSelected : styles.tabTextUnselected,
+              ]}
+            >
+              ⚡ Flash
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.tab,
+              selectedTab === 'pro' ? styles.tabSelected : styles.tabUnselected,
+            ]}
+            onPress={() => setSelectedTab('pro')}
+          >
+            <Text
+              style={[
+                styles.tabText,
+                selectedTab === 'pro' ? styles.tabTextSelected : styles.tabTextUnselected,
+              ]}
+            >
+              🎯 Pro
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* 現在の残高 */}
+        <View style={styles.balanceContainer}>
+          <Text style={styles.balanceText}>
+            現在の残高: {selectedTab === 'flash' ? '⚡' : '🎯'}{' '}
+            {formatTokenAmount(
+              selectedTab === 'flash' ? settings.tokenBalance.flash : settings.tokenBalance.pro
+            )}{' '}
+            トークン
+          </Text>
+        </View>
+
+        {/* パッケージリスト */}
+        <ScrollView showsVerticalScrollIndicator={true}>
+          {filteredPackages.length === 0 ? (
+            <Text style={styles.emptyText}>購入可能なパッケージがありません</Text>
+          ) : (
+            filteredPackages.map((pkg) => (
+              <TouchableOpacity
+                key={pkg.id}
+                style={styles.packageCard}
+                onPress={() => handlePurchase(pkg)}
+                disabled={purchasing}
+              >
+                <View style={styles.packageHeader}>
+                  <Text style={styles.packageName}>
+                    {selectedTab === 'flash' ? '⚡' : '🎯'}{' '}
+                    {formatTokenAmount(
+                      selectedTab === 'flash' ? pkg.tokens.flash : pkg.tokens.pro
+                    )}{' '}
+                    トークン
+                  </Text>
+                  <Text style={styles.packagePrice}>¥{pkg.price} →</Text>
+                </View>
+                <Text style={styles.packageDescription}>{pkg.description}</Text>
+              </TouchableOpacity>
+            ))
+          )}
+        </ScrollView>
+
+        {/* 注意事項 */}
+        <View style={styles.noticeContainer}>
+          <Text style={styles.noticeText}>
+            ℹ️ トークンは購入後すぐに残高に追加されます
+          </Text>
+        </View>
+      </>
+    );
+  };
+
+  return (
+    <CustomModal
+      isVisible={isVisible}
+      title="💰 トークンパッケージ購入"
+      buttons={[
+        {
+          text: 'キャンセル',
+          style: 'cancel',
+          onPress: onClose,
+        },
+      ]}
+      onClose={onClose}
+    >
+      {renderContent()}
+    </CustomModal>
+  );
+};
