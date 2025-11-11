@@ -32,7 +32,7 @@ export const GEMINI_PRICING: Record<string, ModelPricing> = {
   // Gemini 2.5 Pro（高性能、複雑なタスク向き、プロンプト長で料金変動）
   'gemini-2.5-pro': {
     modelId: 'gemini-2.5-pro',
-    displayName: 'Gemini 2.5 Think',
+    displayName: 'Gemini 2.5 Pro',
     inputPricePer1M: 1.25, // $1.25 - $2.50（最低料金）
     outputPricePer1M: 10.0, // $10.00 - $15.00（最低料金）
   },
@@ -40,9 +40,25 @@ export const GEMINI_PRICING: Record<string, ModelPricing> = {
   // Gemini 2.5 Flash（高速・低コスト、大規模処理向き）
   'gemini-2.5-flash': {
     modelId: 'gemini-2.5-flash',
-    displayName: 'Gemini 2.5 Quick',
+    displayName: 'Gemini 2.5 Flash',
     inputPricePer1M: 0.3, // $0.30 per 1M tokens
     outputPricePer1M: 2.5, // $2.50 per 1M tokens
+  },
+
+  // Gemini 1.5 Pro（安定版、コスト重視）
+  'gemini-1.5-pro': {
+    modelId: 'gemini-1.5-pro',
+    displayName: 'Gemini 1.5 Pro',
+    inputPricePer1M: 1.25, // $1.25 per 1M tokens
+    outputPricePer1M: 5.0, // $5.00 per 1M tokens
+  },
+
+  // Gemini 1.5 Flash（安定版、実績あり）
+  'gemini-1.5-flash': {
+    modelId: 'gemini-1.5-flash',
+    displayName: 'Gemini 1.5 Flash',
+    inputPricePer1M: 0.075, // $0.075 per 1M tokens
+    outputPricePer1M: 0.3, // $0.30 per 1M tokens
   },
 };
 

@@ -26,6 +26,7 @@ import { useSettingsStore, TOKEN_CAPACITY_LIMITS } from '../../settings/settings
 import { GEMINI_PRICING } from '../../constants/pricing';
 import { convertProvidersToModelInfo, type ModelInfo } from './constants';
 import APIService from '../../features/chat/llmService/api';
+import { CreditAllocationModal } from '../../settings/components/CreditAllocationModal';
 
 type ModelSelectionScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ModelSelection'>;
 
@@ -38,6 +39,10 @@ export const ModelSelectionScreen: React.FC = () => {
   const [availableModels, setAvailableModels] = useState<ModelInfo[]>([]);
   const [isLoadingModels, setIsLoadingModels] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+
+  // 配分モーダル制御
+  const [showAllocationModal, setShowAllocationModal] = useState(false);
+  const [selectedModelForAllocation, setSelectedModelForAllocation] = useState<string | undefined>(undefined);
 
   // モデル情報をバックエンドから取得
   useEffect(() => {
@@ -87,12 +92,19 @@ export const ModelSelectionScreen: React.FC = () => {
 
     const tokens = settings.tokenBalance.allocatedTokens[modelId] || 0;
     if (tokens <= 0) {
-      // トークンがない場合は配分を促す
-      // TODO: クレジット配分画面に遷移
+      // トークンがない場合は配分モーダルを開く
+      setSelectedModelForAllocation(modelId);
+      setShowAllocationModal(true);
       return;
     }
 
     await loadModel(category, modelId);
+  };
+
+  // トークン配分ボタンハンドラー（新規追加）
+  const handleAllocateTokens = (modelId: string) => {
+    setSelectedModelForAllocation(modelId);
+    setShowAllocationModal(true);
   };
 
   // モデルごとのトークン残高を取得
@@ -447,62 +459,81 @@ export const ModelSelectionScreen: React.FC = () => {
     const pricing = GEMINI_PRICING[modelId];
 
     return (
-      <TouchableOpacity
-        key={modelId}
-        style={[
-          styles.modelCard,
-          isActive && styles.modelCardActive,
-          isActive && { borderColor: accentColor },
-        ]}
-        onPress={() => handleSelectModel(modelId, category)}
-        disabled={tokens <= 0}
-      >
-        <View style={styles.modelCardLeft}>
+      <View key={modelId} style={{ marginBottom: spacing.sm }}>
+        <TouchableOpacity
+          style={[
+            styles.modelCard,
+            isActive && styles.modelCardActive,
+            isActive && { borderColor: accentColor },
+          ]}
+          onPress={() => handleSelectModel(modelId, category)}
+          disabled={tokens <= 0}
+        >
+          <View style={styles.modelCardLeft}>
+            <View
+              style={[
+                styles.modelRadio,
+                { borderColor: isActive ? accentColor : colors.border },
+              ]}
+            >
+              {isActive && <View style={styles.modelRadioInner} />}
+            </View>
+            <View style={styles.modelInfo}>
+              <Text style={styles.modelName}>{model.name}</Text>
+              <Text style={styles.modelDescription}>{model.description}</Text>
+              {pricing && (
+                <Text style={styles.modelPricing}>
+                  料金: ¥{pricing.inputPricePer1M}/1M入力 ¥{pricing.outputPricePer1M}/1M出力
+                </Text>
+              )}
+            </View>
+          </View>
           <View
             style={[
-              styles.modelRadio,
-              { borderColor: isActive ? accentColor : colors.border },
+              styles.modelTokenBox,
+              isActive && styles.modelTokenBoxActive,
+              isActive && { backgroundColor: `${accentColor}15`, borderColor: accentColor },
             ]}
           >
-            {isActive && <View style={styles.modelRadioInner} />}
-          </View>
-          <View style={styles.modelInfo}>
-            <Text style={styles.modelName}>{model.name}</Text>
-            <Text style={styles.modelDescription}>{model.description}</Text>
-            {pricing && (
-              <Text style={styles.modelPricing}>
-                料金: ¥{pricing.inputPricePer1M}/1M入力 ¥{pricing.outputPricePer1M}/1M出力
+            <Text style={styles.modelTokenLabel}>このモデルの残高</Text>
+            <View style={styles.modelTokenRow}>
+              <Text style={[styles.modelTokenAmount, { color: tokens > 0 ? accentColor : colors.textSecondary }]}>
+                {tokens.toLocaleString()}
               </Text>
+              <Text style={styles.modelTokenUnit}>トークン</Text>
+            </View>
+            {isActive ? (
+              <View style={[styles.modelStatusBadge, { backgroundColor: accentColor }]}>
+                <Text style={[styles.modelStatusText, { color: colors.white }]}>装填中</Text>
+              </View>
+            ) : (
+              <View style={[styles.modelStatusBadge, { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border }]}>
+                <Text style={[styles.modelStatusText, { color: tokens > 0 ? colors.text : colors.textSecondary }]}>
+                  {tokens > 0 ? '選択' : '残高なし'}
+                </Text>
+              </View>
             )}
           </View>
-        </View>
-        <View
-          style={[
-            styles.modelTokenBox,
-            isActive && styles.modelTokenBoxActive,
-            isActive && { backgroundColor: `${accentColor}15`, borderColor: accentColor },
-          ]}
+        </TouchableOpacity>
+        {/* トークン配分ボタン */}
+        <TouchableOpacity
+          style={{
+            marginTop: spacing.xs,
+            paddingVertical: spacing.xs,
+            paddingHorizontal: spacing.sm,
+            backgroundColor: colors.secondary,
+            borderRadius: 6,
+            borderWidth: 1,
+            borderColor: colors.border,
+            alignItems: 'center',
+          }}
+          onPress={() => handleAllocateTokens(modelId)}
         >
-          <Text style={styles.modelTokenLabel}>このモデルの残高</Text>
-          <View style={styles.modelTokenRow}>
-            <Text style={[styles.modelTokenAmount, { color: tokens > 0 ? accentColor : colors.textSecondary }]}>
-              {tokens.toLocaleString()}
-            </Text>
-            <Text style={styles.modelTokenUnit}>トークン</Text>
-          </View>
-          {isActive ? (
-            <View style={[styles.modelStatusBadge, { backgroundColor: accentColor }]}>
-              <Text style={[styles.modelStatusText, { color: colors.white }]}>装填中</Text>
-            </View>
-          ) : (
-            <View style={[styles.modelStatusBadge, { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border }]}>
-              <Text style={[styles.modelStatusText, { color: tokens > 0 ? colors.text : colors.textSecondary }]}>
-                {tokens > 0 ? '選択' : '残高なし'}
-              </Text>
-            </View>
-          )}
-        </View>
-      </TouchableOpacity>
+          <Text style={{ fontSize: 12, color: colors.primary, fontWeight: '600' }}>
+            💰 トークンを配分
+          </Text>
+        </TouchableOpacity>
+      </View>
     );
   };
 
@@ -646,6 +677,16 @@ export const ModelSelectionScreen: React.FC = () => {
           </Text>
         </View>
       </ScrollView>
+
+      {/* トークン配分モーダル */}
+      <CreditAllocationModal
+        isVisible={showAllocationModal}
+        onClose={() => {
+          setShowAllocationModal(false);
+          setSelectedModelForAllocation(undefined);
+        }}
+        initialModelId={selectedModelForAllocation}
+      />
     </MainContainer>
   );
 };

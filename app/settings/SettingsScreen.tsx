@@ -17,8 +17,6 @@ import {
 import { useSettingsStore } from './settingsStore';
 import { useTheme } from '../design/theme/ThemeContext';
 import { useSettingsHeader } from './hooks/useSettingsHeader';
-import APIService from '../features/chat/llmService/api';
-import { LLMProvider } from '../features/chat/llmService/types/types';
 import { ListItem } from '../components/ListItem';
 import { TokenUsageSection } from './components/TokenUsageSection';
 import { MainContainer } from '../components/MainContainer';
@@ -27,39 +25,11 @@ function SettingsScreen() {
   const { colors, spacing, typography } = useTheme();
   const { settings, loadSettings, updateSettings, isLoading, checkAndResetMonthlyUsageIfNeeded } = useSettingsStore();
 
-  // 初期値にキャッシュを使用（キャッシュがあれば即座に表示）
-  const [llmProviders, setLlmProviders] = useState<Record<string, LLMProvider>>(
-    () => APIService.getCachedLLMProviders() || {}
-  );
-  const [isLoadingProviders, setIsLoadingProviders] = useState(
-    () => !APIService.getCachedLLMProviders() // キャッシュがなければローディング状態
-  );
-
   useEffect(() => {
     loadSettings();
     // 月次使用量のリセットチェック（月が変わったらリセット）
     checkAndResetMonthlyUsageIfNeeded();
-
-    // キャッシュがあればすぐ表示、なければ読み込み
-    const cached = APIService.getCachedLLMProviders();
-    if (cached) {
-      setLlmProviders(cached);
-      setIsLoadingProviders(false);
-    } else {
-      loadLLMProviders();
-    }
   }, []);
-
-  const loadLLMProviders = async () => {
-    try {
-      const providers = await APIService.loadLLMProviders();
-      setLlmProviders(providers);
-    } catch (error) {
-      console.error('Failed to load LLM providers:', error);
-    } finally {
-      setIsLoadingProviders(false);
-    }
-  };
 
   // ヘッダー設定
   useSettingsHeader();
@@ -117,15 +87,6 @@ function SettingsScreen() {
       resetButtonText: {
         ...typography.subtitle,
         color: colors.background,
-      },
-      loadingContent: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.md,
-      },
-      loadingText: {
-        ...typography.body,
-        color: colors.textSecondary,
       },
     }),
     [colors, spacing, typography]
@@ -211,59 +172,7 @@ function SettingsScreen() {
           />
         </ListItem.Container>
 
-        {settings.llmEnabled && (
-          <>
-            {isLoadingProviders ? (
-              <ListItem.Container>
-                <View style={styles.loadingContent}>
-                  <ActivityIndicator size="small" color={colors.primary} />
-                  <Text style={styles.loadingText}>LLMプロバイダーを読み込み中...</Text>
-                </View>
-              </ListItem.Container>
-            ) : (
-              <>
-                {renderPicker(
-                  'LLMプロバイダー',
-                  settings.llmProvider,
-                  Object.entries(llmProviders).map(([key, provider]) => ({
-                    label: `${provider.name}${provider.status === 'unavailable' ? ' (利用不可)' : ''}`,
-                    value: key,
-                  })),
-                  (value) => {
-                    const updates: any = { llmProvider: value };
-                    // プロバイダー変更時はデフォルトモデルも設定
-                    if (llmProviders[value]) {
-                      updates.llmModel = llmProviders[value].defaultModel;
-                    }
-                    updateSettings(updates);
-                  }
-                )}
-
-                {settings.llmProvider && llmProviders[settings.llmProvider] && (
-                  renderPicker(
-                    'モデル',
-                    settings.llmModel,
-                    llmProviders[settings.llmProvider].models.map((model: string) => ({
-                      label: model,
-                      value: model,
-                    })),
-                    (value) => updateSettings({ llmModel: value })
-                  )
-                )}
-
-                {/* ノートの文脈情報をLLMに送信機能は非表示
-                <ListItem.Container>
-                  <ListItem.Title>ノートの文脈情報をLLMに送信</ListItem.Title>
-                  <Switch
-                    value={settings.sendFileContextToLLM}
-                    onValueChange={(value: boolean) => updateSettings({ sendFileContextToLLM: value })}
-                  />
-                </ListItem.Container>
-                */}
-              </>
-            )}
-          </>
-        )}
+        {/* LLMプロバイダーとモデルの切り替えはLLMモデル設定画面で行うため、ここでは非表示 */}
 
         {/* トークン残高・使用量セクション（LLM機能のオン/オフに関係なく常に表示） */}
         <TokenUsageSection renderSection={renderSection} />

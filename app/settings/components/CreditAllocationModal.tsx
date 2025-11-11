@@ -4,7 +4,7 @@
  * @description クレジットをモデルにトークンとして配分するモーダル
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,29 +12,41 @@ import {
   TouchableOpacity,
   TextInput,
   Alert,
+  ActivityIndicator,
+  ScrollView,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { CustomModal } from '../../components/CustomModal';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { useSettingsStore, TOKEN_CAPACITY_LIMITS } from '../settingsStore';
 import { creditsToTokens, getTokenPrice } from '../../billing/constants/tokenPricing';
+import APIService from '../../features/chat/llmService/api';
+import { convertProvidersToModelInfo, type ModelInfo } from '../../screen/model-selection/constants';
 
 interface CreditAllocationModalProps {
   isVisible: boolean;
   onClose: () => void;
   initialCredits?: number; // 購入後すぐ開く場合の初期値
+  initialModelId?: string; // 初期選択モデル（指定されている場合）
 }
 
 export const CreditAllocationModal: React.FC<CreditAllocationModalProps> = ({
   isVisible,
   onClose,
   initialCredits,
+  initialModelId,
 }) => {
   const { colors, spacing, typography } = useTheme();
   const { settings, allocateCredits, getTotalTokensByCategory } = useSettingsStore();
 
-  // モデル選択（Quick or Think）
-  const [selectedModelId, setSelectedModelId] = useState<string>('gemini-2.5-flash');
+  // バックエンドから取得したモデル一覧
+  const [availableModels, setAvailableModels] = useState<ModelInfo[]>([]);
+  const [isLoadingModels, setIsLoadingModels] = useState(true);
+
+  // モデル選択
+  const [selectedModelId, setSelectedModelId] = useState<string>(
+    initialModelId || 'gemini-2.5-flash'
+  );
 
   // 配分するクレジット額（10円刻み）
   const [creditsToAllocate, setCreditsToAllocate] = useState<number>(
@@ -43,25 +55,40 @@ export const CreditAllocationModal: React.FC<CreditAllocationModalProps> = ({
 
   const [isAllocating, setIsAllocating] = useState(false);
 
-  // モデル情報
-  const models = [
-    {
-      id: 'gemini-2.5-flash',
-      displayName: 'Gemini 2.5 Quick',
-      icon: 'speedometer',
-      color: '#FFC107',
-      category: 'quick' as const,
-    },
-    {
-      id: 'gemini-2.5-pro',
-      displayName: 'Gemini 2.5 Think',
-      icon: 'speedometer-slow',
-      color: '#4CAF50',
-      category: 'think' as const,
-    },
-  ];
+  // モデル情報をバックエンドから取得
+  useEffect(() => {
+    const loadModels = async () => {
+      try {
+        setIsLoadingModels(true);
+        const providers = await APIService.loadLLMProviders();
+        const models = convertProvidersToModelInfo(providers);
+        setAvailableModels(models);
 
-  const selectedModel = models.find((m) => m.id === selectedModelId)!;
+        // 初期選択モデルが指定されていない場合、最初のモデルを選択
+        if (!initialModelId && models.length > 0) {
+          setSelectedModelId(models[0].id);
+        }
+      } catch (error) {
+        console.error('Failed to load models:', error);
+        Alert.alert('エラー', 'モデル情報の読み込みに失敗しました');
+      } finally {
+        setIsLoadingModels(false);
+      }
+    };
+
+    if (isVisible) {
+      loadModels();
+    }
+  }, [isVisible, initialModelId]);
+
+  const selectedModel = availableModels.find((m) => m.id === selectedModelId);
+
+  // カテゴリーごとの色とアイコン
+  const getCategoryStyle = (category: 'quick' | 'think') => {
+    return category === 'quick'
+      ? { color: '#FFC107', icon: 'speedometer' as const }
+      : { color: '#4CAF50', icon: 'speedometer-slow' as const };
+  };
 
   // クレジット→トークン変換
   const convertedTokens = useMemo(() => {
@@ -70,6 +97,17 @@ export const CreditAllocationModal: React.FC<CreditAllocationModalProps> = ({
 
   // 容量制限チェック
   const capacityInfo = useMemo(() => {
+    if (!selectedModel) {
+      return {
+        currentTotal: 0,
+        newTotal: 0,
+        limit: 0,
+        remaining: 0,
+        isOverLimit: false,
+        usagePercent: 0,
+      };
+    }
+
     const category = selectedModel.category;
     const currentTotal = getTotalTokensByCategory(category);
     const currentModelTokens = settings.tokenBalance.allocatedTokens[selectedModelId] || 0;
@@ -99,6 +137,11 @@ export const CreditAllocationModal: React.FC<CreditAllocationModalProps> = ({
 
   // 配分実行
   const handleAllocate = async () => {
+    if (!selectedModel) {
+      Alert.alert('エラー', 'モデルを選択してください');
+      return;
+    }
+
     if (creditsToAllocate <= 0) {
       Alert.alert('エラー', '配分するクレジット額を指定してください');
       return;
@@ -121,7 +164,7 @@ export const CreditAllocationModal: React.FC<CreditAllocationModalProps> = ({
 
       Alert.alert(
         '✅ 配分完了',
-        `${creditsToAllocate}円分のクレジットを\n${selectedModel.displayName}に配分しました\n\n${convertedTokens.toLocaleString()}トークンが追加されました`,
+        `${creditsToAllocate}円分のクレジットを\n${selectedModel.name}に配分しました\n\n${convertedTokens.toLocaleString()}トークンが追加されました`,
         [{ text: 'OK', onPress: onClose }]
       );
     } catch (error: any) {
@@ -332,6 +375,31 @@ export const CreditAllocationModal: React.FC<CreditAllocationModalProps> = ({
     },
   });
 
+  // ローディング中の表示
+  if (isLoadingModels) {
+    return (
+      <CustomModal
+        isVisible={isVisible}
+        title="💰 クレジット配分"
+        buttons={[
+          {
+            text: '閉じる',
+            style: 'cancel',
+            onPress: onClose,
+          },
+        ]}
+        onClose={onClose}
+      >
+        <View style={{ alignItems: 'center', paddingVertical: spacing.xl }}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={{ marginTop: spacing.md, color: colors.textSecondary }}>
+            モデル情報を読み込み中...
+          </Text>
+        </View>
+      </CustomModal>
+    );
+  }
+
   return (
     <CustomModal
       isVisible={isVisible}
@@ -350,52 +418,109 @@ export const CreditAllocationModal: React.FC<CreditAllocationModalProps> = ({
       ]}
       onClose={onClose}
     >
-      {/* 現在の残高 */}
-      <View style={styles.balanceContainer}>
-        <Text style={styles.balanceLabel}>未配分クレジット</Text>
-        <Text style={styles.balanceAmount}>
-          {settings.tokenBalance.credits}円
-        </Text>
-      </View>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* 現在の残高 */}
+        <View style={styles.balanceContainer}>
+          <Text style={styles.balanceLabel}>未配分クレジット</Text>
+          <Text style={styles.balanceAmount}>
+            {settings.tokenBalance.credits}円
+          </Text>
+        </View>
 
-      {/* モデル選択 */}
-      <Text style={styles.sectionTitle}>配分先のモデル</Text>
-      <View style={styles.modelSelector}>
-        {models.map((model) => {
-          const isSelected = model.id === selectedModelId;
-          return (
-            <TouchableOpacity
-              key={model.id}
-              style={[
-                styles.modelButton,
-                isSelected ? styles.modelButtonSelected : styles.modelButtonUnselected,
-                { borderColor: isSelected ? model.color : colors.border },
-              ]}
-              onPress={() => {
-                setSelectedModelId(model.id);
-                // モデル変更時にスライダーをリセット
-                setCreditsToAllocate(Math.min(10, settings.tokenBalance.credits));
-              }}
-            >
-              <MaterialCommunityIcons
-                name={model.icon as any}
-                size={20}
-                color={isSelected ? model.color : colors.textSecondary}
-              />
-              <View style={styles.modelButtonTextContainer}>
-                <Text
-                  style={[
-                    styles.modelButtonText,
-                    { color: isSelected ? colors.text : colors.textSecondary },
-                  ]}
-                >
-                  {model.displayName.replace('Gemini 2.5 ', '')}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+        {/* モデル選択 */}
+        <Text style={styles.sectionTitle}>配分先のモデル</Text>
+
+        {/* Quickカテゴリー */}
+        <Text style={[styles.sectionTitle, { fontSize: 13, color: colors.textSecondary, marginTop: spacing.sm }]}>
+          ⚡ Quick（高速モデル）
+        </Text>
+        {availableModels
+          .filter((model) => model.category === 'quick')
+          .map((model) => {
+            const isSelected = model.id === selectedModelId;
+            const categoryStyle = getCategoryStyle(model.category);
+            return (
+              <TouchableOpacity
+                key={model.id}
+                style={[
+                  styles.modelButton,
+                  isSelected ? styles.modelButtonSelected : styles.modelButtonUnselected,
+                  { borderColor: isSelected ? categoryStyle.color : colors.border, marginBottom: spacing.xs },
+                ]}
+                onPress={() => {
+                  setSelectedModelId(model.id);
+                  setCreditsToAllocate(Math.min(10, settings.tokenBalance.credits));
+                }}
+              >
+                <MaterialCommunityIcons
+                  name={categoryStyle.icon}
+                  size={20}
+                  color={isSelected ? categoryStyle.color : colors.textSecondary}
+                />
+                <View style={styles.modelButtonTextContainer}>
+                  <Text
+                    style={[
+                      styles.modelButtonText,
+                      { color: isSelected ? colors.text : colors.textSecondary },
+                    ]}
+                  >
+                    {model.shortName}
+                  </Text>
+                  {model.recommended && (
+                    <Text style={{ fontSize: 10, color: categoryStyle.color, marginLeft: spacing.xs }}>
+                      (推奨)
+                    </Text>
+                  )}
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+
+        {/* Thinkカテゴリー */}
+        <Text style={[styles.sectionTitle, { fontSize: 13, color: colors.textSecondary, marginTop: spacing.md }]}>
+          🧠 Think（高性能モデル）
+        </Text>
+        {availableModels
+          .filter((model) => model.category === 'think')
+          .map((model) => {
+            const isSelected = model.id === selectedModelId;
+            const categoryStyle = getCategoryStyle(model.category);
+            return (
+              <TouchableOpacity
+                key={model.id}
+                style={[
+                  styles.modelButton,
+                  isSelected ? styles.modelButtonSelected : styles.modelButtonUnselected,
+                  { borderColor: isSelected ? categoryStyle.color : colors.border, marginBottom: spacing.xs },
+                ]}
+                onPress={() => {
+                  setSelectedModelId(model.id);
+                  setCreditsToAllocate(Math.min(10, settings.tokenBalance.credits));
+                }}
+              >
+                <MaterialCommunityIcons
+                  name={categoryStyle.icon}
+                  size={20}
+                  color={isSelected ? categoryStyle.color : colors.textSecondary}
+                />
+                <View style={styles.modelButtonTextContainer}>
+                  <Text
+                    style={[
+                      styles.modelButtonText,
+                      { color: isSelected ? colors.text : colors.textSecondary },
+                    ]}
+                  >
+                    {model.shortName}
+                  </Text>
+                  {model.recommended && (
+                    <Text style={{ fontSize: 10, color: categoryStyle.color, marginLeft: spacing.xs }}>
+                      (推奨)
+                    </Text>
+                  )}
+                </View>
+              </TouchableOpacity>
+            );
+          })}
 
       {/* クレジット入力 */}
       <View style={styles.sliderContainer}>
@@ -491,27 +616,29 @@ export const CreditAllocationModal: React.FC<CreditAllocationModalProps> = ({
       </View>
 
       {/* 容量制限表示 */}
-      <View style={styles.capacityContainer}>
-        <View style={styles.capacityHeader}>
-          <Text style={styles.capacityLabel}>
-            {selectedModel.category === 'quick' ? 'Quick' : 'Think'}カテゴリー容量
-          </Text>
-          <Text style={styles.capacityPercent}>
-            {capacityInfo.usagePercent.toFixed(0)}%
+      {selectedModel && (
+        <View style={styles.capacityContainer}>
+          <View style={styles.capacityHeader}>
+            <Text style={styles.capacityLabel}>
+              {selectedModel.category === 'quick' ? 'Quick' : 'Think'}カテゴリー容量
+            </Text>
+            <Text style={styles.capacityPercent}>
+              {capacityInfo.usagePercent.toFixed(0)}%
+            </Text>
+          </View>
+          <View style={styles.capacityBar}>
+            <View
+              style={[
+                styles.capacityFill,
+                { width: `${Math.min(100, capacityInfo.usagePercent)}%` },
+              ]}
+            />
+          </View>
+          <Text style={styles.capacityText}>
+            {capacityInfo.newTotal.toLocaleString()} / {capacityInfo.limit.toLocaleString()} トークン
           </Text>
         </View>
-        <View style={styles.capacityBar}>
-          <View
-            style={[
-              styles.capacityFill,
-              { width: `${Math.min(100, capacityInfo.usagePercent)}%` },
-            ]}
-          />
-        </View>
-        <Text style={styles.capacityText}>
-          {capacityInfo.newTotal.toLocaleString()} / {capacityInfo.limit.toLocaleString()} トークン
-        </Text>
-      </View>
+      )}
 
       {/* 容量超過警告 */}
       {capacityInfo.isOverLimit && (
@@ -527,6 +654,7 @@ export const CreditAllocationModal: React.FC<CreditAllocationModalProps> = ({
           </Text>
         </View>
       )}
+      </ScrollView>
     </CustomModal>
   );
 };
