@@ -557,6 +557,30 @@ export const ModelSelectionScreen: React.FC = () => {
         ]}
       />
       <ScrollView style={styles.scrollContent}>
+        {/* Quickモデル一覧 */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Quickモデル一覧</Text>
+          <Text style={styles.sectionDescription}>
+            日常的な会話や軽いタスクに使用するモデルを選択
+          </Text>
+
+          {availableModels.filter(m => m.category === 'quick').map(model =>
+            renderModelCard(model.id, 'quick', model.id === activeQuickModel, '#FFC107')
+          )}
+        </View>
+
+        {/* Thinkモデル一覧 */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Thinkモデル一覧</Text>
+          <Text style={styles.sectionDescription}>
+            複雑な推論や高度なタスクに使用するモデルを選択
+          </Text>
+
+          {availableModels.filter(m => m.category === 'think').map(model =>
+            renderModelCard(model.id, 'think', model.id === activeThinkModel, '#4CAF50')
+          )}
+        </View>
+
         {/* トークン保持状況 */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>トークン保持状況</Text>
@@ -589,39 +613,6 @@ export const ModelSelectionScreen: React.FC = () => {
             thinkBreakdown.activeModelId,
             'think'
           )}
-        </View>
-
-        {/* Quickモデル一覧 */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Quickモデル一覧</Text>
-          <Text style={styles.sectionDescription}>
-            日常的な会話や軽いタスクに使用するモデルを選択
-          </Text>
-
-          {availableModels.filter(m => m.category === 'quick').map(model =>
-            renderModelCard(model.id, 'quick', model.id === activeQuickModel, '#FFC107')
-          )}
-        </View>
-
-        {/* Thinkモデル一覧 */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Thinkモデル一覧</Text>
-          <Text style={styles.sectionDescription}>
-            複雑な推論や高度なタスクに使用するモデルを選択
-          </Text>
-
-          {availableModels.filter(m => m.category === 'think').map(model =>
-            renderModelCard(model.id, 'think', model.id === activeThinkModel, '#4CAF50')
-          )}
-        </View>
-
-        {/* 追加モデルプレースホルダー */}
-        <View style={styles.addModelPlaceholder}>
-          <Text style={styles.addModelTitle}>+ 他のLLMモデルを追加購入</Text>
-          <Text style={styles.addModelDescription}>
-            GPT-4, Claude, Ultra Think等、様々なモデルのトークンを{'\n'}
-            個別に購入して使い分けることができます（各カテゴリーに上限あり）
-          </Text>
         </View>
       </ScrollView>
 

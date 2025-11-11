@@ -137,8 +137,6 @@ export const TokenUsageSection: React.FC<TokenUsageSectionProps> = ({ renderSect
 
   return (
     <>
-      {renderSection('トークン残高・使用量')}
-
       {/* トークン購入・未配分クレジット */}
       <ListItem.Container>
         <View style={{ flex: 1 }}>
@@ -187,7 +185,7 @@ export const TokenUsageSection: React.FC<TokenUsageSectionProps> = ({ renderSect
               onPress={() => navigation.navigate('ModelSelection' as any)}
             >
               <MaterialCommunityIcons name="brain" size={20} color="#FFFFFF" style={styles.purchaseButtonIcon} />
-              <Text style={styles.purchaseButtonText}>モデルを設定</Text>
+              <Text style={styles.purchaseButtonText}>詳細設定</Text>
               <Ionicons name="chevron-forward" size={20} color="#FFFFFF" />
             </TouchableOpacity>
           </View>

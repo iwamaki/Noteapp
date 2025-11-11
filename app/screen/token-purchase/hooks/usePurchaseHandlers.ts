@@ -28,7 +28,7 @@ export const usePurchaseHandlers = ({
   tokenProducts,
 }: UsePurchaseHandlersProps): UsePurchaseHandlersReturn => {
   const navigation = useNavigation();
-  const { addCredits, setShouldShowAllocationModal } = useSettingsStore();
+  const { addCredits } = useSettingsStore();
   const [purchasing, setPurchasing] = useState(false);
 
   // トークンパッケージ購入処理
@@ -62,16 +62,9 @@ export const usePurchaseHandlers = ({
 
                 Alert.alert(
                   '💰 購入完了（開発モード）',
-                  `${pkg.credits}円分のクレジットを追加しました\n\nモデルに配分しますか？\n（後から設定画面で配分できます）`,
+                  `${pkg.credits}円分のクレジットを追加しました`,
                   [
-                    { text: '後で配分する', onPress: () => (navigation as any).goBack() },
-                    {
-                      text: '今すぐ配分する',
-                      onPress: () => {
-                        setShouldShowAllocationModal(true);
-                        (navigation as any).goBack();
-                      }
-                    },
+                    { text: 'OK', onPress: () => (navigation as any).goBack() },
                   ]
                 );
               } catch (error) {
@@ -123,16 +116,9 @@ export const usePurchaseHandlers = ({
           // 成功メッセージ
           Alert.alert(
             '💰 購入完了',
-            `${pkg.credits}円分のクレジットを追加しました\n\nモデルに配分しますか？\n（後から設定画面で配分できます）`,
+            `${pkg.credits}円分のクレジットを追加しました`,
             [
-              { text: '後で配分する', onPress: () => (navigation as any).goBack() },
-              {
-                text: '今すぐ配分する',
-                onPress: () => {
-                  setShouldShowAllocationModal(true);
-                  (navigation as any).goBack();
-                }
-              },
+              { text: 'OK', onPress: () => (navigation as any).goBack() },
             ]
           );
         },
