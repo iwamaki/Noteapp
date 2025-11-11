@@ -40,10 +40,6 @@ class ChatService {
   // ローディング状態
   private isLoading: boolean = false;
 
-  // LLMプロバイダーとモデル
-  private llmProvider: string = 'anthropic';
-  private llmModel: string = 'claude-3-5-sonnet-20241022';
-
   // WebSocketサービス
   private wsService: WebSocketService | null = null;
   private clientId: string | null = null;
@@ -123,14 +119,6 @@ class ChatService {
    */
   public registerCommandHandlers(handlers: Record<string, (command: LLMCommand) => void | Promise<void>>): void {
     this.commandService.registerCommandHandlers(handlers);
-  }
-
-  /**
-   * LLMプロバイダーとモデルを設定
-   */
-  public setLLMConfig(provider: string, model: string): void {
-    this.llmProvider = provider;
-    this.llmModel = model;
   }
 
   /**
@@ -245,11 +233,12 @@ class ChatService {
     this.setLoading(true);
 
     // トークン上限チェック（現在使用中のモデルで判定）
-    const tokenLimitCheck = checkModelTokenLimit(this.llmModel);
+    const currentModel = APIService.getCurrentLLMModel();
+    const tokenLimitCheck = checkModelTokenLimit(currentModel);
 
     if (!tokenLimitCheck.canUse) {
       logger.warn('chatService', 'Token limit exceeded', {
-        model: this.llmModel,
+        model: currentModel,
         current: tokenLimitCheck.current,
         max: tokenLimitCheck.max,
         tier: tokenLimitCheck.tier,
@@ -284,10 +273,6 @@ class ChatService {
 
       // ChatContextを構築
       const chatContext: ChatContext = await this.buildChatContext(screenContext);
-
-      // LLMの設定を適用
-      APIService.setLLMProvider(this.llmProvider);
-      APIService.setLLMModel(this.llmModel);
 
       // WebSocket接続状態をログに出力（デバッグ用）
       if (this.wsService) {

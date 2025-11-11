@@ -71,11 +71,6 @@ export const useChat = () => {
     })
   ).current;
 
-  // ChatServiceからLLM設定を更新
-  useEffect(() => {
-    ChatService.setLLMConfig(settings.llmProvider, settings.llmModel);
-  }, [settings.llmProvider, settings.llmModel]);
-
   const sendMessage = useCallback(async (inputText: string) => {
     logger.debug('chat', '[useChat] sendMessage called with:', { inputText });
     await ChatService.sendMessage(inputText);
