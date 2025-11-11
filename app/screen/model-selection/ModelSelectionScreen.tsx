@@ -244,18 +244,21 @@ export const ModelSelectionScreen: React.FC = () => {
       borderColor: 'transparent',
       backgroundColor: colors.secondary,
       padding: spacing.md,
-      flexDirection: 'row',
-      alignItems: 'center',
     },
     modelCardActive: {
       backgroundColor: colors.secondary,
     },
-    modelCardLeft: {
-      flex: 1,
-      justifyContent: 'center',
+    modelCardContent: {
+      flexDirection: 'column',
     },
     modelInfo: {
       flex: 1,
+    },
+    modelTokenRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginTop: spacing.xs,
     },
     modelName: {
       fontSize: 15,
@@ -267,48 +270,19 @@ export const ModelSelectionScreen: React.FC = () => {
       color: colors.textSecondary,
       marginTop: spacing.xs,
     },
-    modelPricing: {
-      fontSize: 11,
-      color: colors.textSecondary,
-      marginTop: spacing.xs,
-    },
-    modelTokenBox: {
-      minWidth: 140,
-      backgroundColor: colors.secondary,
-      borderRadius: 6,
-      padding: spacing.sm,
-      marginLeft: spacing.md,
-      borderWidth: 2,
-      borderColor: 'transparent',
-    },
-    modelTokenBoxActive: {
-      // borderWidthは親から継承（2のまま）
-    },
-    modelTokenLabel: {
-      fontSize: 11,
-      color: colors.textSecondary,
-    },
-    modelTokenRow: {
-      flexDirection: 'row',
-      alignItems: 'flex-end',
-      justifyContent: 'space-between',
-      marginTop: spacing.xs,
-    },
     modelTokenAmount: {
-      fontSize: 20,
+      fontSize: 14,
       fontWeight: 'bold',
-    },
-    modelTokenUnit: {
-      fontSize: 11,
-      color: colors.textSecondary,
+      color: '#FFC107',
+      marginTop: spacing.xs,
     },
     modelStatusBadge: {
       borderRadius: 4,
       paddingVertical: 4,
       paddingHorizontal: spacing.sm,
-      marginTop: spacing.xs,
       borderWidth: 1,
       borderColor: 'transparent',
+      alignSelf: 'flex-start',
     },
     modelStatusText: {
       fontSize: 11,
@@ -460,11 +434,6 @@ export const ModelSelectionScreen: React.FC = () => {
 
     const tokens = getModelTokens(modelId);
 
-    // 🆕 バックエンドから価格情報を取得
-    const providers = APIService.getCachedLLMProviders();
-    const metadata = providers?.gemini?.modelMetadata?.[modelId];
-    const pricing = metadata?.pricing;
-
     return (
       <View key={modelId} style={styles.modelCardWrapper}>
         <TouchableOpacity
@@ -476,39 +445,31 @@ export const ModelSelectionScreen: React.FC = () => {
           onPress={() => handleSelectModel(modelId, category)}
           disabled={tokens <= 0}
         >
-          <View style={styles.modelCardLeft}>
+          <View style={styles.modelCardContent}>
+            {/* モデル名と説明 */}
             <View style={styles.modelInfo}>
               <Text style={styles.modelName}>{model.name}</Text>
               <Text style={styles.modelDescription}>{model.description}</Text>
             </View>
-          </View>
 
-          {/* トークン残高表示 */}
-          <View
-            style={[
-              styles.modelTokenBox,
-              isActive && styles.modelTokenBoxActive,
-              isActive && { backgroundColor: `${accentColor}15`, borderColor: accentColor },
-            ]}
-          >
-            <Text style={styles.modelTokenLabel}>このモデルの残高</Text>
+            {/* トークン量と装填状態ボタンを同じ行に */}
             <View style={styles.modelTokenRow}>
-              <Text style={[styles.modelTokenAmount, { color: tokens > 0 ? accentColor : colors.textSecondary }]}>
-                {tokens.toLocaleString()}
+              <Text style={styles.modelTokenAmount}>
+                残高：{tokens.toLocaleString()} トークン
               </Text>
-              <Text style={styles.modelTokenUnit}>トークン</Text>
+
+              {isActive ? (
+                <View style={[styles.modelStatusBadge, { backgroundColor: accentColor }]}>
+                  <Text style={[styles.modelStatusText, { color: colors.white }]}>装填中</Text>
+                </View>
+              ) : (
+                <View style={[styles.modelStatusBadge, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                  <Text style={[styles.modelStatusText, { color: tokens > 0 ? colors.text : colors.textSecondary }]}>
+                    {tokens > 0 ? '選択' : '残高なし'}
+                  </Text>
+                </View>
+              )}
             </View>
-            {isActive ? (
-              <View style={[styles.modelStatusBadge, { backgroundColor: accentColor }]}>
-                <Text style={[styles.modelStatusText, { color: colors.white }]}>装填中</Text>
-              </View>
-            ) : (
-              <View style={[styles.modelStatusBadge, { backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border }]}>
-                <Text style={[styles.modelStatusText, { color: tokens > 0 ? colors.text : colors.textSecondary }]}>
-                  {tokens > 0 ? '選択' : '残高なし'}
-                </Text>
-              </View>
-            )}
           </View>
         </TouchableOpacity>
 

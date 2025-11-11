@@ -6,7 +6,7 @@
  * SettingsScreenから分離して責任を明確化。
  */
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -20,7 +20,7 @@ import { useTheme } from '../../design/theme/ThemeContext';
 import { RootStackParamList } from '../../navigation/types';
 import { useMonthlyCost } from '../../billing/utils/costCalculationHelpers';
 import { useSettingsStore } from '../settingsStore';
-import { CreditAllocationModal } from '../../screen/model-selection/components/CreditAllocationModal';
+import { ListItem } from '../../components/ListItem';
 
 type SettingsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Settings'>;
 
@@ -31,7 +31,7 @@ interface TokenUsageSectionProps {
 export const TokenUsageSection: React.FC<TokenUsageSectionProps> = ({ renderSection }) => {
   const { colors, spacing, typography } = useTheme();
   const navigation = useNavigation<SettingsScreenNavigationProp>();
-  const { settings, getTotalTokensByCategory, shouldShowAllocationModal, setShouldShowAllocationModal } = useSettingsStore();
+  const { settings, getTotalTokensByCategory } = useSettingsStore();
 
   // 月間コスト情報を取得（開発時のみ）
   const costInfo = __DEV__ ? useMonthlyCost() : null;
@@ -40,47 +40,14 @@ export const TokenUsageSection: React.FC<TokenUsageSectionProps> = ({ renderSect
   const quickTokens = getTotalTokensByCategory('quick');
   const thinkTokens = getTotalTokensByCategory('think');
 
-  // クレジット配分モーダルの状態
-  const [showAllocationModal, setShowAllocationModal] = useState(false);
-
-  // 購入完了後の自動モーダル表示
-  useEffect(() => {
-    if (shouldShowAllocationModal) {
-      setShowAllocationModal(true);
-      setShouldShowAllocationModal(false);
-    }
-  }, [shouldShowAllocationModal, setShouldShowAllocationModal]);
-
   const styles = StyleSheet.create({
-    usageContainer: {
-      backgroundColor: colors.secondary,
-      padding: spacing.md,
-      marginHorizontal: spacing.md,
-      marginBottom: spacing.md,
-      borderRadius: 12,
-    },
-    modelTitleRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginBottom: spacing.sm,
-    },
-    usageTitle: {
-      ...typography.subtitle,
+    valueText: {
+      ...typography.body,
       color: colors.text,
+      fontWeight: '600',
     },
-    balanceDisplay: {
-      alignItems: 'center',
-      paddingVertical: spacing.lg,
-    },
-    balanceAmount: {
-      fontSize: 36,
-      fontWeight: 'bold',
-      color: colors.text,
-    },
-    balanceLabel: {
-      fontSize: typography.body.fontSize,
-      color: colors.textSecondary,
-      marginTop: spacing.xs,
+    iconContainer: {
+      marginRight: spacing.sm,
     },
     purchaseButton: {
       flexDirection: 'row',
@@ -90,7 +57,6 @@ export const TokenUsageSection: React.FC<TokenUsageSectionProps> = ({ renderSect
       borderRadius: 8,
       paddingVertical: spacing.md,
       paddingHorizontal: spacing.lg,
-      marginTop: spacing.sm,
     },
     purchaseButtonIcon: {
       marginRight: spacing.sm,
@@ -99,8 +65,13 @@ export const TokenUsageSection: React.FC<TokenUsageSectionProps> = ({ renderSect
       ...typography.body,
       color: '#FFFFFF',
       fontWeight: '600',
-      flex: 1,
-      textAlign: 'center',
+    },
+    usageContainer: {
+      backgroundColor: colors.secondary,
+      padding: spacing.md,
+      marginHorizontal: spacing.md,
+      marginBottom: spacing.md,
+      borderRadius: 12,
     },
     modelBreakdownTitle: {
       ...typography.caption,
@@ -168,96 +139,60 @@ export const TokenUsageSection: React.FC<TokenUsageSectionProps> = ({ renderSect
     <>
       {renderSection('トークン残高・使用量')}
 
-      {/* 未配分クレジット残高 */}
-      {settings.tokenBalance.credits > 0 && (
-        <View style={styles.usageContainer}>
-          <View style={styles.modelTitleRow}>
+      {/* トークン購入・未配分クレジット */}
+      <ListItem.Container>
+        <View style={{ flex: 1 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <MaterialCommunityIcons
+                name="wallet"
+                size={20}
+                color={colors.primary}
+                style={styles.iconContainer}
+              />
+              <ListItem.Title>未配分クレジット</ListItem.Title>
+            </View>
+            {settings.tokenBalance.credits > 0 && (
+              <Text style={styles.valueText}>{settings.tokenBalance.credits}円</Text>
+            )}
+          </View>
+          <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
+            <TouchableOpacity
+              style={styles.purchaseButton}
+              onPress={() => navigation.navigate('TokenPurchase' as any)}
+            >
+              <Ionicons name="card" size={20} color="#FFFFFF" style={styles.purchaseButtonIcon} />
+              <Text style={styles.purchaseButtonText}>トークンを購入</Text>
+              <Ionicons name="chevron-forward" size={20} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ListItem.Container>
+
+      {/* LLMモデル設定画面遷移 */}
+      <ListItem.Container>
+        <View style={{ flex: 1 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.sm }}>
             <MaterialCommunityIcons
-              name="wallet"
+              name="cog"
               size={20}
               color={colors.primary}
-              style={{ marginRight: 8 }}
+              style={styles.iconContainer}
             />
-            <Text style={styles.usageTitle}>未配分クレジット</Text>
+            <ListItem.Title>LLMモデル設定</ListItem.Title>
           </View>
-          <View style={styles.balanceDisplay}>
-            <Text style={styles.balanceAmount}>
-              {settings.tokenBalance.credits}
-            </Text>
-            <Text style={styles.balanceLabel}>円</Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
+            <TouchableOpacity
+              style={styles.purchaseButton}
+              onPress={() => navigation.navigate('ModelSelection' as any)}
+            >
+              <MaterialCommunityIcons name="brain" size={20} color="#FFFFFF" style={styles.purchaseButtonIcon} />
+              <Text style={styles.purchaseButtonText}>モデルを設定</Text>
+              <Ionicons name="chevron-forward" size={20} color="#FFFFFF" />
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            style={styles.purchaseButton}
-            onPress={() => setShowAllocationModal(true)}
-          >
-            <MaterialCommunityIcons name="swap-horizontal" size={20} color="#FFFFFF" style={styles.purchaseButtonIcon} />
-            <Text style={styles.purchaseButtonText}>モデルに配分する</Text>
-            <Ionicons name="chevron-forward" size={20} color="#FFFFFF" />
-          </TouchableOpacity>
         </View>
-      )}
-
-      {/* Quick tokens 使用量 */}
-      <TouchableOpacity
-        style={styles.usageContainer}
-        onPress={() => navigation.navigate('ModelSelection' as any)}
-      >
-        <View style={styles.modelTitleRow}>
-          <MaterialCommunityIcons
-            name="speedometer"
-            size={20}
-            color="#FFC107"
-            style={{ marginRight: 8 }}
-          />
-          <Text style={styles.usageTitle}>Quick モデル</Text>
-          <View style={{ flex: 1 }} />
-          <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
-        </View>
-        <View style={styles.balanceDisplay}>
-          <Text style={styles.balanceAmount}>
-            {quickTokens.toLocaleString()}
-          </Text>
-          <Text style={styles.balanceLabel}>トークン</Text>
-        </View>
-      </TouchableOpacity>
-
-      {/* Think tokens 使用量（購入トークンがある場合に表示） */}
-      {thinkTokens > 0 && (
-        <TouchableOpacity
-          style={styles.usageContainer}
-          onPress={() => navigation.navigate('ModelSelection' as any)}
-        >
-          <View style={styles.modelTitleRow}>
-            <MaterialCommunityIcons
-              name="speedometer-slow"
-              size={20}
-              color="#4CAF50"
-              style={{ marginRight: 8 }}
-            />
-            <Text style={styles.usageTitle}>Think モデル</Text>
-            <View style={{ flex: 1 }} />
-            <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
-          </View>
-          <View style={styles.balanceDisplay}>
-            <Text style={styles.balanceAmount}>
-              {thinkTokens.toLocaleString()}
-            </Text>
-            <Text style={styles.balanceLabel}>トークン</Text>
-          </View>
-        </TouchableOpacity>
-      )}
-
-      {/* 購入・プラン管理ボタン */}
-      <View style={styles.usageContainer}>
-        <TouchableOpacity
-          style={styles.purchaseButton}
-          onPress={() => navigation.navigate('TokenPurchase' as any)}
-        >
-          <Ionicons name="card" size={20} color="#FFFFFF" style={styles.purchaseButtonIcon} />
-          <Text style={styles.purchaseButtonText}>トークンを購入</Text>
-          <Ionicons name="chevron-forward" size={20} color="#FFFFFF" />
-        </TouchableOpacity>
-      </View>
+      </ListItem.Container>
 
       {/* モデル別詳細（開発時のみ） */}
       {__DEV__ && Object.keys(settings.usage.monthlyTokensByModel).length > 0 && (
@@ -295,12 +230,6 @@ export const TokenUsageSection: React.FC<TokenUsageSectionProps> = ({ renderSect
           )}
         </View>
       )}
-
-      {/* クレジット配分モーダル */}
-      <CreditAllocationModal
-        isVisible={showAllocationModal}
-        onClose={() => setShowAllocationModal(false)}
-      />
     </>
   );
 };

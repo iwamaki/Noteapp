@@ -40,7 +40,9 @@ const ListItemContainer: React.FC<ListItemContainerProps> = ({
       backgroundColor: colors.transparent,
       borderRadius: 0,
       marginBottom: 0,
-      padding: responsive.getResponsiveSize(spacing.sm, spacing.md, spacing.lg),
+      paddingTop: responsive.getResponsiveSize(spacing.sm, spacing.md, spacing.lg),
+      paddingBottom: responsive.getResponsiveSize(spacing.md, spacing.lg, spacing.xl),
+      paddingHorizontal: responsive.getResponsiveSize(spacing.sm, spacing.md, spacing.lg),
       flexDirection: 'row',
       alignItems: 'center',
     },
@@ -207,6 +209,7 @@ const ListItemButtonGroup: React.FC<ListItemButtonGroupProps> = ({
       marginTop: spacing.md,
       gap: spacing.sm,
       flexWrap: 'wrap',
+      justifyContent: 'flex-end',
     },
     button: {
       paddingVertical: spacing.sm,
@@ -224,7 +227,7 @@ const ListItemButtonGroup: React.FC<ListItemButtonGroupProps> = ({
       opacity: 0.5,
     },
     buttonText: {
-      ...typography.body,
+      ...typography.caption,
       color: colors.text,
     },
     buttonTextActive: {
