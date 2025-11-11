@@ -3,40 +3,7 @@
  *
  * このファイルから定数をインポートすることで、
  * 一貫した方法で定数にアクセスできます。
- *
- * @example
- * import { SUBSCRIPTION_PLANS, hasFeatureAccess } from '@/constants';
  */
 
-// プラン定義
-export {
-  SUBSCRIPTION_PLANS,
-  DEFAULT_PLAN,
-  TRIAL_PERIOD_DAYS,
-  getPlanInfo,
-  isFeatureEnabled,
-  getLimit,
-  isWithinLimit,
-  canUpgradeTo,
-} from '../billing/constants/plans';
-
-export type {
-  SubscriptionTier,
-  SubscriptionPlan,
-  PlanLimits,
-  PlanFeatures,
-} from '../billing/constants/plans';
-
-// 機能要件
-export {
-  FEATURE_REQUIREMENTS,
-  MODEL_REQUIREMENTS,
-  hasFeatureAccess,
-  hasModelAccess,
-  getRequiredPlanName,
-  getFeatureCategory,
-  getAvailableFeatures,
-  getUpgradeRequirement,
-} from './features';
-
-export type { FeatureKey } from './features';
+// Note: Subscription-related exports have been archived to docs/archive/subscription/
+// Current system uses token-based purchases only
