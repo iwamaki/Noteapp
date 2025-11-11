@@ -12,7 +12,6 @@ import { useTheme } from '../../../design/theme/ThemeContext';
 import { useChatUI } from '../contexts/ChatUIContext';
 import { CHAT_CONFIG } from '../config/chatConfig';
 import { useSettingsStore } from '../../../settings/settingsStore';
-import APIService from '../llmService/api';
 
 interface MessageInputProps {
   inputText: string;
@@ -31,9 +30,8 @@ export const MessageInput: React.FC<MessageInputProps> = ({ inputText, setInputT
   const quickModel = settings.loadedModels?.quick || 'gemini-2.5-flash';
   const thinkModel = settings.loadedModels?.think || 'gemini-2.5-pro';
 
-  // 現在のモデルがquickかthinkか判定（APIServiceから取得）
-  const currentModel = APIService.getCurrentLLMModel();
-  const isCurrentlyQuick = currentModel === quickModel;
+  // 現在のモデルがquickかthinkか判定（settingsから直接取得してReactivityを確保）
+  const isCurrentlyQuick = settings.activeModelCategory === 'quick';
 
   // モデルを切り替える（装填されているモデル間でトグル）
   const toggleModel = async () => {

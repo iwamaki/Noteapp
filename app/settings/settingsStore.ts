@@ -111,10 +111,13 @@ export interface AppSettings {
     think: string; // Thinkスロットに装填されているモデルID
   };
 
-  // 11. 購入履歴
+  // 11. 現在アクティブなモデルカテゴリー（UIの表示制御用）
+  activeModelCategory: 'quick' | 'think';
+
+  // 12. 購入履歴
   purchaseHistory: PurchaseRecord[];
 
-  // 12. 使用量情報（統計表示用）
+  // 13. 使用量情報（統計表示用）
   usage: {
     // 💰 コスト計算用（レガシー）
     monthlyInputTokens: number;  // 今月の入力トークン数（全体）
@@ -224,6 +227,9 @@ const defaultSettings: AppSettings = {
     quick: 'gemini-2.5-flash', // デフォルトはGemini 2.5 Flash
     think: 'gemini-2.5-pro',   // デフォルトはGemini 2.5 Pro
   },
+
+  // 現在アクティブなモデルカテゴリー
+  activeModelCategory: 'quick', // デフォルトはQuickモデル
 
   // 購入履歴
   purchaseHistory: [],
@@ -556,11 +562,12 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
         ...settings.loadedModels,
         [category]: modelId,
       },
+      activeModelCategory: category, // アクティブカテゴリーも更新
     };
 
     await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(newSettings));
     set({ settings: newSettings });
-    console.log(`[ModelLoading] Loaded ${modelId} into ${category} slot`);
+    console.log(`[ModelLoading] Loaded ${modelId} into ${category} slot, set active category to ${category}`);
 
     // APIServiceにもモデル変更を通知
     try {
