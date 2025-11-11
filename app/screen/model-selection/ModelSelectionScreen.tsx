@@ -23,7 +23,6 @@ import { CustomHeader } from '../../components/CustomHeader';
 import { MainContainer } from '../../components/MainContainer';
 import { RootStackParamList } from '../../navigation/types';
 import { useSettingsStore, TOKEN_CAPACITY_LIMITS } from '../../settings/settingsStore';
-import { GEMINI_PRICING } from '../../constants/pricing';
 import { convertProvidersToModelInfo, type ModelInfo } from './constants';
 import APIService from '../../features/chat/llmService/api';
 import { CreditAllocationModal } from '../../settings/components/CreditAllocationModal';
@@ -456,7 +455,11 @@ export const ModelSelectionScreen: React.FC = () => {
     if (!model) return null;
 
     const tokens = getModelTokens(modelId);
-    const pricing = GEMINI_PRICING[modelId];
+
+    // 🆕 バックエンドから価格情報を取得
+    const providers = APIService.getCachedLLMProviders();
+    const metadata = providers?.gemini?.modelMetadata?.[modelId];
+    const pricing = metadata?.pricing;
 
     return (
       <View key={modelId} style={{ marginBottom: spacing.sm }}>
@@ -483,7 +486,7 @@ export const ModelSelectionScreen: React.FC = () => {
               <Text style={styles.modelDescription}>{model.description}</Text>
               {pricing && (
                 <Text style={styles.modelPricing}>
-                  料金: ¥{pricing.inputPricePer1M}/1M入力 ¥{pricing.outputPricePer1M}/1M出力
+                  原価: ${pricing.cost.inputPricePer1M}/1M入力 ${pricing.cost.outputPricePer1M}/1M出力 | 販売価格: ¥{pricing.sellingPriceJPY}/1M
                 </Text>
               )}
             </View>

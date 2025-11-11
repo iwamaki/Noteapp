@@ -97,6 +97,24 @@ export const TOKEN_PRICING_JPY: Record<string, number> = {
  * @returns 販売価格（円/M tokens）、存在しない場合は undefined
  */
 export function getTokenPrice(modelId: string): number | undefined {
+  // 🆕 バックエンドから取得した価格を優先
+  try {
+    const APIService = require('../../features/chat/llmService/api').default;
+    const providers = APIService.getCachedLLMProviders();
+
+    if (providers) {
+      // Geminiプロバイダーから価格情報を取得
+      const geminiProvider = providers.gemini;
+      if (geminiProvider?.modelMetadata?.[modelId]?.pricing) {
+        const pricing = geminiProvider.modelMetadata[modelId].pricing;
+        return pricing.sellingPriceJPY;
+      }
+    }
+  } catch (error) {
+    console.warn('[Pricing] Failed to get price from backend, using fallback', error);
+  }
+
+  // フォールバック: ローカルの価格テーブル
   return TOKEN_PRICING_JPY[modelId];
 }
 

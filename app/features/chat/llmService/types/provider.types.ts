@@ -4,6 +4,22 @@
  */
 
 /**
+ * 原価情報（USD/1M tokens）
+ */
+export interface CostInfo {
+  inputPricePer1M: number;
+  outputPricePer1M: number;
+}
+
+/**
+ * 価格情報
+ */
+export interface PricingInfo {
+  cost: CostInfo; // 原価（USD）
+  sellingPriceJPY: number; // 販売価格（JPY/1M tokens）
+}
+
+/**
  * モデルのメタデータ
  */
 export interface ModelMetadata {
@@ -11,6 +27,7 @@ export interface ModelMetadata {
   displayName?: string;
   description?: string;
   recommended?: boolean;
+  pricing?: PricingInfo; // 価格情報
 }
 
 /**

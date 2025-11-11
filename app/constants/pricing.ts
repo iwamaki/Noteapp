@@ -68,6 +68,29 @@ export const MODEL_PRICING: Record<string, ModelPricing> = {
  * @returns 料金情報、存在しない場合はundefined
  */
 export function getModelPricing(modelId: string): ModelPricing | undefined {
+  // 🆕 バックエンドから取得した価格を優先
+  try {
+    const APIService = require('../features/chat/llmService/api').default;
+    const providers = APIService.getCachedLLMProviders();
+
+    if (providers) {
+      const geminiProvider = providers.gemini;
+      const metadata = geminiProvider?.modelMetadata?.[modelId];
+
+      if (metadata?.pricing) {
+        return {
+          modelId,
+          displayName: metadata.displayName || modelId,
+          inputPricePer1M: metadata.pricing.cost.inputPricePer1M,
+          outputPricePer1M: metadata.pricing.cost.outputPricePer1M,
+        };
+      }
+    }
+  } catch (error) {
+    console.warn('[Pricing] Failed to get pricing from backend, using fallback', error);
+  }
+
+  // フォールバック: ローカルの価格テーブル
   return MODEL_PRICING[modelId];
 }
 

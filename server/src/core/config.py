@@ -46,34 +46,64 @@ class Settings:
             ]
         }
 
-        # モデルメタデータ（カテゴリー、表示名、説明、推奨フラグ）
+        # モデルメタデータ（カテゴリー、表示名、説明、推奨フラグ、価格情報）
         # フロントエンドの画面表示やトークン管理に使用される
-        self.model_metadata: dict[str, dict] = {
-            "gemini-2.5-flash": {
-                "category": "quick",           # Quick/Thinkカテゴリー
-                "displayName": "Gemini 2.5 Flash",
-                "description": "高速・最新版（推奨）",
-                "recommended": True,
-            },
-            "gemini-2.5-pro": {
-                "category": "think",
-                "displayName": "Gemini 2.5 Pro",
-                "description": "最高性能・複雑なタスク向け（推奨）",
-                "recommended": True,
-            },
-            "gemini-2.0-flash": {
-                "category": "quick",
-                "displayName": "Gemini 2.0 Flash",
-                "description": "互換性・コスト重視",
+        # 価格情報は pricing_config.py から自動取得
+        from .pricing_config import MODEL_PRICING
+
+        self.model_metadata: dict[str, dict] = {}
+        for model_id in self.available_models["gemini"]:
+            pricing_info = MODEL_PRICING.get(model_id)
+
+            # 基本メタデータ
+            metadata = {
+                "category": "",
+                "displayName": "",
+                "description": "",
                 "recommended": False,
-            },
-            "gemini-2.0-pro": {
-                "category": "think",
-                "displayName": "Gemini 2.0 Pro",
-                "description": "互換性・コスト重視",
-                "recommended": False,
-            },
-        }
+            }
+
+            # モデル別の設定
+            if model_id == "gemini-2.5-flash":
+                metadata.update({
+                    "category": "quick",
+                    "displayName": "Gemini 2.5 Flash",
+                    "description": "高速・最新版（推奨）",
+                    "recommended": True,
+                })
+            elif model_id == "gemini-2.5-pro":
+                metadata.update({
+                    "category": "think",
+                    "displayName": "Gemini 2.5 Pro",
+                    "description": "最高性能・複雑なタスク向け（推奨）",
+                    "recommended": True,
+                })
+            elif model_id == "gemini-2.0-flash":
+                metadata.update({
+                    "category": "quick",
+                    "displayName": "Gemini 2.0 Flash",
+                    "description": "互換性・コスト重視",
+                    "recommended": False,
+                })
+            elif model_id == "gemini-2.0-pro":
+                metadata.update({
+                    "category": "think",
+                    "displayName": "Gemini 2.0 Pro",
+                    "description": "互換性・コスト重視",
+                    "recommended": False,
+                })
+
+            # 価格情報を追加
+            if pricing_info:
+                metadata["pricing"] = {
+                    "cost": {
+                        "inputPricePer1M": pricing_info.cost.input_price_per_1m,
+                        "outputPricePer1M": pricing_info.cost.output_price_per_1m,
+                    },
+                    "sellingPriceJPY": pricing_info.selling_price_jpy,
+                }
+
+            self.model_metadata[model_id] = metadata
 
         # ========================================
         # APIキーの読み込み（Secret Manager → 環境変数の順）

@@ -93,6 +93,18 @@ class ChatResponse(BaseModel):
     tokenUsage: Optional[TokenUsageInfo] = None  # トークン使用量情報
 
 
+class CostInfo(BaseModel):
+    """原価情報（USD/1M tokens）"""
+    inputPricePer1M: float
+    outputPricePer1M: float
+
+
+class PricingInfo(BaseModel):
+    """価格情報"""
+    cost: CostInfo  # 原価（USD）
+    sellingPriceJPY: float  # 販売価格（JPY/1M tokens）
+
+
 class ModelMetadata(BaseModel):
     """モデルのメタデータ
 
@@ -102,6 +114,7 @@ class ModelMetadata(BaseModel):
     displayName: Optional[str] = None
     description: Optional[str] = None
     recommended: Optional[bool] = False
+    pricing: Optional[PricingInfo] = None  # 価格情報
 
 
 class LLMProvider(BaseModel):
