@@ -20,8 +20,9 @@ export class ProviderManager {
   private currentModel: string;
 
   constructor(config: ProviderManagerConfig = {}) {
-    this.currentProvider = config.defaultProvider || 'openai';
-    this.currentModel = config.defaultModel || 'gpt-3.5-turbo';
+    // フォールバック値（実際はconfigureLLMServiceTaskで上書きされる）
+    this.currentProvider = config.defaultProvider || 'gemini';
+    this.currentModel = config.defaultModel || 'gemini-2.5-flash';
   }
 
   /**

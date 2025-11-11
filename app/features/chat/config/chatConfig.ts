@@ -48,10 +48,10 @@ export const CHAT_CONFIG = {
     apiTimeout: 120000,
     /** リクエスト間の最小間隔（ms） */
     minRequestInterval: 100,
-    /** デフォルトのLLMプロバイダー */
-    defaultProvider: 'openai',
-    /** デフォルトのLLMモデル */
-    defaultModel: 'gpt-3.5-turbo',
+    /** デフォルトのLLMプロバイダー（フォールバック用、実際はバックエンドから取得） */
+    defaultProvider: 'gemini',
+    /** デフォルトのLLMモデル（フォールバック用、実際はバックエンドから取得） */
+    defaultModel: 'gemini-2.5-flash',
   },
 
   /**
