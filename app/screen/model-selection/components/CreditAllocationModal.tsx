@@ -50,15 +50,17 @@ export const CreditAllocationModal: React.FC<CreditAllocationModalProps> = ({
       padding: spacing.md,
       borderRadius: 8,
       marginBottom: spacing.md,
+      flexDirection: 'row',
+      justifyContent: 'center',
       alignItems: 'center',
     },
     balanceLabel: {
-      fontSize: typography.caption.fontSize,
+      fontSize: typography.body.fontSize,
       color: colors.textSecondary,
-      marginBottom: spacing.xs,
+      marginRight: spacing.xs,
     },
     balanceAmount: {
-      fontSize: 28,
+      fontSize: typography.subtitle.fontSize,
       fontWeight: 'bold',
       color: colors.text,
     },
@@ -90,17 +92,6 @@ export const CreditAllocationModal: React.FC<CreditAllocationModalProps> = ({
     modelDescription: {
       fontSize: typography.caption.fontSize,
       color: colors.textSecondary,
-    },
-    currentBalance: {
-      fontSize: typography.caption.fontSize,
-      color: colors.textSecondary,
-      marginTop: spacing.sm,
-      textAlign: 'center',
-    },
-    currentBalanceAmount: {
-      fontSize: typography.body.fontSize,
-      fontWeight: 'bold',
-      color: colors.primary,
     },
     sectionTitle: {
       fontSize: typography.body.fontSize,
@@ -173,25 +164,31 @@ export const CreditAllocationModal: React.FC<CreditAllocationModalProps> = ({
       marginTop: spacing.md,
       marginBottom: spacing.md,
     },
-    conversionRow: {
+    tokenComparisonRow: {
       flexDirection: 'row',
-      justifyContent: 'space-between',
+      justifyContent: 'space-around',
       alignItems: 'center',
+    },
+    tokenBox: {
+      alignItems: 'center',
+    },
+    tokenLabel: {
+      fontSize: typography.caption.fontSize,
+      color: colors.textSecondary,
       marginBottom: spacing.xs,
     },
-    conversionLabel: {
-      fontSize: typography.body.fontSize,
-      color: colors.textSecondary,
-    },
-    conversionValue: {
-      fontSize: typography.body.fontSize,
-      fontWeight: '600',
+    tokenValue: {
+      fontSize: typography.subtitle.fontSize,
+      fontWeight: 'bold',
       color: colors.text,
     },
-    conversionValueLarge: {
+    tokenValueAfter: {
       fontSize: typography.subtitle.fontSize,
       fontWeight: 'bold',
       color: colors.primary,
+    },
+    arrowIcon: {
+      marginHorizontal: spacing.sm,
     },
     capacityContainer: {
       backgroundColor: capacityInfo.isOverLimit ? `${colors.danger}15` : colors.secondary,
@@ -298,10 +295,8 @@ export const CreditAllocationModal: React.FC<CreditAllocationModalProps> = ({
     >
       {/* 現在のクレジット残高 */}
       <View style={styles.balanceContainer}>
-        <Text style={styles.balanceLabel}>未配分クレジット</Text>
-        <Text style={styles.balanceAmount}>
-          {settings.tokenBalance.credits}円
-        </Text>
+        <Text style={styles.balanceLabel}>未配分クレジット:</Text>
+        <Text style={styles.balanceAmount}>{settings.tokenBalance.credits}円</Text>
       </View>
 
       {/* 配分先モデル情報 */}
@@ -318,13 +313,6 @@ export const CreditAllocationModal: React.FC<CreditAllocationModalProps> = ({
         </View>
         <Text style={styles.modelName}>{modelInfo.name}</Text>
         <Text style={styles.modelDescription}>{modelInfo.description}</Text>
-        <Text style={styles.currentBalance}>
-          現在の残高:{' '}
-          <Text style={styles.currentBalanceAmount}>
-            {(settings.tokenBalance.allocatedTokens[modelInfo.id] || 0).toLocaleString()}
-          </Text>{' '}
-          トークン
-        </Text>
       </View>
 
       {/* クレジット入力 */}
@@ -404,17 +392,27 @@ export const CreditAllocationModal: React.FC<CreditAllocationModalProps> = ({
         ))}
       </View>
 
-      {/* 変換結果 */}
+      {/* トークン追加前後の比較 */}
       <View style={styles.conversionContainer}>
-        <View style={styles.conversionRow}>
-          <Text style={styles.conversionLabel}>配分するクレジット:</Text>
-          <Text style={styles.conversionValue}>{creditsToAllocate}円</Text>
-        </View>
-        <View style={styles.conversionRow}>
-          <Text style={styles.conversionLabel}>→ 追加されるトークン:</Text>
-          <Text style={styles.conversionValueLarge}>
-            {convertedTokens.toLocaleString()}
-          </Text>
+        <View style={styles.tokenComparisonRow}>
+          <View style={styles.tokenBox}>
+            <Text style={styles.tokenLabel}>追加前</Text>
+            <Text style={styles.tokenValue}>
+              {(settings.tokenBalance.allocatedTokens[modelInfo.id] || 0).toLocaleString()}
+            </Text>
+          </View>
+          <MaterialCommunityIcons
+            name="arrow-right"
+            size={24}
+            color={colors.primary}
+            style={styles.arrowIcon}
+          />
+          <View style={styles.tokenBox}>
+            <Text style={styles.tokenLabel}>追加後</Text>
+            <Text style={styles.tokenValueAfter}>
+              {((settings.tokenBalance.allocatedTokens[modelInfo.id] || 0) + convertedTokens).toLocaleString()}
+            </Text>
+          </View>
         </View>
       </View>
 

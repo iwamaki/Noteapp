@@ -110,6 +110,9 @@ export const CustomModal: React.FC<CustomModalProps> = ({
       paddingHorizontal: spacing.lg,
       flexShrink: 1,
     },
+    scrollContentContainer: {
+      paddingBottom: spacing.md,
+    },
     fixedFooterContainer: {
       paddingHorizontal: spacing.lg,
       paddingTop: spacing.sm,
@@ -202,6 +205,7 @@ export const CustomModal: React.FC<CustomModalProps> = ({
             {children && (
               <ScrollView
                 style={styles.childrenContainer}
+                contentContainerStyle={styles.scrollContentContainer}
                 showsVerticalScrollIndicator={true}
                 keyboardShouldPersistTaps="handled"
                 scrollEnabled={true}
