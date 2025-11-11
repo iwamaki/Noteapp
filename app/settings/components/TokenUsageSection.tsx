@@ -137,7 +137,7 @@ export const TokenUsageSection: React.FC<TokenUsageSectionProps> = ({ renderSect
 
   return (
     <>
-      {/* トークン購入・未配分クレジット */}
+      {/* トークン購入・クレジット */}
       <ListItem.Container>
         <View style={{ flex: 1 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
@@ -148,7 +148,7 @@ export const TokenUsageSection: React.FC<TokenUsageSectionProps> = ({ renderSect
                 color={colors.primary}
                 style={styles.iconContainer}
               />
-              <ListItem.Title>未配分クレジット</ListItem.Title>
+              <ListItem.Title>クレジット</ListItem.Title>
             </View>
             {settings.tokenBalance.credits > 0 && (
               <Text style={styles.valueText}>{settings.tokenBalance.credits}円</Text>
@@ -160,7 +160,7 @@ export const TokenUsageSection: React.FC<TokenUsageSectionProps> = ({ renderSect
               onPress={() => navigation.navigate('TokenPurchase' as any)}
             >
               <Ionicons name="card" size={20} color="#FFFFFF" style={styles.purchaseButtonIcon} />
-              <Text style={styles.purchaseButtonText}>トークンを購入</Text>
+              <Text style={styles.purchaseButtonText}>購入</Text>
               <Ionicons name="chevron-forward" size={20} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
@@ -177,7 +177,7 @@ export const TokenUsageSection: React.FC<TokenUsageSectionProps> = ({ renderSect
               color={colors.primary}
               style={styles.iconContainer}
             />
-            <ListItem.Title>LLMモデル設定</ListItem.Title>
+            <ListItem.Title>LLM設定</ListItem.Title>
           </View>
           <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
             <TouchableOpacity
@@ -185,7 +185,7 @@ export const TokenUsageSection: React.FC<TokenUsageSectionProps> = ({ renderSect
               onPress={() => navigation.navigate('ModelSelection' as any)}
             >
               <MaterialCommunityIcons name="brain" size={20} color="#FFFFFF" style={styles.purchaseButtonIcon} />
-              <Text style={styles.purchaseButtonText}>詳細設定</Text>
+              <Text style={styles.purchaseButtonText}>詳細</Text>
               <Ionicons name="chevron-forward" size={20} color="#FFFFFF" />
             </TouchableOpacity>
           </View>

@@ -119,7 +119,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({ inputText, setInputT
         <MaterialCommunityIcons
           name={isCurrentlyQuick ? 'speedometer' : 'speedometer-slow'}
           size={iconSizes.medium}
-          color={isCurrentlyQuick ? '#FFC107' : '#4CAF50'}
+          color={isCurrentlyQuick ? colors.accentQuick : colors.accentThink}
         />
       </TouchableOpacity>
       <TouchableOpacity

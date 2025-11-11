@@ -25,6 +25,9 @@ const lightColors = {
   black: '#000',
   transparent: 'transparent',
   overlay: 'rgba(0, 0, 0, 0.5)',
+  // LLMモデルカテゴリーのアクセントカラー
+  accentQuick: '#FFC107', // Quickモデル用（黄色）
+  accentThink: '#4CAF50', // Thinkモデル用（緑色）
 };
 
 // ダークテーマのカラーパレット
@@ -44,6 +47,9 @@ const darkColors = {
   black: '#000',
   transparent: 'transparent',
   overlay: 'rgba(0, 0, 0, 0.5)',
+  // LLMモデルカテゴリーのアクセントカラー
+  accentQuick: '#FFC107', // Quickモデル用（黄色）
+  accentThink: '#4CAF50', // Thinkモデル用（緑色）
 };
 
 // スペーシング（テーマに依存しない）

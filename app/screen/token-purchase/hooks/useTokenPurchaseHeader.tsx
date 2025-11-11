@@ -26,7 +26,7 @@ export const useTokenPurchaseHeader = () => {
     navigation.setOptions({
       header: () => (
         <CustomHeader
-          title="トークン購入"
+          title="購入"
           leftButtons={[
             {
               icon: <Ionicons name="arrow-back-outline" size={iconSizes.medium} color={colors.text} />,

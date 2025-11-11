@@ -168,7 +168,6 @@ export const ModelSelectionScreen: React.FC = () => {
     gaugeBarContainer: {
       height: 28,
       backgroundColor: colors.secondary,
-      borderRadius: 14,
       borderWidth: 1,
       borderColor: colors.border,
       overflow: 'hidden',
@@ -177,7 +176,6 @@ export const ModelSelectionScreen: React.FC = () => {
     gaugeBar: {
       height: '100%',
       position: 'absolute',
-      borderRadius: 14,
     },
     gaugeBarActive: {
       zIndex: 2,
@@ -336,15 +334,30 @@ export const ModelSelectionScreen: React.FC = () => {
     activeModelId: string,
     category: 'quick' | 'think'
   ) => {
-    const activeModel = availableModels.find(m => m.id === activeModelId);
-    const otherModels = availableModels.filter(
-      m => m.category === category && m.id !== activeModelId && getModelTokens(m.id) > 0
-    );
+    // カテゴリー内の全モデルをトークン量でソート（小さい順）
+    const allModels = availableModels
+      .filter(m => m.category === category && getModelTokens(m.id) > 0)
+      .sort((a, b) => getModelTokens(a.id) - getModelTokens(b.id));
 
-    const activePercent = (activeTokens / limit) * 100;
-    const otherPercent = (otherTokens / limit) * 100;
     const remaining = limit - current;
     const isNearLimit = percent >= 70;
+
+    // 各モデルの累積位置を計算
+    let cumulativePercent = 0;
+    const modelSegments = allModels.map(model => {
+      const tokens = getModelTokens(model.id);
+      const modelPercent = (tokens / limit) * 100;
+      const isActive = model.id === activeModelId;
+      const segment = {
+        model,
+        tokens,
+        startPercent: cumulativePercent,
+        widthPercent: modelPercent,
+        isActive,
+      };
+      cumulativePercent += modelPercent;
+      return segment;
+    });
 
     return (
       <View style={styles.gaugeContainer}>
@@ -361,28 +374,32 @@ export const ModelSelectionScreen: React.FC = () => {
         </View>
 
         <View style={styles.gaugeBarContainer}>
-          {/* 他のモデルのゲージ（背景層） */}
-          {otherPercent > 0 && (
+          {/* 各モデルのゲージを左から順に表示 */}
+          {modelSegments.map((segment, index) => (
             <View
+              key={segment.model.id}
               style={[
                 styles.gaugeBar,
-                styles.gaugeBarOther,
-                { width: `${otherPercent + activePercent}%`, backgroundColor: iconColor },
+                {
+                  left: `${segment.startPercent}%`,
+                  width: `${segment.widthPercent}%`,
+                  backgroundColor: iconColor,
+                  opacity: segment.isActive ? 1 : 0.7,
+                  zIndex: segment.isActive ? 2 : 1,
+                },
               ]}
             />
-          )}
-          {/* 装填中モデルのゲージ（前景層） */}
-          <View
-            style={[
-              styles.gaugeBar,
-              styles.gaugeBarActive,
-              { width: `${activePercent}%`, backgroundColor: iconColor },
-            ]}
-          />
+          ))}
           {/* 境界線 */}
-          {otherPercent > 0 && activePercent > 0 && (
-            <View style={[styles.gaugeDivider, { left: `${activePercent}%` }]} />
-          )}
+          {modelSegments.slice(0, -1).map((segment, index) => (
+            <View
+              key={`divider-${segment.model.id}`}
+              style={[
+                styles.gaugeDivider,
+                { left: `${segment.startPercent + segment.widthPercent}%` },
+              ]}
+            />
+          ))}
           {/* パーセント表示 */}
           <View style={styles.gaugePercent}>
             <Text style={[styles.gaugePercentText, percent > 50 && { color: colors.white }]}>
@@ -392,32 +409,19 @@ export const ModelSelectionScreen: React.FC = () => {
         </View>
 
         <View style={styles.gaugeLegend}>
-          {activeModel && (
-            <View style={styles.legendItem}>
-              <View style={[styles.legendColor, { backgroundColor: iconColor }]} />
+          {modelSegments.map(segment => (
+            <View key={segment.model.id} style={styles.legendItem}>
+              <View style={[
+                styles.legendColor,
+                { backgroundColor: iconColor, opacity: segment.isActive ? 1 : 0.7 }
+              ]} />
               <Text style={styles.legendText}>
-                {activeModel.shortName}: {(activeTokens / 1_000_000).toFixed(2)}M (装填中)
-              </Text>
-            </View>
-          )}
-          {otherModels.map(model => (
-            <View key={model.id} style={styles.legendItem}>
-              <View style={[styles.legendColor, { backgroundColor: iconColor, opacity: 0.7 }]} />
-              <Text style={styles.legendText}>
-                {model.shortName}: {(getModelTokens(model.id) / 1_000_000).toFixed(2)}M
+                {segment.model.shortName}: {(segment.tokens / 1_000_000).toFixed(2)}M
+                {segment.isActive && ' (適用中)'}
               </Text>
             </View>
           ))}
         </View>
-
-        <Text
-          style={[
-            styles.gaugeStatus,
-            { color: isNearLimit ? colors.warning : colors.success },
-          ]}
-        >
-          {isNearLimit ? '⚠' : '✓'} 残り{(remaining / 1_000_000).toFixed(2)}M購入可能
-        </Text>
       </View>
     );
   };
@@ -454,13 +458,18 @@ export const ModelSelectionScreen: React.FC = () => {
 
             {/* トークン量と装填状態ボタンを同じ行に */}
             <View style={styles.modelTokenRow}>
-              <Text style={styles.modelTokenAmount}>
+              <Text style={[styles.modelTokenAmount, { color: accentColor }]}>
                 残高：{tokens.toLocaleString()} トークン
               </Text>
 
               {isActive ? (
-                <View style={[styles.modelStatusBadge, { backgroundColor: accentColor }]}>
-                  <Text style={[styles.modelStatusText, { color: colors.white }]}>装填中</Text>
+                <View style={[styles.modelStatusBadge, { backgroundColor: accentColor, flexDirection: 'row', alignItems: 'center', gap: 4 }]}>
+                  <MaterialCommunityIcons
+                    name={category === 'quick' ? 'speedometer' : 'speedometer-slow'}
+                    size={14}
+                    color={colors.white}
+                  />
+                  <Text style={[styles.modelStatusText, { color: colors.white }]}>適用中</Text>
                 </View>
               ) : (
                 <View style={[styles.modelStatusBadge, { backgroundColor: colors.background, borderColor: colors.border }]}>
@@ -489,7 +498,7 @@ export const ModelSelectionScreen: React.FC = () => {
     return (
       <MainContainer>
         <CustomHeader
-          title="LLMモデル設定"
+          title="LLM設定"
           leftButtons={[
             {
               icon: <Ionicons name="arrow-back" size={24} color={colors.text} />,
@@ -511,7 +520,7 @@ export const ModelSelectionScreen: React.FC = () => {
     return (
       <MainContainer>
         <CustomHeader
-          title="LLMモデル設定"
+          title="LLM設定"
           leftButtons={[
             {
               icon: <Ionicons name="arrow-back" size={24} color={colors.text} />,
@@ -548,7 +557,7 @@ export const ModelSelectionScreen: React.FC = () => {
   return (
     <MainContainer>
       <CustomHeader
-        title="LLMモデル設定"
+        title="LLM設定"
         leftButtons={[
           {
             icon: <Ionicons name="arrow-back" size={24} color={colors.text} />,
@@ -565,7 +574,7 @@ export const ModelSelectionScreen: React.FC = () => {
           </Text>
 
           {availableModels.filter(m => m.category === 'quick').map(model =>
-            renderModelCard(model.id, 'quick', model.id === activeQuickModel, '#FFC107')
+            renderModelCard(model.id, 'quick', model.id === activeQuickModel, colors.accentQuick)
           )}
         </View>
 
@@ -577,7 +586,7 @@ export const ModelSelectionScreen: React.FC = () => {
           </Text>
 
           {availableModels.filter(m => m.category === 'think').map(model =>
-            renderModelCard(model.id, 'think', model.id === activeThinkModel, '#4CAF50')
+            renderModelCard(model.id, 'think', model.id === activeThinkModel, colors.accentThink)
           )}
         </View>
 
@@ -591,7 +600,7 @@ export const ModelSelectionScreen: React.FC = () => {
           {renderGauge(
             'QUICK',
             'speedometer',
-            '#FFC107',
+            colors.accentQuick,
             quickTokens,
             quickLimit,
             quickPercent,
@@ -604,7 +613,7 @@ export const ModelSelectionScreen: React.FC = () => {
           {renderGauge(
             'THINK',
             'speedometer-slow',
-            '#4CAF50',
+            colors.accentThink,
             thinkTokens,
             thinkLimit,
             thinkPercent,

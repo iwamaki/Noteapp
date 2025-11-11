@@ -139,7 +139,6 @@ export const ModelSelectionModal: React.FC<ModelSelectionModalProps> = ({
     modelTokenAmount: {
       fontSize: 13,
       fontWeight: 'bold',
-      color: '#FFC107',
     },
     modelStatusBadge: {
       borderRadius: 4,
@@ -212,15 +211,20 @@ export const ModelSelectionModal: React.FC<ModelSelectionModalProps> = ({
           <Text style={styles.modelDescription}>{model.description}</Text>
         </View>
 
-        {/* トークン量と装填状態 */}
+        {/* トークン量と適用状態 */}
         <View style={styles.modelTokenRow}>
-          <Text style={styles.modelTokenAmount}>
+          <Text style={[styles.modelTokenAmount, { color: accentColor }]}>
             残高：{tokens.toLocaleString()} トークン
           </Text>
 
           {isActive ? (
-            <View style={[styles.modelStatusBadge, { backgroundColor: accentColor }]}>
-              <Text style={[styles.modelStatusText, { color: colors.white }]}>装填中</Text>
+            <View style={[styles.modelStatusBadge, { backgroundColor: accentColor, flexDirection: 'row', alignItems: 'center', gap: 4 }]}>
+              <MaterialCommunityIcons
+                name={category === 'quick' ? 'speedometer' : 'speedometer-slow'}
+                size={14}
+                color={colors.white}
+              />
+              <Text style={[styles.modelStatusText, { color: colors.white }]}>適用中</Text>
             </View>
           ) : (
             <View style={[styles.modelStatusBadge, { backgroundColor: colors.background, borderColor: colors.border }]}>
@@ -271,14 +275,14 @@ export const ModelSelectionModal: React.FC<ModelSelectionModalProps> = ({
             <MaterialCommunityIcons
               name="speedometer"
               size={20}
-              color="#FFC107"
+              color={colors.accentQuick}
               style={styles.sectionIcon}
             />
-            <Text style={[styles.sectionTitle, { color: '#FFC107' }]}>Quickモデル</Text>
+            <Text style={[styles.sectionTitle, { color: colors.accentQuick }]}>Quickモデル</Text>
           </View>
 
           {availableModels.filter(m => m.category === 'quick').map(model =>
-            renderModelCard(model.id, 'quick', model.id === activeQuickModel, '#FFC107')
+            renderModelCard(model.id, 'quick', model.id === activeQuickModel, colors.accentQuick)
           )}
         </View>
 
@@ -288,14 +292,14 @@ export const ModelSelectionModal: React.FC<ModelSelectionModalProps> = ({
             <MaterialCommunityIcons
               name="speedometer-slow"
               size={20}
-              color="#4CAF50"
+              color={colors.accentThink}
               style={styles.sectionIcon}
             />
-            <Text style={[styles.sectionTitle, { color: '#4CAF50' }]}>Thinkモデル</Text>
+            <Text style={[styles.sectionTitle, { color: colors.accentThink }]}>Thinkモデル</Text>
           </View>
 
           {availableModels.filter(m => m.category === 'think').map(model =>
-            renderModelCard(model.id, 'think', model.id === activeThinkModel, '#4CAF50')
+            renderModelCard(model.id, 'think', model.id === activeThinkModel, colors.accentThink)
           )}
         </View>
       </>
