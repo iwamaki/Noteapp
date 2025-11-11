@@ -17,7 +17,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { CustomModal } from '../../components/CustomModal';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { useSettingsStore, TOKEN_CAPACITY_LIMITS } from '../settingsStore';
-import { GEMINI_PRICING } from '../../constants/pricing';
+import { creditsToTokens, getTokenPrice } from '../../billing/constants/tokenPricing';
 
 interface CreditAllocationModalProps {
   isVisible: boolean;
@@ -62,14 +62,11 @@ export const CreditAllocationModal: React.FC<CreditAllocationModalProps> = ({
   ];
 
   const selectedModel = models.find((m) => m.id === selectedModelId)!;
-  const pricing = GEMINI_PRICING[selectedModelId];
 
   // クレジット→トークン変換
   const convertedTokens = useMemo(() => {
-    if (!pricing || creditsToAllocate <= 0) return 0;
-    const avgPricePerMToken = (pricing.inputPricePer1M + pricing.outputPricePer1M) / 2;
-    return Math.floor((creditsToAllocate / avgPricePerMToken) * 1_000_000);
-  }, [pricing, creditsToAllocate]);
+    return creditsToTokens(selectedModelId, creditsToAllocate);
+  }, [selectedModelId, creditsToAllocate]);
 
   // 容量制限チェック
   const capacityInfo = useMemo(() => {
@@ -92,12 +89,13 @@ export const CreditAllocationModal: React.FC<CreditAllocationModalProps> = ({
 
   // 最大配分可能クレジット
   const maxAllocatableCredits = useMemo(() => {
-    if (!pricing) return settings.tokenBalance.credits;
-    const avgPricePerMToken = (pricing.inputPricePer1M + pricing.outputPricePer1M) / 2;
+    const pricePerMToken = getTokenPrice(selectedModelId);
+    if (!pricePerMToken) return settings.tokenBalance.credits;
+
     const maxTokens = capacityInfo.remaining;
-    const maxCredits = Math.floor((maxTokens / 1_000_000) * avgPricePerMToken);
+    const maxCredits = Math.floor((maxTokens / 1_000_000) * pricePerMToken);
     return Math.min(settings.tokenBalance.credits, maxCredits);
-  }, [pricing, capacityInfo.remaining, settings.tokenBalance.credits]);
+  }, [selectedModelId, capacityInfo.remaining, settings.tokenBalance.credits]);
 
   // 配分実行
   const handleAllocate = async () => {

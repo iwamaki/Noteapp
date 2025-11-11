@@ -479,21 +479,20 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
 
     // 容量制限をチェック + トークン数を計算
     const newAllocatedTokens = { ...settings.tokenBalance.allocatedTokens };
-    const { GEMINI_PRICING } = await import('../constants/pricing');
+    const { creditsToTokens, getTokenPrice, getModelCategory } = await import('../billing/constants/tokenPricing');
 
     for (const { modelId, credits } of allocations) {
       if (credits <= 0) continue;
 
-      const category: 'quick' | 'think' = modelId.toLowerCase().includes('flash') ? 'quick' : 'think';
-      const pricing = GEMINI_PRICING[modelId];
+      const category = getModelCategory(modelId);
+      const pricePerMToken = getTokenPrice(modelId);
 
-      if (!pricing) {
+      if (!pricePerMToken) {
         throw new Error(`モデル ${modelId} の価格情報が見つかりません`);
       }
 
-      // クレジットをトークンに変換（平均価格で計算）
-      const avgPricePerMToken = (pricing.inputPricePer1M + pricing.outputPricePer1M) / 2;
-      const tokens = Math.floor((credits / avgPricePerMToken) * 1_000_000);
+      // クレジットをトークンに変換
+      const tokens = creditsToTokens(modelId, credits);
 
       // 容量制限をチェック
       const currentTotal = getTotalTokensByCategory(category);
@@ -503,7 +502,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
 
       if (newCategoryTotal > limit) {
         const remaining = limit - (currentTotal - currentModelTokens);
-        const maxCredits = Math.floor((remaining / 1_000_000) * avgPricePerMToken);
+        const maxCredits = Math.floor((remaining / 1_000_000) * pricePerMToken);
         throw new Error(
           `容量制限を超えています。${category === 'quick' ? 'Quick' : 'Think'}カテゴリーの上限は${(limit / 1000000).toFixed(1)}Mトークンです。最大${maxCredits}円まで配分できます。`
         );

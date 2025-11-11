@@ -198,7 +198,10 @@ export const TokenUsageSection: React.FC<TokenUsageSectionProps> = ({ renderSect
       )}
 
       {/* Quick tokens 使用量 */}
-      <View style={styles.usageContainer}>
+      <TouchableOpacity
+        style={styles.usageContainer}
+        onPress={() => navigation.navigate('ModelSelection' as any)}
+      >
         <View style={styles.modelTitleRow}>
           <MaterialCommunityIcons
             name="speedometer"
@@ -207,6 +210,8 @@ export const TokenUsageSection: React.FC<TokenUsageSectionProps> = ({ renderSect
             style={{ marginRight: 8 }}
           />
           <Text style={styles.usageTitle}>Quick モデル</Text>
+          <View style={{ flex: 1 }} />
+          <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
         </View>
         <View style={styles.balanceDisplay}>
           <Text style={styles.balanceAmount}>
@@ -214,11 +219,14 @@ export const TokenUsageSection: React.FC<TokenUsageSectionProps> = ({ renderSect
           </Text>
           <Text style={styles.balanceLabel}>トークン</Text>
         </View>
-      </View>
+      </TouchableOpacity>
 
       {/* Think tokens 使用量（購入トークンがある場合に表示） */}
       {thinkTokens > 0 && (
-        <View style={styles.usageContainer}>
+        <TouchableOpacity
+          style={styles.usageContainer}
+          onPress={() => navigation.navigate('ModelSelection' as any)}
+        >
           <View style={styles.modelTitleRow}>
             <MaterialCommunityIcons
               name="speedometer-slow"
@@ -227,6 +235,8 @@ export const TokenUsageSection: React.FC<TokenUsageSectionProps> = ({ renderSect
               style={{ marginRight: 8 }}
             />
             <Text style={styles.usageTitle}>Think モデル</Text>
+            <View style={{ flex: 1 }} />
+            <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
           </View>
           <View style={styles.balanceDisplay}>
             <Text style={styles.balanceAmount}>
@@ -234,7 +244,7 @@ export const TokenUsageSection: React.FC<TokenUsageSectionProps> = ({ renderSect
             </Text>
             <Text style={styles.balanceLabel}>トークン</Text>
           </View>
-        </View>
+        </TouchableOpacity>
       )}
 
       {/* 購入・プラン管理ボタン */}
