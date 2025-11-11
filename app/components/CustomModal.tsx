@@ -199,7 +199,7 @@ export const CustomModal: React.FC<CustomModalProps> = ({
         keyboardVerticalOffset={keyboardVerticalOffset}
       >
         <Pressable style={styles.centeredView} onPress={onClose}>
-          <Pressable style={styles.modalView} onPress={() => {}}>
+          <Pressable style={styles.modalView} onPress={(e) => e.stopPropagation()}>
             <Text style={styles.modalTitle}>{title}</Text>
             {message && <Text style={styles.modalMessage}>{message}</Text>}
             {children && (
