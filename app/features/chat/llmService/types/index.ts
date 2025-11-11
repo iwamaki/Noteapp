@@ -14,7 +14,7 @@ export type { ChatContext } from './context.types';
 export type { LLMCommand, LLMResponse } from './command.types';
 
 // プロバイダー関連
-export type { LLMProvider, LLMHealthStatus } from './provider.types';
+export type { LLMProvider, LLMHealthStatus, ModelMetadata } from './provider.types';
 
 // 設定・トークン使用量関連
 export type { TokenUsageInfo, LLMConfig } from './config.types';

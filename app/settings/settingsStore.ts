@@ -425,12 +425,22 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     const { settings } = get();
     const { allocatedTokens } = settings.tokenBalance;
 
-    // カテゴリーに属するモデルを判定（モデル名に 'flash' を含むものをQuick、'pro' を含むものをThinkとする）
+    // APIServiceのメタデータを使用してカテゴリー判定
+    // 動的インポートで循環依存を回避
+    let getModelCategory: (modelId: string) => 'quick' | 'think';
+    try {
+      const APIService = require('../features/chat/llmService/api').default;
+      getModelCategory = (modelId: string) => APIService.getModelCategory(modelId);
+    } catch (error) {
+      // フォールバック
+      console.warn('Failed to load APIService, using fallback for category detection');
+      getModelCategory = (modelId: string) =>
+        modelId.toLowerCase().includes('flash') ? 'quick' : 'think';
+    }
+
     let total = 0;
     for (const [modelId, balance] of Object.entries(allocatedTokens)) {
-      if (category === 'quick' && modelId.toLowerCase().includes('flash')) {
-        total += balance;
-      } else if (category === 'think' && modelId.toLowerCase().includes('pro')) {
+      if (getModelCategory(modelId) === category) {
         total += balance;
       }
     }

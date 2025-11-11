@@ -130,11 +130,20 @@ export function tokensToCredits(modelId: string, tokens: number): number {
 
 /**
  * モデルカテゴリー判定
+ * バックエンドのメタデータを使用（キャッシュ経由）
  * @param modelId モデルID
  * @returns 'quick' | 'think'
  */
 export function getModelCategory(modelId: string): 'quick' | 'think' {
-  return modelId.toLowerCase().includes('flash') ? 'quick' : 'think';
+  // 動的インポートでAPIServiceを使用（循環依存を避けるため）
+  try {
+    const APIService = require('../../features/chat/llmService/api').default;
+    return APIService.getModelCategory(modelId);
+  } catch (error) {
+    // フォールバック: APIServiceが利用できない場合
+    console.warn('Failed to get model category from APIService, using fallback', error);
+    return modelId.toLowerCase().includes('flash') ? 'quick' : 'think';
+  }
 }
 
 /**

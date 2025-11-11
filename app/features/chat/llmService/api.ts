@@ -87,6 +87,31 @@ export class APIService {
     this.llmServiceInstance.refreshProviders();
   }
 
+  /**
+   * モデルIDからカテゴリー（quick/think）を取得
+   * キャッシュされたプロバイダー情報のメタデータを使用
+   * @param modelId モデルID
+   * @returns カテゴリー（'quick' | 'think'）、メタデータがない場合はフォールバック
+   */
+  static getModelCategory(modelId: string): 'quick' | 'think' {
+    const providers = this.getCachedLLMProviders();
+    if (!providers) {
+      // キャッシュがない場合はフォールバック
+      console.warn('LLM providers not cached, using fallback for model category');
+      return modelId.toLowerCase().includes('flash') ? 'quick' : 'think';
+    }
+
+    // Geminiプロバイダーからメタデータを取得
+    const geminiProvider = providers['gemini'];
+    if (geminiProvider?.modelMetadata?.[modelId]) {
+      return geminiProvider.modelMetadata[modelId].category;
+    }
+
+    // メタデータがない場合はフォールバック
+    console.warn(`Model metadata not found for ${modelId}, using fallback`);
+    return modelId.toLowerCase().includes('flash') ? 'quick' : 'think';
+  }
+
   // 会話履歴を要約
   static async summarizeConversation(): Promise<SummarizeResponse> {
     return this.llmServiceInstance.summarizeConversation();

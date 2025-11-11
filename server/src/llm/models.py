@@ -93,11 +93,23 @@ class ChatResponse(BaseModel):
     tokenUsage: Optional[TokenUsageInfo] = None  # トークン使用量情報
 
 
+class ModelMetadata(BaseModel):
+    """モデルのメタデータ
+
+    モデルのカテゴリー、表示名、説明などの追加情報。
+    """
+    category: str  # "quick" or "think"
+    displayName: Optional[str] = None
+    description: Optional[str] = None
+    recommended: Optional[bool] = False
+
+
 class LLMProvider(BaseModel):
     name: str
     defaultModel: str
     models: List[str]
     status: str
+    modelMetadata: Optional[Dict[str, ModelMetadata]] = None
 
 
 class SummarizeRequest(BaseModel):

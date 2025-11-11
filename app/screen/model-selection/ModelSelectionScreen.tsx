@@ -6,22 +6,26 @@
  * 設定画面のトークン残高セクションから遷移する。
  */
 
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useTheme } from '../../design/theme/ThemeContext';
+import { CustomHeader } from '../../components/CustomHeader';
+import { MainContainer } from '../../components/MainContainer';
 import { RootStackParamList } from '../../navigation/types';
 import { useSettingsStore, TOKEN_CAPACITY_LIMITS } from '../../settings/settingsStore';
 import { GEMINI_PRICING } from '../../constants/pricing';
-import { AVAILABLE_MODELS } from './constants';
+import { convertProvidersToModelInfo, type ModelInfo } from './constants';
+import APIService from '../../features/chat/llmService/api';
 
 type ModelSelectionScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ModelSelection'>;
 
@@ -29,6 +33,40 @@ export const ModelSelectionScreen: React.FC = () => {
   const { colors, spacing, typography } = useTheme();
   const navigation = useNavigation<ModelSelectionScreenNavigationProp>();
   const { settings, getTotalTokensByCategory, loadModel } = useSettingsStore();
+
+  // バックエンドから取得したモデル一覧
+  const [availableModels, setAvailableModels] = useState<ModelInfo[]>([]);
+  const [isLoadingModels, setIsLoadingModels] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  // モデル情報をバックエンドから取得
+  useEffect(() => {
+    const loadModels = async () => {
+      try {
+        setIsLoadingModels(true);
+        setLoadError(null);
+
+        // プロバイダー情報を取得（キャッシュがあれば即座に返る）
+        const providers = await APIService.loadLLMProviders();
+
+        // ModelInfo形式に変換
+        const models = convertProvidersToModelInfo(providers);
+
+        if (models.length === 0) {
+          setLoadError('利用可能なモデルがありません');
+        } else {
+          setAvailableModels(models);
+        }
+      } catch (error) {
+        console.error('Failed to load models:', error);
+        setLoadError('モデル情報の読み込みに失敗しました');
+      } finally {
+        setIsLoadingModels(false);
+      }
+    };
+
+    loadModels();
+  }, []);
 
   // 現在選択されているモデル
   const activeQuickModel = settings.loadedModels.quick || 'gemini-2.5-flash';
@@ -44,7 +82,7 @@ export const ModelSelectionScreen: React.FC = () => {
 
   // モデル選択ハンドラー
   const handleSelectModel = async (modelId: string, category: 'quick' | 'think') => {
-    const model = AVAILABLE_MODELS.find(m => m.id === modelId);
+    const model = availableModels.find(m => m.id === modelId);
     if (!model) return;
 
     const tokens = settings.tokenBalance.allocatedTokens[modelId] || 0;
@@ -65,7 +103,7 @@ export const ModelSelectionScreen: React.FC = () => {
   // カテゴリーごとのモデル内訳（装填中モデルと他モデル）
   const getModelBreakdown = (category: 'quick' | 'think') => {
     const activeModelId = category === 'quick' ? activeQuickModel : activeThinkModel;
-    const models = AVAILABLE_MODELS.filter(m => m.category === category);
+    const models = availableModels.filter(m => m.category === category);
 
     // 装填中モデルのトークン数
     const activeTokens = getModelTokens(activeModelId);
@@ -82,25 +120,6 @@ export const ModelSelectionScreen: React.FC = () => {
   const thinkBreakdown = getModelBreakdown('think');
 
   const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-    header: {
-      backgroundColor: colors.secondary,
-      padding: spacing.md,
-      flexDirection: 'row',
-      alignItems: 'center',
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    backButton: {
-      marginRight: spacing.md,
-    },
-    headerTitle: {
-      ...typography.title,
-      color: colors.text,
-    },
     scrollContent: {
       padding: spacing.md,
     },
@@ -201,65 +220,6 @@ export const ModelSelectionScreen: React.FC = () => {
       fontSize: 10,
       marginTop: spacing.xs,
       textAlign: 'right',
-    },
-    // 装填中のモデルカード
-    loadedModelsRow: {
-      flexDirection: 'row',
-      gap: spacing.sm,
-      marginBottom: spacing.lg,
-    },
-    loadedModelCard: {
-      flex: 1,
-      borderRadius: 8,
-      borderWidth: 3,
-      padding: spacing.md,
-    },
-    loadedModelHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginBottom: spacing.sm,
-    },
-    loadedModelIcon: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginRight: spacing.sm,
-    },
-    loadedModelTitles: {
-      flex: 1,
-    },
-    loadedModelCategory: {
-      fontSize: 11,
-      fontWeight: 'bold',
-    },
-    loadedModelName: {
-      fontSize: 15,
-      fontWeight: 'bold',
-      color: colors.text,
-    },
-    loadedModelDescription: {
-      fontSize: 11,
-      color: colors.textSecondary,
-    },
-    loadedModelDivider: {
-      height: 1,
-      opacity: 0.3,
-      marginVertical: spacing.sm,
-    },
-    loadedModelBalance: {
-      flexDirection: 'row',
-      alignItems: 'flex-end',
-      justifyContent: 'space-between',
-    },
-    loadedModelTokens: {
-      fontSize: 22,
-      fontWeight: 'bold',
-    },
-    loadedModelLabel: {
-      fontSize: 12,
-      color: colors.textSecondary,
     },
     // モデル選択カード
     modelCard: {
@@ -390,8 +350,8 @@ export const ModelSelectionScreen: React.FC = () => {
     activeModelId: string,
     category: 'quick' | 'think'
   ) => {
-    const activeModel = AVAILABLE_MODELS.find(m => m.id === activeModelId);
-    const otherModels = AVAILABLE_MODELS.filter(
+    const activeModel = availableModels.find(m => m.id === activeModelId);
+    const otherModels = availableModels.filter(
       m => m.category === category && m.id !== activeModelId && getModelTokens(m.id) > 0
     );
 
@@ -473,45 +433,6 @@ export const ModelSelectionScreen: React.FC = () => {
     );
   };
 
-  // 装填中モデルカード
-  const renderLoadedModelCard = (
-    category: 'quick' | 'think',
-    modelId: string,
-    tokens: number,
-    bgColor: string,
-    borderColor: string,
-    iconColor: string,
-    icon: string,
-    categoryLabel: string
-  ) => {
-    const model = AVAILABLE_MODELS.find(m => m.id === modelId);
-    if (!model) return null;
-
-    return (
-      <View style={[styles.loadedModelCard, { backgroundColor: bgColor, borderColor }]}>
-        <View style={styles.loadedModelHeader}>
-          <View style={[styles.loadedModelIcon, { backgroundColor: iconColor }]}>
-            <Text style={{ fontSize: 18 }}>{icon}</Text>
-          </View>
-          <View style={styles.loadedModelTitles}>
-            <Text style={[styles.loadedModelCategory, { color: iconColor }]}>
-              {categoryLabel}
-            </Text>
-            <Text style={styles.loadedModelName}>{model.name}</Text>
-            <Text style={styles.loadedModelDescription}>{model.description}</Text>
-          </View>
-        </View>
-        <View style={[styles.loadedModelDivider, { backgroundColor: borderColor }]} />
-        <View style={styles.loadedModelBalance}>
-          <Text style={[styles.loadedModelTokens, { color: iconColor }]}>
-            {tokens.toLocaleString()}
-          </Text>
-          <Text style={styles.loadedModelLabel}>トークン残高</Text>
-        </View>
-      </View>
-    );
-  };
-
   // モデル選択カード
   const renderModelCard = (
     modelId: string,
@@ -519,7 +440,7 @@ export const ModelSelectionScreen: React.FC = () => {
     isActive: boolean,
     accentColor: string
   ) => {
-    const model = AVAILABLE_MODELS.find(m => m.id === modelId);
+    const model = availableModels.find(m => m.id === modelId);
     if (!model) return null;
 
     const tokens = getModelTokens(modelId);
@@ -585,19 +506,78 @@ export const ModelSelectionScreen: React.FC = () => {
     );
   };
 
-  return (
-    <View style={styles.container}>
-      {/* ヘッダー */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <MaterialCommunityIcons name="arrow-left" size={24} color={colors.text} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>LLMモデル設定</Text>
-      </View>
+  // ローディング中またはエラー時の表示
+  if (isLoadingModels) {
+    return (
+      <MainContainer>
+        <CustomHeader
+          title="LLMモデル設定"
+          leftButtons={[
+            {
+              icon: <Ionicons name="arrow-back" size={24} color={colors.text} />,
+              onPress: () => navigation.goBack(),
+            },
+          ]}
+        />
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={{ marginTop: spacing.md, color: colors.textSecondary }}>
+            モデル情報を読み込み中...
+          </Text>
+        </View>
+      </MainContainer>
+    );
+  }
 
+  if (loadError) {
+    return (
+      <MainContainer>
+        <CustomHeader
+          title="LLMモデル設定"
+          leftButtons={[
+            {
+              icon: <Ionicons name="arrow-back" size={24} color={colors.text} />,
+              onPress: () => navigation.goBack(),
+            },
+          ]}
+        />
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.xl }}>
+          <MaterialCommunityIcons name="alert-circle-outline" size={48} color={colors.danger} />
+          <Text style={{ marginTop: spacing.md, color: colors.danger, fontSize: 16, textAlign: 'center' }}>
+            {loadError}
+          </Text>
+          <TouchableOpacity
+            style={{
+              marginTop: spacing.lg,
+              paddingVertical: spacing.sm,
+              paddingHorizontal: spacing.lg,
+              backgroundColor: colors.primary,
+              borderRadius: 8,
+            }}
+            onPress={() => {
+              setIsLoadingModels(true);
+              setLoadError(null);
+              // リロード処理は useEffect で自動的に行われる
+            }}
+          >
+            <Text style={{ color: colors.white, fontWeight: 'bold' }}>再試行</Text>
+          </TouchableOpacity>
+        </View>
+      </MainContainer>
+    );
+  }
+
+  return (
+    <MainContainer>
+      <CustomHeader
+        title="LLMモデル設定"
+        leftButtons={[
+          {
+            icon: <Ionicons name="arrow-back" size={24} color={colors.text} />,
+            onPress: () => navigation.goBack(),
+          },
+        ]}
+      />
       <ScrollView style={styles.scrollContent}>
         {/* トークン保持状況 */}
         <View style={styles.section}>
@@ -633,37 +613,6 @@ export const ModelSelectionScreen: React.FC = () => {
           )}
         </View>
 
-        {/* 装填中のモデル */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>装填中のモデル</Text>
-          <Text style={styles.sectionDescription}>
-            チャット画面で使用されるモデルとトークン残高
-          </Text>
-
-          <View style={styles.loadedModelsRow}>
-            {renderLoadedModelCard(
-              'quick',
-              activeQuickModel,
-              quickBreakdown.activeTokens,
-              '#FFF9E6',
-              '#FFC107',
-              '#FFC107',
-              '⚡',
-              'QUICK 装填中'
-            )}
-            {renderLoadedModelCard(
-              'think',
-              activeThinkModel,
-              thinkBreakdown.activeTokens,
-              '#E8F5E9',
-              '#4CAF50',
-              '#4CAF50',
-              '🧠',
-              'THINK 装填中'
-            )}
-          </View>
-        </View>
-
         {/* Quickモデル一覧 */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Quickモデル一覧</Text>
@@ -671,7 +620,7 @@ export const ModelSelectionScreen: React.FC = () => {
             日常的な会話や軽いタスクに使用するモデルを選択
           </Text>
 
-          {AVAILABLE_MODELS.filter(m => m.category === 'quick').map(model =>
+          {availableModels.filter(m => m.category === 'quick').map(model =>
             renderModelCard(model.id, 'quick', model.id === activeQuickModel, '#FFC107')
           )}
         </View>
@@ -683,7 +632,7 @@ export const ModelSelectionScreen: React.FC = () => {
             複雑な推論や高度なタスクに使用するモデルを選択
           </Text>
 
-          {AVAILABLE_MODELS.filter(m => m.category === 'think').map(model =>
+          {availableModels.filter(m => m.category === 'think').map(model =>
             renderModelCard(model.id, 'think', model.id === activeThinkModel, '#4CAF50')
           )}
         </View>
@@ -697,6 +646,6 @@ export const ModelSelectionScreen: React.FC = () => {
           </Text>
         </View>
       </ScrollView>
-    </View>
+    </MainContainer>
   );
 };

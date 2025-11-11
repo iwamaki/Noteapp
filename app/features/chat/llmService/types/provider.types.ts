@@ -4,6 +4,16 @@
  */
 
 /**
+ * モデルのメタデータ
+ */
+export interface ModelMetadata {
+  category: 'quick' | 'think';
+  displayName?: string;
+  description?: string;
+  recommended?: boolean;
+}
+
+/**
  * LLMプロバイダー情報
  */
 export interface LLMProvider {
@@ -11,6 +21,7 @@ export interface LLMProvider {
   defaultModel: string;
   models: string[];
   status: 'available' | 'unavailable' | 'error';
+  modelMetadata?: Record<string, ModelMetadata>;
 }
 
 /**
