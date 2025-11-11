@@ -17,6 +17,7 @@ import {
 import type { FeatureKey } from '../../constants/features';
 import type { PlanLimits } from '../constants/plans';
 import { calculateCost, formatCost, getModelPricing } from '../../constants/pricing';
+import { isFlashModel, isProModel, getTokenUsageByModelType } from './modelHelpers';
 
 /**
  * 現在のサブスクリプション情報を取得するフック
@@ -352,53 +353,10 @@ export function useMonthlyCost() {
 
 /**
  * モデルIDがFlash系かProかを判定
+ * @deprecated modelHelpers.ts から import してください
+ * 後方互換性のため re-export しています
  */
-export function isFlashModel(modelId: string): boolean {
-  return modelId.toLowerCase().includes('flash');
-}
-
-export function isProModel(modelId: string): boolean {
-  return modelId.toLowerCase().includes('pro');
-}
-
-/**
- * Quick/Think別のトークン使用量を取得（非React環境から呼び出し可能）
- */
-export function getTokenUsageByModelType(): {
-  flash: { inputTokens: number; outputTokens: number; totalTokens: number };
-  pro: { inputTokens: number; outputTokens: number; totalTokens: number };
-} {
-  const { settings } = useSettingsStore.getState();
-  const { usage } = settings;
-
-  let flashInput = 0;
-  let flashOutput = 0;
-  let proInput = 0;
-  let proOutput = 0;
-
-  for (const [modelId, tokenUsage] of Object.entries(usage.monthlyTokensByModel)) {
-    if (isFlashModel(modelId)) {
-      flashInput += tokenUsage.inputTokens;
-      flashOutput += tokenUsage.outputTokens;
-    } else if (isProModel(modelId)) {
-      proInput += tokenUsage.inputTokens;
-      proOutput += tokenUsage.outputTokens;
-    }
-  }
-
-  return {
-    flash: {
-      inputTokens: flashInput,
-      outputTokens: flashOutput,
-      totalTokens: flashInput + flashOutput,
-    },
-    pro: {
-      inputTokens: proInput,
-      outputTokens: proOutput,
-      totalTokens: proInput + proOutput,
-    },
-  };
-}
+export { isFlashModel, isProModel, getTokenUsageByModelType };
 
 /**
  * Flash tokens の使用状況を取得（Reactフック）

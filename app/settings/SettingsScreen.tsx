@@ -286,24 +286,6 @@ function SettingsScreen() {
             >
               <Text style={styles.resetButtonText}>トークンと使用量をリセット</Text>
             </TouchableOpacity>
-
-            {settings.subscription.status === 'active' && (
-              <TouchableOpacity
-                style={[styles.resetButton, { backgroundColor: '#FF9500' }]}
-                onPress={async () => {
-                  const { updateSettings } = useSettingsStore.getState();
-                  await updateSettings({
-                    subscription: {
-                      ...settings.subscription,
-                      status: 'canceled',
-                    },
-                  });
-                  Alert.alert('完了', 'サブスクをキャンセル済みに変更しました');
-                }}
-              >
-                <Text style={styles.resetButtonText}>サブスクをキャンセル済みにする</Text>
-              </TouchableOpacity>
-            )}
           </>
         )}
 

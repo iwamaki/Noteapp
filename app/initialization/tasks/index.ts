@@ -15,7 +15,6 @@ import { initializeWebSocketTask } from './initializeWebSocket';
 import { verifyAppReadyTask } from './verifyAppReady';
 import { loadIconFontsTask } from './loadIconFonts';
 import { loadToolDefinitionsTask } from './loadToolDefinitions';
-import { checkSubscriptionStatusTask } from './checkSubscriptionStatus';
 import { InitializationTask } from '../types';
 
 /**
@@ -40,7 +39,6 @@ export const allInitializationTasks: InitializationTask[] = [
   configureChatServiceTask,
   initializeWebSocketTask,  // WebSocket接続の初期化
   loadToolDefinitionsTask,
-  checkSubscriptionStatusTask,  // サブスクリプション状態チェック
 
   // Stage 4: READY - UI表示準備完了
   verifyAppReadyTask,
@@ -56,6 +54,5 @@ export {
   configureChatServiceTask,
   initializeWebSocketTask,
   loadToolDefinitionsTask,
-  checkSubscriptionStatusTask,
   verifyAppReadyTask,
 };

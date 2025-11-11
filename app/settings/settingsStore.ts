@@ -13,7 +13,7 @@ const SETTINGS_STORAGE_KEY = '@app_settings';
 // 購入履歴レコード
 export interface PurchaseRecord {
   id: string; // ユニークID
-  type: 'initial' | 'addon' | 'subscription'; // 購入タイプ
+  type: 'initial' | 'addon'; // 購入タイプ（単発購入のみ）
   productId: string; // プロダクトID
   transactionId: string; // トランザクションID
   purchaseDate: string; // 購入日時（ISO 8601）
@@ -96,25 +96,16 @@ export interface AppSettings {
   fileSortMethod: 'updatedAt' | 'name'; // ファイルのソート方法（更新日時順/名前順）
   showSummary: boolean; // ファイルリストに要約を表示するかどうか
 
-  // 9. サブスクリプション・課金設定
-  subscription: {
-    tier: 'free' | 'standard' | 'pro' | 'premium';
-    status: 'active' | 'canceled' | 'expired' | 'trial' | 'none';
-    expiresAt?: string; // ISO 8601 形式の日時
-    trialStartedAt?: string; // トライアル開始日時
-    autoRenew: boolean;
-  };
-
-  // 10. トークン残高（Phase 1: 購入したトークン）
+  // 9. トークン残高（購入したトークン）
   tokenBalance: {
     flash: number; // Quickモデル用トークン残高
     pro: number; // Thinkモデル用トークン残高
   };
 
-  // 11. 購入履歴
+  // 10. 購入履歴
   purchaseHistory: PurchaseRecord[];
 
-  // 12. 使用量情報（サーバーから同期）
+  // 11. 使用量情報（統計表示用）
   usage: {
     // 💰 コスト計算用（レガシー）
     monthlyInputTokens: number;  // 今月の入力トークン数（全体）
@@ -212,15 +203,6 @@ const defaultSettings: AppSettings = {
   fileSortMethod: 'updatedAt',
   showSummary: true,
 
-  // サブスクリプション・課金設定
-  subscription: {
-    tier: 'free',
-    status: 'none',
-    expiresAt: undefined,
-    trialStartedAt: undefined,
-    autoRenew: false,
-  },
-
   // トークン残高
   tokenBalance: {
     flash: 0,
@@ -282,19 +264,10 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
           parsedSettings.usage.monthlyTokensByModel = {};
         }
 
-        // マイグレーション2: 'enterprise' → 'premium' に変換
+        // マイグレーション2: subscription フィールドを削除（レガシー互換性）
         if (parsedSettings.subscription) {
-          const oldTier = parsedSettings.subscription.tier as string;
-          if (oldTier === 'enterprise') {
-            console.log('[SettingsStore] Migrating tier: enterprise → premium');
-            parsedSettings.subscription.tier = 'premium';
-          }
-          // 無効なtier値の場合はfreeにリセット
-          const validTiers = ['free', 'standard', 'pro', 'premium'];
-          if (!validTiers.includes(parsedSettings.subscription.tier)) {
-            console.warn(`[SettingsStore] Invalid tier detected: ${parsedSettings.subscription.tier}, resetting to free`);
-            parsedSettings.subscription.tier = 'free';
-          }
+          console.log('[SettingsStore] Removing legacy subscription field');
+          delete parsedSettings.subscription;
         }
 
         set({ settings: { ...defaultSettings, ...parsedSettings } });

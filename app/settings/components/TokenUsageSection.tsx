@@ -18,8 +18,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { RootStackParamList } from '../../navigation/types';
-import { useMonthlyCost, useSubscription } from '../../billing/utils/subscriptionHelpers';
-import { useProTokenUsage } from '../../billing/utils/tokenPurchaseHelpers';
+import { useMonthlyCost } from '../../billing/utils/costCalculationHelpers';
 import { useSettingsStore } from '../settingsStore';
 
 type SettingsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Settings'>;
@@ -32,12 +31,6 @@ export const TokenUsageSection: React.FC<TokenUsageSectionProps> = ({ renderSect
   const { colors, spacing, typography } = useTheme();
   const navigation = useNavigation<SettingsScreenNavigationProp>();
   const { settings } = useSettingsStore();
-
-  // トークン使用量情報を取得
-  const { tier, isActive } = useSubscription();
-
-  // Pro トークン使用量情報を取得（購入トークン残高も含む）
-  const proUsage = useProTokenUsage(tier, isActive);
 
   // 月間コスト情報を取得（開発時のみ）
   const costInfo = __DEV__ ? useMonthlyCost() : null;
@@ -178,8 +171,8 @@ export const TokenUsageSection: React.FC<TokenUsageSectionProps> = ({ renderSect
         </View>
       </View>
 
-      {/* Think tokens 使用量（月次割当があるか、購入トークンがある場合に表示） */}
-      {(proUsage.available || settings.tokenBalance.pro > 0) && (
+      {/* Think tokens 使用量（購入トークンがある場合に表示） */}
+      {settings.tokenBalance.pro > 0 && (
         <View style={styles.usageContainer}>
           <View style={styles.modelTitleRow}>
             <MaterialCommunityIcons
