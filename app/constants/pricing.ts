@@ -26,40 +26,33 @@ export interface ModelPricing {
 /**
  * Geminiモデルの料金テーブル
  * 参照: https://ai.google.dev/pricing
- * 最終更新: 2024-08
+ * 最終更新: 2025-01
  */
 export const GEMINI_PRICING: Record<string, ModelPricing> = {
-  // Gemini 2.5 Pro（高性能、複雑なタスク向き、プロンプト長で料金変動）
+  // Gemini 2.5 Pro (for prompts <= 200k tokens)
   'gemini-2.5-pro': {
     modelId: 'gemini-2.5-pro',
     displayName: 'Gemini 2.5 Pro',
-    inputPricePer1M: 1.25, // $1.25 - $2.50（最低料金）
-    outputPricePer1M: 10.0, // $10.00 - $15.00（最低料金）
+    inputPricePer1M: 1.25,
+    outputPricePer1M: 10.0,
   },
 
-  // Gemini 2.5 Flash（高速・低コスト、大規模処理向き）
+  // Gemini 2.5 Flash
   'gemini-2.5-flash': {
     modelId: 'gemini-2.5-flash',
     displayName: 'Gemini 2.5 Flash',
-    inputPricePer1M: 0.3, // $0.30 per 1M tokens
-    outputPricePer1M: 2.5, // $2.50 per 1M tokens
+    inputPricePer1M: 0.3,
+    outputPricePer1M: 2.5,
   },
 
-  // Gemini 1.5 Pro（安定版、コスト重視）
-  'gemini-1.5-pro': {
-    modelId: 'gemini-1.5-pro',
-    displayName: 'Gemini 1.5 Pro',
-    inputPricePer1M: 1.25, // $1.25 per 1M tokens
-    outputPricePer1M: 5.0, // $5.00 per 1M tokens
+  // Gemini 2.0 Flash
+  'gemini-2.0-flash': {
+    modelId: 'gemini-2.0-flash',
+    displayName: 'Gemini 2.0 Flash',
+    inputPricePer1M: 0.10,
+    outputPricePer1M: 0.40,
   },
-
-  // Gemini 1.5 Flash（安定版、実績あり）
-  'gemini-1.5-flash': {
-    modelId: 'gemini-1.5-flash',
-    displayName: 'Gemini 1.5 Flash',
-    inputPricePer1M: 0.075, // $0.075 per 1M tokens
-    outputPricePer1M: 0.3, // $0.30 per 1M tokens
-  },
+  // Note: Gemini 1.5 series and 2.0 Pro have been discontinued.
 };
 
 /**

@@ -74,8 +74,7 @@ function calculatePrice(modelId: string): number {
  * 📊 現在の価格（自動計算）:
  * - gemini-2.5-flash: ¥${calculatePrice('gemini-2.5-flash')}/M
  * - gemini-2.5-pro: ¥${calculatePrice('gemini-2.5-pro')}/M
- * - gemini-1.5-flash: ¥${calculatePrice('gemini-1.5-flash')}/M
- * - gemini-1.5-pro: ¥${calculatePrice('gemini-1.5-pro')}/M
+ * - gemini-2.0-flash: ¥${calculatePrice('gemini-2.0-flash')}/M
  *
  * 💡 価格調整方法：
  * 1. PRICING_CONFIG.exchangeRate を変更 → 為替レート対応
@@ -86,11 +85,10 @@ function calculatePrice(modelId: string): number {
 export const TOKEN_PRICING_JPY: Record<string, number> = {
   // Quick モデル（高速・低コスト）
   'gemini-2.5-flash': calculatePrice('gemini-2.5-flash'),
-  'gemini-1.5-flash': calculatePrice('gemini-1.5-flash'),
+  'gemini-2.0-flash': calculatePrice('gemini-2.0-flash'),
 
   // Think モデル（高性能・複雑タスク向け）
   'gemini-2.5-pro': calculatePrice('gemini-2.5-pro'),
-  'gemini-1.5-pro': calculatePrice('gemini-1.5-pro'),
 };
 
 /**
