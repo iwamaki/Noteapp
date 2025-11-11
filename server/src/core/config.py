@@ -41,8 +41,8 @@ class Settings:
             "gemini": [
                 "gemini-2.5-flash",
                 "gemini-2.5-pro",
-                "gemini-1.5-flash",
-                "gemini-1.5-pro"
+                "gemini-2.0-flash",
+                "gemini-2.0-pro"
             ]
         }
 
@@ -61,16 +61,16 @@ class Settings:
                 "description": "最高性能・複雑なタスク向け（推奨）",
                 "recommended": True,
             },
-            "gemini-1.5-flash": {
+            "gemini-2.0-flash": {
                 "category": "quick",
-                "displayName": "Gemini 1.5 Flash",
-                "description": "安定版・実績あり",
+                "displayName": "Gemini 2.0 Flash",
+                "description": "互換性・コスト重視",
                 "recommended": False,
             },
-            "gemini-1.5-pro": {
+            "gemini-2.0-pro": {
                 "category": "think",
-                "displayName": "Gemini 1.5 Pro",
-                "description": "安定版・コスト重視",
+                "displayName": "Gemini 2.0 Pro",
+                "description": "互換性・コスト重視",
                 "recommended": False,
             },
         }

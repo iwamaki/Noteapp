@@ -53,8 +53,6 @@ export interface AppSettings {
   llmEnabled: boolean; // LLM機能の有効/無効
   privacyMode: 'normal' | 'private';
   llmService: string;
-  llmProvider: string; // 現在選択中のLLMプロバイダー (openai, gemini, etc.)
-  llmModel: string; // 現在選択中のLLMモデル (gpt-4, gemini-1.5-pro, etc.)
   llmApiKey: string;
   localLlmUrl: string;
   localLlmPort: string;
@@ -168,8 +166,6 @@ const defaultSettings: AppSettings = {
   llmEnabled: process.env.EXPO_PUBLIC_LLM_ENABLED === 'true',
   privacyMode: 'normal',
   llmService: 'openai',
-  llmProvider: 'openai',
-  llmModel: 'gpt-4',
   llmApiKey: '',
   localLlmUrl: 'http://localhost',
   localLlmPort: '8080',
@@ -381,21 +377,6 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       });
       await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(newSettings));
       set({ settings: newSettings });
-
-      // LLM設定が変更された場合、APIServiceにも反映
-      if (updates.llmProvider !== undefined || updates.llmModel !== undefined) {
-        const { default: APIService } = await import('../features/chat/llmService/api');
-
-        if (updates.llmProvider !== undefined) {
-          APIService.setLLMProvider(updates.llmProvider);
-          console.log('[SettingsStore] Updated LLM provider in APIService:', updates.llmProvider);
-        }
-
-        if (updates.llmModel !== undefined) {
-          APIService.setLLMModel(updates.llmModel);
-          console.log('[SettingsStore] Updated LLM model in APIService:', updates.llmModel);
-        }
-      }
     } catch (error) {
       console.error('Failed to update settings:', error);
       throw error;

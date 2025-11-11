@@ -12,6 +12,7 @@ import { useTheme } from '../../../design/theme/ThemeContext';
 import { useChatUI } from '../contexts/ChatUIContext';
 import { CHAT_CONFIG } from '../config/chatConfig';
 import { useSettingsStore } from '../../../settings/settingsStore';
+import APIService from '../llmService/api';
 
 interface MessageInputProps {
   inputText: string;
@@ -24,19 +25,21 @@ interface MessageInputProps {
 export const MessageInput: React.FC<MessageInputProps> = ({ inputText, setInputText }) => {
   const { colors, iconSizes } = useTheme();
   const { sendMessage, isLoading } = useChatUI();
-  const { settings, updateSettings } = useSettingsStore();
+  const { settings, loadModel } = useSettingsStore();
 
   // loadedModels から Quick/Think モデルを取得（フォールバック付き）
   const quickModel = settings.loadedModels?.quick || 'gemini-2.5-flash';
   const thinkModel = settings.loadedModels?.think || 'gemini-2.5-pro';
 
-  // 現在のモデルがquickかthinkか判定
-  const isCurrentlyQuick = settings.llmModel === quickModel;
+  // 現在のモデルがquickかthinkか判定（APIServiceから取得）
+  const currentModel = APIService.getCurrentLLMModel();
+  const isCurrentlyQuick = currentModel === quickModel;
 
   // モデルを切り替える（装填されているモデル間でトグル）
   const toggleModel = async () => {
+    const newCategory = isCurrentlyQuick ? 'think' : 'quick';
     const newModel = isCurrentlyQuick ? thinkModel : quickModel;
-    await updateSettings({ llmModel: newModel });
+    await loadModel(newCategory, newModel);
   };
 
   // メッセージ送信処理

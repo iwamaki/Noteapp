@@ -43,7 +43,7 @@ export const verifyAppReadyTask: InitializationTask = {
       console.log('[verifyAppReady] Settings loaded:', {
         theme: settings.theme,
         fontSize: settings.fontSize,
-        llmProvider: settings.llmProvider,
+        loadedModels: settings.loadedModels,
       });
     }
   },
