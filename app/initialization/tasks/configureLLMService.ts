@@ -25,21 +25,39 @@ export const configureLLMServiceTask: InitializationTask = {
   execute: async () => {
     const { settings } = useSettingsStore.getState();
 
-    // LLMプロバイダーとモデルを設定
-    if (settings.llmProvider) {
-      APIService.setLLMProvider(settings.llmProvider);
-    }
+    // loadedModelsから初期モデルを取得（thinkモデルを優先）
+    const initialModelId = settings.loadedModels?.think || settings.loadedModels?.quick || 'gemini-2.5-pro';
 
-    if (settings.llmModel) {
-      APIService.setLLMModel(settings.llmModel);
-    }
+    // バックエンドから取得したプロバイダー情報を使って、モデルIDに対応するプロバイダーを取得
+    try {
+      const providers = await APIService.loadLLMProviders();
+      let providerName: string | undefined;
 
-    // デバッグログ（開発時のみ）
-    if (__DEV__) {
-      console.log('[configureLLMService] LLM configured:', {
-        provider: settings.llmProvider,
-        model: settings.llmModel,
-      });
+      // どのプロバイダーにこのモデルが含まれているかを探す
+      for (const [name, provider] of Object.entries(providers)) {
+        if (provider.models.includes(initialModelId)) {
+          providerName = name;
+          break;
+        }
+      }
+
+      if (providerName) {
+        APIService.setLLMProvider(providerName);
+        APIService.setLLMModel(initialModelId);
+
+        // デバッグログ（開発時のみ）
+        if (__DEV__) {
+          console.log('[configureLLMService] LLM configured:', {
+            provider: providerName,
+            model: initialModelId,
+          });
+        }
+      } else {
+        console.warn('[configureLLMService] Provider not found for model:', initialModelId);
+      }
+    } catch (error) {
+      console.error('[configureLLMService] Failed to load providers:', error);
+      throw error;
     }
   },
 

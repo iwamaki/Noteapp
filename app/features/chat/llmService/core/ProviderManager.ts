@@ -40,11 +40,13 @@ export class ProviderManager {
    * 現在のプロバイダーを設定
    */
   setProvider(provider: string): void {
-    this.currentProvider = provider;
+    // プロバイダーが実際に変更された場合のみデフォルトモデルを設定
+    if (this.currentProvider !== provider) {
+      this.currentProvider = provider;
 
-    // プロバイダー変更時にデフォルトモデルを設定
-    if (this.availableProviders[provider]) {
-      this.currentModel = this.availableProviders[provider].defaultModel;
+      if (this.availableProviders[provider]) {
+        this.currentModel = this.availableProviders[provider].defaultModel;
+      }
     }
   }
 

@@ -580,6 +580,36 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(newSettings));
     set({ settings: newSettings });
     console.log(`[ModelLoading] Loaded ${modelId} into ${category} slot`);
+
+    // APIServiceにもモデル変更を通知
+    try {
+      const { default: APIService } = await import('../features/chat/llmService/api');
+
+      // バックエンドから取得したプロバイダー情報を使って、モデルIDに対応するプロバイダーを取得
+      const providers = await APIService.loadLLMProviders();
+      let providerName: string | undefined;
+
+      // どのプロバイダーにこのモデルが含まれているかを探す
+      for (const [name, provider] of Object.entries(providers)) {
+        if (provider.models.includes(modelId)) {
+          providerName = name;
+          break;
+        }
+      }
+
+      if (!providerName) {
+        console.error(`[ModelLoading] Provider not found for model: ${modelId}`);
+        return;
+      }
+
+      // プロバイダーを設定してから、モデルを設定
+      // ProviderManagerはプロバイダーが変わった時のみデフォルトモデルを設定する
+      APIService.setLLMProvider(providerName);
+      APIService.setLLMModel(modelId);
+      console.log(`[ModelLoading] Updated APIService: provider=${providerName}, model=${modelId}`);
+    } catch (error) {
+      console.error('[ModelLoading] Failed to update APIService:', error);
+    }
   },
 
   /**
