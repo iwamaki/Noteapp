@@ -38,7 +38,7 @@ export const BillingModal: React.FC<BillingModalProps> = ({
   onClose,
 }) => {
   const { colors, typography, spacing } = useTheme();
-  const { settings, addTokens } = useSettingsStore();
+  const { settings, addCredits, setShouldShowAllocationModal } = useSettingsStore();
   const [selectedTab, setSelectedTab] = useState<TokenType>('flash');
   const [loading, setLoading] = useState(false);
   const [purchasing, setPurchasing] = useState(false);
@@ -75,10 +75,8 @@ export const BillingModal: React.FC<BillingModalProps> = ({
     }
   };
 
-  // 選択されたタブに応じてフィルタリング
-  const filteredPackages = availablePackages.filter((pkg) =>
-    selectedTab === 'flash' ? pkg.tokens.flash > 0 : pkg.tokens.pro > 0
-  );
+  // クレジットシステムではタブ不要（全パッケージ表示）
+  const filteredPackages = availablePackages;
 
   // パッケージカードをタップしたときに確認モーダルを表示
   const handlePackagePress = (pkg: TokenPackage) => {
@@ -110,14 +108,10 @@ export const BillingModal: React.FC<BillingModalProps> = ({
       ? (product as any).localizedPrice || `¥${selectedPackage.price}`
       : `¥${selectedPackage.price}`;
 
-    const tokenAmount = selectedPackage.tokens.flash > 0
-      ? `${formatTokenAmount(selectedPackage.tokens.flash)} Quick トークン`
-      : `${formatTokenAmount(selectedPackage.tokens.pro)} Think トークン`;
-
     return [
       {
-        label: 'トークン数:',
-        value: tokenAmount,
+        label: 'クレジット:',
+        value: `${selectedPackage.credits}円分`,
         isPrimary: false,
       },
       {
@@ -149,21 +143,25 @@ export const BillingModal: React.FC<BillingModalProps> = ({
                   transactionId: `mock_transaction_${Date.now()}`,
                   purchaseDate: new Date().toISOString(),
                   amount: pkg.price,
-                  tokensAdded: {
-                    flash: pkg.tokens.flash,
-                    pro: pkg.tokens.pro,
-                  },
+                  creditsAdded: pkg.credits,
                 };
 
-                await addTokens(pkg.tokens.flash, pkg.tokens.pro, mockPurchaseRecord);
+                await addCredits(pkg.credits, mockPurchaseRecord);
 
-                const tokenMsg = pkg.tokens.flash > 0
-                  ? `${formatTokenAmount(pkg.tokens.flash)} Quick トークンを追加しました`
-                  : `${formatTokenAmount(pkg.tokens.pro)} Think トークンを追加しました`;
-
-                Alert.alert('購入完了（開発モード）', tokenMsg, [
-                  { text: 'OK', onPress: onClose },
-                ]);
+                Alert.alert(
+                  '💰 購入完了（開発モード）',
+                  `${pkg.credits}円分のクレジットを追加しました\n\nモデルに配分しますか？\n（後から設定画面で配分できます）`,
+                  [
+                    { text: '後で配分する', onPress: onClose },
+                    {
+                      text: '今すぐ配分する',
+                      onPress: () => {
+                        setShouldShowAllocationModal(true);
+                        onClose();
+                      }
+                    },
+                  ]
+                );
               } catch (error) {
                 console.error('[BillingModal] Mock purchase error:', error);
                 Alert.alert('エラー', 'モック購入中にエラーが発生しました');
@@ -200,20 +198,27 @@ export const BillingModal: React.FC<BillingModalProps> = ({
             transactionId: purchase.transactionId || '',
             purchaseDate: new Date(purchase.transactionDate).toISOString(),
             amount: pkg.price,
-            tokensAdded: {
-              flash: pkg.tokens.flash,
-              pro: pkg.tokens.pro,
-            },
+            creditsAdded: pkg.credits,
           };
 
-          await addTokens(pkg.tokens.flash, pkg.tokens.pro, purchaseRecord);
+          await addCredits(pkg.credits, purchaseRecord);
 
-          const tokenMsg = pkg.tokens.flash > 0
-            ? `${formatTokenAmount(pkg.tokens.flash)} Quick トークンを追加しました`
-            : `${formatTokenAmount(pkg.tokens.pro)} Think トークンを追加しました`;
-
-          Alert.alert('購入完了', tokenMsg, [{ text: 'OK', onPress: onClose }]);
           setPurchasing(false);
+
+          Alert.alert(
+            '💰 購入完了',
+            `${pkg.credits}円分のクレジットを追加しました\n\nモデルに配分しますか？\n（後から設定画面で配分できます）`,
+            [
+              { text: '後で配分する', onPress: onClose },
+              {
+                text: '今すぐ配分する',
+                onPress: () => {
+                  setShouldShowAllocationModal(true);
+                  onClose();
+                }
+              },
+            ]
+          );
         },
         // onError
         (error) => {
@@ -297,6 +302,18 @@ export const BillingModal: React.FC<BillingModalProps> = ({
     packageDescription: {
       fontSize: typography.caption.fontSize,
       color: colors.textSecondary,
+    },
+    badge: {
+      backgroundColor: colors.primary,
+      paddingHorizontal: spacing.xs,
+      paddingVertical: spacing.xs / 2,
+      borderRadius: 4,
+      marginLeft: spacing.sm,
+    },
+    badgeText: {
+      color: colors.white,
+      fontSize: typography.caption.fontSize,
+      fontWeight: '600',
     },
     balanceContainer: {
       paddingVertical: spacing.sm,
@@ -394,13 +411,10 @@ export const BillingModal: React.FC<BillingModalProps> = ({
           </TouchableOpacity>
         </View>
 
-        {/* 現在の残高 */}
+        {/* 現在のクレジット残高 */}
         <View style={styles.balanceContainer}>
           <Text style={styles.balanceText}>
-            現在の残高: {formatTokenAmount(
-              selectedTab === 'flash' ? settings.tokenBalance.flash : settings.tokenBalance.pro
-            )}{' '}
-            トークン
+            未配分クレジット: {settings.tokenBalance.credits}円
           </Text>
         </View>
 
@@ -418,13 +432,15 @@ export const BillingModal: React.FC<BillingModalProps> = ({
               >
                 <View style={styles.packageHeader}>
                   <Text style={styles.packageName}>
-                    {formatTokenAmount(
-                      selectedTab === 'flash' ? pkg.tokens.flash : pkg.tokens.pro
-                    )}{' '}
-                    トークン
+                    {pkg.name}
                   </Text>
-                  <Text style={styles.packagePrice}>¥{pkg.price} →</Text>
+                  {pkg.badge && (
+                    <View style={styles.badge}>
+                      <Text style={styles.badgeText}>{pkg.badge}</Text>
+                    </View>
+                  )}
                 </View>
+                <Text style={styles.packagePrice}>¥{pkg.price}</Text>
                 <Text style={styles.packageDescription}>{pkg.description}</Text>
               </TouchableOpacity>
             ))

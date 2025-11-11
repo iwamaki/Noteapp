@@ -10,6 +10,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SETTINGS_STORAGE_KEY = '@app_settings';
 
+// トークン容量制限（カテゴリーごとの全モデル合計上限）
+export const TOKEN_CAPACITY_LIMITS = {
+  quick: 5000000, // Quick カテゴリー: 5M tokens
+  think: 1000000, // Think カテゴリー: 1M tokens
+} as const;
+
 // 購入履歴レコード
 export interface PurchaseRecord {
   id: string; // ユニークID
@@ -18,10 +24,7 @@ export interface PurchaseRecord {
   transactionId: string; // トランザクションID
   purchaseDate: string; // 購入日時（ISO 8601）
   amount: number; // 支払額（円）
-  tokensAdded: {
-    flash: number; // 追加されたQuickトークン数
-    pro: number; // 追加されたThinkトークン数
-  };
+  creditsAdded: number; // 追加されたクレジット額（円建て）
 }
 
 // アプリケーション設定の型定義
@@ -96,16 +99,24 @@ export interface AppSettings {
   fileSortMethod: 'updatedAt' | 'name'; // ファイルのソート方法（更新日時順/名前順）
   showSummary: boolean; // ファイルリストに要約を表示するかどうか
 
-  // 9. トークン残高（購入したトークン）
+  // 9. トークン残高とクレジット
   tokenBalance: {
-    flash: number; // Quickモデル用トークン残高
-    pro: number; // Thinkモデル用トークン残高
+    credits: number; // 未配分のクレジット（円建て）
+    allocatedTokens: {
+      [modelId: string]: number; // モデルIDごとの配分済みトークン数
+    };
   };
 
-  // 10. 購入履歴
+  // 10. 装填中のモデル（Quick/Thinkスロットに装填されているモデル）
+  loadedModels: {
+    quick: string; // Quickスロットに装填されているモデルID
+    think: string; // Thinkスロットに装填されているモデルID
+  };
+
+  // 11. 購入履歴
   purchaseHistory: PurchaseRecord[];
 
-  // 11. 使用量情報（統計表示用）
+  // 12. 使用量情報（統計表示用）
   usage: {
     // 💰 コスト計算用（レガシー）
     monthlyInputTokens: number;  // 今月の入力トークン数（全体）
@@ -203,10 +214,19 @@ const defaultSettings: AppSettings = {
   fileSortMethod: 'updatedAt',
   showSummary: true,
 
-  // トークン残高
+  // トークン残高とクレジット
   tokenBalance: {
-    flash: 0,
-    pro: 0,
+    credits: 0, // 未配分クレジット
+    allocatedTokens: {
+      'gemini-2.5-flash': 0,
+      'gemini-2.5-pro': 0,
+    },
+  },
+
+  // 装填中のモデル
+  loadedModels: {
+    quick: 'gemini-2.5-flash', // デフォルトはGemini 2.5 Flash
+    think: 'gemini-2.5-pro',   // デフォルトはGemini 2.5 Pro
   },
 
   // 購入履歴
@@ -232,11 +252,18 @@ interface SettingsStore {
   updateSettings: (updates: Partial<AppSettings>) => Promise<void>;
   resetSettings: () => Promise<void>;
 
-  // トークン残高管理関数
-  addTokens: (flashTokens: number, proTokens: number, purchaseRecord: PurchaseRecord) => Promise<void>;
-  deductTokens: (flashTokens: number, proTokens: number) => Promise<void>;
+  // クレジット・トークン管理関数
+  addCredits: (credits: number, purchaseRecord: PurchaseRecord) => Promise<void>;
+  allocateCredits: (allocations: Array<{ modelId: string; credits: number }>) => Promise<void>;
+  deductTokens: (modelId: string, tokens: number) => Promise<void>;
+  loadModel: (category: 'quick' | 'think', modelId: string) => Promise<void>;
+  getTotalTokensByCategory: (category: 'quick' | 'think') => number;
   getPurchaseHistory: () => PurchaseRecord[];
   resetTokensAndUsage: () => Promise<void>; // デバッグ用：トークン残高と使用量をリセット
+
+  // UI状態管理
+  shouldShowAllocationModal: boolean;
+  setShouldShowAllocationModal: (should: boolean) => void;
 
   // 使用量トラッキング関数
   trackTokenUsage: (inputTokens: number, outputTokens: number, modelId: string) => Promise<void>;
@@ -251,6 +278,7 @@ interface SettingsStore {
 export const useSettingsStore = create<SettingsStore>((set, get) => ({
   settings: defaultSettings,
   isLoading: false,
+  shouldShowAllocationModal: false,
 
   loadSettings: async () => {
     set({ isLoading: true });
@@ -268,6 +296,68 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
         if (parsedSettings.subscription) {
           console.log('[SettingsStore] Removing legacy subscription field');
           delete parsedSettings.subscription;
+        }
+
+        // マイグレーション3: tokenBalance をカテゴリー単位からモデル単位に変換
+        if (parsedSettings.tokenBalance && !parsedSettings.tokenBalance.byModel && !parsedSettings.tokenBalance.allocatedTokens) {
+          console.log('[SettingsStore] Migrating tokenBalance from category-based to model-based');
+          const oldBalance = parsedSettings.tokenBalance;
+          parsedSettings.tokenBalance = {
+            credits: 0,
+            allocatedTokens: {
+              'gemini-2.5-flash': oldBalance.flash || 0,
+              'gemini-2.5-pro': oldBalance.pro || 0,
+            },
+          };
+        }
+
+        // マイグレーション6: tokenBalance.byModel を allocatedTokens に変換 + credits追加
+        if (parsedSettings.tokenBalance && parsedSettings.tokenBalance.byModel && !parsedSettings.tokenBalance.allocatedTokens) {
+          console.log('[SettingsStore] Migrating tokenBalance.byModel to allocatedTokens + credits');
+          const oldBalance = parsedSettings.tokenBalance.byModel;
+          parsedSettings.tokenBalance = {
+            credits: 0, // 既存のトークンはそのまま、新しいクレジットは0から
+            allocatedTokens: oldBalance,
+          };
+        }
+
+        // マイグレーション7: credits フィールドが存在しない場合は追加
+        if (parsedSettings.tokenBalance && parsedSettings.tokenBalance.credits === undefined) {
+          console.log('[SettingsStore] Adding credits field to tokenBalance');
+          parsedSettings.tokenBalance.credits = 0;
+        }
+
+        // マイグレーション4: loadedModels が存在しない場合は追加
+        if (!parsedSettings.loadedModels) {
+          console.log('[SettingsStore] Adding loadedModels with default values');
+          parsedSettings.loadedModels = {
+            quick: 'gemini-2.5-flash',
+            think: 'gemini-2.5-pro',
+          };
+        }
+
+        // マイグレーション5: purchaseHistory のレコード形式を変換
+        if (parsedSettings.purchaseHistory && Array.isArray(parsedSettings.purchaseHistory)) {
+          parsedSettings.purchaseHistory = parsedSettings.purchaseHistory.map((record: any) => {
+            // 旧形式1: tokensAdded: {flash, pro} → creditsAdded
+            if (record.tokensAdded && typeof record.tokensAdded === 'object' && !record.creditsAdded) {
+              console.log('[SettingsStore] Migrating purchase record (tokensAdded object):', record.id);
+              // amountをそのままcreditsAddedとして使用（1円=1credit）
+              return {
+                ...record,
+                creditsAdded: record.amount || 0,
+              };
+            }
+            // 旧形式2: tokensAdded: number, targetModel → creditsAdded
+            if (record.tokensAdded && typeof record.tokensAdded === 'number' && !record.creditsAdded) {
+              console.log('[SettingsStore] Migrating purchase record (tokensAdded number):', record.id);
+              return {
+                ...record,
+                creditsAdded: record.amount || 0,
+              };
+            }
+            return record;
+          });
         }
 
         set({ settings: { ...defaultSettings, ...parsedSettings } });
@@ -327,46 +417,160 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   // =========================
 
   /**
-   * トークンを追加（購入時に呼び出される）
-   * @param flashTokens 追加するQuickトークン数
-   * @param proTokens 追加するThinkトークン数
+   * カテゴリーごとの合計トークン数を取得
+   * @param category カテゴリー ('quick' または 'think')
+   * @returns カテゴリー内の全モデルのトークン合計
+   */
+  getTotalTokensByCategory: (category: 'quick' | 'think') => {
+    const { settings } = get();
+    const { allocatedTokens } = settings.tokenBalance;
+
+    // カテゴリーに属するモデルを判定（モデル名に 'flash' を含むものをQuick、'pro' を含むものをThinkとする）
+    let total = 0;
+    for (const [modelId, balance] of Object.entries(allocatedTokens)) {
+      if (category === 'quick' && modelId.toLowerCase().includes('flash')) {
+        total += balance;
+      } else if (category === 'think' && modelId.toLowerCase().includes('pro')) {
+        total += balance;
+      }
+    }
+    return total;
+  },
+
+  /**
+   * クレジットを追加（購入時に呼び出される）
+   * @param credits 追加するクレジット額（円建て）
    * @param purchaseRecord 購入履歴レコード
    */
-  addTokens: async (flashTokens: number, proTokens: number, purchaseRecord: PurchaseRecord) => {
+  addCredits: async (credits: number, purchaseRecord: PurchaseRecord) => {
     const { settings } = get();
+
     const newSettings = {
       ...settings,
       tokenBalance: {
-        flash: settings.tokenBalance.flash + flashTokens,
-        pro: settings.tokenBalance.pro + proTokens,
+        ...settings.tokenBalance,
+        credits: settings.tokenBalance.credits + credits,
       },
       purchaseHistory: [purchaseRecord, ...settings.purchaseHistory], // 最新を先頭に
     };
+
     await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(newSettings));
     set({ settings: newSettings });
-    console.log(`[TokenBalance] Added tokens: Flash=${flashTokens}, Pro=${proTokens}. New balance: Flash=${newSettings.tokenBalance.flash}, Pro=${newSettings.tokenBalance.pro}`);
+    console.log(`[Credits] Added ${credits} credits. New balance: ${newSettings.tokenBalance.credits} credits`);
+  },
+
+  /**
+   * クレジットを各モデルにトークンとして配分
+   * @param allocations 配分先のモデルとクレジット額の配列
+   * @throws クレジット不足、容量制限超過の場合はエラー
+   */
+  allocateCredits: async (allocations: Array<{ modelId: string; credits: number }>) => {
+    const { settings, getTotalTokensByCategory } = get();
+
+    // 合計クレジット額を計算
+    const totalCreditsToAllocate = allocations.reduce((sum, a) => sum + a.credits, 0);
+
+    // クレジット残高をチェック
+    if (totalCreditsToAllocate > settings.tokenBalance.credits) {
+      throw new Error(
+        `クレジットが不足しています。必要: ${totalCreditsToAllocate}円、残高: ${settings.tokenBalance.credits}円`
+      );
+    }
+
+    // 容量制限をチェック + トークン数を計算
+    const newAllocatedTokens = { ...settings.tokenBalance.allocatedTokens };
+    const { GEMINI_PRICING } = await import('../constants/pricing');
+
+    for (const { modelId, credits } of allocations) {
+      if (credits <= 0) continue;
+
+      const category: 'quick' | 'think' = modelId.toLowerCase().includes('flash') ? 'quick' : 'think';
+      const pricing = GEMINI_PRICING[modelId];
+
+      if (!pricing) {
+        throw new Error(`モデル ${modelId} の価格情報が見つかりません`);
+      }
+
+      // クレジットをトークンに変換（平均価格で計算）
+      const avgPricePerMToken = (pricing.inputPricePer1M + pricing.outputPricePer1M) / 2;
+      const tokens = Math.floor((credits / avgPricePerMToken) * 1_000_000);
+
+      // 容量制限をチェック
+      const currentTotal = getTotalTokensByCategory(category);
+      const currentModelTokens = newAllocatedTokens[modelId] || 0;
+      const newCategoryTotal = currentTotal - currentModelTokens + (currentModelTokens + tokens);
+      const limit = TOKEN_CAPACITY_LIMITS[category];
+
+      if (newCategoryTotal > limit) {
+        const remaining = limit - (currentTotal - currentModelTokens);
+        const maxCredits = Math.floor((remaining / 1_000_000) * avgPricePerMToken);
+        throw new Error(
+          `容量制限を超えています。${category === 'quick' ? 'Quick' : 'Think'}カテゴリーの上限は${(limit / 1000000).toFixed(1)}Mトークンです。最大${maxCredits}円まで配分できます。`
+        );
+      }
+
+      // トークンを配分
+      newAllocatedTokens[modelId] = (newAllocatedTokens[modelId] || 0) + tokens;
+    }
+
+    // クレジットを減算
+    const newSettings = {
+      ...settings,
+      tokenBalance: {
+        credits: settings.tokenBalance.credits - totalCreditsToAllocate,
+        allocatedTokens: newAllocatedTokens,
+      },
+    };
+
+    await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(newSettings));
+    set({ settings: newSettings });
+    console.log(`[Credits] Allocated ${totalCreditsToAllocate} credits. Remaining: ${newSettings.tokenBalance.credits} credits`);
   },
 
   /**
    * トークンを消費（LLM使用時に呼び出される）
-   * @param flashTokens 消費するQuickトークン数
-   * @param proTokens 消費するThinkトークン数
+   * @param modelId 消費対象のモデルID（例: "gemini-2.5-flash"）
+   * @param tokens 消費するトークン数
    */
-  deductTokens: async (flashTokens: number, proTokens: number) => {
+  deductTokens: async (modelId: string, tokens: number) => {
     const { settings } = get();
-    const newFlashBalance = Math.max(0, settings.tokenBalance.flash - flashTokens);
-    const newProBalance = Math.max(0, settings.tokenBalance.pro - proTokens);
+    const currentBalance = settings.tokenBalance.allocatedTokens[modelId] || 0;
+    const newBalance = Math.max(0, currentBalance - tokens);
 
     const newSettings = {
       ...settings,
       tokenBalance: {
-        flash: newFlashBalance,
-        pro: newProBalance,
+        ...settings.tokenBalance,
+        allocatedTokens: {
+          ...settings.tokenBalance.allocatedTokens,
+          [modelId]: newBalance,
+        },
       },
     };
+
     await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(newSettings));
     set({ settings: newSettings });
-    console.log(`[TokenBalance] Deducted tokens: Flash=${flashTokens}, Pro=${proTokens}. New balance: Flash=${newFlashBalance}, Pro=${newProBalance}`);
+    console.log(`[TokenBalance] Deducted ${tokens} tokens from ${modelId}. New balance: ${newBalance}`);
+  },
+
+  /**
+   * モデルをスロットに装填する
+   * @param category カテゴリー ('quick' または 'think')
+   * @param modelId 装填するモデルID（例: "gemini-2.5-flash"）
+   */
+  loadModel: async (category: 'quick' | 'think', modelId: string) => {
+    const { settings } = get();
+    const newSettings = {
+      ...settings,
+      loadedModels: {
+        ...settings.loadedModels,
+        [category]: modelId,
+      },
+    };
+
+    await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(newSettings));
+    set({ settings: newSettings });
+    console.log(`[ModelLoading] Loaded ${modelId} into ${category} slot`);
   },
 
   /**
@@ -384,8 +588,11 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     const newSettings = {
       ...settings,
       tokenBalance: {
-        flash: 0,
-        pro: 0,
+        credits: 0,
+        allocatedTokens: {
+          'gemini-2.5-flash': 0,
+          'gemini-2.5-pro': 0,
+        },
       },
       purchaseHistory: [],
       usage: {
@@ -396,7 +603,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     };
     await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(newSettings));
     set({ settings: newSettings });
-    console.log('[Debug] Token balance and usage reset');
+    console.log('[Debug] Token balance, credits, and usage reset');
   },
 
   // =========================
@@ -543,5 +750,10 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       console.log(`[UsageTracking] Month changed: ${lastResetMonth} → ${currentMonth}`);
       await resetMonthlyUsage();
     }
+  },
+
+  // UI状態管理
+  setShouldShowAllocationModal: (should: boolean) => {
+    set({ shouldShowAllocationModal: should });
   },
 }));

@@ -59,20 +59,12 @@ export async function trackAndDeductTokens(
   try {
     const totalTokens = inputTokens + outputTokens;
 
-    // 1. 購入トークン残高から即時消費
-    if (isFlashModel(modelId)) {
-      await deductTokens(totalTokens, 0);
-      logger.info(
-        'system',
-        `Deducted ${totalTokens} Quick tokens from purchased balance (model: ${modelId})`
-      );
-    } else if (isProModel(modelId)) {
-      await deductTokens(0, totalTokens);
-      logger.info(
-        'system',
-        `Deducted ${totalTokens} Think tokens from purchased balance (model: ${modelId})`
-      );
-    }
+    // 1. 購入トークン残高から即時消費（モデル単位で消費）
+    await deductTokens(modelId, totalTokens);
+    logger.info(
+      'system',
+      `Deducted ${totalTokens} tokens from ${modelId} balance`
+    );
 
     // 2. 月次使用量を記録（統計表示用）
     await trackTokenUsage(inputTokens, outputTokens, modelId);

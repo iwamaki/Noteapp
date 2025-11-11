@@ -26,12 +26,16 @@ export const MessageInput: React.FC<MessageInputProps> = ({ inputText, setInputT
   const { sendMessage, isLoading } = useChatUI();
   const { settings, updateSettings } = useSettingsStore();
 
-  // 現在のモデルがquickかthinkか判定
-  const isFlashModel = settings.llmModel.toLowerCase().includes('flash');
+  // loadedModels から Quick/Think モデルを取得（フォールバック付き）
+  const quickModel = settings.loadedModels?.quick || 'gemini-2.5-flash';
+  const thinkModel = settings.loadedModels?.think || 'gemini-2.5-pro';
 
-  // モデルを切り替える
+  // 現在のモデルがquickかthinkか判定
+  const isCurrentlyQuick = settings.llmModel === quickModel;
+
+  // モデルを切り替える（装填されているモデル間でトグル）
   const toggleModel = async () => {
-    const newModel = isFlashModel ? 'gemini-2.5-pro' : 'gemini-2.5-flash';
+    const newModel = isCurrentlyQuick ? thinkModel : quickModel;
     await updateSettings({ llmModel: newModel });
   };
 
@@ -110,9 +114,9 @@ export const MessageInput: React.FC<MessageInputProps> = ({ inputText, setInputT
         disabled={isLoading}
       >
         <MaterialCommunityIcons
-          name={isFlashModel ? 'speedometer' : 'speedometer-slow'}
+          name={isCurrentlyQuick ? 'speedometer' : 'speedometer-slow'}
           size={iconSizes.medium}
-          color={isFlashModel ? '#FFC107' : '#4CAF50'}
+          color={isCurrentlyQuick ? '#FFC107' : '#4CAF50'}
         />
       </TouchableOpacity>
       <TouchableOpacity

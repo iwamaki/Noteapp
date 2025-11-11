@@ -28,7 +28,7 @@ export const usePurchaseHandlers = ({
   tokenProducts,
 }: UsePurchaseHandlersProps): UsePurchaseHandlersReturn => {
   const navigation = useNavigation();
-  const { addTokens } = useSettingsStore();
+  const { addCredits, setShouldShowAllocationModal } = useSettingsStore();
   const [purchasing, setPurchasing] = useState(false);
 
   // トークンパッケージ購入処理
@@ -54,23 +54,25 @@ export const usePurchaseHandlers = ({
                   transactionId: `mock_transaction_${Date.now()}`,
                   purchaseDate: new Date().toISOString(),
                   amount: pkg.price,
-                  tokensAdded: {
-                    flash: pkg.tokens.flash,
-                    pro: pkg.tokens.pro,
-                  },
+                  creditsAdded: pkg.credits,
                 };
 
-                // トークン残高を更新
-                await addTokens(pkg.tokens.flash, pkg.tokens.pro, mockPurchaseRecord);
-
-                const tokenMsg = pkg.tokens.flash > 0
-                  ? `${formatTokenAmount(pkg.tokens.flash)} Quick トークンを追加しました`
-                  : `${formatTokenAmount(pkg.tokens.pro)} Think トークンを追加しました`;
+                // クレジットを追加
+                await addCredits(pkg.credits, mockPurchaseRecord);
 
                 Alert.alert(
-                  '購入完了（開発モード）',
-                  tokenMsg,
-                  [{ text: 'OK', onPress: () => (navigation as any).goBack() }]
+                  '💰 購入完了（開発モード）',
+                  `${pkg.credits}円分のクレジットを追加しました\n\nモデルに配分しますか？\n（後から設定画面で配分できます）`,
+                  [
+                    { text: '後で配分する', onPress: () => (navigation as any).goBack() },
+                    {
+                      text: '今すぐ配分する',
+                      onPress: () => {
+                        setShouldShowAllocationModal(true);
+                        (navigation as any).goBack();
+                      }
+                    },
+                  ]
                 );
               } catch (error) {
                 console.error('[usePurchaseHandlers] Mock purchase error:', error);
@@ -110,29 +112,26 @@ export const usePurchaseHandlers = ({
             transactionId: purchase.transactionId || '',
             purchaseDate: new Date(purchase.transactionDate).toISOString(),
             amount: pkg.price,
-            tokensAdded: {
-              flash: pkg.tokens.flash,
-              pro: pkg.tokens.pro,
-            },
+            creditsAdded: pkg.credits,
           };
 
-          // トークン残高を更新
-          await addTokens(pkg.tokens.flash, pkg.tokens.pro, purchaseRecord);
+          // クレジットを追加
+          await addCredits(pkg.credits, purchaseRecord);
 
           setPurchasing(false);
 
           // 成功メッセージ
-          const tokenMsg = pkg.tokens.flash > 0
-            ? `${formatTokenAmount(pkg.tokens.flash)} Quick トークンを追加しました`
-            : `${formatTokenAmount(pkg.tokens.pro)} Think トークンを追加しました`;
-
           Alert.alert(
-            '購入完了',
-            tokenMsg,
+            '💰 購入完了',
+            `${pkg.credits}円分のクレジットを追加しました\n\nモデルに配分しますか？\n（後から設定画面で配分できます）`,
             [
+              { text: '後で配分する', onPress: () => (navigation as any).goBack() },
               {
-                text: 'OK',
-                onPress: () => (navigation as any).goBack(),
+                text: '今すぐ配分する',
+                onPress: () => {
+                  setShouldShowAllocationModal(true);
+                  (navigation as any).goBack();
+                }
               },
             ]
           );

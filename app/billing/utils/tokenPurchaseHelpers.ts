@@ -12,11 +12,11 @@ import { isFlashModel, isProModel } from './modelHelpers';
  * トークン残高を取得するフック
  */
 export function useTokenBalance() {
-  const tokenBalance = useSettingsStore((state) => state.settings.tokenBalance);
+  const getTotalTokensByCategory = useSettingsStore((state) => state.getTotalTokensByCategory);
 
   return {
-    flash: tokenBalance.flash,
-    pro: tokenBalance.pro,
+    flash: getTotalTokensByCategory('quick'),  // 旧名称との互換性のため
+    pro: getTotalTokensByCategory('think'),
   };
 }
 
@@ -24,30 +24,32 @@ export function useTokenBalance() {
  * Quick トークン残高を取得（非React環境から呼び出し可能）
  */
 export function getFlashTokenBalance(): number {
-  const { settings } = useSettingsStore.getState();
-  return settings.tokenBalance.flash;
+  const { getTotalTokensByCategory } = useSettingsStore.getState();
+  return getTotalTokensByCategory('quick');
 }
 
 /**
  * Think トークン残高を取得（非React環境から呼び出し可能）
  */
 export function getProTokenBalance(): number {
-  const { settings } = useSettingsStore.getState();
-  return settings.tokenBalance.pro;
+  const { getTotalTokensByCategory } = useSettingsStore.getState();
+  return getTotalTokensByCategory('think');
 }
 
 /**
  * Quick トークン残高を取得するフック（シンプル版）
  */
 export function useFlashTokenBalance(): number {
-  return useSettingsStore((state) => state.settings.tokenBalance.flash);
+  const getTotalTokensByCategory = useSettingsStore((state) => state.getTotalTokensByCategory);
+  return getTotalTokensByCategory('quick');
 }
 
 /**
  * Think トークン残高を取得するフック（シンプル版）
  */
 export function useProTokenBalance(): number {
-  return useSettingsStore((state) => state.settings.tokenBalance.pro);
+  const getTotalTokensByCategory = useSettingsStore((state) => state.getTotalTokensByCategory);
+  return getTotalTokensByCategory('think');
 }
 
 /**
@@ -65,11 +67,10 @@ export function checkModelTokenLimit(modelId: string): {
   tier?: string;    // Tier情報（互換性のため undefined）
   reason?: string;
 } {
-  const { settings } = useSettingsStore.getState();
-  const { tokenBalance } = settings;
+  const { getTotalTokensByCategory } = useSettingsStore.getState();
 
   if (isFlashModel(modelId)) {
-    const balance = tokenBalance.flash;
+    const balance = getTotalTokensByCategory('quick');
     return {
       canUse: balance > 0,
       current: balance,
@@ -80,7 +81,7 @@ export function checkModelTokenLimit(modelId: string): {
         : 'Quick トークンがありません。トークンを購入してください。',
     };
   } else if (isProModel(modelId)) {
-    const balance = tokenBalance.pro;
+    const balance = getTotalTokensByCategory('think');
     return {
       canUse: balance > 0,
       current: balance,

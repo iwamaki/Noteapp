@@ -76,14 +76,10 @@ export default function TokenPurchaseScreen() {
     const product = tokenProducts.find((p) => (p as any).id === selectedPackage.productId);
     const priceDisplay = product ? (product as any).localizedPrice || `¥${selectedPackage.price}` : `¥${selectedPackage.price}`;
 
-    const tokenAmount = selectedPackage.tokens.flash > 0
-      ? `${formatTokenAmount(selectedPackage.tokens.flash)} Quick トークン`
-      : `${formatTokenAmount(selectedPackage.tokens.pro)} Think トークン`;
-
     return [
       {
-        label: 'トークン数:',
-        value: tokenAmount,
+        label: 'クレジット:',
+        value: `${selectedPackage.credits}円分`,
         isPrimary: false,
       },
       {
@@ -97,37 +93,17 @@ export default function TokenPurchaseScreen() {
   return (
     <MainContainer isLoading={loading}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        {/* Quick トークンパッケージ */}
-        {availablePackages.filter(pkg => pkg.tokens.flash > 0).length > 0 && (
-          <View style={styles.packagesContainer}>
-            {availablePackages
-              .filter(pkg => pkg.tokens.flash > 0)
-              .map((pkg) => (
-                <TokenPackageCard
-                  key={pkg.id}
-                  package={pkg}
-                  product={tokenProducts.find((p) => (p as any).id === pkg.productId)}
-                  onPress={handleCardPress}
-                />
-              ))}
-          </View>
-        )}
-
-        {/* Think トークンパッケージ */}
-        {availablePackages.filter(pkg => pkg.tokens.pro > 0).length > 0 && (
-          <View style={styles.packagesContainer}>
-            {availablePackages
-              .filter(pkg => pkg.tokens.pro > 0)
-              .map((pkg) => (
-                <TokenPackageCard
-                  key={pkg.id}
-                  package={pkg}
-                  product={tokenProducts.find((p) => (p as any).id === pkg.productId)}
-                  onPress={handleCardPress}
-                />
-              ))}
-          </View>
-        )}
+        {/* クレジットパッケージ */}
+        <View style={styles.packagesContainer}>
+          {availablePackages.map((pkg) => (
+            <TokenPackageCard
+              key={pkg.id}
+              package={pkg}
+              product={tokenProducts.find((p) => (p as any).id === pkg.productId)}
+              onPress={handleCardPress}
+            />
+          ))}
+        </View>
 
         {/* 注意事項 */}
         <NoticeCard

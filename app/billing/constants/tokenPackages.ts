@@ -14,10 +14,7 @@ export interface TokenPackage {
   name: string; // パッケージ名
   description: string; // パッケージの説明
   price: number; // 価格（円）
-  tokens: {
-    flash: number; // 付与されるQuickトークン数
-    pro: number; // 付与されるThinkトークン数
-  };
+  credits: number; // 付与されるクレジット額（円建て、通常は price と同じ）
   productId: string; // IAP プロダクトID
   isInitial?: boolean; // 初回購入専用パッケージかどうか
   badge?: string; // バッジ表示（例: "おすすめ", "お得"）
@@ -29,111 +26,56 @@ export interface TokenPackage {
  */
 export const TOKEN_PACKAGES: TokenPackage[] = [
   // Quick トークン - 初回購入パッケージ（初回のみ表示）
-  {
-    id: 'initial',
-    name: '初回購入 (Quick)',
-    description: '初めてのトークン購入 - 低コストモデル用',
-    price: 300,
-    tokens: {
-      flash: 1000000, // 1.0M Quick tokens
-      pro: 0,
-    },
-    productId: Platform.select({
-      ios: 'noteapp.tokens.initial',
-      android: 'noteapp.tokens.initial',
-    }) as string,
-    isInitial: true,
-    badge: '初回限定',
-  },
+  // TODO: ユーザー認証システム導入後に有効化
+  // {
+  //   id: 'initial',
+  //   name: '初回購入 (Quick)',
+  //   description: '初めてのトークン購入 - 低コストモデル用',
+  //   price: 300,
+  //   tokens: {
+  //     flash: 1000000, // 1.0M Quick tokens
+  //     pro: 0,
+  //   },
+  //   productId: Platform.select({
+  //     ios: 'noteapp.tokens.first',
+  //     android: 'noteapp.tokens.first',
+  //   }) as string,
+  //   isInitial: true,
+  //   badge: '初回限定',
+  // },
 
-  // Quick トークン - 通常パッケージ
+  // クレジットパッケージ（シンプル化）
   {
     id: 'small',
-    name: 'Quick スモール',
-    description: '少量のQuickトークンが必要な方に',
+    name: 'スモール',
+    description: '少量のクレジットが必要な方に',
     price: 300,
-    tokens: {
-      flash: 500000, // 0.5M Quick tokens
-      pro: 0,
-    },
+    credits: 300,
     productId: Platform.select({
-      ios: 'noteapp.tokens.small',
-      android: 'noteapp.tokens.small',
+      ios: 'noteapp.credits.small',
+      android: 'noteapp.credits.small',
     }) as string,
   },
   {
     id: 'regular',
-    name: 'Quick レギュラー',
-    description: 'Quickモデルの標準的な使用量に対応',
+    name: 'レギュラー',
+    description: '標準的な使用量に対応',
     price: 500,
-    tokens: {
-      flash: 1000000, // 1.0M Quick tokens
-      pro: 0,
-    },
+    credits: 500,
     productId: Platform.select({
-      ios: 'noteapp.tokens.regular',
-      android: 'noteapp.tokens.regular',
+      ios: 'noteapp.credits.regular',
+      android: 'noteapp.credits.regular',
     }) as string,
-    badge: 'おすすめ',
   },
   {
     id: 'large',
-    name: 'Quick ラージ',
-    description: 'Quickモデルのヘビーユーザー向け',
+    name: 'ラージ',
+    description: 'ヘビーユーザー向け',
     price: 1000,
-    tokens: {
-      flash: 3000000, // 3.0M Quick tokens
-      pro: 0,
-    },
+    credits: 1000,
     productId: Platform.select({
-      ios: 'noteapp.tokens.large',
-      android: 'noteapp.tokens.large',
-    }) as string,
-    badge: 'お得',
-  },
-
-  // Think トークン - 通常パッケージ
-  {
-    id: 'pro_small',
-    name: 'Think スモール',
-    description: '少量のThinkトークンが必要な方に',
-    price: 300,
-    tokens: {
-      flash: 0,
-      pro: 100000, // 0.1M Think tokens
-    },
-    productId: Platform.select({
-      ios: 'noteapp.tokens.pro.small',
-      android: 'noteapp.tokens.pro.small',
-    }) as string,
-  },
-  {
-    id: 'pro_regular',
-    name: 'Think レギュラー',
-    description: 'Thinkモデルの標準的な使用量に対応',
-    price: 500,
-    tokens: {
-      flash: 0,
-      pro: 200000, // 0.2M Think tokens
-    },
-    productId: Platform.select({
-      ios: 'noteapp.tokens.pro.regular',
-      android: 'noteapp.tokens.pro.regular',
-    }) as string,
-    badge: 'おすすめ',
-  },
-  {
-    id: 'pro_large',
-    name: 'Think ラージ',
-    description: 'Thinkモデルのヘビーユーザー向け',
-    price: 1000,
-    tokens: {
-      flash: 0,
-      pro: 700000, // 0.7M Think tokens
-    },
-    productId: Platform.select({
-      ios: 'noteapp.tokens.pro.large',
-      android: 'noteapp.tokens.pro.large',
+      ios: 'noteapp.credits.large',
+      android: 'noteapp.credits.large',
     }) as string,
     badge: 'お得',
   },

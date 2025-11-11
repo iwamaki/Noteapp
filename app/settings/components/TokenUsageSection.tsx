@@ -6,7 +6,7 @@
  * SettingsScreenから分離して責任を明確化。
  */
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -20,6 +20,7 @@ import { useTheme } from '../../design/theme/ThemeContext';
 import { RootStackParamList } from '../../navigation/types';
 import { useMonthlyCost } from '../../billing/utils/costCalculationHelpers';
 import { useSettingsStore } from '../settingsStore';
+import { CreditAllocationModal } from './CreditAllocationModal';
 
 type SettingsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Settings'>;
 
@@ -30,10 +31,25 @@ interface TokenUsageSectionProps {
 export const TokenUsageSection: React.FC<TokenUsageSectionProps> = ({ renderSection }) => {
   const { colors, spacing, typography } = useTheme();
   const navigation = useNavigation<SettingsScreenNavigationProp>();
-  const { settings } = useSettingsStore();
+  const { settings, getTotalTokensByCategory, shouldShowAllocationModal, setShouldShowAllocationModal } = useSettingsStore();
 
   // 月間コスト情報を取得（開発時のみ）
   const costInfo = __DEV__ ? useMonthlyCost() : null;
+
+  // カテゴリーごとの合計トークン数を取得
+  const quickTokens = getTotalTokensByCategory('quick');
+  const thinkTokens = getTotalTokensByCategory('think');
+
+  // クレジット配分モーダルの状態
+  const [showAllocationModal, setShowAllocationModal] = useState(false);
+
+  // 購入完了後の自動モーダル表示
+  useEffect(() => {
+    if (shouldShowAllocationModal) {
+      setShowAllocationModal(true);
+      setShouldShowAllocationModal(false);
+    }
+  }, [shouldShowAllocationModal, setShouldShowAllocationModal]);
 
   const styles = StyleSheet.create({
     usageContainer: {
@@ -152,6 +168,35 @@ export const TokenUsageSection: React.FC<TokenUsageSectionProps> = ({ renderSect
     <>
       {renderSection('トークン残高・使用量')}
 
+      {/* 未配分クレジット残高 */}
+      {settings.tokenBalance.credits > 0 && (
+        <View style={styles.usageContainer}>
+          <View style={styles.modelTitleRow}>
+            <MaterialCommunityIcons
+              name="wallet"
+              size={20}
+              color={colors.primary}
+              style={{ marginRight: 8 }}
+            />
+            <Text style={styles.usageTitle}>未配分クレジット</Text>
+          </View>
+          <View style={styles.balanceDisplay}>
+            <Text style={styles.balanceAmount}>
+              {settings.tokenBalance.credits}
+            </Text>
+            <Text style={styles.balanceLabel}>円</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.purchaseButton}
+            onPress={() => setShowAllocationModal(true)}
+          >
+            <MaterialCommunityIcons name="swap-horizontal" size={20} color="#FFFFFF" style={styles.purchaseButtonIcon} />
+            <Text style={styles.purchaseButtonText}>モデルに配分する</Text>
+            <Ionicons name="chevron-forward" size={20} color="#FFFFFF" />
+          </TouchableOpacity>
+        </View>
+      )}
+
       {/* Quick tokens 使用量 */}
       <View style={styles.usageContainer}>
         <View style={styles.modelTitleRow}>
@@ -165,14 +210,14 @@ export const TokenUsageSection: React.FC<TokenUsageSectionProps> = ({ renderSect
         </View>
         <View style={styles.balanceDisplay}>
           <Text style={styles.balanceAmount}>
-            {settings.tokenBalance.flash.toLocaleString()}
+            {quickTokens.toLocaleString()}
           </Text>
           <Text style={styles.balanceLabel}>トークン</Text>
         </View>
       </View>
 
       {/* Think tokens 使用量（購入トークンがある場合に表示） */}
-      {settings.tokenBalance.pro > 0 && (
+      {thinkTokens > 0 && (
         <View style={styles.usageContainer}>
           <View style={styles.modelTitleRow}>
             <MaterialCommunityIcons
@@ -185,7 +230,7 @@ export const TokenUsageSection: React.FC<TokenUsageSectionProps> = ({ renderSect
           </View>
           <View style={styles.balanceDisplay}>
             <Text style={styles.balanceAmount}>
-              {settings.tokenBalance.pro.toLocaleString()}
+              {thinkTokens.toLocaleString()}
             </Text>
             <Text style={styles.balanceLabel}>トークン</Text>
           </View>
@@ -240,6 +285,12 @@ export const TokenUsageSection: React.FC<TokenUsageSectionProps> = ({ renderSect
           )}
         </View>
       )}
+
+      {/* クレジット配分モーダル */}
+      <CreditAllocationModal
+        isVisible={showAllocationModal}
+        onClose={() => setShowAllocationModal(false)}
+      />
     </>
   );
 };

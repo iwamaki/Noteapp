@@ -25,10 +25,8 @@ export const TokenPackageCard: React.FC<TokenPackageCardProps> = ({
 }) => {
   const { colors, spacing, typography } = useTheme();
 
-  // Quick or Think トークンの表示を決定
-  const tokenDisplay = pkg.tokens.flash > 0
-    ? `${formatTokenAmount(pkg.tokens.flash)} Quick トークン`
-    : `${formatTokenAmount(pkg.tokens.pro)} Think トークン`;
+  // クレジット表示
+  const creditDisplay = `${pkg.credits}円分のクレジット`;
 
   const priceDisplay = product ? (product as any).localizedPrice || `¥${pkg.price}` : `¥${pkg.price}`;
 
@@ -87,7 +85,7 @@ export const TokenPackageCard: React.FC<TokenPackageCardProps> = ({
       <ListItem.Description numberOfLines={2}>{pkg.description}</ListItem.Description>
 
       <View style={styles.infoRow}>
-        <Text style={styles.tokenInfo}>{tokenDisplay}</Text>
+        <Text style={styles.tokenInfo}>{creditDisplay}</Text>
         <Text style={styles.price}>{priceDisplay}</Text>
       </View>
     </TouchableOpacity>

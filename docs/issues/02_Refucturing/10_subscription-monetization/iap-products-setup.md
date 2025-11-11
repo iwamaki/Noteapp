@@ -8,12 +8,12 @@
 ## Flash トークンパッケージ
 
 ### 1. 初回購入 (Flash)
-- **Product ID**: `noteapp.tokens.initial`
+- **Product ID**: `noteapp.tokens.first`
 - **商品名**: 初回購入 (Flash)
 - **説明**: 初めてのトークン購入 - 低コストモデル用
 - **価格**: ¥300
 - **トークン数**: 500,000 Flash トークン
-- **Purchase Option ID**: `initial` (ドットなし)
+- **Purchase Option ID**: `first` (ドットなし)
 
 ### 2. Flash スモール
 - **Product ID**: `noteapp.tokens.small`
@@ -93,7 +93,7 @@
 
 ## 現在の登録状況
 
-✅ noteapp.tokens.initial - 登録済み
+✅ noteapp.tokens.first - 登録済み
 ⬜ noteapp.tokens.small - 未登録
 ⬜ noteapp.tokens.regular - 未登録
 ⬜ noteapp.tokens.large - 未登録
