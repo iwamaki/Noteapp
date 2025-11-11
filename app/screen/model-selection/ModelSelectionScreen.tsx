@@ -25,7 +25,7 @@ import { RootStackParamList } from '../../navigation/types';
 import { useSettingsStore, TOKEN_CAPACITY_LIMITS } from '../../settings/settingsStore';
 import { convertProvidersToModelInfo, type ModelInfo } from './constants';
 import APIService from '../../features/chat/llmService/api';
-import { CreditAllocationModal } from '../../settings/components/CreditAllocationModal';
+import { CreditAllocationModal } from './components/CreditAllocationModal';
 
 type ModelSelectionScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ModelSelection'>;
 
@@ -160,8 +160,6 @@ export const ModelSelectionScreen: React.FC = () => {
     gaugeTitle: {
       fontSize: 13,
       fontWeight: 'bold',
-      flexDirection: 'row',
-      alignItems: 'center',
     },
     gaugeAmount: {
       fontSize: 11,
@@ -233,39 +231,28 @@ export const ModelSelectionScreen: React.FC = () => {
       textAlign: 'right',
     },
     // モデル選択カード
+    modelCardWrapper: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      marginBottom: spacing.sm,
+    },
     modelCard: {
+      flex: 1,
       borderRadius: 8,
-      borderWidth: 1,
-      borderColor: colors.border,
+      borderWidth: 3,
+      borderColor: 'transparent',
       backgroundColor: colors.secondary,
       padding: spacing.md,
-      marginBottom: spacing.sm,
       flexDirection: 'row',
       alignItems: 'center',
     },
     modelCardActive: {
-      borderWidth: 3,
       backgroundColor: colors.secondary,
     },
     modelCardLeft: {
-      flexDirection: 'row',
-      alignItems: 'center',
       flex: 1,
-    },
-    modelRadio: {
-      width: 24,
-      height: 24,
-      borderRadius: 12,
-      borderWidth: 2,
       justifyContent: 'center',
-      alignItems: 'center',
-      marginRight: spacing.md,
-    },
-    modelRadioInner: {
-      width: 12,
-      height: 12,
-      borderRadius: 6,
-      backgroundColor: colors.background,
     },
     modelInfo: {
       flex: 1,
@@ -291,9 +278,11 @@ export const ModelSelectionScreen: React.FC = () => {
       borderRadius: 6,
       padding: spacing.sm,
       marginLeft: spacing.md,
+      borderWidth: 2,
+      borderColor: 'transparent',
     },
     modelTokenBoxActive: {
-      borderWidth: 2,
+      // borderWidthは親から継承（2のまま）
     },
     modelTokenLabel: {
       fontSize: 11,
@@ -318,11 +307,23 @@ export const ModelSelectionScreen: React.FC = () => {
       paddingVertical: 4,
       paddingHorizontal: spacing.sm,
       marginTop: spacing.xs,
+      borderWidth: 1,
+      borderColor: 'transparent',
     },
     modelStatusText: {
       fontSize: 11,
       fontWeight: 'bold',
       textAlign: 'center',
+    },
+    allocateButton: {
+      width: 56,
+      borderRadius: 8,
+      backgroundColor: colors.secondary,
+      borderWidth: 1,
+      borderColor: colors.border,
+      justifyContent: 'center',
+      alignItems: 'center',
+      alignSelf: 'stretch',
     },
     // 追加モデルプレースホルダー
     addModelPlaceholder: {
@@ -351,7 +352,7 @@ export const ModelSelectionScreen: React.FC = () => {
   // ゲージコンポーネント
   const renderGauge = (
     title: string,
-    icon: string,
+    iconName: 'speedometer' | 'speedometer-slow',
     iconColor: string,
     current: number,
     limit: number,
@@ -374,9 +375,12 @@ export const ModelSelectionScreen: React.FC = () => {
     return (
       <View style={styles.gaugeContainer}>
         <View style={styles.gaugeHeader}>
-          <Text style={[styles.gaugeTitle, { color: iconColor }]}>
-            {icon} {title}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+            <MaterialCommunityIcons name={iconName} size={20} color={iconColor} />
+            <Text style={[styles.gaugeTitle, { color: iconColor }]}>
+              {title}
+            </Text>
+          </View>
           <Text style={styles.gaugeAmount}>
             {(current / 1_000_000).toFixed(2)}M / {(limit / 1_000_000).toFixed(2)}M
           </Text>
@@ -462,7 +466,7 @@ export const ModelSelectionScreen: React.FC = () => {
     const pricing = metadata?.pricing;
 
     return (
-      <View key={modelId} style={{ marginBottom: spacing.sm }}>
+      <View key={modelId} style={styles.modelCardWrapper}>
         <TouchableOpacity
           style={[
             styles.modelCard,
@@ -473,24 +477,13 @@ export const ModelSelectionScreen: React.FC = () => {
           disabled={tokens <= 0}
         >
           <View style={styles.modelCardLeft}>
-            <View
-              style={[
-                styles.modelRadio,
-                { borderColor: isActive ? accentColor : colors.border },
-              ]}
-            >
-              {isActive && <View style={styles.modelRadioInner} />}
-            </View>
             <View style={styles.modelInfo}>
               <Text style={styles.modelName}>{model.name}</Text>
               <Text style={styles.modelDescription}>{model.description}</Text>
-              {pricing && (
-                <Text style={styles.modelPricing}>
-                  原価: ${pricing.cost.inputPricePer1M}/1M入力 ${pricing.cost.outputPricePer1M}/1M出力 | 販売価格: ¥{pricing.sellingPriceJPY}/1M
-                </Text>
-              )}
             </View>
           </View>
+
+          {/* トークン残高表示 */}
           <View
             style={[
               styles.modelTokenBox,
@@ -518,23 +511,13 @@ export const ModelSelectionScreen: React.FC = () => {
             )}
           </View>
         </TouchableOpacity>
-        {/* トークン配分ボタン */}
+
+        {/* トークン配分ボタン（リストアイテムの外側右） */}
         <TouchableOpacity
-          style={{
-            marginTop: spacing.xs,
-            paddingVertical: spacing.xs,
-            paddingHorizontal: spacing.sm,
-            backgroundColor: colors.secondary,
-            borderRadius: 6,
-            borderWidth: 1,
-            borderColor: colors.border,
-            alignItems: 'center',
-          }}
+          style={styles.allocateButton}
           onPress={() => handleAllocateTokens(modelId)}
         >
-          <Text style={{ fontSize: 12, color: colors.primary, fontWeight: '600' }}>
-            💰 トークンを配分
-          </Text>
+          <MaterialCommunityIcons name="wallet-plus" size={28} color={colors.primary} />
         </TouchableOpacity>
       </View>
     );
@@ -622,7 +605,7 @@ export const ModelSelectionScreen: React.FC = () => {
 
           {renderGauge(
             'QUICK',
-            '⚡',
+            'speedometer',
             '#FFC107',
             quickTokens,
             quickLimit,
@@ -635,7 +618,7 @@ export const ModelSelectionScreen: React.FC = () => {
 
           {renderGauge(
             'THINK',
-            '🧠',
+            'speedometer-slow',
             '#4CAF50',
             thinkTokens,
             thinkLimit,

@@ -19,6 +19,7 @@ interface CustomModalButton {
   onPress?: () => void;
   style?: 'default' | 'cancel' | 'destructive';
   customComponent?: React.ReactNode; // カスタムボタンコンポーネント
+  disabled?: boolean; // ボタンを無効化
 }
 
 interface CustomModalProps {
@@ -195,11 +196,17 @@ export const CustomModal: React.FC<CustomModalProps> = ({
         keyboardVerticalOffset={keyboardVerticalOffset}
       >
         <Pressable style={styles.centeredView} onPress={onClose}>
-          <Pressable style={styles.modalView} onPress={(e) => e.stopPropagation()}>
+          <Pressable style={styles.modalView} onPress={() => {}}>
             <Text style={styles.modalTitle}>{title}</Text>
             {message && <Text style={styles.modalMessage}>{message}</Text>}
             {children && (
-              <ScrollView style={styles.childrenContainer} showsVerticalScrollIndicator={true}>
+              <ScrollView
+                style={styles.childrenContainer}
+                showsVerticalScrollIndicator={true}
+                keyboardShouldPersistTaps="handled"
+                scrollEnabled={true}
+                nestedScrollEnabled={true}
+              >
                 {children}
               </ScrollView>
             )}
@@ -226,8 +233,13 @@ export const CustomModal: React.FC<CustomModalProps> = ({
                 return (
                   <TouchableOpacity
                     key={index}
-                    style={[styles.button, buttonStyle]}
+                    style={[
+                      styles.button,
+                      buttonStyle,
+                      button.disabled && { opacity: 0.5 }
+                    ]}
                     onPress={button.onPress}
+                    disabled={button.disabled}
                   >
                     <Text style={[styles.buttonText, textStyle]}>{
                       button.text

@@ -20,7 +20,7 @@ import { useTheme } from '../../design/theme/ThemeContext';
 import { RootStackParamList } from '../../navigation/types';
 import { useMonthlyCost } from '../../billing/utils/costCalculationHelpers';
 import { useSettingsStore } from '../settingsStore';
-import { CreditAllocationModal } from './CreditAllocationModal';
+import { CreditAllocationModal } from '../../screen/model-selection/components/CreditAllocationModal';
 
 type SettingsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Settings'>;
 
