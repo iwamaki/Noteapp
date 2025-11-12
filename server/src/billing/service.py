@@ -360,3 +360,40 @@ class BillingService:
         total = sum(b.allocated_tokens for b in balances)
         logger.debug(f"[BillingService] Category '{category}' total tokens: {total}")
         return total
+
+    # =====================================
+    # デバッグ・リセット機能
+    # =====================================
+
+    def reset_all_data(self) -> Dict:
+        """全データリセット（デバッグ用）
+
+        クレジット残高、トークン残高、取引履歴をすべてリセット。
+        開発・テスト環境でのみ使用を想定。
+
+        Returns:
+            Dict: {"success": True, "message": "All data reset successfully"}
+        """
+        try:
+            # クレジット残高をリセット
+            credit = self.db.query(Credit).filter_by(user_id=self.user_id).first()
+            if credit:
+                credit.credits = 0
+
+            # トークン残高をすべて削除
+            self.db.query(TokenBalance).filter_by(user_id=self.user_id).delete()
+
+            # 取引履歴をすべて削除
+            self.db.query(Transaction).filter_by(user_id=self.user_id).delete()
+
+            self.db.commit()
+            logger.info(f"[BillingService] All data reset for user {self.user_id}")
+
+            return {
+                "success": True,
+                "message": "All data reset successfully"
+            }
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"[BillingService] Failed to reset data: {e}")
+            raise ValueError(f"データリセットに失敗しました: {str(e)}")

@@ -466,28 +466,37 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
 
   /**
    * トークン残高と使用量をリセット（デバッグ用）
+   * バックエンドDBとローカルキャッシュの両方をリセット
    */
   resetTokensAndUsage: async () => {
-    const { settings } = get();
-    const newSettings = {
-      ...settings,
-      tokenBalance: {
-        credits: 0,
-        allocatedTokens: {
-          'gemini-2.5-flash': 0,
-          'gemini-2.5-pro': 0,
+    try {
+      // 1. バックエンドDBをリセット
+      const { getBillingApiService } = await import('../billing/services/billingApiService');
+      const billingService = getBillingApiService();
+      await billingService.resetAllData();
+
+      // 2. ローカルキャッシュをリセット
+      const { settings } = get();
+      const newSettings = {
+        ...settings,
+        tokenBalance: {
+          credits: 0,
+          allocatedTokens: {},
         },
-      },
-      purchaseHistory: [],
-      usage: {
-        ...settings.usage,
-        monthlyLLMRequests: 0,
-        monthlyTokensByModel: {},
-      },
-    };
-    await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(newSettings));
-    set({ settings: newSettings });
-    console.log('[Debug] Token balance, credits, and usage reset');
+        purchaseHistory: [],
+        usage: {
+          ...settings.usage,
+          monthlyLLMRequests: 0,
+          monthlyTokensByModel: {},
+        },
+      };
+      await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(newSettings));
+      set({ settings: newSettings });
+      console.log('[Debug] Token balance, credits, and usage reset (backend + local)');
+    } catch (error) {
+      console.error('[Debug] Failed to reset tokens and usage:', error);
+      throw error;
+    }
   },
 
   // =========================

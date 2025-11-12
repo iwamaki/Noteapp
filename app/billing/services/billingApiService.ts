@@ -137,8 +137,14 @@ export class BillingApiService {
    */
   async allocateCredits(allocations: Allocation[]): Promise<void> {
     try {
+      // フロントエンドのcamelCaseをバックエンドのsnake_caseに変換
+      const backendAllocations = allocations.map(alloc => ({
+        model_id: alloc.modelId,
+        credits: alloc.credits,
+      }));
+
       await this.client.post('/credits/allocate', {
-        allocations,
+        allocations: backendAllocations,
       });
       logger.info('billingApi', 'Credits allocated', allocations);
     } catch (error) {
@@ -220,6 +226,20 @@ export class BillingApiService {
     } catch (error) {
       logger.error('billingApi', 'Failed to get category balance', error);
       throw this.handleError(error, 'カテゴリー別残高の取得に失敗しました');
+    }
+  }
+
+  /**
+   * 全データリセット（デバッグ用）
+   * POST /api/billing/reset
+   */
+  async resetAllData(): Promise<void> {
+    try {
+      await this.client.post('/reset');
+      logger.info('billingApi', 'All data reset successfully');
+    } catch (error) {
+      logger.error('billingApi', 'Failed to reset all data', error);
+      throw this.handleError(error, 'データのリセットに失敗しました');
     }
   }
 

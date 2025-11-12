@@ -268,6 +268,41 @@ async def get_pricing(db: Session = Depends(get_db)):
 
 
 # =====================================
+# デバッグ・リセット機能
+# =====================================
+
+@router.post("/reset", response_model=OperationSuccessResponse)
+async def reset_all_data(db: Session = Depends(get_db)):
+    """全データリセット（デバッグ用）
+
+    クレジット残高、トークン残高、取引履歴をすべてリセット。
+    開発・テスト環境でのみ使用を想定。
+
+    Returns:
+        OperationSuccessResponse: {
+            "success": True,
+            "message": "All data reset successfully"
+        }
+    """
+    try:
+        service = BillingService(db)
+        result = service.reset_all_data()
+        return OperationSuccessResponse(**result)
+    except ValueError as e:
+        logger.warning(f"[billing_router] Validation error in reset_all_data: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except Exception as e:
+        logger.error(f"[billing_router] Error in reset_all_data: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"データリセットに失敗しました: {str(e)}"
+        )
+
+
+# =====================================
 # ヘルスチェック
 # =====================================
 
