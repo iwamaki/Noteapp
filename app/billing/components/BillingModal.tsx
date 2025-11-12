@@ -38,7 +38,7 @@ export const BillingModal: React.FC<BillingModalProps> = ({
   onClose,
 }) => {
   const { colors, typography, spacing } = useTheme();
-  const { settings, addCredits, setShouldShowAllocationModal } = useSettingsStore();
+  const { settings, refreshTokenBalance, setShouldShowAllocationModal } = useSettingsStore();
   const [selectedTab, setSelectedTab] = useState<TokenType>('flash');
   const [loading, setLoading] = useState(false);
   const [purchasing, setPurchasing] = useState(false);
@@ -146,7 +146,13 @@ export const BillingModal: React.FC<BillingModalProps> = ({
                   creditsAdded: pkg.credits,
                 };
 
-                await addCredits(pkg.credits, mockPurchaseRecord);
+                // バックエンドにクレジットを追加
+                const { getBillingApiService } = await import('../../billing/services/billingApiService');
+                const billingService = getBillingApiService();
+                await billingService.addCredits(pkg.credits, mockPurchaseRecord);
+
+                // ローカルキャッシュを更新
+                await refreshTokenBalance();
 
                 Alert.alert(
                   '💰 購入完了（開発モード）',
@@ -201,7 +207,13 @@ export const BillingModal: React.FC<BillingModalProps> = ({
             creditsAdded: pkg.credits,
           };
 
-          await addCredits(pkg.credits, purchaseRecord);
+          // バックエンドにクレジットを追加
+          const { getBillingApiService } = await import('../../billing/services/billingApiService');
+          const billingService = getBillingApiService();
+          await billingService.addCredits(pkg.credits, purchaseRecord);
+
+          // ローカルキャッシュを更新
+          await refreshTokenBalance();
 
           setPurchasing(false);
 

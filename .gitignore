@@ -63,3 +63,4 @@ build/
 
 # else
 scripts/
+server/billing.db
