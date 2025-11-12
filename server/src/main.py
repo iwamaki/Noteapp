@@ -11,6 +11,8 @@ from src.llm.routers import knowledge_base_router
 from src.llm.rag.collection_manager import CollectionManager
 from src.llm.rag.cleanup_job import start_cleanup_job, stop_cleanup_job
 from src.api.websocket import manager
+from src.api import billing_router
+from src.billing.database import init_db
 from src.core.logger import logger
 
 
@@ -22,6 +24,10 @@ async def lifespan(app: FastAPI):
     """
     # 起動時の処理
     logger.info("Application startup...")
+
+    # Billingデータベースを初期化
+    init_db()
+    logger.info("Billing database initialized")
 
     # コレクションマネージャーを初期化
     collection_manager = CollectionManager()
@@ -57,6 +63,7 @@ app.include_router(chat_router.router)
 app.include_router(llm_providers_router.router)
 app.include_router(tools_router.router)
 app.include_router(knowledge_base_router.router)
+app.include_router(billing_router.router)
 
 # ルートエンドポイント
 @app.get("/")
@@ -71,7 +78,8 @@ async def root():
             "tools": "/api/tools",
             "health": "/api/health",
             "websocket": "/ws/{client_id}",
-            "knowledge_base": "/api/knowledge-base"
+            "knowledge_base": "/api/knowledge-base",
+            "billing": "/api/billing"
         }
     }
 
