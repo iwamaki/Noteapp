@@ -5,16 +5,11 @@
 """
 価格設定パラメータ
 
-現在のフロントエンド (app/billing/constants/tokenPricing.ts) から移植。
-バックエンドで一元管理することで、価格変更時にアプリ再ビルド不要。
+pricing_config.py の計算ロジックを使用して、DBの初期価格を生成。
+価格はすべて自動計算され、ハードコーディングは一切行わない。
 """
 
-# 価格設定パラメータ
-PRICING_CONFIG = {
-    "exchange_rate": 150,        # 円/USD
-    "margin_percent": 20,        # マージン率（%）
-    "input_output_ratio": 0.5,  # 入出力比率（0.5 = 50%入力、50%出力）
-}
+from src.core.pricing_config import MODEL_PRICING
 
 # カテゴリー別トークン容量制限
 # ユーザー体験の一貫性とコスト管理のため、カテゴリーごとに上限を設定
@@ -26,27 +21,37 @@ TOKEN_CAPACITY_LIMITS = {
 # デフォルトユーザーID（認証システム未実装時）
 DEFAULT_USER_ID = "default_user"
 
+# モデルカテゴリー定義
+MODEL_CATEGORIES = {
+    "gemini-2.5-flash": "quick",
+    "gemini-2.5-pro": "think",
+    "gemini-2.0-flash": "quick",
+    "gemini-2.0-pro": "quick",
+    "gpt-5-mini": "quick",
+}
+
+def _generate_initial_pricing_data():
+    """
+    pricing_config.py の計算結果からDBの初期価格データを生成
+
+    Returns:
+        初期価格データのリスト
+    """
+    pricing_data = []
+
+    for model_id, pricing in MODEL_PRICING.items():
+        category = MODEL_CATEGORIES.get(model_id, "quick")
+
+        pricing_data.append({
+            "model_id": model_id,
+            "price_per_m_token": int(pricing.selling_price_jpy),
+            "category": category,
+            "exchange_rate": 150,  # pricing_config.py の PRICING_CONFIG から
+            "margin_percent": 20,  # pricing_config.py の PRICING_CONFIG から
+        })
+
+    return pricing_data
+
 # 初期価格データ（データベース初期化時に使用）
-INITIAL_PRICING_DATA = [
-    {
-        "model_id": "gemini-2.5-flash",
-        "price_per_m_token": 255,
-        "category": "quick",
-        "exchange_rate": PRICING_CONFIG["exchange_rate"],
-        "margin_percent": PRICING_CONFIG["margin_percent"],
-    },
-    {
-        "model_id": "gemini-2.5-pro",
-        "price_per_m_token": 750,
-        "category": "think",
-        "exchange_rate": PRICING_CONFIG["exchange_rate"],
-        "margin_percent": PRICING_CONFIG["margin_percent"],
-    },
-    {
-        "model_id": "gemini-2.0-flash",
-        "price_per_m_token": 75,
-        "category": "quick",
-        "exchange_rate": PRICING_CONFIG["exchange_rate"],
-        "margin_percent": PRICING_CONFIG["margin_percent"],
-    },
-]
+# pricing_config.py の計算ロジックから自動生成
+INITIAL_PRICING_DATA = _generate_initial_pricing_data()

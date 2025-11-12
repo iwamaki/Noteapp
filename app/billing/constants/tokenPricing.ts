@@ -93,11 +93,19 @@ export const TOKEN_PRICING_JPY: Record<string, number> = {
 
 /**
  * モデルIDから販売価格を取得
+ *
+ * ⚠️ 重要: この関数は同期的に動作するため、事前にバックエンドから価格情報を
+ * 取得してキャッシュしておく必要があります。
+ *
+ * キャッシュは以下のタイミングで更新されます：
+ * 1. アプリ起動時（initBillingApiService）
+ * 2. 価格情報取得時（billingApiService.getPricing()）
+ *
  * @param modelId モデルID
  * @returns 販売価格（円/M tokens）、存在しない場合は undefined
  */
 export function getTokenPrice(modelId: string): number | undefined {
-  // 🆕 バックエンドから取得した価格を優先
+  // 🆕 バックエンドから取得した価格を優先（キャッシュ経由）
   try {
     const APIService = require('../../features/chat/llmService/api').default;
     const providers = APIService.getCachedLLMProviders();
@@ -108,15 +116,19 @@ export function getTokenPrice(modelId: string): number | undefined {
         const typedProvider = provider as any;
         if (typedProvider?.modelMetadata?.[modelId]?.pricing) {
           const pricing = typedProvider.modelMetadata[modelId].pricing;
-          return pricing.sellingPriceJPY;
+          // バックエンドの価格を使用（selling_priceJPY フィールド）
+          if (pricing.sellingPriceJPY !== undefined) {
+            return pricing.sellingPriceJPY;
+          }
         }
       }
     }
   } catch (error) {
-    console.warn('[Pricing] Failed to get price from backend, using fallback', error);
+    console.warn('[Pricing] Failed to get price from backend cache, using fallback', error);
   }
 
-  // フォールバック: ローカルの価格テーブル
+  // ⚠️ フォールバック: ローカルの計算結果（バックエンドと一致するはず）
+  // このフォールバックは、初期化前やキャッシュ失敗時のみ使用される
   return TOKEN_PRICING_JPY[modelId];
 }
 

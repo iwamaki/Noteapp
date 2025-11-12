@@ -3,7 +3,7 @@
 # @responsibility トークン残高管理、クレジット配分、消費処理、取引履歴管理
 
 from sqlalchemy.orm import Session
-from .models import User, TokenBalance, Credit, Transaction, TokenPricing
+from .models import TokenBalance, Credit, Transaction, TokenPricing
 from .config import DEFAULT_USER_ID, TOKEN_CAPACITY_LIMITS
 from typing import Dict, List
 import json

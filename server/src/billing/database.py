@@ -3,7 +3,7 @@
 # @responsibility SQLiteデータベースの初期化、セッション管理、初期データ投入
 
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker
 from .models import Base, User, Credit, TokenPricing
 from .config import DEFAULT_USER_ID, INITIAL_PRICING_DATA
 from src.core.logger import logger
