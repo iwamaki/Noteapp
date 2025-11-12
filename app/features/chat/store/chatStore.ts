@@ -6,7 +6,7 @@
  */
 
 import { create } from 'zustand';
-import { ChatMessage, TokenUsageInfo } from '../llmService/types/types';
+import { ChatMessage, TokenUsageInfo } from '../llmService/types/index';
 
 /**
  * チャットストアの状態と操作を定義するインターフェース

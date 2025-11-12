@@ -5,7 +5,7 @@
  */
 
 import { logger } from '../../../utils/logger';
-import { LLMCommand } from '../llmService/types/types';
+import { LLMCommand } from '../llmService/types/index';
 
 /**
  * ツールのJSON Schema定義

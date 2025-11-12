@@ -16,7 +16,7 @@ import type {
   ChatMessage,
   DocumentSummarizeRequest,
   DocumentSummarizeResponse,
-} from './types/types';
+} from './types/index';
 import { LLMError } from './types/LLMError';
 import { ConversationHistory } from './core/ConversationHistory';
 import { HttpClient } from './utils/HttpClient';
@@ -26,7 +26,7 @@ import { ProviderManager } from './core/ProviderManager';
 import { CHAT_CONFIG } from '../config/chatConfig';
 
 // Re-export types
-export type { ChatMessage, ChatContext, LLMProvider, LLMResponse, LLMHealthStatus, LLMConfig, LLMCommand, TokenUsageInfo, SummarizeRequest, SummarizeResponse, SummaryResult, DocumentSummarizeRequest, DocumentSummarizeResponse } from './types/types';
+export type { ChatMessage, ChatContext, LLMProvider, LLMResponse, LLMHealthStatus, LLMConfig, LLMCommand, TokenUsageInfo, SummarizeRequest, SummarizeResponse, SummaryResult, DocumentSummarizeRequest, DocumentSummarizeResponse } from './types/index';
 export { LLMError } from './types/LLMError';
 export { ConversationHistory } from './core/ConversationHistory';
 

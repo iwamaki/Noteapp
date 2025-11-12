@@ -5,7 +5,7 @@
  */
 
 import { logger } from '../../../utils/logger';
-import { ChatMessage } from '../llmService/types/types';
+import { ChatMessage } from '../llmService/types/index';
 import { LLMError } from '../llmService/types/LLMError';
 
 /**

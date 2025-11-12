@@ -6,7 +6,7 @@
 
 import { FileRepository } from '@data/repositories/fileRepository';
 import type { FileFlat } from '@data/core/typesFlat';
-import { LLMCommand } from '../llmService/types/types';
+import { LLMCommand } from '../llmService/types/index';
 import { CommandHandler } from './types';
 import { logger } from '../../../utils/logger';
 import { UnifiedErrorHandler } from '../utils/errorHandler';

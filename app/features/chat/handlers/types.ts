@@ -4,7 +4,7 @@
  * @responsibility ハンドラのインターフェースと依存関係の型を定義します
  */
 
-import { LLMCommand } from '../llmService/types/types';
+import { LLMCommand } from '../llmService/types/index';
 
 /**
  * コマンドハンドラのコンテキスト

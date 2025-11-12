@@ -1,4 +1,4 @@
-import { LLMCommand } from '../types/types';
+import { LLMCommand } from '../types/index';
 import { LLMError } from '../types/LLMError';
 import ToolService from '../../services/ToolService';
 

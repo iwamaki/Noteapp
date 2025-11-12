@@ -6,7 +6,7 @@
  */
 
 import APIService, { ChatContext } from './llmService/api';
-import { ChatMessage, LLMCommand, TokenUsageInfo, SummarizeResponse } from './llmService/types/types';
+import { ChatMessage, LLMCommand, TokenUsageInfo, SummarizeResponse } from './llmService/types/index';
 import { logger } from '../../utils/logger';
 import { ActiveScreenContextProvider, ActiveScreenContext } from './types';
 import { FileRepository } from '@data/repositories/fileRepository';

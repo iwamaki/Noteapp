@@ -4,7 +4,7 @@
  * @responsibility LLMプロバイダーとモデルの状態管理、デフォルト値の設定
  */
 
-import type { LLMProvider } from '../types/types';
+import type { LLMProvider } from '../types/index';
 
 export interface ProviderManagerConfig {
   defaultProvider?: string;

@@ -180,5 +180,5 @@ export class APIService {
 }
 
 export { LLMService } from './index';
-export { ChatContext, LLMResponse } from './types/types';
+export { ChatContext, LLMResponse } from './types/index';
 export default APIService;

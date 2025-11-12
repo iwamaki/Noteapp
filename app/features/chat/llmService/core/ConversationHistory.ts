@@ -1,4 +1,4 @@
-import { ChatMessage } from '../types/types';
+import { ChatMessage } from '../types/index';
 
 /**
  * 会話履歴管理クラス（インスタンス化対応）
