@@ -5,6 +5,7 @@ from fastapi import APIRouter
 from src.llm.models import LLMProvider, ModelMetadata, PricingInfo, CostInfo
 from src.llm.routers.error_handlers import handle_route_errors
 from src.core.config import settings
+from src.llm.providers.registry import _get_registry
 
 router = APIRouter()
 
@@ -12,6 +13,9 @@ router = APIRouter()
 @handle_route_errors
 async def get_llm_providers():
     """利用可能なLLMプロバイダーを取得（価格情報含む）"""
+    # メタデータを初期化（遅延初期化、循環依存回避）
+    settings._ensure_metadata_initialized()
+
     providers = {}
 
     # モデルメタデータを変換（config形式 → ModelMetadata形式）
@@ -37,48 +41,24 @@ async def get_llm_providers():
             pricing=pricing
         )
 
-    # Geminiプロバイダー
-    gemini_models = settings.available_models.get("gemini", [])
-    gemini_metadata = {k: v for k, v in model_metadata.items() if k in gemini_models}
+    # すべてのプロバイダーをレジストリからループ処理
+    for provider_name, provider_config in _get_registry().items():
+        # API keyの存在を確認
+        api_key_field = provider_config.get_api_key_field()
+        api_key = getattr(settings, api_key_field, None)
+        status = "available" if api_key else "unavailable"
 
-    if settings.gemini_api_key:
-        providers["gemini"] = LLMProvider(
-            name=settings.provider_display_names.get("gemini", "Google Gemini"),
-            defaultModel=settings.get_default_model("gemini"),
-            models=gemini_models,
-            status="available",
-            modelMetadata=gemini_metadata
-        )
-    else:
-        # APIキーが設定されていない場合
-        providers["gemini"] = LLMProvider(
-            name=settings.provider_display_names.get("gemini", "Google Gemini"),
-            defaultModel=settings.get_default_model("gemini"),
-            models=gemini_models,
-            status="unavailable",
-            modelMetadata=gemini_metadata
-        )
+        # このプロバイダーのモデルリストとメタデータをフィルタリング
+        models = provider_config.get_model_ids()
+        provider_metadata = {k: v for k, v in model_metadata.items() if k in models}
 
-    # OpenAIプロバイダー
-    openai_models = settings.available_models.get("openai", [])
-    openai_metadata = {k: v for k, v in model_metadata.items() if k in openai_models}
-
-    if settings.openai_api_key:
-        providers["openai"] = LLMProvider(
-            name=settings.provider_display_names.get("openai", "OpenAI"),
-            defaultModel=settings.get_default_model("openai"),
-            models=openai_models,
-            status="available",
-            modelMetadata=openai_metadata
-        )
-    else:
-        # APIキーが設定されていない場合
-        providers["openai"] = LLMProvider(
-            name=settings.provider_display_names.get("openai", "OpenAI"),
-            defaultModel=settings.get_default_model("openai"),
-            models=openai_models,
-            status="unavailable",
-            modelMetadata=openai_metadata
+        # LLMProviderを生成
+        providers[provider_name] = LLMProvider(
+            name=provider_config.display_name,
+            defaultModel=provider_config.default_model,
+            models=models,
+            status=status,
+            modelMetadata=provider_metadata
         )
 
     return providers
@@ -89,21 +69,20 @@ async def health_check():
     """ヘルスチェック"""
     providers_status = {}
 
-    if settings.gemini_api_key:
-        providers_status["gemini"] = {
-            "name": settings.provider_display_names.get("gemini", "Google Gemini"),
-            "status": "available",
-            "defaultModel": settings.get_default_model("gemini"),
-            "models": settings.available_models.get("gemini", [])
-        }
+    # すべてのプロバイダーをレジストリからループ処理
+    for provider_name, provider_config in _get_registry().items():
+        # API keyの存在を確認
+        api_key_field = provider_config.get_api_key_field()
+        api_key = getattr(settings, api_key_field, None)
 
-    if settings.openai_api_key:
-        providers_status["openai"] = {
-            "name": settings.provider_display_names.get("openai", "OpenAI"),
-            "status": "available",
-            "defaultModel": settings.get_default_model("openai"),
-            "models": settings.available_models.get("openai", [])
-        }
+        # API keyが設定されているプロバイダーのみ返す
+        if api_key:
+            providers_status[provider_name] = {
+                "name": provider_config.display_name,
+                "status": "available",
+                "defaultModel": provider_config.default_model,
+                "models": provider_config.get_model_ids()
+            }
 
     return {
         "status": "ok" if providers_status else "error",

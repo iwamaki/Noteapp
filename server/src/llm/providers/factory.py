@@ -16,8 +16,7 @@ from pydantic import SecretStr
 
 from src.core.config import settings
 from src.llm.providers.base import BaseLLMProvider
-from src.llm.providers.gemini import GeminiProvider
-from src.llm.providers.openai import OpenAIProvider
+from src.llm.providers.registry import get_provider_config, _get_registry
 
 # LangChain imports
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -26,12 +25,6 @@ from langchain_openai import ChatOpenAI
 
 class LLMClientFactory:
     """LLMプロバイダーとクライアントの統一ファクトリー"""
-
-    # プロバイダークラスのレジストリ
-    _PROVIDER_CLASSES = {
-        "gemini": GeminiProvider,
-        "openai": OpenAIProvider,
-    }
 
     @classmethod
     def create_provider(
@@ -48,8 +41,8 @@ class LLMClientFactory:
         Returns:
             BaseLLMProviderインスタンス、またはNone（API keyがない場合）
         """
-        provider_class = cls._PROVIDER_CLASSES.get(provider_name)
-        if not provider_class:
+        config = get_provider_config(provider_name)
+        if not config:
             return None
 
         # API keyを取得
@@ -57,7 +50,7 @@ class LLMClientFactory:
         if not api_key:
             return None
 
-        return provider_class(api_key=api_key, model=model)
+        return config.provider_class(api_key=api_key, model=model)
 
     @classmethod
     def create_llm_client(
@@ -79,13 +72,21 @@ class LLMClientFactory:
         Raises:
             ValueError: プロバイダーがサポートされていない、またはAPI keyが未設定
         """
+        config = get_provider_config(provider_name)
+        if not config:
+            supported = ', '.join(_get_registry().keys())
+            raise ValueError(
+                f"Unsupported provider: {provider_name}. "
+                f"Supported providers: {supported}"
+            )
+
         # API keyを取得
         api_key = cls._get_api_key(provider_name)
         if not api_key:
             raise ValueError(f"{provider_name.capitalize()} API key is not configured")
 
         # モデル名を決定
-        model_name = model or settings.get_default_model(provider_name)
+        model_name = model or config.default_model
 
         # プロバイダーごとにクライアントを生成
         if provider_name == "gemini":
@@ -101,10 +102,8 @@ class LLMClientFactory:
                 temperature=temperature,
             )
         else:
-            raise ValueError(
-                f"Unsupported provider: {provider_name}. "
-                f"Supported providers: {', '.join(cls._PROVIDER_CLASSES.keys())}"
-            )
+            # この分岐には到達しないはずだが、念のため
+            raise ValueError(f"Unsupported provider: {provider_name}")
 
     @classmethod
     def _get_api_key(cls, provider_name: str) -> Optional[str]:
@@ -130,4 +129,4 @@ class LLMClientFactory:
         Returns:
             プロバイダー名のリスト
         """
-        return list(cls._PROVIDER_CLASSES.keys())
+        return list(_get_registry().keys())

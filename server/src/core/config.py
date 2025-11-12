@@ -23,126 +23,16 @@ class Settings:
         # ========================================
         # LLMプロバイダー設定
         # ========================================
+        # プロバイダー設定は src/llm/providers/registry.py で一元管理
+        # ここではデフォルトプロバイダーのみを指定
         self.default_llm_provider: str = "gemini"
 
-        self.provider_display_names: dict[str, str] = {
-            "gemini": "Google Gemini",
-            "openai": "OpenAI"
-        }
-
         # ========================================
-        # モデル設定
+        # モデルメタデータ（基本情報 + 価格情報）
         # ========================================
-        # デフォルトモデル
-        self.default_llm_models: dict[str, str] = {
-            "gemini": "gemini-2.5-flash",
-            "openai": "gpt-5-mini"
-        }
-
-        # 利用可能なモデル一覧
-        self.available_models: dict[str, list[str]] = {
-            "gemini": [
-                "gemini-2.5-flash",
-                "gemini-2.5-pro",
-                "gemini-2.0-flash",
-                "gemini-2.0-pro"
-            ],
-            "openai": [
-                "gpt-5-mini"
-            ]
-        }
-
-        # モデルメタデータ（カテゴリー、表示名、説明、推奨フラグ、価格情報）
-        # フロントエンドの画面表示やトークン管理に使用される
-        # 価格情報は pricing_config.py から自動取得
-        from .pricing_config import MODEL_PRICING
-
+        # メタデータは初期化後に構築される（循環依存回避）
         self.model_metadata: dict[str, dict] = {}
-        for model_id in self.available_models["gemini"]:
-            pricing_info = MODEL_PRICING.get(model_id)
-
-            # 基本メタデータ
-            metadata = {
-                "category": "",
-                "displayName": "",
-                "description": "",
-                "recommended": False,
-            }
-
-            # モデル別の設定
-            if model_id == "gemini-2.5-flash":
-                metadata.update({
-                    "category": "quick",
-                    "displayName": "Gemini 2.5 Flash",
-                    "description": "高速・最新版（推奨）",
-                    "recommended": True,
-                })
-            elif model_id == "gemini-2.5-pro":
-                metadata.update({
-                    "category": "think",
-                    "displayName": "Gemini 2.5 Pro",
-                    "description": "最高性能・複雑なタスク向け（推奨）",
-                    "recommended": True,
-                })
-            elif model_id == "gemini-2.0-flash":
-                metadata.update({
-                    "category": "quick",
-                    "displayName": "Gemini 2.0 Flash",
-                    "description": "互換性・コスト重視",
-                    "recommended": False,
-                })
-            elif model_id == "gemini-2.0-pro":
-                metadata.update({
-                    "category": "think",
-                    "displayName": "Gemini 2.0 Pro",
-                    "description": "互換性・コスト重視",
-                    "recommended": False,
-                })
-
-            # 価格情報を追加
-            if pricing_info:
-                metadata["pricing"] = {
-                    "cost": {
-                        "inputPricePer1M": pricing_info.cost.input_price_per_1m,
-                        "outputPricePer1M": pricing_info.cost.output_price_per_1m,
-                    },
-                    "sellingPriceJPY": pricing_info.selling_price_jpy,
-                }
-
-            self.model_metadata[model_id] = metadata
-
-        # OpenAIモデルのメタデータ設定
-        for model_id in self.available_models["openai"]:
-            pricing_info = MODEL_PRICING.get(model_id)
-
-            # 基本メタデータ
-            metadata = {
-                "category": "",
-                "displayName": "",
-                "description": "",
-                "recommended": False,
-            }
-
-            # モデル別の設定
-            if model_id == "gpt-5-mini":
-                metadata.update({
-                    "category": "quick",
-                    "displayName": "GPT-5 Mini",
-                    "description": "OpenAIの最新高速モデル（推奨）",
-                    "recommended": True,
-                })
-
-            # 価格情報を追加
-            if pricing_info:
-                metadata["pricing"] = {
-                    "cost": {
-                        "inputPricePer1M": pricing_info.cost.input_price_per_1m,
-                        "outputPricePer1M": pricing_info.cost.output_price_per_1m,
-                    },
-                    "sellingPriceJPY": pricing_info.selling_price_jpy,
-                }
-
-            self.model_metadata[model_id] = metadata
+        self._metadata_initialized = False
 
         # ========================================
         # APIキーの読み込み（Secret Manager → 環境変数の順）
@@ -189,6 +79,44 @@ class Settings:
             logger.warning(f"Error accessing secret '{secret_id}': {e}")
         return None
 
+    def _ensure_metadata_initialized(self):
+        """メタデータが初期化されていることを保証する（遅延初期化）
+
+        循環依存を回避するため、メタデータは初回アクセス時に構築される。
+        """
+        if self._metadata_initialized:
+            return
+
+        # 遅延インポート（循環依存回避）
+        from .pricing_config import MODEL_PRICING
+        from src.llm.providers.registry import _get_registry
+
+        # すべてのプロバイダーのモデルをループ
+        for provider_name, provider_config in _get_registry().items():
+            for model_id, model_meta in provider_config.models.items():
+                # registry から基本メタデータを取得
+                metadata = {
+                    "category": model_meta.category,
+                    "displayName": model_meta.display_name,
+                    "description": model_meta.description,
+                    "recommended": model_meta.recommended,
+                }
+
+                # 価格情報を追加
+                pricing_info = MODEL_PRICING.get(model_id)
+                if pricing_info:
+                    metadata["pricing"] = {
+                        "cost": {
+                            "inputPricePer1M": pricing_info.cost.input_price_per_1m,
+                            "outputPricePer1M": pricing_info.cost.output_price_per_1m,
+                        },
+                        "sellingPriceJPY": pricing_info.selling_price_jpy,
+                    }
+
+                self.model_metadata[model_id] = metadata
+
+        self._metadata_initialized = True
+
     def get_default_provider(self) -> str:
         """デフォルトのLLMプロバイダーを取得する"""
         return self.default_llm_provider
@@ -202,9 +130,19 @@ class Settings:
         Returns:
             モデル名
         """
+        from src.llm.providers.registry import get_provider_config
+
         if provider is None:
             provider = self.default_llm_provider
-        return self.default_llm_models.get(provider, self.default_llm_models[self.default_llm_provider])
+
+        config = get_provider_config(provider)
+        if config:
+            return config.default_model
+
+        # フォールバック: 指定されたプロバイダーが見つからない場合は
+        # デフォルトプロバイダーのデフォルトモデルを返す
+        default_config = get_provider_config(self.default_llm_provider)
+        return default_config.default_model if default_config else "gemini-2.5-flash"
 
 # 設定インスタンスを作成
 settings = Settings()
