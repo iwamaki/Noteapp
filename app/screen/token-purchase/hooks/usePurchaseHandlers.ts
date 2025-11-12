@@ -11,7 +11,6 @@ import { useSettingsStore } from '../../../settings/settingsStore';
 import type { PurchaseRecord } from '../../../settings/settingsStore';
 import { purchaseTokenPackage } from '../../../billing/services/tokenIapService';
 import type { TokenPackage } from '../../../billing/constants/tokenPackages';
-import { formatTokenAmount } from '../../../billing/constants/tokenPackages';
 import { isUserCancelledError } from '../../../billing/utils/purchaseHelpers';
 
 interface UsePurchaseHandlersProps {

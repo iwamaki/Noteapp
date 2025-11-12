@@ -28,19 +28,6 @@ export function isThinkModel(modelId: string): boolean {
   return APIService.getModelCategory(modelId) === 'think';
 }
 
-/**
- * @deprecated isFlashModel() は isQuickModel() に名称変更されました
- */
-export function isFlashModel(modelId: string): boolean {
-  return isQuickModel(modelId);
-}
-
-/**
- * @deprecated isProModel() は isThinkModel() に名称変更されました
- */
-export function isProModel(modelId: string): boolean {
-  return isThinkModel(modelId);
-}
 
 /**
  * Quick/Think別のトークン使用量を取得（非React環境から呼び出し可能）

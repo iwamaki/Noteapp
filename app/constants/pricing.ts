@@ -1,9 +1,9 @@
 /**
  * @file pricing.ts
- * @summary LLMモデルの料金テーブル
+ * @summary LLMモデルの料金情報取得（バックエンド経由）
  * @description
- * 各LLMモデルの入力・出力トークン単価を定義。
- * コスト計算に使用。
+ * 各LLMモデルの入力・出力トークン単価をバックエンドから取得。
+ * すべての価格情報はバックエンドが唯一の情報源（Single Source of Truth）。
  */
 
 /**
@@ -24,74 +24,39 @@ export interface ModelPricing {
 }
 
 /**
- * Geminiモデルの料金テーブル
- * 参照: https://ai.google.dev/pricing
- * 最終更新: 2025-01
- */
-export const GEMINI_PRICING: Record<string, ModelPricing> = {
-  // Gemini 2.5 Pro (for prompts <= 200k tokens)
-  'gemini-2.5-pro': {
-    modelId: 'gemini-2.5-pro',
-    displayName: 'Gemini 2.5 Pro',
-    inputPricePer1M: 1.25,
-    outputPricePer1M: 10.0,
-  },
-
-  // Gemini 2.5 Flash
-  'gemini-2.5-flash': {
-    modelId: 'gemini-2.5-flash',
-    displayName: 'Gemini 2.5 Flash',
-    inputPricePer1M: 0.3,
-    outputPricePer1M: 2.5,
-  },
-
-  // Gemini 2.0 Flash
-  'gemini-2.0-flash': {
-    modelId: 'gemini-2.0-flash',
-    displayName: 'Gemini 2.0 Flash',
-    inputPricePer1M: 0.10,
-    outputPricePer1M: 0.40,
-  },
-  // Note: Gemini 1.5 series and 2.0 Pro have been discontinued.
-};
-
-/**
- * 全モデルの料金テーブル
- */
-export const MODEL_PRICING: Record<string, ModelPricing> = {
-  ...GEMINI_PRICING,
-};
-
-/**
- * モデルIDから料金情報を取得
+ * モデルIDから料金情報を取得（バックエンドキャッシュ経由）
  * @param modelId モデルID
  * @returns 料金情報、存在しない場合はundefined
  */
 export function getModelPricing(modelId: string): ModelPricing | undefined {
-  // 🆕 バックエンドから取得した価格を優先
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const APIService = require('../features/chat/llmService/api').default;
     const providers = APIService.getCachedLLMProviders();
 
     if (providers) {
-      const geminiProvider = providers.gemini;
-      const metadata = geminiProvider?.modelMetadata?.[modelId];
+      // すべてのプロバイダーから価格情報を検索
+      for (const provider of Object.values(providers)) {
+        const typedProvider = provider as any;
+        const metadata = typedProvider?.modelMetadata?.[modelId];
 
-      if (metadata?.pricing) {
-        return {
-          modelId,
-          displayName: metadata.displayName || modelId,
-          inputPricePer1M: metadata.pricing.cost.inputPricePer1M,
-          outputPricePer1M: metadata.pricing.cost.outputPricePer1M,
-        };
+        if (metadata?.pricing) {
+          return {
+            modelId,
+            displayName: metadata.displayName || modelId,
+            inputPricePer1M: metadata.pricing.cost.inputPricePer1M,
+            outputPricePer1M: metadata.pricing.cost.outputPricePer1M,
+          };
+        }
       }
     }
   } catch (error) {
-    console.warn('[Pricing] Failed to get pricing from backend, using fallback', error);
+    console.error('[Pricing] Failed to get pricing from backend cache', error);
   }
 
-  // フォールバック: ローカルの価格テーブル
-  return MODEL_PRICING[modelId];
+  // 価格情報が見つからない場合はundefinedを返す
+  console.warn(`[Pricing] No pricing information found for model: ${modelId}`);
+  return undefined;
 }
 
 /**

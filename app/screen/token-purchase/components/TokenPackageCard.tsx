@@ -8,7 +8,6 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import type { Product } from 'react-native-iap';
 import type { TokenPackage } from '../../../billing/constants/tokenPackages';
-import { formatTokenAmount } from '../../../billing/constants/tokenPackages';
 import { ListItem } from '../../../components/ListItem';
 import { useTheme } from '../../../design/theme/ThemeContext';
 

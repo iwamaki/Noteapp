@@ -26,7 +26,6 @@ import { useTokenPurchaseHeader } from './hooks/useTokenPurchaseHeader';
 
 // Types
 import type { TokenPackage } from '../../billing/constants/tokenPackages';
-import { formatTokenAmount } from '../../billing/constants/tokenPackages';
 
 export default function TokenPurchaseScreen() {
   // ヘッダー設定

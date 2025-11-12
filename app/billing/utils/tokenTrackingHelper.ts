@@ -35,7 +35,7 @@ import { logger } from '../../utils/logger';
  *
  * @param inputTokens 入力トークン数
  * @param outputTokens 出力トークン数
- * @param modelId モデルID（例: "gemini-2.0-flash-exp", "gemini-1.5-pro"）
+ * @param modelId モデルID（Quick/Thinkカテゴリーに応じて処理）
  *
  * @example
  * ```typescript
