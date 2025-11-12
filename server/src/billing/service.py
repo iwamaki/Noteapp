@@ -97,7 +97,8 @@ class BillingService:
             credit = Credit(user_id=self.user_id, credits=credits)
             self.db.add(credit)
         else:
-            credit.credits += credits
+            current_credits = credit.credits or 0
+            credit.credits = current_credits + credits
 
         # 取引履歴を記録
         transaction = Transaction(
@@ -170,13 +171,13 @@ class BillingService:
             balance = self.db.query(TokenBalance).filter_by(
                 user_id=self.user_id, model_id=model_id
             ).first()
-            current_model_tokens = balance.allocated_tokens if balance else 0
+            current_model_tokens = (balance.allocated_tokens or 0) if balance else 0
 
             new_total = current_total - current_model_tokens + (current_model_tokens + tokens)
 
             if new_total > limit:
                 remaining = limit - (current_total - current_model_tokens)
-                max_credits = int((remaining / 1_000_000) * pricing.price_per_m_token)
+                max_credits = int((remaining / 1_000_000) * (pricing.price_per_m_token or 0))
                 raise ValueError(
                     f"容量制限を超えています。{category}カテゴリーの上限は"
                     f"{(limit / 1_000_000):.1f}Mトークンです。最大{max_credits}Pまで配分できます。"
@@ -191,7 +192,8 @@ class BillingService:
                 )
                 self.db.add(balance)
             else:
-                balance.allocated_tokens += tokens
+                current_allocated = balance.allocated_tokens or 0
+                balance.allocated_tokens = current_allocated + tokens
 
             # 取引履歴
             transaction = Transaction(
@@ -253,12 +255,13 @@ class BillingService:
         if not balance:
             raise ValueError(f"モデル {model_id} のトークン残高がありません")
 
-        if balance.allocated_tokens < total_tokens:
+        current_allocated = balance.allocated_tokens or 0
+        if current_allocated < total_tokens:
             raise ValueError(
-                f"トークンが不足しています。必要: {total_tokens}、残高: {balance.allocated_tokens}"
+                f"トークンが不足しています。必要: {total_tokens}、残高: {current_allocated}"
             )
 
-        balance.allocated_tokens -= total_tokens
+        balance.allocated_tokens = current_allocated - total_tokens
 
         # 取引履歴
         transaction = Transaction(
@@ -309,7 +312,7 @@ class BillingService:
                 "type": t.type,
                 "amount": t.amount,
                 "model_id": t.model_id,
-                "created_at": t.created_at.isoformat()
+                "created_at": t.created_at.isoformat() if t.created_at else ""
             }
             for t in transactions
         ]
