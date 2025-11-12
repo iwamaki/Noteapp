@@ -100,9 +100,14 @@ export class BillingApiService {
    */
   async getBalance(): Promise<TokenBalance> {
     try {
-      const response = await this.client.get<TokenBalance>('/balance');
+      const response = await this.client.get<any>('/balance');
       logger.info('billingApi', 'Balance fetched', response.data);
-      return response.data;
+
+      // バックエンドのsnake_caseをcamelCaseに変換
+      return {
+        credits: response.data.credits || 0,
+        allocatedTokens: response.data.allocated_tokens || {},
+      };
     } catch (error) {
       logger.error('billingApi', 'Failed to get balance', error);
       throw this.handleError(error, 'トークン残高の取得に失敗しました');

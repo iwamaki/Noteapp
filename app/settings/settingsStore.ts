@@ -381,8 +381,8 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       const newSettings = {
         ...settings,
         tokenBalance: {
-          credits: balance.credits,
-          allocatedTokens: balance.allocatedTokens,
+          credits: balance.credits || 0,
+          allocatedTokens: balance.allocatedTokens || {},
         },
       };
 
