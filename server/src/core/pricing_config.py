@@ -98,11 +98,22 @@ GEMINI_COST_INFO: Dict[str, CostInfo] = {
     ),
 }
 
+# OpenAI モデルの原価（USD/1M tokens）
+# 参照: OpenAI公式情報
+# 最終更新: 2025-08
+OPENAI_COST_INFO: Dict[str, CostInfo] = {
+    "gpt-5-mini": CostInfo(
+        input_price_per_1m=0.25,
+        output_price_per_1m=2.00,
+    ),
+}
+
 # 全モデルの価格情報（自動計算）
 MODEL_PRICING: Dict[str, ModelPricing] = {}
 
 def _initialize_pricing():
     """価格テーブルを初期化（自動計算）"""
+    # Geminiモデルの価格情報を追加
     for model_id, cost_info in GEMINI_COST_INFO.items():
         selling_price = calculate_selling_price(
             cost_info.input_price_per_1m,
@@ -111,6 +122,24 @@ def _initialize_pricing():
         )
 
         # 表示名を取得（config.pyのmodel_metadataから取得するのが理想だが、循環参照を避けるため簡易版）
+        display_name = model_id.replace("-", " ").title()
+
+        MODEL_PRICING[model_id] = ModelPricing(
+            model_id=model_id,
+            display_name=display_name,
+            cost=cost_info,
+            selling_price_jpy=selling_price,
+        )
+
+    # OpenAIモデルの価格情報を追加
+    for model_id, cost_info in OPENAI_COST_INFO.items():
+        selling_price = calculate_selling_price(
+            cost_info.input_price_per_1m,
+            cost_info.output_price_per_1m,
+            PRICING_CONFIG
+        )
+
+        # 表示名を取得
         display_name = model_id.replace("-", " ").title()
 
         MODEL_PRICING[model_id] = ModelPricing(

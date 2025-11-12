@@ -17,10 +17,11 @@ export interface ModelInfo {
 /**
  * モデルIDから短縮名を生成（フォールバック用）
  * 例: "gemini-2.5-flash" → "2.5 Flash"
+ *     "gpt-5-mini" → "5 Mini"
  */
 export function formatShortName(modelId: string): string {
   const parts = modelId.split('-');
-  // "gemini" を除いた部分を大文字化
+  // プロバイダー名（最初のパート）を除いた部分を大文字化
   return parts
     .slice(1)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
@@ -37,40 +38,41 @@ export function convertProvidersToModelInfo(
 ): ModelInfo[] {
   const models: ModelInfo[] = [];
 
-  // Geminiプロバイダーのみを対象（将来的には他のプロバイダーにも対応可能）
-  const geminiProvider = providers['gemini'];
-  if (!geminiProvider || geminiProvider.status !== 'available') {
-    return [];
-  }
-
-  // 各モデルをModelInfo形式に変換
-  geminiProvider.models.forEach((modelId) => {
-    const metadata = geminiProvider.modelMetadata?.[modelId];
-
-    if (metadata) {
-      // バックエンドからメタデータが取得できた場合（推奨）
-      models.push({
-        id: modelId,
-        name: metadata.displayName || modelId,
-        shortName: formatShortName(modelId),
-        description: metadata.description || '',
-        category: metadata.category,
-        recommended: metadata.recommended || false,
-      });
-    } else {
-      // フォールバック: メタデータがない場合は従来のロジック
-      console.warn(`Model metadata not found for ${modelId}, using fallback`);
-      const category = modelId.toLowerCase().includes('flash') ? 'quick' : 'think';
-
-      models.push({
-        id: modelId,
-        name: modelId,
-        shortName: formatShortName(modelId),
-        description: '',
-        category,
-        recommended: false,
-      });
+  // すべての利用可能なプロバイダーを処理
+  Object.values(providers).forEach((provider) => {
+    if (provider.status !== 'available') {
+      return;
     }
+
+    // 各モデルをModelInfo形式に変換
+    provider.models.forEach((modelId) => {
+      const metadata = provider.modelMetadata?.[modelId];
+
+      if (metadata) {
+        // バックエンドからメタデータが取得できた場合（推奨）
+        models.push({
+          id: modelId,
+          name: metadata.displayName || modelId,
+          shortName: formatShortName(modelId),
+          description: metadata.description || '',
+          category: metadata.category,
+          recommended: metadata.recommended || false,
+        });
+      } else {
+        // フォールバック: メタデータがない場合は従来のロジック
+        console.warn(`Model metadata not found for ${modelId}, using fallback`);
+        const category = modelId.toLowerCase().includes('flash') || modelId.toLowerCase().includes('mini') ? 'quick' : 'think';
+
+        models.push({
+          id: modelId,
+          name: modelId,
+          shortName: formatShortName(modelId),
+          description: '',
+          category,
+          recommended: false,
+        });
+      }
+    });
   });
 
   return models;

@@ -98,18 +98,22 @@ export class APIService {
     if (!providers) {
       // キャッシュがない場合はフォールバック
       console.warn('LLM providers not cached, using fallback for model category');
-      return modelId.toLowerCase().includes('flash') ? 'quick' : 'think';
+      const modelIdLower = modelId.toLowerCase();
+      return (modelIdLower.includes('flash') || modelIdLower.includes('mini')) ? 'quick' : 'think';
     }
 
-    // Geminiプロバイダーからメタデータを取得
-    const geminiProvider = providers['gemini'];
-    if (geminiProvider?.modelMetadata?.[modelId]) {
-      return geminiProvider.modelMetadata[modelId].category;
+    // すべてのプロバイダーからメタデータを検索
+    for (const provider of Object.values(providers)) {
+      const typedProvider = provider as any;
+      if (typedProvider?.modelMetadata?.[modelId]) {
+        return typedProvider.modelMetadata[modelId].category;
+      }
     }
 
     // メタデータがない場合はフォールバック
     console.warn(`Model metadata not found for ${modelId}, using fallback`);
-    return modelId.toLowerCase().includes('flash') ? 'quick' : 'think';
+    const modelIdLower = modelId.toLowerCase();
+    return (modelIdLower.includes('flash') || modelIdLower.includes('mini')) ? 'quick' : 'think';
   }
 
   // 会話履歴を要約

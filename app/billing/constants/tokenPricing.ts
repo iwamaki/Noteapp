@@ -103,11 +103,13 @@ export function getTokenPrice(modelId: string): number | undefined {
     const providers = APIService.getCachedLLMProviders();
 
     if (providers) {
-      // Geminiプロバイダーから価格情報を取得
-      const geminiProvider = providers.gemini;
-      if (geminiProvider?.modelMetadata?.[modelId]?.pricing) {
-        const pricing = geminiProvider.modelMetadata[modelId].pricing;
-        return pricing.sellingPriceJPY;
+      // すべてのプロバイダーから価格情報を検索
+      for (const provider of Object.values(providers)) {
+        const typedProvider = provider as any;
+        if (typedProvider?.modelMetadata?.[modelId]?.pricing) {
+          const pricing = typedProvider.modelMetadata[modelId].pricing;
+          return pricing.sellingPriceJPY;
+        }
       }
     }
   } catch (error) {
@@ -158,7 +160,8 @@ export function getModelCategory(modelId: string): 'quick' | 'think' {
   } catch (error) {
     // フォールバック: APIServiceが利用できない場合
     console.warn('Failed to get model category from APIService, using fallback', error);
-    return modelId.toLowerCase().includes('flash') ? 'quick' : 'think';
+    const modelIdLower = modelId.toLowerCase();
+    return (modelIdLower.includes('flash') || modelIdLower.includes('mini')) ? 'quick' : 'think';
   }
 }
 

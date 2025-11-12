@@ -18,6 +18,7 @@ class Settings:
         # APIキー設定
         # ========================================
         self.gemini_api_key: str | None = None
+        self.openai_api_key: str | None = None
 
         # ========================================
         # LLMプロバイダー設定
@@ -25,7 +26,8 @@ class Settings:
         self.default_llm_provider: str = "gemini"
 
         self.provider_display_names: dict[str, str] = {
-            "gemini": "Google Gemini"
+            "gemini": "Google Gemini",
+            "openai": "OpenAI"
         }
 
         # ========================================
@@ -33,7 +35,8 @@ class Settings:
         # ========================================
         # デフォルトモデル
         self.default_llm_models: dict[str, str] = {
-            "gemini": "gemini-2.5-flash"
+            "gemini": "gemini-2.5-flash",
+            "openai": "gpt-5-mini"
         }
 
         # 利用可能なモデル一覧
@@ -43,6 +46,9 @@ class Settings:
                 "gemini-2.5-pro",
                 "gemini-2.0-flash",
                 "gemini-2.0-pro"
+            ],
+            "openai": [
+                "gpt-5-mini"
             ]
         }
 
@@ -105,11 +111,45 @@ class Settings:
 
             self.model_metadata[model_id] = metadata
 
+        # OpenAIモデルのメタデータ設定
+        for model_id in self.available_models["openai"]:
+            pricing_info = MODEL_PRICING.get(model_id)
+
+            # 基本メタデータ
+            metadata = {
+                "category": "",
+                "displayName": "",
+                "description": "",
+                "recommended": False,
+            }
+
+            # モデル別の設定
+            if model_id == "gpt-5-mini":
+                metadata.update({
+                    "category": "quick",
+                    "displayName": "GPT-5 Mini",
+                    "description": "OpenAIの最新高速モデル（推奨）",
+                    "recommended": True,
+                })
+
+            # 価格情報を追加
+            if pricing_info:
+                metadata["pricing"] = {
+                    "cost": {
+                        "inputPricePer1M": pricing_info.cost.input_price_per_1m,
+                        "outputPricePer1M": pricing_info.cost.output_price_per_1m,
+                    },
+                    "sellingPriceJPY": pricing_info.selling_price_jpy,
+                }
+
+            self.model_metadata[model_id] = metadata
+
         # ========================================
         # APIキーの読み込み（Secret Manager → 環境変数の順）
         # ========================================
         gcp_project_id = os.getenv("GCP_PROJECT_ID")
         gemini_secret_id = os.getenv("GEMINI_API_SECRET_ID", "GOOGLE_API_KEY")
+        openai_secret_id = os.getenv("OPENAI_API_SECRET_ID", "OPENAI_API_KEY")
 
         # GOOGLE_APPLICATION_CREDENTIALS が設定されている場合、Secret Managerから取得を試みる
         if os.getenv("GOOGLE_APPLICATION_CREDENTIALS"):
@@ -117,12 +157,16 @@ class Settings:
                 client = secretmanager.SecretManagerServiceClient()
                 if gcp_project_id and gemini_secret_id:
                     self.gemini_api_key = self._get_secret(client, gcp_project_id, gemini_secret_id)
+                if gcp_project_id and openai_secret_id:
+                    self.openai_api_key = self._get_secret(client, gcp_project_id, openai_secret_id)
             except Exception as e:
                 logger.warning(f"Secret Manager initialization failed: {e}. Using environment variables.")
 
         # Secret Managerで取得できなかった場合は環境変数からフォールバック
         if not self.gemini_api_key:
             self.gemini_api_key = os.getenv("GEMINI_API_KEY")
+        if not self.openai_api_key:
+            self.openai_api_key = os.getenv("OPENAI_API_KEY")
 
     def _get_secret(self, client, project_id: str, secret_id: str) -> str | None:
         """Secret Managerから最新バージョンのシークレットを取得

@@ -6,7 +6,9 @@
 from typing import List, Dict, Any, Optional, Tuple
 from datetime import datetime
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage
+from pydantic import SecretStr
 
 from src.core.config import settings
 from src.core.logger import logger
@@ -21,10 +23,10 @@ class SummarizationService:
         pass
 
     def _get_llm_instance(self, provider: str, model: Optional[str]):
-        """LLMインスタンスを取得する（Gemini専用）
+        """LLMインスタンスを取得する
 
         Args:
-            provider: LLMプロバイダー（"gemini"のみサポート）
+            provider: LLMプロバイダー（"gemini"または"openai"）
             model: モデル名（Noneの場合はデフォルト）
 
         Returns:
@@ -45,8 +47,23 @@ class SummarizationService:
                 temperature=0.3,
             )
 
+        elif provider == "openai":
+            if not settings.openai_api_key:
+                raise ValueError("OpenAI API key is not configured")
+
+            model_name = model or settings.get_default_model("openai")
+            logger.info(
+                f"Creating LLM instance: provider={provider}, "
+                f"requested_model={model}, final_model={model_name}"
+            )
+            return ChatOpenAI(
+                api_key=SecretStr(settings.openai_api_key),
+                model=model_name,
+                temperature=0.3,
+            )
+
         else:
-            raise ValueError(f"Unsupported provider: {provider}. Only 'gemini' is supported.")
+            raise ValueError(f"Unsupported provider: {provider}. Supported providers: 'gemini', 'openai'")
 
     async def summarize(
         self,
