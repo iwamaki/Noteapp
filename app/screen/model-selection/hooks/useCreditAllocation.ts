@@ -21,7 +21,7 @@ export const useCreditAllocation = ({
   initialModelId,
   onClose,
 }: UseCreditAllocationProps) => {
-  const { settings, allocateCredits, getTotalTokensByCategory } = useSettingsStore();
+  const { settings, refreshTokenBalance, getTotalTokensByCategory } = useSettingsStore();
 
   // State
   const [modelInfo, setModelInfo] = useState<ModelInfo | null>(null);
@@ -135,12 +135,18 @@ export const useCreditAllocation = ({
     setIsAllocating(true);
 
     try {
-      await allocateCredits([
+      // バックエンドにクレジットを配分
+      const { getBillingApiService } = await import('../../../billing/services/billingApiService');
+      const billingService = getBillingApiService();
+      await billingService.allocateCredits([
         {
           modelId: modelInfo.id,
           credits: creditsToAllocate,
         },
       ]);
+
+      // ローカルキャッシュを更新
+      await refreshTokenBalance();
 
       Alert.alert(
         '✅ 配分完了',

@@ -12,6 +12,7 @@ import { configureLLMServiceTask } from './configureLLMService';
 import { preloadLLMProvidersTask } from './preloadLLMProviders';
 import { configureChatServiceTask } from './configureChatService';
 import { initializeWebSocketTask } from './initializeWebSocket';
+import { initializeBillingServiceTask } from './initializeBillingService';
 import { verifyAppReadyTask } from './verifyAppReady';
 import { loadIconFontsTask } from './loadIconFonts';
 import { loadToolDefinitionsTask } from './loadToolDefinitions';
@@ -38,6 +39,7 @@ export const allInitializationTasks: InitializationTask[] = [
   preloadLLMProvidersTask,
   configureChatServiceTask,
   initializeWebSocketTask,  // WebSocket接続の初期化
+  initializeBillingServiceTask,  // Billing APIの初期化
   loadToolDefinitionsTask,
 
   // Stage 4: READY - UI表示準備完了
@@ -53,6 +55,7 @@ export {
   preloadLLMProvidersTask,
   configureChatServiceTask,
   initializeWebSocketTask,
+  initializeBillingServiceTask,
   loadToolDefinitionsTask,
   verifyAppReadyTask,
 };

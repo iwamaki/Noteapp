@@ -254,12 +254,11 @@ interface SettingsStore {
   updateSettings: (updates: Partial<AppSettings>) => Promise<void>;
   resetSettings: () => Promise<void>;
 
-  // クレジット・トークン管理関数
-  addCredits: (credits: number, purchaseRecord: PurchaseRecord) => Promise<void>;
-  allocateCredits: (allocations: Array<{ modelId: string; credits: number }>) => Promise<void>;
-  deductTokens: (modelId: string, tokens: number) => Promise<void>;
-  loadModel: (category: 'quick' | 'think', modelId: string) => Promise<void>;
+  // トークン残高管理関数（API経由）
+  loadTokenBalance: () => Promise<void>;
+  refreshTokenBalance: () => Promise<void>;
   getTotalTokensByCategory: (category: 'quick' | 'think') => number;
+  loadModel: (category: 'quick' | 'think', modelId: string) => Promise<void>;
   getPurchaseHistory: () => PurchaseRecord[];
   resetTokensAndUsage: () => Promise<void>; // デバッグ用：トークン残高と使用量をリセット
 
@@ -361,118 +360,50 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
   },
 
   /**
-   * クレジットを追加（購入時に呼び出される）
-   * @param credits 追加するクレジット額（円建て）
-   * @param purchaseRecord 購入履歴レコード
+   * トークン残高をAPIから取得してキャッシュを更新
+   * アプリ起動時および各操作後に呼び出される
    */
-  addCredits: async (credits: number, purchaseRecord: PurchaseRecord) => {
-    const { settings } = get();
+  loadTokenBalance: async () => {
+    try {
+      // BillingApiServiceをインポート（遅延インポートで循環依存を回避）
+      const { getBillingApiService, isBillingApiServiceInitialized } = await import('../billing/services/billingApiService');
 
-    const newSettings = {
-      ...settings,
-      tokenBalance: {
-        ...settings.tokenBalance,
-        credits: settings.tokenBalance.credits + credits,
-      },
-      purchaseHistory: [purchaseRecord, ...settings.purchaseHistory], // 最新を先頭に
-    };
-
-    await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(newSettings));
-    set({ settings: newSettings });
-    console.log(`[Credits] Added ${credits} credits. New balance: ${newSettings.tokenBalance.credits} credits`);
-  },
-
-  /**
-   * クレジットを各モデルにトークンとして配分
-   * @param allocations 配分先のモデルとクレジット額の配列
-   * @throws クレジット不足、容量制限超過の場合はエラー
-   */
-  allocateCredits: async (allocations: Array<{ modelId: string; credits: number }>) => {
-    const { settings, getTotalTokensByCategory } = get();
-
-    // 合計クレジット額を計算
-    const totalCreditsToAllocate = allocations.reduce((sum, a) => sum + a.credits, 0);
-
-    // クレジット残高をチェック
-    if (totalCreditsToAllocate > settings.tokenBalance.credits) {
-      throw new Error(
-        `クレジットが不足しています。必要: ${totalCreditsToAllocate}P、残高: ${settings.tokenBalance.credits}P`
-      );
-    }
-
-    // 容量制限をチェック + トークン数を計算
-    const newAllocatedTokens = { ...settings.tokenBalance.allocatedTokens };
-    const { creditsToTokens, getTokenPrice, getModelCategory } = await import('../billing/constants/tokenPricing');
-
-    for (const { modelId, credits } of allocations) {
-      if (credits <= 0) continue;
-
-      const category = getModelCategory(modelId);
-      const pricePerMToken = getTokenPrice(modelId);
-
-      if (!pricePerMToken) {
-        throw new Error(`モデル ${modelId} の価格情報が見つかりません`);
+      // 初期化されていない場合はスキップ（初期化前の呼び出しを許容）
+      if (!isBillingApiServiceInitialized()) {
+        console.warn('[SettingsStore] BillingApiService not initialized, skipping balance load');
+        return;
       }
 
-      // クレジットをトークンに変換
-      const tokens = creditsToTokens(modelId, credits);
+      const billingService = getBillingApiService();
+      const balance = await billingService.getBalance();
 
-      // 容量制限をチェック
-      const currentTotal = getTotalTokensByCategory(category);
-      const currentModelTokens = newAllocatedTokens[modelId] || 0;
-      const newCategoryTotal = currentTotal - currentModelTokens + (currentModelTokens + tokens);
-      const limit = TOKEN_CAPACITY_LIMITS[category];
-
-      if (newCategoryTotal > limit) {
-        const remaining = limit - (currentTotal - currentModelTokens);
-        const maxCredits = Math.floor((remaining / 1_000_000) * pricePerMToken);
-        throw new Error(
-          `容量制限を超えています。${category === 'quick' ? 'Quick' : 'Think'}カテゴリーの上限は${(limit / 1000000).toFixed(1)}Mトークンです。最大${maxCredits}Pまで配分できます。`
-        );
-      }
-
-      // トークンを配分
-      newAllocatedTokens[modelId] = (newAllocatedTokens[modelId] || 0) + tokens;
-    }
-
-    // クレジットを減算
-    const newSettings = {
-      ...settings,
-      tokenBalance: {
-        credits: settings.tokenBalance.credits - totalCreditsToAllocate,
-        allocatedTokens: newAllocatedTokens,
-      },
-    };
-
-    await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(newSettings));
-    set({ settings: newSettings });
-    console.log(`[Credits] Allocated ${totalCreditsToAllocate} credits. Remaining: ${newSettings.tokenBalance.credits} credits`);
-  },
-
-  /**
-   * トークンを消費（LLM使用時に呼び出される）
-   * @param modelId 消費対象のモデルID（例: "gemini-2.5-flash"）
-   * @param tokens 消費するトークン数
-   */
-  deductTokens: async (modelId: string, tokens: number) => {
-    const { settings } = get();
-    const currentBalance = settings.tokenBalance.allocatedTokens[modelId] || 0;
-    const newBalance = Math.max(0, currentBalance - tokens);
-
-    const newSettings = {
-      ...settings,
-      tokenBalance: {
-        ...settings.tokenBalance,
-        allocatedTokens: {
-          ...settings.tokenBalance.allocatedTokens,
-          [modelId]: newBalance,
+      const { settings } = get();
+      const newSettings = {
+        ...settings,
+        tokenBalance: {
+          credits: balance.credits,
+          allocatedTokens: balance.allocatedTokens,
         },
-      },
-    };
+      };
 
-    await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(newSettings));
-    set({ settings: newSettings });
-    console.log(`[TokenBalance] Deducted ${tokens} tokens from ${modelId}. New balance: ${newBalance}`);
+      await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(newSettings));
+      set({ settings: newSettings });
+      console.log('[SettingsStore] Token balance loaded from API:', {
+        credits: balance.credits,
+        models: Object.keys(balance.allocatedTokens).length,
+      });
+    } catch (error) {
+      console.error('[SettingsStore] Failed to load token balance:', error);
+      // エラー時はローカルのキャッシュを使用（通信エラーに備える）
+    }
+  },
+
+  /**
+   * トークン残高を更新（各操作後に呼び出す）
+   * loadTokenBalance() のエイリアス
+   */
+  refreshTokenBalance: async () => {
+    await get().loadTokenBalance();
   },
 
   /**

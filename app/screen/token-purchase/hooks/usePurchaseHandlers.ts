@@ -26,7 +26,7 @@ interface UsePurchaseHandlersReturn {
 export const usePurchaseHandlers = ({
   tokenProducts,
 }: UsePurchaseHandlersProps): UsePurchaseHandlersReturn => {
-  const { addCredits } = useSettingsStore();
+  const { refreshTokenBalance } = useSettingsStore();
   const [purchasing, setPurchasing] = useState(false);
 
   // トークンパッケージ購入処理
@@ -55,8 +55,13 @@ export const usePurchaseHandlers = ({
                   creditsAdded: pkg.credits,
                 };
 
-                // クレジットを追加
-                await addCredits(pkg.credits, mockPurchaseRecord);
+                // バックエンドにクレジットを追加
+                const { getBillingApiService } = await import('../../../billing/services/billingApiService');
+                const billingService = getBillingApiService();
+                await billingService.addCredits(pkg.credits, mockPurchaseRecord);
+
+                // ローカルキャッシュを更新
+                await refreshTokenBalance();
 
                 Alert.alert(
                   '💰 購入完了（開発モード）',
@@ -103,8 +108,13 @@ export const usePurchaseHandlers = ({
             creditsAdded: pkg.credits,
           };
 
-          // クレジットを追加
-          await addCredits(pkg.credits, purchaseRecord);
+          // バックエンドにクレジットを追加
+          const { getBillingApiService } = await import('../../../billing/services/billingApiService');
+          const billingService = getBillingApiService();
+          await billingService.addCredits(pkg.credits, purchaseRecord);
+
+          // ローカルキャッシュを更新
+          await refreshTokenBalance();
 
           setPurchasing(false);
 

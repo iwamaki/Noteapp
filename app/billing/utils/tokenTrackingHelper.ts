@@ -52,27 +52,31 @@ export async function trackAndDeductTokens(
   outputTokens: number,
   modelId: string
 ): Promise<void> {
-  const { trackTokenUsage, incrementLLMRequestCount, deductTokens } =
+  const { trackTokenUsage, incrementLLMRequestCount, refreshTokenBalance } =
     useSettingsStore.getState();
 
   try {
-    const totalTokens = inputTokens + outputTokens;
-
-    // 1. 購入トークン残高から即時消費（モデル単位で消費）
-    await deductTokens(modelId, totalTokens);
+    // 1. バックエンドでトークン消費（サーバー側で残高チェック）
+    const { getBillingApiService } = await import('../services/billingApiService');
+    const billingService = getBillingApiService();
+    await billingService.consumeTokens(modelId, inputTokens, outputTokens);
     logger.info(
       'system',
-      `Deducted ${totalTokens} tokens from ${modelId} balance`
+      `Consumed ${inputTokens + outputTokens} tokens from ${modelId} via API`
     );
 
-    // 2. 月次使用量を記録（統計表示用）
+    // 2. ローカルキャッシュを更新
+    await refreshTokenBalance();
+    logger.debug('system', 'Token balance cache refreshed');
+
+    // 3. 月次使用量を記録（統計表示用）
     await trackTokenUsage(inputTokens, outputTokens, modelId);
     logger.debug(
       'system',
       `Tracked usage for ${modelId}: input=${inputTokens}, output=${outputTokens}`
     );
 
-    // 3. LLMリクエスト回数をインクリメント
+    // 4. LLMリクエスト回数をインクリメント
     await incrementLLMRequestCount();
   } catch (error) {
     logger.error('system', 'Failed to track and deduct tokens:', error);
