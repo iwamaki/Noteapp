@@ -5,15 +5,13 @@
 """
 from typing import List, Dict, Any, Optional, Tuple
 from datetime import datetime
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage
-from pydantic import SecretStr
 
 from src.core.config import settings
 from src.core.logger import logger
 from src.llm.models import SummarizeResponse, SummaryResult
 from src.llm.utils.token_counter import count_message_tokens
+from src.llm.providers.factory import LLMClientFactory
 
 
 class SummarizationService:
@@ -31,39 +29,19 @@ class SummarizationService:
 
         Returns:
             LangChain LLM instance
+
+        Raises:
+            ValueError: プロバイダーがサポートされていない、またはAPI keyが未設定
         """
-        if provider == "gemini":
-            if not settings.gemini_api_key:
-                raise ValueError("Gemini API key is not configured")
-
-            model_name = model or settings.get_default_model("gemini")
-            logger.info(
-                f"Creating LLM instance: provider={provider}, "
-                f"requested_model={model}, final_model={model_name}"
-            )
-            return ChatGoogleGenerativeAI(
-                api_key=settings.gemini_api_key,
-                model=model_name,
-                temperature=0.3,
-            )
-
-        elif provider == "openai":
-            if not settings.openai_api_key:
-                raise ValueError("OpenAI API key is not configured")
-
-            model_name = model or settings.get_default_model("openai")
-            logger.info(
-                f"Creating LLM instance: provider={provider}, "
-                f"requested_model={model}, final_model={model_name}"
-            )
-            return ChatOpenAI(
-                api_key=SecretStr(settings.openai_api_key),
-                model=model_name,
-                temperature=0.3,
-            )
-
-        else:
-            raise ValueError(f"Unsupported provider: {provider}. Supported providers: 'gemini', 'openai'")
+        logger.info(
+            f"Creating LLM instance: provider={provider}, "
+            f"requested_model={model}"
+        )
+        return LLMClientFactory.create_llm_client(
+            provider_name=provider,
+            model=model,
+            temperature=0.3
+        )
 
     async def summarize(
         self,
