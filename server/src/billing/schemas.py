@@ -16,7 +16,7 @@ class TokenBalanceResponse(BaseModel):
     allocated_tokens: Dict[str, int] = Field(
         ...,
         description="モデル別の配分済みトークン数",
-        example={"gemini-2.5-flash": 100000, "gemini-2.5-pro": 50000}
+        examples=[{"gemini-2.5-flash": 100000, "gemini-2.5-pro": 50000}]
     )
 
 
@@ -46,10 +46,10 @@ class PricingInfoResponse(BaseModel):
     pricing: Dict[str, PricingInfoItem] = Field(
         ...,
         description="モデルID -> 価格情報のマッピング",
-        example={
+        examples=[{
             "gemini-2.5-flash": {"price_per_m_token": 255, "category": "quick"},
             "gemini-2.5-pro": {"price_per_m_token": 750, "category": "think"}
-        }
+        }]
     )
 
 
@@ -76,19 +76,19 @@ class AddCreditsRequest(BaseModel):
     purchase_record: dict = Field(
         ...,
         description="購入レコード情報",
-        example={
+        examples=[{
             "productId": "noteapp.credits.small",
             "transactionId": "1000000123456789",
             "purchaseDate": "2025-11-12T10:30:00Z",
             "amount": 300,
             "creditsAdded": 300
-        }
+        }]
     )
 
 
 class AllocationItem(BaseModel):
     """クレジット配分アイテム"""
-    model_id: str = Field(..., description="配分先モデルID", example="gemini-2.5-flash")
+    model_id: str = Field(..., description="配分先モデルID", examples=["gemini-2.5-flash"])
     credits: int = Field(..., gt=0, description="配分するクレジット額（円）")
 
 
@@ -96,17 +96,17 @@ class AllocateCreditsRequest(BaseModel):
     """クレジット配分リクエスト"""
     allocations: List[AllocationItem] = Field(
         ...,
-        min_items=1,
+        min_length=1,
         description="配分情報のリスト",
-        example=[
+        examples=[[
             {"model_id": "gemini-2.5-flash", "credits": 100},
             {"model_id": "gemini-2.5-pro", "credits": 50}
-        ]
+        ]]
     )
 
 
 class ConsumeTokensRequest(BaseModel):
     """トークン消費リクエスト"""
-    model_id: str = Field(..., description="消費対象モデルID", example="gemini-2.5-flash")
+    model_id: str = Field(..., description="消費対象モデルID", examples=["gemini-2.5-flash"])
     input_tokens: int = Field(..., ge=0, description="入力トークン数")
     output_tokens: int = Field(..., ge=0, description="出力トークン数")
