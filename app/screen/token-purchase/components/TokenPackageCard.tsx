@@ -37,20 +37,6 @@ export const TokenPackageCard: React.FC<TokenPackageCardProps> = ({
       padding: spacing.md,
       marginBottom: spacing.sm,
     },
-    badge: {
-      position: 'absolute',
-      top: spacing.sm,
-      right: spacing.sm,
-      backgroundColor: colors.primary,
-      paddingHorizontal: spacing.sm,
-      paddingVertical: spacing.xs,
-      borderRadius: 4,
-    },
-    badgeText: {
-      color: colors.white,
-      fontSize: typography.caption.fontSize,
-      fontWeight: '600',
-    },
     infoRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',
@@ -75,12 +61,6 @@ export const TokenPackageCard: React.FC<TokenPackageCardProps> = ({
       onPress={() => onPress(pkg)}
       activeOpacity={0.7}
     >
-      {pkg.badge && (
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>{pkg.badge}</Text>
-        </View>
-      )}
-
       <ListItem.Title style={{ marginBottom: spacing.xs }}>{pkg.name}</ListItem.Title>
       <ListItem.Description numberOfLines={2}>{pkg.description}</ListItem.Description>
 

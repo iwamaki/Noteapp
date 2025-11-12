@@ -6,7 +6,6 @@
 
 import { useState } from 'react';
 import { Alert } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
 import type { Product, Purchase } from 'react-native-iap';
 import { useSettingsStore } from '../../../settings/settingsStore';
 import type { PurchaseRecord } from '../../../settings/settingsStore';
@@ -27,7 +26,6 @@ interface UsePurchaseHandlersReturn {
 export const usePurchaseHandlers = ({
   tokenProducts,
 }: UsePurchaseHandlersProps): UsePurchaseHandlersReturn => {
-  const navigation = useNavigation();
   const { addCredits } = useSettingsStore();
   const [purchasing, setPurchasing] = useState(false);
 
@@ -62,10 +60,7 @@ export const usePurchaseHandlers = ({
 
                 Alert.alert(
                   '💰 購入完了（開発モード）',
-                  `${pkg.credits}Pのクレジットを追加しました`,
-                  [
-                    { text: 'OK', onPress: () => (navigation as any).goBack() },
-                  ]
+                  `${pkg.credits}Pのクレジットを追加しました`
                 );
               } catch (error) {
                 console.error('[usePurchaseHandlers] Mock purchase error:', error);
@@ -116,10 +111,7 @@ export const usePurchaseHandlers = ({
           // 成功メッセージ
           Alert.alert(
             '💰 購入完了',
-            `${pkg.credits}Pのクレジットを追加しました`,
-            [
-              { text: 'OK', onPress: () => (navigation as any).goBack() },
-            ]
+            `${pkg.credits}Pのクレジットを追加しました`
           );
         },
         // onError
