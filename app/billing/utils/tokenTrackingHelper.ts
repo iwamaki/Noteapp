@@ -7,7 +7,6 @@
  */
 
 import { useSettingsStore } from '../../settings/settingsStore';
-import { isFlashModel, isProModel } from './modelHelpers';
 import { logger } from '../../utils/logger';
 
 /**

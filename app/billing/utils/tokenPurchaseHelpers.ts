@@ -6,7 +6,7 @@
  */
 
 import { useSettingsStore } from '../../settings/settingsStore';
-import { isFlashModel, isProModel } from './modelHelpers';
+import { isQuickModel, isThinkModel } from './modelHelpers';
 
 /**
  * トークン残高を取得するフック
@@ -69,7 +69,7 @@ export function checkModelTokenLimit(modelId: string): {
 } {
   const { getTotalTokensByCategory } = useSettingsStore.getState();
 
-  if (isFlashModel(modelId)) {
+  if (isQuickModel(modelId)) {
     const balance = getTotalTokensByCategory('quick');
     return {
       canUse: balance > 0,
@@ -80,7 +80,7 @@ export function checkModelTokenLimit(modelId: string): {
         ? undefined
         : 'Quick トークンがありません。トークンを購入してください。',
     };
-  } else if (isProModel(modelId)) {
+  } else if (isThinkModel(modelId)) {
     const balance = getTotalTokensByCategory('think');
     return {
       canUse: balance > 0,
@@ -93,11 +93,12 @@ export function checkModelTokenLimit(modelId: string): {
     };
   }
 
-  // Flash/Pro 以外のモデル（将来の拡張用）
+  // Quick/Think 以外のモデル（エラーケース）
   return {
-    canUse: true,
+    canUse: false,
     current: 0,
     max: -1,
     percentage: 0,
+    reason: `モデル ${modelId} は未対応です。対応モデルを選択してください。`,
   };
 }

@@ -6,23 +6,40 @@
  */
 
 import { useSettingsStore } from '../../settings/settingsStore';
+import APIService from '../../features/chat/llmService/api';
 
 /**
- * モデルIDがFlash系（Quick）かどうかを判定
+ * モデルIDがQuick系かどうかを判定
+ * バックエンドから取得したcategory情報を使用
  * @param modelId チェックするモデルID
- * @returns Flash系の場合 true
+ * @returns Quick系の場合 true
  */
-export function isFlashModel(modelId: string): boolean {
-  return modelId.toLowerCase().includes('flash');
+export function isQuickModel(modelId: string): boolean {
+  return APIService.getModelCategory(modelId) === 'quick';
 }
 
 /**
- * モデルIDがPro系（Think）かどうかを判定
+ * モデルIDがThink系かどうかを判定
+ * バックエンドから取得したcategory情報を使用
  * @param modelId チェックするモデルID
- * @returns Pro系の場合 true
+ * @returns Think系の場合 true
+ */
+export function isThinkModel(modelId: string): boolean {
+  return APIService.getModelCategory(modelId) === 'think';
+}
+
+/**
+ * @deprecated isFlashModel() は isQuickModel() に名称変更されました
+ */
+export function isFlashModel(modelId: string): boolean {
+  return isQuickModel(modelId);
+}
+
+/**
+ * @deprecated isProModel() は isThinkModel() に名称変更されました
  */
 export function isProModel(modelId: string): boolean {
-  return modelId.toLowerCase().includes('pro');
+  return isThinkModel(modelId);
 }
 
 /**
@@ -46,10 +63,10 @@ export function getTokenUsageByModelType(): {
   let proOutput = 0;
 
   for (const [modelId, tokenUsage] of Object.entries(usage.monthlyTokensByModel)) {
-    if (isFlashModel(modelId)) {
+    if (isQuickModel(modelId)) {
       flashInput += tokenUsage.inputTokens;
       flashOutput += tokenUsage.outputTokens;
-    } else if (isProModel(modelId)) {
+    } else if (isThinkModel(modelId)) {
       proInput += tokenUsage.inputTokens;
       proOutput += tokenUsage.outputTokens;
     }
