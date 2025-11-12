@@ -296,7 +296,7 @@ export const CreditAllocationModal: React.FC<CreditAllocationModalProps> = ({
       {/* 現在のクレジット残高 */}
       <View style={styles.balanceContainer}>
         <Text style={styles.balanceLabel}>未配分クレジット:</Text>
-        <Text style={styles.balanceAmount}>{settings.tokenBalance.credits}円</Text>
+        <Text style={styles.balanceAmount}>{settings.tokenBalance.credits}P</Text>
       </View>
 
       {/* 配分先モデル情報 */}
@@ -346,7 +346,7 @@ export const CreditAllocationModal: React.FC<CreditAllocationModalProps> = ({
             keyboardType="numeric"
             selectTextOnFocus
           />
-          <Text style={styles.inputSuffix}>円</Text>
+          <Text style={styles.inputSuffix}>P</Text>
         </View>
         <TouchableOpacity
           style={styles.stepButton}
@@ -386,7 +386,7 @@ export const CreditAllocationModal: React.FC<CreditAllocationModalProps> = ({
                 settings.tokenBalance.credits < amount && styles.quickButtonTextDisabled,
               ]}
             >
-              {amount}円
+              {amount}P
             </Text>
           </TouchableOpacity>
         ))}
@@ -449,7 +449,7 @@ export const CreditAllocationModal: React.FC<CreditAllocationModalProps> = ({
             style={styles.warningIcon}
           />
           <Text style={styles.warningText}>
-            容量制限を超えています。最大{maxAllocatableCredits}円まで配分できます。
+            容量制限を超えています。最大{maxAllocatableCredits}Pまで配分できます。
           </Text>
         </View>
       )}

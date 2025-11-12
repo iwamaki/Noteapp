@@ -3,7 +3,8 @@
 @summary モデル価格情報と計算ロジック
 @description
 フロントエンドのtokenPricing.tsから移植した価格計算ロジック。
-USD建て原価からJPY建て販売価格を自動計算する。
+USD建て原価からポイント換算価格を自動計算する。
+ポイント（P）は内部的に円と同等の価値で計算されるが、ユーザーには通貨ではなくポイントとして表示される。
 """
 
 from typing import Dict, Optional
@@ -12,7 +13,7 @@ from pydantic import BaseModel
 
 class PricingConfig(BaseModel):
     """価格設定パラメータ"""
-    exchange_rate: float = 150.0  # 為替レート（円/USD）
+    exchange_rate: float = 150.0  # 為替レート（ポイント換算レート: P/USD、内部的には円と同等）
     margin_percent: float = 20.0  # マージン率（%）
     input_output_ratio: float = 0.5  # 入出力トークンの価格比率（入力:出力）
 
@@ -28,7 +29,7 @@ class ModelPricing(BaseModel):
     model_id: str
     display_name: str
     cost: CostInfo  # 原価（USD）
-    selling_price_jpy: float  # 販売価格（JPY/1M tokens）
+    selling_price_jpy: float  # 販売価格（P/1M tokens）※内部的には円と同等だがポイント表記
 
 
 # 💰 価格設定（ここを変更するだけで全モデルの販売価格が自動計算される）
@@ -45,7 +46,7 @@ def calculate_selling_price(
     config: PricingConfig = PRICING_CONFIG
 ) -> int:
     """
-    原価（USD）から販売価格（JPY）を自動計算
+    原価（USD）から販売価格（ポイント）を自動計算
 
     Args:
         input_price_usd: 入力トークン単価（USD/1M）
@@ -53,7 +54,7 @@ def calculate_selling_price(
         config: 価格設定パラメータ
 
     Returns:
-        販売価格（JPY/1M tokens）、5円単位で四捨五入
+        販売価格（P/1M tokens）、5P単位で四捨五入
     """
     # 入力と出力の加重平均価格を計算
     avg_price_usd = (
@@ -61,13 +62,13 @@ def calculate_selling_price(
         output_price_usd * (1 - config.input_output_ratio)
     )
 
-    # 円建て原価
+    # ポイント換算価格（内部的には円と同等）
     cost_jpy = avg_price_usd * config.exchange_rate
 
     # マージンを加えた販売価格
     selling_price = cost_jpy * (1 + config.margin_percent / 100)
 
-    # 5円単位で四捨五入（価格の見栄えを良くする）
+    # 5P単位で四捨五入（価格の見栄えを良くする）
     return round(selling_price / 5) * 5
 
 
@@ -168,11 +169,11 @@ def calculate_cost_usd(
 
 def credits_to_tokens(model_id: str, credits: float) -> int:
     """
-    クレジット（円）をトークン数に変換
+    クレジット（ポイント）をトークン数に変換
 
     Args:
         model_id: モデルID
-        credits: クレジット額（円）
+        credits: クレジット額（P）
 
     Returns:
         トークン数、価格情報がない場合は0
@@ -186,14 +187,14 @@ def credits_to_tokens(model_id: str, credits: float) -> int:
 
 def tokens_to_credits(model_id: str, tokens: int) -> int:
     """
-    トークン数をクレジット（円）に変換
+    トークン数をクレジット（ポイント）に変換
 
     Args:
         model_id: モデルID
         tokens: トークン数
 
     Returns:
-        クレジット額（円）、価格情報がない場合は0
+        クレジット額（P）、価格情報がない場合は0
     """
     pricing = get_model_pricing(model_id)
     if not pricing or tokens <= 0:

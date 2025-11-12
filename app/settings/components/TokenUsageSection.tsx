@@ -151,7 +151,7 @@ export const TokenUsageSection: React.FC<TokenUsageSectionProps> = ({ renderSect
               <ListItem.Title>クレジット</ListItem.Title>
             </View>
             {settings.tokenBalance.credits > 0 && (
-              <Text style={styles.valueText}>{settings.tokenBalance.credits}円</Text>
+              <Text style={styles.valueText}>{settings.tokenBalance.credits}P</Text>
             )}
           </View>
           <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>

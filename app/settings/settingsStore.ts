@@ -470,7 +470,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     // クレジット残高をチェック
     if (totalCreditsToAllocate > settings.tokenBalance.credits) {
       throw new Error(
-        `クレジットが不足しています。必要: ${totalCreditsToAllocate}円、残高: ${settings.tokenBalance.credits}円`
+        `クレジットが不足しています。必要: ${totalCreditsToAllocate}P、残高: ${settings.tokenBalance.credits}P`
       );
     }
 
@@ -501,7 +501,7 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
         const remaining = limit - (currentTotal - currentModelTokens);
         const maxCredits = Math.floor((remaining / 1_000_000) * pricePerMToken);
         throw new Error(
-          `容量制限を超えています。${category === 'quick' ? 'Quick' : 'Think'}カテゴリーの上限は${(limit / 1000000).toFixed(1)}Mトークンです。最大${maxCredits}円まで配分できます。`
+          `容量制限を超えています。${category === 'quick' ? 'Quick' : 'Think'}カテゴリーの上限は${(limit / 1000000).toFixed(1)}Mトークンです。最大${maxCredits}Pまで配分できます。`
         );
       }
 

@@ -111,7 +111,7 @@ export const BillingModal: React.FC<BillingModalProps> = ({
     return [
       {
         label: 'クレジット:',
-        value: `${selectedPackage.credits}円分`,
+        value: `${selectedPackage.credits}P`,
         isPrimary: false,
       },
       {
@@ -150,7 +150,7 @@ export const BillingModal: React.FC<BillingModalProps> = ({
 
                 Alert.alert(
                   '💰 購入完了（開発モード）',
-                  `${pkg.credits}円分のクレジットを追加しました\n\nモデルに配分しますか？\n（後から設定画面で配分できます）`,
+                  `${pkg.credits}Pのクレジットを追加しました\n\nモデルに配分しますか？\n（後から設定画面で配分できます）`,
                   [
                     { text: '後で配分する', onPress: onClose },
                     {
@@ -207,7 +207,7 @@ export const BillingModal: React.FC<BillingModalProps> = ({
 
           Alert.alert(
             '💰 購入完了',
-            `${pkg.credits}円分のクレジットを追加しました\n\nモデルに配分しますか？\n（後から設定画面で配分できます）`,
+            `${pkg.credits}Pのクレジットを追加しました\n\nモデルに配分しますか？\n（後から設定画面で配分できます）`,
             [
               { text: '後で配分する', onPress: onClose },
               {
@@ -414,7 +414,7 @@ export const BillingModal: React.FC<BillingModalProps> = ({
         {/* 現在のクレジット残高 */}
         <View style={styles.balanceContainer}>
           <Text style={styles.balanceText}>
-            未配分クレジット: {settings.tokenBalance.credits}円
+            未配分クレジット: {settings.tokenBalance.credits}P
           </Text>
         </View>
 

@@ -144,7 +144,7 @@ export const useCreditAllocation = ({
 
       Alert.alert(
         '✅ 配分完了',
-        `${creditsToAllocate}円分のクレジットを\n${modelInfo.name}に配分しました\n\n${convertedTokens.toLocaleString()}トークンが追加されました`,
+        `${creditsToAllocate}Pのクレジットを\n${modelInfo.name}に配分しました\n\n${convertedTokens.toLocaleString()}トークンが追加されました`,
         [{ text: 'OK', onPress: onClose }]
       );
     } catch (error: any) {

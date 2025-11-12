@@ -62,7 +62,7 @@ export const usePurchaseHandlers = ({
 
                 Alert.alert(
                   '💰 購入完了（開発モード）',
-                  `${pkg.credits}円分のクレジットを追加しました`,
+                  `${pkg.credits}Pのクレジットを追加しました`,
                   [
                     { text: 'OK', onPress: () => (navigation as any).goBack() },
                   ]
@@ -116,7 +116,7 @@ export const usePurchaseHandlers = ({
           // 成功メッセージ
           Alert.alert(
             '💰 購入完了',
-            `${pkg.credits}円分のクレジットを追加しました`,
+            `${pkg.credits}Pのクレジットを追加しました`,
             [
               { text: 'OK', onPress: () => (navigation as any).goBack() },
             ]

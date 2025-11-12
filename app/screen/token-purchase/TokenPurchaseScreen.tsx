@@ -79,7 +79,7 @@ export default function TokenPurchaseScreen() {
     return [
       {
         label: 'クレジット:',
-        value: `${selectedPackage.credits}円分`,
+        value: `${selectedPackage.credits}P`,
         isPrimary: false,
       },
       {

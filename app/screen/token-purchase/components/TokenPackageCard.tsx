@@ -26,7 +26,7 @@ export const TokenPackageCard: React.FC<TokenPackageCardProps> = ({
   const { colors, spacing, typography } = useTheme();
 
   // クレジット表示
-  const creditDisplay = `${pkg.credits}円分のクレジット`;
+  const creditDisplay = `${pkg.credits}P`;
 
   const priceDisplay = product ? (product as any).localizedPrice || `¥${pkg.price}` : `¥${pkg.price}`;
 
