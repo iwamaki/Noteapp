@@ -19,6 +19,7 @@ class Settings:
         # ========================================
         self.gemini_api_key: str | None = None
         self.openai_api_key: str | None = None
+        self.google_cse_api_key: str | None = None  # Google Custom Search API用
 
         # ========================================
         # LLMプロバイダー設定
@@ -40,6 +41,7 @@ class Settings:
         gcp_project_id = os.getenv("GCP_PROJECT_ID")
         gemini_secret_id = os.getenv("GEMINI_API_SECRET_ID", "GOOGLE_API_KEY")
         openai_secret_id = os.getenv("OPENAI_API_SECRET_ID", "OPENAI_API_KEY")
+        google_cse_secret_id = os.getenv("GOOGLE_CSE_API_SECRET_ID", "GOOGLE_CSE_API_KEY")
 
         # Secret Manager から API キーを取得（必須）
         if not os.getenv("GOOGLE_APPLICATION_CREDENTIALS"):
@@ -74,6 +76,16 @@ class Settings:
                     logger.warning(
                         "OPENAI_API_KEY not found in Secret Manager. "
                         "OpenAI provider will not be available."
+                    )
+
+            # Google Custom Search API キーの取得（オプション）
+            if google_cse_secret_id:
+                self.google_cse_api_key = self._get_secret(client, gcp_project_id, google_cse_secret_id)
+                # Web検索はオプション機能なので、エラーにはしない
+                if not self.google_cse_api_key:
+                    logger.warning(
+                        "GOOGLE_CSE_API_KEY not found in Secret Manager. "
+                        "Web search functionality will not be available."
                     )
         except exceptions.PermissionDenied as e:
             raise ValueError(

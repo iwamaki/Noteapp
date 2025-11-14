@@ -1,5 +1,6 @@
 from langchain.tools import tool
 from src.core.logger import logger
+from src.core.config import settings
 import os
 import httpx
 from bs4 import BeautifulSoup  # type: ignore
@@ -40,13 +41,19 @@ async def web_search(
     fetch_details = max(0, min(5, fetch_details))
 
     # Google Custom Search APIのキー確認
-    api_key = os.getenv("GOOGLE_API_KEY")
+    # Secret Managerから取得したAPIキーを使用
+    api_key = settings.google_cse_api_key
     search_engine_id = os.getenv("GOOGLE_CSE_ID")
 
     if not api_key or not search_engine_id:
         error_msg = "Google Custom Search APIの設定が不足しています。"
         logger.error(f"Missing API credentials: api_key={bool(api_key)}, search_engine_id={bool(search_engine_id)}")
-        return f"エラー: {error_msg}\n\n.envファイルに以下の環境変数を設定してください:\n- GOOGLE_API_KEY: Google API Key\n- GOOGLE_CSE_ID: Custom Search Engine ID"
+        return (
+            f"エラー: {error_msg}\n\n"
+            "必要な設定:\n"
+            "- GOOGLE_CSE_API_KEY: Secret Managerに登録済みであることを確認してください\n"
+            "- GOOGLE_CSE_ID: .envファイルに設定してください (Custom Search Engine ID)"
+        )
 
     try:
         # Google Custom Search APIを使用

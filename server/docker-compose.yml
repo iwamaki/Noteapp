@@ -8,13 +8,35 @@ services:
     volumes:
       - .:/app
     environment:
+      # ========================================
+      # Python 設定
+      # ========================================
       - PYTHONUNBUFFERED=1
-      - GOOGLE_APPLICATION_CREDENTIALS=/app/.secrets/geapi/key.json
+
+      # ========================================
+      # Google Cloud Platform
+      # ========================================
       - GCP_PROJECT_ID=${GCP_PROJECT_ID}
-      - OPENAI_API_SECRET_ID=${OPENAI_API_SECRET_ID}
+      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS}
+
+      # ========================================
+      # Secret Manager シークレット名
+      # ========================================
       - GEMINI_API_SECRET_ID=${GEMINI_API_SECRET_ID}
-      # - LOG_LEVEL=INFO  # 本番用（簡潔ログ）
-      - LOG_LEVEL=DEBUG  # 開発用（詳細ログ）
+      - OPENAI_API_SECRET_ID=${OPENAI_API_SECRET_ID}
+      - GOOGLE_CSE_API_SECRET_ID=${GOOGLE_CSE_API_SECRET_ID}
+
+      # ========================================
+      # Google Custom Search
+      # ========================================
+      - GOOGLE_CSE_ID=${GOOGLE_CSE_ID}
+
+      # ========================================
+      # アプリケーション設定
+      # ========================================
+      - ANDROID_PACKAGE_NAME=${ANDROID_PACKAGE_NAME}
+      - ENV=${ENV}
+      - LOG_LEVEL=${LOG_LEVEL}
+
     restart: unless-stopped
     command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
-    # user: "1000:1000"
