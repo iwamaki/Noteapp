@@ -5,6 +5,7 @@
  */
 
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import { getAuthHeaders } from '../../../../auth/authApiClient';
 
 export interface HttpClientConfig {
   baseUrl: string;
@@ -26,6 +27,16 @@ export class HttpClient {
       headers: {
         'Content-Type': 'application/json',
       },
+    });
+
+    // リクエストインターセプターで認証ヘッダーを自動追加
+    this.axiosInstance.interceptors.request.use(async (requestConfig) => {
+      const authHeaders = await getAuthHeaders();
+      requestConfig.headers = {
+        ...requestConfig.headers,
+        ...authHeaders,
+      };
+      return requestConfig;
     });
   }
 

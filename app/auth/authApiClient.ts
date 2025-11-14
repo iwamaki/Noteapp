@@ -4,6 +4,8 @@
  * @responsibility バックエンドの認証APIとの通信を管理
  */
 
+import { getOrCreateDeviceId } from './deviceIdService';
+
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:8000';
 
 // 型定義
@@ -15,6 +17,19 @@ export interface DeviceRegisterResponse {
 
 export interface ErrorResponse {
   detail: string;
+}
+
+/**
+ * 認証ヘッダーを取得
+ * すべてのAPIリクエストで使用するヘッダーを返す
+ * @returns 認証ヘッダー
+ */
+export async function getAuthHeaders(): Promise<Record<string, string>> {
+  const deviceId = await getOrCreateDeviceId();
+  return {
+    'Content-Type': 'application/json',
+    'X-Device-ID': deviceId,
+  };
 }
 
 /**

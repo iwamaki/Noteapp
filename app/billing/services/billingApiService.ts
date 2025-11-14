@@ -8,6 +8,7 @@
 
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import { logger } from '../../utils/logger';
+import { getAuthHeaders } from '../../auth/authApiClient';
 
 // ======================
 // Type Definitions
@@ -76,9 +77,17 @@ export class BillingApiService {
       },
     });
 
-    // リクエスト/レスポンスインターセプターでログ出力
-    this.client.interceptors.request.use((config) => {
+    // リクエスト/レスポンスインターセプターでログ出力と認証ヘッダー追加
+    this.client.interceptors.request.use(async (config) => {
       logger.debug('billingApi', `Request: ${config.method?.toUpperCase()} ${config.url}`);
+
+      // 認証ヘッダーを追加
+      const authHeaders = await getAuthHeaders();
+      config.headers = {
+        ...config.headers,
+        ...authHeaders,
+      };
+
       return config;
     });
 

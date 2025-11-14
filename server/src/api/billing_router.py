@@ -2,10 +2,12 @@
 # @summary Billing API エンドポイント
 # @responsibility トークン管理APIの公開、リクエスト処理、エラーハンドリング
 
+import os
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from src.billing.database import get_db
 from src.billing.service import BillingService
+from src.auth.dependencies import verify_user
 from src.billing.schemas import (
     TokenBalanceResponse,
     AddCreditsRequest,
@@ -29,7 +31,10 @@ router = APIRouter(prefix="/api/billing", tags=["billing"])
 # =====================================
 
 @router.get("/balance", response_model=TokenBalanceResponse)
-async def get_balance(db: Session = Depends(get_db)):
+async def get_balance(
+    user_id: str = Depends(verify_user),
+    db: Session = Depends(get_db)
+):
     """トークン残高取得
 
     未配分クレジットと各モデルの配分済みトークン数を取得。
@@ -41,7 +46,7 @@ async def get_balance(db: Session = Depends(get_db)):
         }
     """
     try:
-        service = BillingService(db)
+        service = BillingService(db, user_id)
         balance = service.get_balance()
         return TokenBalanceResponse(**balance)
     except Exception as e:
@@ -53,7 +58,11 @@ async def get_balance(db: Session = Depends(get_db)):
 
 
 @router.get("/balance/category/{category}", response_model=CategoryBalanceResponse)
-async def get_category_balance(category: str, db: Session = Depends(get_db)):
+async def get_category_balance(
+    category: str,
+    user_id: str = Depends(verify_user),
+    db: Session = Depends(get_db)
+):
     """カテゴリー別トークン合計取得
 
     指定されたカテゴリー（quick/think）の全トークン合計を取得。
@@ -74,7 +83,7 @@ async def get_category_balance(category: str, db: Session = Depends(get_db)):
         )
 
     try:
-        service = BillingService(db)
+        service = BillingService(db, user_id)
         total = service.get_category_balance(category)
         return CategoryBalanceResponse(category=category, total_tokens=total)
     except Exception as e:
@@ -90,7 +99,11 @@ async def get_category_balance(category: str, db: Session = Depends(get_db)):
 # =====================================
 
 @router.post("/credits/add", response_model=OperationSuccessResponse)
-async def add_credits(request: AddCreditsRequest, db: Session = Depends(get_db)):
+async def add_credits(
+    request: AddCreditsRequest,
+    user_id: str = Depends(verify_user),
+    db: Session = Depends(get_db)
+):
     """クレジット追加（購入時）
 
     アプリ内課金完了後に呼び出される。
@@ -106,7 +119,7 @@ async def add_credits(request: AddCreditsRequest, db: Session = Depends(get_db))
         }
     """
     try:
-        service = BillingService(db)
+        service = BillingService(db, user_id)
         result = service.add_credits(request.credits, request.purchase_record)
         return OperationSuccessResponse(**result)
     except ValueError as e:
@@ -124,7 +137,11 @@ async def add_credits(request: AddCreditsRequest, db: Session = Depends(get_db))
 
 
 @router.post("/credits/allocate", response_model=OperationSuccessResponse)
-async def allocate_credits(request: AllocateCreditsRequest, db: Session = Depends(get_db)):
+async def allocate_credits(
+    request: AllocateCreditsRequest,
+    user_id: str = Depends(verify_user),
+    db: Session = Depends(get_db)
+):
     """クレジット配分
 
     未配分クレジットを各モデルにトークンとして配分。
@@ -140,7 +157,7 @@ async def allocate_credits(request: AllocateCreditsRequest, db: Session = Depend
         HTTPException(400): クレジット不足、容量制限超過の場合
     """
     try:
-        service = BillingService(db)
+        service = BillingService(db, user_id)
         allocations = [
             {"model_id": a.model_id, "credits": a.credits}
             for a in request.allocations
@@ -166,7 +183,11 @@ async def allocate_credits(request: AllocateCreditsRequest, db: Session = Depend
 # =====================================
 
 @router.post("/tokens/consume", response_model=ConsumeTokensResponse)
-async def consume_tokens(request: ConsumeTokensRequest, db: Session = Depends(get_db)):
+async def consume_tokens(
+    request: ConsumeTokensRequest,
+    user_id: str = Depends(verify_user),
+    db: Session = Depends(get_db)
+):
     """トークン消費
 
     LLM使用時に呼び出される。
@@ -185,7 +206,7 @@ async def consume_tokens(request: ConsumeTokensRequest, db: Session = Depends(ge
         HTTPException(400): トークン残高不足の場合
     """
     try:
-        service = BillingService(db)
+        service = BillingService(db, user_id)
         result = service.consume_tokens(
             request.model_id,
             request.input_tokens,
@@ -211,7 +232,11 @@ async def consume_tokens(request: ConsumeTokensRequest, db: Session = Depends(ge
 # =====================================
 
 @router.get("/transactions", response_model=List[TransactionResponse])
-async def get_transactions(limit: int = 100, db: Session = Depends(get_db)):
+async def get_transactions(
+    limit: int = 100,
+    user_id: str = Depends(verify_user),
+    db: Session = Depends(get_db)
+):
     """取引履歴取得
 
     最新の取引履歴を取得。
@@ -223,7 +248,7 @@ async def get_transactions(limit: int = 100, db: Session = Depends(get_db)):
         List[TransactionResponse]: 取引履歴のリスト
     """
     try:
-        service = BillingService(db)
+        service = BillingService(db, user_id)
         transactions = service.get_transactions(limit=limit)
         return [TransactionResponse(**t) for t in transactions]
     except Exception as e:
@@ -239,6 +264,7 @@ async def get_pricing(db: Session = Depends(get_db)):
     """価格情報取得
 
     全モデルの価格情報を取得。
+    認証不要（公開情報）。
 
     Returns:
         PricingInfoResponse: {
@@ -249,7 +275,9 @@ async def get_pricing(db: Session = Depends(get_db)):
         }
     """
     try:
-        service = BillingService(db)
+        # 価格情報は公開情報なので、DEFAULT_USER_IDを使用
+        from src.billing.config import DEFAULT_USER_ID
+        service = BillingService(db, DEFAULT_USER_ID)
         pricing_data = service.get_pricing()
 
         # PricingInfoItemに変換
@@ -272,7 +300,10 @@ async def get_pricing(db: Session = Depends(get_db)):
 # =====================================
 
 @router.post("/reset", response_model=OperationSuccessResponse)
-async def reset_all_data(db: Session = Depends(get_db)):
+async def reset_all_data(
+    user_id: str = Depends(verify_user),
+    db: Session = Depends(get_db)
+):
     """全データリセット（デバッグ用）
 
     クレジット残高、トークン残高、取引履歴をすべてリセット。
@@ -284,8 +315,17 @@ async def reset_all_data(db: Session = Depends(get_db)):
             "message": "All data reset successfully"
         }
     """
+    # 本番環境では無効化
+    env = os.getenv("ENV", "development")
+    if env == "production":
+        logger.warning(f"Reset endpoint accessed in production by user: {user_id}")
+        raise HTTPException(
+            status_code=403,
+            detail="This endpoint is not available in production environment"
+        )
+
     try:
-        service = BillingService(db)
+        service = BillingService(db, user_id)
         result = service.reset_all_data()
         return OperationSuccessResponse(**result)
     except ValueError as e:

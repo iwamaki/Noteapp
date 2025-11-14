@@ -72,8 +72,8 @@ class Settings:
                 # OpenAI はオプションなので、エラーにはしない
                 if not self.openai_api_key:
                     logger.warning(
-                        f"OPENAI_API_KEY not found in Secret Manager. "
-                        f"OpenAI provider will not be available."
+                        "OPENAI_API_KEY not found in Secret Manager. "
+                        "OpenAI provider will not be available."
                     )
         except exceptions.PermissionDenied as e:
             raise ValueError(

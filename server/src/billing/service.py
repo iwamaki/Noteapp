@@ -4,7 +4,7 @@
 
 from sqlalchemy.orm import Session
 from .models import TokenBalance, Credit, Transaction, TokenPricing
-from .config import DEFAULT_USER_ID, TOKEN_CAPACITY_LIMITS
+from .config import TOKEN_CAPACITY_LIMITS
 from typing import Dict, List
 import json
 from datetime import datetime
@@ -18,14 +18,15 @@ class BillingService:
     データベース操作はこのクラスを通じて行われる。
     """
 
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, user_id: str):
         """初期化
 
         Args:
             db: SQLAlchemyセッション
+            user_id: ユーザーID（認証済み）
         """
         self.db = db
-        self.user_id = DEFAULT_USER_ID  # 暫定: 固定ユーザーID
+        self.user_id = user_id
 
     # =====================================
     # トークン残高管理

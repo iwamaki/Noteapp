@@ -86,7 +86,12 @@ class AuthService:
             ユーザーID（存在しない場合はNone）
         """
         device = self.db.query(DeviceAuth).filter_by(device_id=device_id).first()
-        return device.user_id if device else None
+        if device:
+            # 最終ログイン日時を更新
+            device.last_login_at = datetime.now()
+            self.db.commit()
+            return device.user_id
+        return None
 
     def _generate_unique_user_id(self) -> str:
         """

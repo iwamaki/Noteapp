@@ -1,0 +1,68 @@
+# @file dependencies.py
+# @summary FastAPI認証Dependency
+# @responsibility APIエンドポイントのデバイスID認証
+
+import re
+from fastapi import Depends, HTTPException, Header
+from sqlalchemy.orm import Session
+from typing import Optional
+from src.billing.database import get_db
+from src.auth.service import AuthService
+from src.core.logger import logger
+
+
+async def verify_user(
+    device_id: Optional[str] = Header(None, alias="X-Device-ID"),
+    db: Session = Depends(get_db)
+) -> str:
+    """
+    デバイスIDを検証し、user_idを返す
+
+    Args:
+        device_id: リクエストヘッダー X-Device-ID
+        db: データベースセッション
+
+    Returns:
+        user_id: 認証されたユーザーID
+
+    Raises:
+        HTTPException: 認証失敗時（401 Unauthorized）
+    """
+    if not device_id:
+        logger.warning("Authentication failed: Missing X-Device-ID header")
+        raise HTTPException(
+            status_code=401,
+            detail="Device ID required. Please provide X-Device-ID header."
+        )
+
+    # デバイスIDの形式チェック（UUID v4）
+    uuid_pattern = r'^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+    if not re.match(uuid_pattern, device_id, re.IGNORECASE):
+        logger.warning(
+            "Authentication failed: Invalid device ID format",
+            extra={"device_id": device_id[:20] + "..."}
+        )
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid device ID format"
+        )
+
+    auth_service = AuthService(db)
+    user_id = auth_service.get_user_id_by_device(device_id)
+
+    if not user_id:
+        logger.warning(
+            "Authentication failed: Device not found",
+            extra={"device_id": device_id}
+        )
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid device ID. Please register your device first."
+        )
+
+    logger.debug(
+        "Authentication successful",
+        extra={"device_id": device_id, "user_id": user_id}
+    )
+
+    return user_id

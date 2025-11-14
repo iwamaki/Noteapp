@@ -1,7 +1,7 @@
 # @file chat.py
 # @summary チャット関連のAPIエンドポイントを定義します。
 # @responsibility /api/chatへのPOSTおよびGETリクエストを処理し、ChatServiceに処理を委譲します。
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from src.llm.models import ChatRequest, SummarizeRequest, DocumentSummarizeRequest, DocumentSummarizeResponse
 from src.llm.services.chat_service import ChatService
 from src.llm.services.summarization_service import SummarizationService
@@ -9,15 +9,20 @@ from src.llm.providers.config import MAX_CONVERSATION_TOKENS, PRESERVE_RECENT_ME
 from src.llm.routers.error_handlers import handle_route_errors
 from src.core.config import settings
 from src.core.logger import logger
+from src.auth.dependencies import verify_user
 
 router = APIRouter()
 chat_service = ChatService()
 summarization_service = SummarizationService()
 
 @router.post("/api/chat")
-async def chat_post(request: ChatRequest):
+async def chat_post(
+    request: ChatRequest,
+    user_id: str = Depends(verify_user)
+):
     """チャットメッセージを処理（POST）"""
     logger.info(f"Received chat request context: {request.context.model_dump_json(indent=2) if request.context else 'None'}")
+    logger.info(f"Authenticated user: {user_id}")
     if request.client_id:
         logger.info(f"Client ID: {request.client_id}")
     try:
@@ -36,9 +41,11 @@ async def chat_post(request: ChatRequest):
 async def chat_get(
     message: str,
     provider: str | None = None,
-    model: str | None = None
+    model: str | None = None,
+    user_id: str = Depends(verify_user)
 ):
     """チャットメッセージを処理（GET）- テスト用"""
+    logger.info(f"Authenticated user: {user_id}")
     # デフォルト値を設定
     if provider is None:
         provider = settings.get_default_provider()
@@ -58,7 +65,10 @@ async def chat_get(
 
 @router.post("/api/chat/summarize")
 @handle_route_errors
-async def summarize_conversation(request: SummarizeRequest):
+async def summarize_conversation(
+    request: SummarizeRequest,
+    user_id: str = Depends(verify_user)
+):
     """会話履歴を要約する
 
     長い会話履歴を圧縮して、重要な情報を保持したまま
@@ -106,7 +116,10 @@ async def summarize_conversation(request: SummarizeRequest):
 
 @router.post("/api/document/summarize")
 @handle_route_errors
-async def summarize_document(request: DocumentSummarizeRequest) -> DocumentSummarizeResponse:
+async def summarize_document(
+    request: DocumentSummarizeRequest,
+    user_id: str = Depends(verify_user)
+) -> DocumentSummarizeResponse:
     """文書内容を要約する
 
     文書の内容をLLMに送信して要約を生成します。
