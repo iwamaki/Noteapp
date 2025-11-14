@@ -12,6 +12,7 @@ from src.llm.rag.collection_manager import CollectionManager
 from src.llm.rag.cleanup_job import start_cleanup_job, stop_cleanup_job
 from src.api.websocket import manager
 from src.api import billing_router
+from src.auth import router as auth_router
 from src.billing.database import init_db
 from src.core.logger import logger
 
@@ -64,6 +65,7 @@ app.include_router(llm_providers_router.router)
 app.include_router(tools_router.router)
 app.include_router(knowledge_base_router.router)
 app.include_router(billing_router.router)
+app.include_router(auth_router.router)
 
 # ルートエンドポイント
 @app.get("/")
@@ -79,7 +81,8 @@ async def root():
             "health": "/api/health",
             "websocket": "/ws/{client_id}",
             "knowledge_base": "/api/knowledge-base",
-            "billing": "/api/billing"
+            "billing": "/api/billing",
+            "auth": "/api/auth"
         }
     }
 

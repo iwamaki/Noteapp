@@ -16,6 +16,7 @@ import { initializeBillingServiceTask } from './initializeBillingService';
 import { verifyAppReadyTask } from './verifyAppReady';
 import { loadIconFontsTask } from './loadIconFonts';
 import { loadToolDefinitionsTask } from './loadToolDefinitions';
+import { authenticateDevice } from './authenticateDevice';
 import { InitializationTask } from '../types';
 
 /**
@@ -29,6 +30,7 @@ export const allInitializationTasks: InitializationTask[] = [
   verifyAsyncStorageTask,
   initializeFileSystemTask,  // FileSystemディレクトリ構造の初期化
   loadSettingsTask,
+  authenticateDevice,  // デバイスID認証
 
   // Stage 2: CORE - コアサービス
   loadIconFontsTask,
@@ -51,6 +53,7 @@ export {
   verifyAsyncStorageTask,
   initializeFileSystemTask,
   loadSettingsTask,
+  authenticateDevice,
   configureLLMServiceTask,
   preloadLLMProvidersTask,
   configureChatServiceTask,

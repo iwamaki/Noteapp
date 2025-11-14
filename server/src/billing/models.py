@@ -88,3 +88,18 @@ class TokenPricing(Base):
     exchange_rate = Column(Integer)  # 為替レート（参考値）
     margin_percent = Column(Integer)  # マージン率（参考値）
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+
+
+class DeviceAuth(Base):
+    """デバイス認証テーブル
+
+    デバイスIDとユーザーIDの紐付けを管理。
+    1つのデバイスIDに対して1つのユーザーアカウントを割り当てる。
+    """
+    __tablename__ = 'device_auth'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    device_id = Column(String, unique=True, nullable=False, index=True)  # デバイスの一意識別子（UUID）
+    user_id = Column(String, ForeignKey('users.user_id'), nullable=False, index=True)
+    created_at = Column(DateTime, default=datetime.now, nullable=False)
+    last_login_at = Column(DateTime, default=datetime.now, onupdate=datetime.now, nullable=False)
