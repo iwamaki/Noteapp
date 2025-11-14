@@ -41,22 +41,47 @@ class Settings:
         gemini_secret_id = os.getenv("GEMINI_API_SECRET_ID", "GOOGLE_API_KEY")
         openai_secret_id = os.getenv("OPENAI_API_SECRET_ID", "OPENAI_API_KEY")
 
-        # GOOGLE_APPLICATION_CREDENTIALS が設定されている場合、Secret Managerから取得を試みる
-        if os.getenv("GOOGLE_APPLICATION_CREDENTIALS"):
-            try:
-                client = secretmanager.SecretManagerServiceClient()
-                if gcp_project_id and gemini_secret_id:
-                    self.gemini_api_key = self._get_secret(client, gcp_project_id, gemini_secret_id)
-                if gcp_project_id and openai_secret_id:
-                    self.openai_api_key = self._get_secret(client, gcp_project_id, openai_secret_id)
-            except Exception as e:
-                logger.warning(f"Secret Manager initialization failed: {e}. Using environment variables.")
+        # Secret Manager から API キーを取得（必須）
+        if not os.getenv("GOOGLE_APPLICATION_CREDENTIALS"):
+            raise ValueError(
+                "GOOGLE_APPLICATION_CREDENTIALS environment variable is not set. "
+                "Please set the path to your service account key file."
+            )
 
-        # Secret Managerで取得できなかった場合は環境変数からフォールバック
-        if not self.gemini_api_key:
-            self.gemini_api_key = os.getenv("GEMINI_API_KEY")
-        if not self.openai_api_key:
-            self.openai_api_key = os.getenv("OPENAI_API_KEY")
+        if not gcp_project_id:
+            raise ValueError(
+                "GCP_PROJECT_ID environment variable is not set. "
+                "Please set your GCP project ID."
+            )
+
+        try:
+            client = secretmanager.SecretManagerServiceClient()
+
+            # Gemini API キーの取得
+            if gemini_secret_id:
+                self.gemini_api_key = self._get_secret(client, gcp_project_id, gemini_secret_id)
+                if not self.gemini_api_key:
+                    raise ValueError(
+                        f"GEMINI_API_KEY not found in Secret Manager. "
+                        f"Please check secret '{gemini_secret_id}' in project '{gcp_project_id}'"
+                    )
+
+            # OpenAI API キーの取得（オプション）
+            if openai_secret_id:
+                self.openai_api_key = self._get_secret(client, gcp_project_id, openai_secret_id)
+                # OpenAI はオプションなので、エラーにはしない
+                if not self.openai_api_key:
+                    logger.warning(
+                        f"OPENAI_API_KEY not found in Secret Manager. "
+                        f"OpenAI provider will not be available."
+                    )
+        except exceptions.PermissionDenied as e:
+            raise ValueError(
+                f"Permission denied accessing Secret Manager: {e}. "
+                "Please ensure your service account has the 'Secret Manager Secret Accessor' role."
+            ) from e
+        except Exception as e:
+            raise ValueError(f"Failed to initialize API keys from Secret Manager: {e}") from e
 
     def _get_secret(self, client, project_id: str, secret_id: str) -> str | None:
         """Secret Managerから最新バージョンのシークレットを取得
