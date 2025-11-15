@@ -6,7 +6,7 @@
  * 設定画面のトークン残高セクションから遷移する。
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -173,17 +173,6 @@ export const ModelSelectionScreen: React.FC = () => {
       overflow: 'hidden',
       position: 'relative',
     },
-    gaugeBar: {
-      height: '100%',
-      position: 'absolute',
-    },
-    gaugeBarActive: {
-      zIndex: 2,
-    },
-    gaugeBarOther: {
-      zIndex: 1,
-      opacity: 0.7,
-    },
     gaugeDivider: {
       position: 'absolute',
       width: 2,
@@ -223,11 +212,6 @@ export const ModelSelectionScreen: React.FC = () => {
       fontSize: 10,
       color: colors.textSecondary,
     },
-    gaugeStatus: {
-      fontSize: 10,
-      marginTop: spacing.xs,
-      textAlign: 'right',
-    },
     // モデル選択カード
     modelCardWrapper: {
       flexDirection: 'row',
@@ -239,7 +223,7 @@ export const ModelSelectionScreen: React.FC = () => {
       flex: 1,
       borderRadius: 8,
       borderWidth: 3,
-      borderColor: 'transparent',
+      borderColor: colors.transparent || 'transparent',
       backgroundColor: colors.secondary,
       padding: spacing.md,
     },
@@ -271,7 +255,6 @@ export const ModelSelectionScreen: React.FC = () => {
     modelTokenAmount: {
       fontSize: 14,
       fontWeight: 'bold',
-      color: '#FFC107',
       marginTop: spacing.xs,
     },
     modelStatusBadge: {
@@ -279,8 +262,13 @@ export const ModelSelectionScreen: React.FC = () => {
       paddingVertical: 4,
       paddingHorizontal: spacing.sm,
       borderWidth: 1,
-      borderColor: 'transparent',
+      borderColor: colors.transparent || 'transparent',
       alignSelf: 'flex-start',
+    },
+    modelStatusBadgeActive: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
     },
     modelStatusText: {
       fontSize: 11,
@@ -297,27 +285,49 @@ export const ModelSelectionScreen: React.FC = () => {
       alignItems: 'center',
       alignSelf: 'stretch',
     },
-    // 追加モデルプレースホルダー
-    addModelPlaceholder: {
-      borderRadius: 8,
-      borderWidth: 2,
-      borderStyle: 'dashed',
-      borderColor: colors.border,
-      backgroundColor: colors.secondary,
-      padding: spacing.lg,
+    gaugeHeaderRow: {
+      flexDirection: 'row',
       alignItems: 'center',
+      gap: spacing.xs,
+    },
+    gaugeBarSegment: {
+      height: '100%',
+      position: 'absolute',
+    },
+    gaugeBarSegmentInactive: {
+      opacity: 0.7,
+    },
+    loadingCenterContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    loadingText: {
       marginTop: spacing.md,
-    },
-    addModelTitle: {
-      fontSize: 15,
-      fontWeight: 'bold',
       color: colors.textSecondary,
-      marginBottom: spacing.xs,
     },
-    addModelDescription: {
-      fontSize: 12,
-      color: colors.textSecondary,
+    errorCenterContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: spacing.xl,
+    },
+    errorText: {
+      marginTop: spacing.md,
+      color: colors.danger,
+      fontSize: 16,
       textAlign: 'center',
+    },
+    retryButton: {
+      marginTop: spacing.lg,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.lg,
+      backgroundColor: colors.primary,
+      borderRadius: 8,
+    },
+    retryButtonText: {
+      color: colors.white,
+      fontWeight: 'bold',
     },
   });
 
@@ -339,9 +349,6 @@ export const ModelSelectionScreen: React.FC = () => {
       .filter(m => m.category === category && getModelTokens(m.id) > 0)
       .sort((a, b) => getModelTokens(a.id) - getModelTokens(b.id));
 
-    const remaining = limit - current;
-    const isNearLimit = percent >= 70;
-
     // 各モデルの累積位置を計算
     let cumulativePercent = 0;
     const modelSegments = allModels.map(model => {
@@ -362,7 +369,7 @@ export const ModelSelectionScreen: React.FC = () => {
     return (
       <View style={styles.gaugeContainer}>
         <View style={styles.gaugeHeader}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+          <View style={styles.gaugeHeaderRow}>
             <MaterialCommunityIcons name={iconName} size={20} color={iconColor} />
             <Text style={[styles.gaugeTitle, { color: iconColor }]}>
               {title}
@@ -375,23 +382,24 @@ export const ModelSelectionScreen: React.FC = () => {
 
         <View style={styles.gaugeBarContainer}>
           {/* 各モデルのゲージを左から順に表示 */}
-          {modelSegments.map((segment, index) => (
+          {modelSegments.map((segment) => (
             <View
               key={segment.model.id}
               style={[
-                styles.gaugeBar,
+                styles.gaugeBarSegment,
+                !segment.isActive && styles.gaugeBarSegmentInactive,
+                // eslint-disable-next-line react-native/no-inline-styles
                 {
                   left: `${segment.startPercent}%`,
                   width: `${segment.widthPercent}%`,
                   backgroundColor: iconColor,
-                  opacity: segment.isActive ? 1 : 0.7,
                   zIndex: segment.isActive ? 2 : 1,
                 },
               ]}
             />
           ))}
           {/* 境界線 */}
-          {modelSegments.slice(0, -1).map((segment, index) => (
+          {modelSegments.slice(0, -1).map((segment) => (
             <View
               key={`divider-${segment.model.id}`}
               style={[
@@ -413,6 +421,7 @@ export const ModelSelectionScreen: React.FC = () => {
             <View key={segment.model.id} style={styles.legendItem}>
               <View style={[
                 styles.legendColor,
+                // eslint-disable-next-line react-native/no-inline-styles
                 { backgroundColor: iconColor, opacity: segment.isActive ? 1 : 0.7 }
               ]} />
               <Text style={styles.legendText}>
@@ -463,7 +472,7 @@ export const ModelSelectionScreen: React.FC = () => {
               </Text>
 
               {isActive ? (
-                <View style={[styles.modelStatusBadge, { backgroundColor: accentColor, flexDirection: 'row', alignItems: 'center', gap: 4 }]}>
+                <View style={[styles.modelStatusBadge, styles.modelStatusBadgeActive, { backgroundColor: accentColor }]}>
                   <MaterialCommunityIcons
                     name={category === 'quick' ? 'speedometer' : 'speedometer-slow'}
                     size={14}
@@ -506,9 +515,9 @@ export const ModelSelectionScreen: React.FC = () => {
             },
           ]}
         />
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <View style={styles.loadingCenterContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={{ marginTop: spacing.md, color: colors.textSecondary }}>
+          <Text style={styles.loadingText}>
             モデル情報を読み込み中...
           </Text>
         </View>
@@ -528,26 +537,20 @@ export const ModelSelectionScreen: React.FC = () => {
             },
           ]}
         />
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.xl }}>
+        <View style={styles.errorCenterContainer}>
           <MaterialCommunityIcons name="alert-circle-outline" size={48} color={colors.danger} />
-          <Text style={{ marginTop: spacing.md, color: colors.danger, fontSize: 16, textAlign: 'center' }}>
+          <Text style={styles.errorText}>
             {loadError}
           </Text>
           <TouchableOpacity
-            style={{
-              marginTop: spacing.lg,
-              paddingVertical: spacing.sm,
-              paddingHorizontal: spacing.lg,
-              backgroundColor: colors.primary,
-              borderRadius: 8,
-            }}
+            style={styles.retryButton}
             onPress={() => {
               setIsLoadingModels(true);
               setLoadError(null);
               // リロード処理は useEffect で自動的に行われる
             }}
           >
-            <Text style={{ color: colors.white, fontWeight: 'bold' }}>再試行</Text>
+            <Text style={styles.retryButtonText}>再試行</Text>
           </TouchableOpacity>
         </View>
       </MainContainer>

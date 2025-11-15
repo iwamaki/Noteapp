@@ -29,7 +29,7 @@ export const ModelSelectionModal: React.FC<ModelSelectionModalProps> = ({
   isVisible,
   onClose,
 }) => {
-  const { colors, spacing, typography } = useTheme();
+  const { colors, spacing } = useTheme();
   const { settings, loadModel } = useSettingsStore();
 
   // バックエンドから取得したモデル一覧
@@ -112,7 +112,7 @@ export const ModelSelectionModal: React.FC<ModelSelectionModalProps> = ({
     modelCard: {
       borderRadius: 8,
       borderWidth: 2,
-      borderColor: 'transparent',
+      borderColor: colors.transparent || 'transparent',
       backgroundColor: colors.secondary,
       padding: spacing.md,
       marginBottom: spacing.sm,
@@ -145,7 +145,12 @@ export const ModelSelectionModal: React.FC<ModelSelectionModalProps> = ({
       paddingVertical: 4,
       paddingHorizontal: spacing.sm,
       borderWidth: 1,
-      borderColor: 'transparent',
+      borderColor: colors.transparent || 'transparent',
+    },
+    modelStatusBadgeActive: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
     },
     modelStatusText: {
       fontSize: 11,
@@ -218,7 +223,7 @@ export const ModelSelectionModal: React.FC<ModelSelectionModalProps> = ({
           </Text>
 
           {isActive ? (
-            <View style={[styles.modelStatusBadge, { backgroundColor: accentColor, flexDirection: 'row', alignItems: 'center', gap: 4 }]}>
+            <View style={[styles.modelStatusBadge, styles.modelStatusBadgeActive, { backgroundColor: accentColor }]}>
               <MaterialCommunityIcons
                 name={category === 'quick' ? 'speedometer' : 'speedometer-slow'}
                 size={14}

@@ -342,9 +342,10 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     // 動的インポートで循環依存を回避
     let getModelCategory: (modelId: string) => 'quick' | 'think';
     try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const APIService = require('../features/chat/llmService/api').default;
       getModelCategory = (modelId: string) => APIService.getModelCategory(modelId);
-    } catch (error) {
+    } catch {
       // フォールバック
       console.warn('Failed to load APIService, using fallback for category detection');
       getModelCategory = (modelId: string) =>
