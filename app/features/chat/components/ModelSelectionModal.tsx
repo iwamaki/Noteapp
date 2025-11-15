@@ -20,6 +20,7 @@ import { useSettingsStore } from '../../../settings/settingsStore';
 import { convertProvidersToModelInfo, type ModelInfo } from '../../../screen/model-selection/constants';
 import APIService from '../llmService/api';
 import { ModelCard } from './ModelCard';
+import { useModelSwitch } from '../../../hooks/useModelSwitch';
 
 interface ModelSelectionModalProps {
   isVisible: boolean;
@@ -31,7 +32,8 @@ export const ModelSelectionModal: React.FC<ModelSelectionModalProps> = ({
   onClose,
 }) => {
   const { colors, spacing } = useTheme();
-  const { settings, loadModel } = useSettingsStore();
+  const { settings } = useSettingsStore();
+  const { switchModel } = useModelSwitch();
 
   // バックエンドから取得したモデル一覧
   const [availableModels, setAvailableModels] = useState<ModelInfo[]>([]);
@@ -91,7 +93,7 @@ export const ModelSelectionModal: React.FC<ModelSelectionModalProps> = ({
     }
 
     // モデルを選択するが、モーダルは閉じない
-    await loadModel(category, modelId);
+    await switchModel(category, modelId);
   };
 
   const styles = StyleSheet.create({

@@ -12,6 +12,7 @@ import { useTheme } from '../../../design/theme/ThemeContext';
 import { useChatUI } from '../contexts/ChatUIContext';
 import { CHAT_CONFIG } from '../config/chatConfig';
 import { useSettingsStore } from '../../../settings/settingsStore';
+import { useModelSwitch } from '../../../hooks/useModelSwitch';
 
 interface MessageInputProps {
   inputText: string;
@@ -24,7 +25,8 @@ interface MessageInputProps {
 export const MessageInput: React.FC<MessageInputProps> = ({ inputText, setInputText }) => {
   const { colors, iconSizes } = useTheme();
   const { sendMessage, isLoading } = useChatUI();
-  const { settings, loadModel } = useSettingsStore();
+  const { settings } = useSettingsStore();
+  const { switchModel } = useModelSwitch();
 
   // loadedModels から Quick/Think モデルを取得（フォールバック付き）
   const quickModel = settings.loadedModels?.quick || 'gemini-2.5-flash';
@@ -37,7 +39,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({ inputText, setInputT
   const toggleModel = async () => {
     const newCategory = isCurrentlyQuick ? 'think' : 'quick';
     const newModel = isCurrentlyQuick ? thinkModel : quickModel;
-    await loadModel(newCategory, newModel);
+    await switchModel(newCategory, newModel);
   };
 
   // メッセージ送信処理

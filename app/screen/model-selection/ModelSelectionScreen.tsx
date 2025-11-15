@@ -26,13 +26,15 @@ import { useSettingsStore, TOKEN_CAPACITY_LIMITS } from '../../settings/settings
 import { convertProvidersToModelInfo, type ModelInfo } from './constants';
 import APIService from '../../features/chat/llmService/api';
 import { CreditAllocationModal } from './components/CreditAllocationModal';
+import { useModelSwitch } from '../../hooks/useModelSwitch';
 
 type ModelSelectionScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ModelSelection'>;
 
 export const ModelSelectionScreen: React.FC = () => {
   const { colors, spacing, typography } = useTheme();
   const navigation = useNavigation<ModelSelectionScreenNavigationProp>();
-  const { settings, getTotalTokensByCategory, loadModel } = useSettingsStore();
+  const { settings, getTotalTokensByCategory } = useSettingsStore();
+  const { switchModel } = useModelSwitch();
 
   // バックエンドから取得したモデル一覧
   const [availableModels, setAvailableModels] = useState<ModelInfo[]>([]);
@@ -97,7 +99,7 @@ export const ModelSelectionScreen: React.FC = () => {
       return;
     }
 
-    await loadModel(category, modelId);
+    await switchModel(category, modelId);
   };
 
   // トークン配分ボタンハンドラー（新規追加）

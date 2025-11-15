@@ -145,6 +145,7 @@ strict digraph "dependency-cruiser output"{
     subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/components" {label="components" "app/features/chat/components/MessageInput.tsx" [label=<MessageInput.tsx> tooltip="MessageInput.tsx" URL="app/features/chat/components/MessageInput.tsx" fillcolor="#bbfeff"] } } } }
     "app/features/chat/components/MessageInput.tsx" -> "app/components/CustomInlineInput.tsx"
     "app/features/chat/components/MessageInput.tsx" -> "app/design/theme/ThemeContext.tsx"
+    "app/features/chat/components/MessageInput.tsx" -> "app/hooks/useModelSwitch.ts"
     "app/features/chat/components/MessageInput.tsx" -> "app/settings/settingsStore.ts"
     "app/features/chat/components/MessageInput.tsx" -> "app/features/chat/config/chatConfig.ts"
     "app/features/chat/components/MessageInput.tsx" -> "app/features/chat/contexts/ChatUIContext.tsx"
@@ -160,6 +161,7 @@ strict digraph "dependency-cruiser output"{
     subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/components" {label="components" "app/features/chat/components/ModelSelectionModal.tsx" [label=<ModelSelectionModal.tsx> tooltip="ModelSelectionModal.tsx" URL="app/features/chat/components/ModelSelectionModal.tsx" fillcolor="#bbfeff"] } } } }
     "app/features/chat/components/ModelSelectionModal.tsx" -> "app/components/CustomModal.tsx"
     "app/features/chat/components/ModelSelectionModal.tsx" -> "app/design/theme/ThemeContext.tsx"
+    "app/features/chat/components/ModelSelectionModal.tsx" -> "app/hooks/useModelSwitch.ts"
     "app/features/chat/components/ModelSelectionModal.tsx" -> "app/screen/model-selection/constants.ts"
     "app/features/chat/components/ModelSelectionModal.tsx" -> "app/settings/settingsStore.ts"
     "app/features/chat/components/ModelSelectionModal.tsx" -> "app/features/chat/llmService/api.ts"
@@ -350,6 +352,9 @@ strict digraph "dependency-cruiser output"{
     subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/utils" {label="utils" "app/features/chat/utils/errorTypes.ts" [label=<errorTypes.ts> tooltip="errorTypes.ts" URL="app/features/chat/utils/errorTypes.ts" fillcolor="#ddfeff"] } } } }
     subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/utils" {label="utils" "app/features/chat/utils/tokenUsageHelpers.ts" [label=<tokenUsageHelpers.ts> tooltip="tokenUsageHelpers.ts" URL="app/features/chat/utils/tokenUsageHelpers.ts" fillcolor="#ddfeff"] } } } }
     "app/features/chat/utils/tokenUsageHelpers.ts" -> "app/features/chat/llmService/types/index.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/hooks" {label="hooks" "app/hooks/useModelSwitch.ts" [label=<useModelSwitch.ts> tooltip="useModelSwitch.ts" URL="app/hooks/useModelSwitch.ts" fillcolor="#ddfeff"] } }
+    "app/hooks/useModelSwitch.ts" -> "app/features/chat/llmService/api.ts"
+    "app/hooks/useModelSwitch.ts" -> "app/settings/settingsStore.ts"
     subgraph "cluster_app" {label="app" "app/index.ts" [label=<index.ts> tooltip="index.ts" URL="app/index.ts" fillcolor="#ddfeff"] }
     "app/index.ts" -> "app/App.tsx"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/initialization" {label="initialization" "app/initialization/AppInitializer.ts" [label=<AppInitializer.ts> tooltip="AppInitializer.ts" URL="app/initialization/AppInitializer.ts" fillcolor="#ddfeff"] } }
@@ -606,6 +611,7 @@ strict digraph "dependency-cruiser output"{
     "app/screen/model-selection/ModelSelectionScreen.tsx" -> "app/components/MainContainer.tsx"
     "app/screen/model-selection/ModelSelectionScreen.tsx" -> "app/design/theme/ThemeContext.tsx"
     "app/screen/model-selection/ModelSelectionScreen.tsx" -> "app/features/chat/llmService/api.ts"
+    "app/screen/model-selection/ModelSelectionScreen.tsx" -> "app/hooks/useModelSwitch.ts"
     "app/screen/model-selection/ModelSelectionScreen.tsx" -> "app/navigation/types.ts"
     "app/screen/model-selection/ModelSelectionScreen.tsx" -> "app/settings/settingsStore.ts"
     "app/screen/model-selection/ModelSelectionScreen.tsx" -> "app/screen/model-selection/components/CreditAllocationModal.tsx"
