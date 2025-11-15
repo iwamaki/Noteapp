@@ -22,6 +22,8 @@ from src.billing.schemas import (
 )
 from typing import List
 from src.core.logger import logger
+from src.billing.iap_verification import verify_purchase, acknowledge_purchase
+from src.billing.models import Transaction
 
 router = APIRouter(prefix="/api/billing", tags=["billing"])
 
@@ -107,7 +109,8 @@ async def add_credits(
     """クレジット追加（購入時）
 
     アプリ内課金完了後に呼び出される。
-    未配分クレジットに追加し、取引履歴に記録。
+    Google Play Developer APIでレシート検証を行い、
+    検証成功時のみ未配分クレジットに追加し、取引履歴に記録。
 
     Args:
         request: AddCreditsRequest
@@ -117,10 +120,68 @@ async def add_credits(
             "success": True,
             "new_balance": 新しいクレジット残高
         }
+
+    Raises:
+        HTTPException(400): レシート検証失敗時
+        HTTPException(409): 二重購入検出時
     """
+    # レシート検証
+    try:
+        product_id = request.purchase_record.get("productId")
+        purchase_token = request.purchase_record.get("purchaseToken")
+        transaction_id = request.purchase_record.get("transactionId")
+
+        if not product_id or not purchase_token:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Missing productId or purchaseToken in purchase_record"
+            )
+
+        # Google Play Developer APIで検証
+        verify_purchase(product_id, purchase_token)
+
+    except ValueError as e:
+        # 検証失敗
+        logger.warning(
+            "Invalid purchase attempt",
+            extra={
+                "user_id": user_id,
+                "product_id": product_id,
+                "error": str(e)
+            }
+        )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid purchase receipt: {str(e)}"
+        )
+
+    # 二重購入防止
+    if transaction_id:
+        existing = db.query(Transaction).filter_by(
+            transaction_id=transaction_id
+        ).first()
+
+        if existing:
+            logger.warning(
+                "Duplicate purchase attempt detected",
+                extra={
+                    "user_id": user_id,
+                    "transaction_id": transaction_id
+                }
+            )
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Purchase already processed"
+            )
+
+    # クレジット追加
     try:
         service = BillingService(db, user_id)
         result = service.add_credits(request.credits, request.purchase_record)
+
+        # Google側で購入を確認済みにマーク
+        acknowledge_purchase(product_id, purchase_token)
+
         return OperationSuccessResponse(**result)
     except ValueError as e:
         logger.warning(f"[billing_router] Validation error in add_credits: {e}")
