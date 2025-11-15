@@ -5,6 +5,7 @@
  */
 
 import { getOrCreateDeviceId } from './deviceIdService';
+import { logger } from '../utils/logger';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:8000';
 
@@ -60,7 +61,7 @@ export async function registerDevice(deviceId: string): Promise<DeviceRegisterRe
 
     return await response.json();
   } catch (error) {
-    console.error('[AuthAPI] Device registration error:', error);
+    logger.error('auth', 'Device registration error', error);
     throw error;
   }
 }
@@ -98,7 +99,7 @@ export async function verifyDevice(
 
     return await response.json();
   } catch (error) {
-    console.error('[AuthAPI] Device verification error:', error);
+    logger.error('auth', 'Device verification error', error);
     throw error;
   }
 }

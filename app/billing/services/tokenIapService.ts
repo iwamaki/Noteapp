@@ -24,6 +24,7 @@ import type {
 } from 'react-native-iap';
 
 import { TOKEN_PACKAGES } from '../constants/tokenPackages';
+import { logger } from '../../utils/logger';
 
 /**
  * トークン購入 プロダクトID定義
@@ -50,9 +51,9 @@ export async function initializeTokenIAP(): Promise<void> {
   try {
     await initConnection();
     isInitialized = true;
-    console.log('[Token IAP] Connection initialized');
+    logger.info('billing', 'Token IAP connection initialized');
   } catch (error) {
-    console.error('[Token IAP] Failed to initialize connection:', error);
+    logger.error('billing', 'Failed to initialize Token IAP connection', error);
     throw error;
   }
 }
@@ -75,9 +76,9 @@ export async function disconnectTokenIAP(): Promise<void> {
 
     await endConnection();
     isInitialized = false;
-    console.log('[Token IAP] Connection ended');
+    logger.info('billing', 'Token IAP connection ended');
   } catch (error) {
-    console.error('[Token IAP] Failed to end connection:', error);
+    logger.error('billing', 'Failed to end Token IAP connection', error);
   }
 }
 
@@ -90,10 +91,12 @@ export async function getAvailableTokenPackages(): Promise<Product[]> {
 
     // トークンパッケージは消費型アイテム（in-app）として取得
     const products = await fetchProducts({ skus, type: 'in-app' });
-    console.log('[Token IAP] Available token packages:', products);
+    logger.info('billing', 'Available token packages retrieved', {
+      count: products?.length || 0
+    });
     return (products as Product[]) || [];
   } catch (error) {
-    console.error('[Token IAP] Failed to get token packages:', error);
+    logger.error('billing', 'Failed to get token packages', error);
     return [];
   }
 }
@@ -107,24 +110,26 @@ export async function purchaseTokenPackage(
   onSuccess: (purchase: Purchase) => void,
   onError: (error: PurchaseError) => void,
 ): Promise<void> {
-  console.log('[Token IAP] purchaseTokenPackage called with productId:', productId);
-  console.log('[Token IAP] Product details:', product);
+  logger.info('billing', 'Purchase token package initiated', { productId });
 
   // 既存のリスナーを解除（重複登録を防ぐ）
   if (purchaseUpdateSubscription) {
-    console.log('[Token IAP] Removing existing purchase update listener');
+    logger.debug('billing', 'Removing existing purchase update listener');
     purchaseUpdateSubscription.remove();
     purchaseUpdateSubscription = null;
   }
   if (purchaseErrorSubscription) {
-    console.log('[Token IAP] Removing existing purchase error listener');
+    logger.debug('billing', 'Removing existing purchase error listener');
     purchaseErrorSubscription.remove();
     purchaseErrorSubscription = null;
   }
 
   // 購入更新リスナーを設定
   purchaseUpdateSubscription = purchaseUpdatedListener((purchase: Purchase) => {
-    console.log('[Token IAP] Token package purchase updated:', purchase);
+    logger.info('billing', 'Token package purchase updated', {
+      productId: purchase.productId,
+      transactionId: purchase.transactionId?.substring(0, 12)
+    });
 
     // レシート検証（Phase 1では簡易的）
     const receipt = purchase.transactionId;
@@ -133,7 +138,7 @@ export async function purchaseTokenPackage(
       // 理由: バックエンドで検証してからacknowledgeする必要がある
       // finishTransactionを先に呼ぶとGoogle側で消費済みになり、バックエンドの検証が失敗する
       // finishTransactionはバックエンドのAPI呼び出し成功後に呼ぶ
-      console.log('[Token IAP] Calling onSuccess without finishTransaction (will be done after backend verification)');
+      logger.debug('billing', 'Calling onSuccess without finishTransaction (backend verification required)');
       onSuccess(purchase);
     }
   });
@@ -147,9 +152,9 @@ export async function purchaseTokenPackage(
       errorCode === 'user_cancelled' ||
       errorCode === 'user-cancelled'
     ) {
-      console.log('[Token IAP] User cancelled token package purchase:', error);
+      logger.info('billing', 'User cancelled token package purchase');
     } else {
-      console.error('[Token IAP] Token package purchase error:', error);
+      logger.error('billing', 'Token package purchase error', error);
     }
     onError(error);
   });
@@ -168,12 +173,12 @@ export async function purchaseTokenPackage(
       type: 'in-app', // 消費型アイテム指定
     };
 
-    console.log('[Token IAP] Requesting token package purchase with params:', JSON.stringify(requestParams));
+    logger.debug('billing', 'Requesting token package purchase', { productId });
 
     // v14では requestPurchase が統一API
     await requestPurchase(requestParams);
   } catch (error) {
-    console.error('[Token IAP] Failed to request token package purchase:', error);
+    logger.error('billing', 'Failed to request token package purchase', error);
     onError(error as PurchaseError);
   }
 }
@@ -185,7 +190,9 @@ export async function purchaseTokenPackage(
 export async function restoreTokenPurchases(): Promise<Purchase[]> {
   try {
     const purchases = await getAvailablePurchases();
-    console.log('[Token IAP] Checking for pending token purchases:', purchases);
+    logger.info('billing', 'Checking for pending token purchases', {
+      totalPurchases: purchases.length
+    });
 
     // トークンパッケージのみをフィルタリング
     const tokenPurchases = purchases.filter((purchase) => {
@@ -193,9 +200,13 @@ export async function restoreTokenPurchases(): Promise<Purchase[]> {
       return TOKEN_PRODUCT_IDS.includes(productId);
     });
 
+    logger.info('billing', 'Token purchases found', {
+      count: tokenPurchases.length
+    });
+
     return tokenPurchases;
   } catch (error) {
-    console.error('[Token IAP] Failed to restore token purchases:', error);
+    logger.error('billing', 'Failed to restore token purchases', error);
     return [];
   }
 }
