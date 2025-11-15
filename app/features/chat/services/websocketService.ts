@@ -5,8 +5,15 @@
  */
 
 import { logger } from '../../../utils/logger';
-import { FileRepository } from '@data/repositories/fileRepository';
 import { CHAT_CONFIG } from '../config/chatConfig';
+import {
+  handleFetchFileContent,
+  FetchFileContentRequest,
+} from './websocket/handlers/fileContentHandler';
+import {
+  handleFetchSearchResults,
+  FetchSearchResultsRequest,
+} from './websocket/handlers/searchResultsHandler';
 
 /**
  * WebSocketメッセージの型定義
@@ -14,47 +21,6 @@ import { CHAT_CONFIG } from '../config/chatConfig';
 interface WebSocketMessage {
   type: string;
   [key: string]: any;
-}
-
-/**
- * fetch_file_contentリクエスト
- */
-interface FetchFileContentRequest extends WebSocketMessage {
-  type: 'fetch_file_content';
-  request_id: string;
-  title: string;
-}
-
-/**
- * file_content_responseレスポンス
- */
-interface FileContentResponse extends WebSocketMessage {
-  type: 'file_content_response';
-  request_id: string;
-  title: string;
-  content: string | null;
-  error?: string;
-}
-
-/**
- * fetch_search_resultsリクエスト
- */
-interface FetchSearchResultsRequest extends WebSocketMessage {
-  type: 'fetch_search_results';
-  request_id: string;
-  query: string;
-  search_type: 'title' | 'content' | 'tag' | 'category';
-}
-
-/**
- * search_results_responseレスポンス
- */
-interface SearchResultsResponse extends WebSocketMessage {
-  type: 'search_results_response';
-  request_id: string;
-  query: string;
-  results: any[];
-  error?: string;
 }
 
 /**
@@ -233,13 +199,17 @@ class WebSocketService {
       logger.debug('websocket', 'Message received:', data);
 
       switch (data.type) {
-        case 'fetch_file_content':
-          await this.handleFetchFileContent(data as FetchFileContentRequest);
+        case 'fetch_file_content': {
+          const response = await handleFetchFileContent(data as FetchFileContentRequest);
+          this.sendMessage(response);
           break;
+        }
 
-        case 'fetch_search_results':
-          await this.handleFetchSearchResults(data as FetchSearchResultsRequest);
+        case 'fetch_search_results': {
+          const response = await handleFetchSearchResults(data as FetchSearchResultsRequest);
+          this.sendMessage(response);
           break;
+        }
 
         case 'pong':
           this.handlePong();
@@ -250,168 +220,6 @@ class WebSocketService {
       }
     } catch (error) {
       logger.error('websocket', 'Failed to handle message:', error);
-    }
-  }
-
-  /**
-   * fetch_file_contentリクエストを処理
-   */
-  private async handleFetchFileContent(request: FetchFileContentRequest): Promise<void> {
-    const { request_id, title } = request;
-
-    logger.info('websocket', `Fetching file content: title=${title}, request_id=${request_id}`);
-
-    try {
-      // Expo FileSystemからファイルを取得
-      const files = await FileRepository.getAll();
-      const file = files.find(f => f.title === title);
-
-      if (!file) {
-        logger.warn('websocket', `File not found: ${title}`);
-
-        // ファイルが見つからない場合
-        const response: FileContentResponse = {
-          type: 'file_content_response',
-          request_id,
-          title,
-          content: null,
-          error: `File '${title}' not found`,
-        };
-
-        this.sendMessage(response);
-        return;
-      }
-
-      // ファイル内容を返す
-      const response: FileContentResponse = {
-        type: 'file_content_response',
-        request_id,
-        title,
-        content: file.content || '',
-      };
-
-      this.sendMessage(response);
-      logger.info('websocket', `File content sent: title=${title}, length=${file.content?.length || 0}`);
-
-    } catch (error) {
-      logger.error('websocket', `Failed to fetch file content: ${title}`, error);
-
-      // エラーレスポンス
-      const response: FileContentResponse = {
-        type: 'file_content_response',
-        request_id,
-        title,
-        content: null,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      };
-
-      this.sendMessage(response);
-    }
-  }
-
-  /**
-   * fetch_search_resultsリクエストを処理
-   */
-  private async handleFetchSearchResults(request: FetchSearchResultsRequest): Promise<void> {
-    const { request_id, query, search_type } = request;
-
-    logger.info('websocket', `Searching files: query=${query}, search_type=${search_type}, request_id=${request_id}`);
-
-    try {
-      // Expo FileSystemから全ファイルを取得
-      const files = await FileRepository.getAll();
-      let results: any[] = [];
-
-      // 検索タイプに応じた検索処理
-      const lowerQuery = query.toLowerCase();
-
-      switch (search_type) {
-        case 'title':
-          // タイトル検索
-          results = files.filter(file =>
-            file.title?.toLowerCase().includes(lowerQuery)
-          );
-          break;
-
-        case 'content':
-          // 内容検索（マッチしたスニペットも含める）
-          results = files
-            .filter(file => file.content?.toLowerCase().includes(lowerQuery))
-            .map(file => {
-              // マッチした部分のスニペットを抽出（前後50文字）
-              const content = file.content || '';
-              const lowerContent = content.toLowerCase();
-              const matchIndex = lowerContent.indexOf(lowerQuery);
-
-              let snippet = '';
-              if (matchIndex !== -1) {
-                const contextLength = CHAT_CONFIG.search.snippetContextLength;
-                const start = Math.max(0, matchIndex - contextLength);
-                const end = Math.min(content.length, matchIndex + query.length + contextLength);
-                snippet = (start > 0 ? '...' : '') +
-                  content.substring(start, end) +
-                  (end < content.length ? '...' : '');
-              }
-
-              return {
-                ...file,
-                match_snippet: snippet,
-              };
-            });
-          break;
-
-        case 'tag':
-          // タグ検索
-          results = files.filter(file =>
-            file.tags?.some((tag: string) =>
-              tag.toLowerCase().includes(lowerQuery)
-            )
-          );
-          break;
-
-        case 'category':
-          // カテゴリー検索
-          results = files.filter(file =>
-            file.category?.toLowerCase().includes(lowerQuery)
-          );
-          break;
-
-        default:
-          logger.warn('websocket', `Unknown search_type: ${search_type}`);
-          results = [];
-      }
-
-      // 検索結果を返す（必要な情報だけに絞る）
-      const resultData = results.map(file => ({
-        title: file.title,
-        category: file.category,
-        tags: file.tags,
-        match_snippet: file.match_snippet, // content検索の場合のみ
-      }));
-
-      const response: SearchResultsResponse = {
-        type: 'search_results_response',
-        request_id,
-        query,
-        results: resultData,
-      };
-
-      this.sendMessage(response);
-      logger.info('websocket', `Search results sent: query=${query}, results_count=${results.length}`);
-
-    } catch (error) {
-      logger.error('websocket', `Failed to search files: ${query}`, error);
-
-      // エラーレスポンス
-      const response: SearchResultsResponse = {
-        type: 'search_results_response',
-        request_id,
-        query,
-        results: [],
-        error: error instanceof Error ? error.message : 'Unknown error',
-      };
-
-      this.sendMessage(response);
     }
   }
 

@@ -6,19 +6,19 @@
  */
 
 import APIService, { ChatContext } from './llmService/api';
-import { ChatMessage, LLMCommand, TokenUsageInfo, SummarizeResponse } from './llmService/types/index';
+import { ChatMessage, LLMCommand, TokenUsageInfo } from './llmService/types/index';
 import { logger } from '../../utils/logger';
 import { ActiveScreenContextProvider, ActiveScreenContext } from './types';
 import { FileRepository } from '@data/repositories/fileRepository';
-import WebSocketService from './services/websocketService';
 import { ChatAttachmentService } from './services/chatAttachmentService';
 import { ChatTokenService } from './services/chatTokenService';
 import { ChatCommandService } from './services/chatCommandService';
-import { getOrCreateClientId } from './utils/clientId';
 import { useSettingsStore } from '../../settings/settingsStore';
 import { useChatStore } from './store/chatStore';
 import { UnifiedErrorHandler } from './utils/errorHandler';
 import { checkModelTokenLimit } from '../../billing/utils/tokenBalance';
+import { ChatSummarizationService } from './services/chatSummarizationService';
+import { ChatWebSocketManager } from './services/chatWebSocketManager';
 
 /**
  * シングルトンクラスとして機能し、アプリケーション全体でチャットの状態を管理します。
@@ -40,10 +40,8 @@ class ChatService {
   // ローディング状態
   private isLoading: boolean = false;
 
-  // WebSocketサービス
-  private wsService: WebSocketService | null = null;
-  private clientId: string | null = null;
-  private isWebSocketInitialized: boolean = false;
+  // WebSocket管理マネージャー
+  private wsManager: ChatWebSocketManager;
 
   // 添付ファイルサービス
   private attachmentService: ChatAttachmentService;
@@ -55,6 +53,7 @@ class ChatService {
     // プライベートコンストラクタでシングルトンを保証
     // 各サービスを初期化
     this.commandService = new ChatCommandService();
+    this.wsManager = new ChatWebSocketManager();
     this.attachmentService = new ChatAttachmentService((files) => {
       this.notifyAttachedFileChange(files);
     });
@@ -130,52 +129,21 @@ class ChatService {
    * @param backendUrl バックエンドのURL（例: "https://xxxxx.ngrok-free.app"）
    */
   public async initializeWebSocket(backendUrl: string): Promise<void> {
-    if (this.isWebSocketInitialized) {
-      logger.debug('chatService', 'WebSocket already initialized');
-      return;
-    }
-
-    try {
-      // client_idを取得または生成
-      this.clientId = await getOrCreateClientId();
-      logger.info('chatService', `WebSocket client_id: ${this.clientId}`);
-
-      // WebSocketサービスを初期化
-      this.wsService = WebSocketService.getInstance(this.clientId);
-
-      // WebSocket状態変更リスナーを追加（デバッグ用）
-      this.wsService.addStateListener((state) => {
-        logger.info('chatService', `WebSocket state changed: ${state}`);
-      });
-
-      // WebSocket接続を確立
-      this.wsService.connect(backendUrl);
-
-      this.isWebSocketInitialized = true;
-      logger.info('chatService', 'WebSocket initialization completed');
-
-    } catch (error) {
-      logger.error('chatService', 'Failed to initialize WebSocket:', error);
-      throw error;
-    }
+    await this.wsManager.initialize(backendUrl);
   }
 
   /**
    * WebSocket接続を切断
    */
   public disconnectWebSocket(): void {
-    if (this.wsService) {
-      this.wsService.disconnect();
-      this.isWebSocketInitialized = false;
-      logger.info('chatService', 'WebSocket disconnected');
-    }
+    this.wsManager.disconnect();
   }
 
   /**
    * client_idを取得
    */
   public getClientId(): string | null {
-    return this.clientId;
+    return this.wsManager.getClientId();
   }
 
   /**
@@ -275,13 +243,15 @@ class ChatService {
       const chatContext: ChatContext = await this.buildChatContext(screenContext);
 
       // WebSocket接続状態をログに出力（デバッグ用）
-      if (this.wsService) {
-        logger.info('chatService', `WebSocket state before sending message: ${this.wsService.getState()}`);
+      const wsService = this.wsManager.getService();
+      if (wsService) {
+        logger.info('chatService', `WebSocket state before sending message: ${wsService.getState()}`);
       }
 
       // APIにメッセージを送信（client_idと添付ファイル情報も含める）
       logger.debug('chatService', 'Sending message to LLM with context:', chatContext);
-      const response = await APIService.sendChatMessage(trimmedMessage, chatContext, this.clientId, attachedFiles.length > 0 ? attachedFiles : undefined);
+      const clientId = this.wsManager.getClientId();
+      const response = await APIService.sendChatMessage(trimmedMessage, chatContext, clientId, attachedFiles.length > 0 ? attachedFiles : undefined);
 
       // AIメッセージを追加（トークン使用率を記録）
       const aiMessage: ChatMessage = {
@@ -363,78 +333,23 @@ class ChatService {
     this.setLoading(true);
 
     try {
-      logger.info('chatService', 'Starting conversation summarization');
+      // 要約サービスを使用して要約を実行
+      const result = await ChatSummarizationService.summarizeConversation(this.messages);
 
-      // APIServiceを通じて要約を実行
-      const result: SummarizeResponse = await APIService.summarizeConversation();
-
-      // compressionRatioが0.95以上の場合（効果が小さい、または逆効果）
-      const isActuallySummarized = result.compressionRatio < 0.95;
-
-      if (!isActuallySummarized) {
+      if (!result.isActuallySummarized) {
         // 要約が効果的でなかった場合
-        logger.info('chatService', `Summarization not effective (compressionRatio: ${result.compressionRatio})`);
-
-        let message: string;
-        if (result.compressionRatio >= 1.0) {
-          // トークンが増えた場合
-          const increase = result.compressedTokens - result.originalTokens;
-          message = `⚠️ 要約を実行しましたが、トークン数が削減されませんでした。\n\n元のトークン数: ${result.originalTokens}\n要約後: ${result.compressedTokens}（+${increase}）\n\n会話が短すぎるため、要約の効果がありません。\nもう少し会話を続けてから要約をお試しください。`;
-        } else {
-          // 削減効果が小さい場合
-          const reduction = ((1 - result.compressionRatio) * 100).toFixed(1);
-          message = `ℹ️ 要約の削減効果が小さいため、適用されませんでした。\n\n元のトークン数: ${result.originalTokens}\n要約後: ${result.compressedTokens}\n削減率: ${reduction}%\n\nもう少し会話を続けてから要約をお試しください。`;
-        }
-
-        const infoMessage: ChatMessage = {
-          role: 'system',
-          content: message,
-          timestamp: new Date(),
-        };
-        this.addMessage(infoMessage);
-
-        // 要約されていないので、isSummarizedフラグは付けない
-        // トークン使用量もリセットしない
+        result.messages.forEach((msg) => this.addMessage(msg));
         return;
       }
 
-      // 実際に要約された場合のみ以下を実行
-
-      // 表示用：要約前のすべてのメッセージにisSummarizedフラグを追加
-      // （UI表示では要約前のメッセージも残しておく）
-      this.messages = this.messages.map(msg => ({
-        ...msg,
-        isSummarized: true,
-      }));
-
-      // 要約システムメッセージを最後に追加（区切りとして）
-      const summaryMessage: ChatMessage = {
-        role: 'system',
-        content: `📝 **会話の要約**\n\n${result.summary.content}\n\n---\n\n以下は要約後の会話が続きます。`,
-        timestamp: new Date(),
-      };
-      this.messages.push(summaryMessage);
-
-      // 注: LLMService側の会話履歴は既に圧縮されている
-      // this.messagesは表示用なので全履歴を保持し、isSummarizedフラグで区別する
+      // 実際に要約された場合
+      this.messages = result.messages;
 
       // トークン使用量をリセット（要約後は新しいカウントになる）
-      // バックエンドで再計算されたトークン使用量を次のメッセージ送信時に取得する
       this.tokenService.resetTokenUsage();
-
-      logger.info('chatService', `Conversation summarized: ${result.originalTokens} -> ${result.compressedTokens} tokens (${(result.compressionRatio * 100).toFixed(1)}% reduction)`);
 
       // リスナーに通知
       this.notifyListeners();
-
-      // 要約完了のシステムメッセージを追加
-      const completionMessage: ChatMessage = {
-        role: 'system',
-        content: `✅ 要約が完了しました。${result.originalTokens}トークン → ${result.compressedTokens}トークン（${((1 - result.compressionRatio) * 100).toFixed(1)}%削減）`,
-        timestamp: new Date(),
-      };
-      this.addMessage(completionMessage);
-
     } catch (error) {
       const errorMessage = UnifiedErrorHandler.handleChatError(
         {

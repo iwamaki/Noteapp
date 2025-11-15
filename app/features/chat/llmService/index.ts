@@ -11,10 +11,7 @@ import type {
   LLMResponse,
   LLMHealthStatus,
   LLMConfig,
-  SummarizeRequest,
   SummarizeResponse,
-  ChatMessage,
-  DocumentSummarizeRequest,
   DocumentSummarizeResponse,
 } from './types/index';
 import { LLMError } from './types/LLMError';
@@ -23,6 +20,7 @@ import { HttpClient } from './utils/HttpClient';
 import { RequestManager } from './core/RequestManager';
 import { ErrorHandler } from './utils/ErrorHandler';
 import { ProviderManager } from './core/ProviderManager';
+import { SummarizationService } from './services/SummarizationService';
 import { CHAT_CONFIG } from '../config/chatConfig';
 
 // Re-export types
@@ -39,6 +37,7 @@ export class LLMService {
   private httpClient: HttpClient;
   private requestManager: RequestManager;
   private providerManager: ProviderManager;
+  private summarizationService: SummarizationService;
   private cachedProviders: Record<string, LLMProvider> | null = null;
   private loadingPromise: Promise<Record<string, LLMProvider>> | null = null;
 
@@ -62,6 +61,7 @@ export class LLMService {
       defaultProvider: CHAT_CONFIG.llm.defaultProvider,
       defaultModel: CHAT_CONFIG.llm.defaultModel,
     });
+    this.summarizationService = new SummarizationService(this.httpClient);
   }
 
   async sendChatMessage(
@@ -259,69 +259,11 @@ export class LLMService {
    * @returns 要約結果と圧縮された会話履歴
    */
   async summarizeConversation(): Promise<SummarizeResponse> {
-    try {
-      // 現在の会話履歴を取得
-      const history = this.conversationHistory.getHistory().map(msg => ({
-        role: msg.role,
-        content: msg.content,
-        timestamp: msg.timestamp.toISOString(),
-      }));
-
-      if (history.length === 0) {
-        throw new LLMError('会話履歴が空です', 'EMPTY_HISTORY');
-      }
-
-      logger.info('llm', `Summarizing conversation with ${history.length} messages`);
-
-      // 要約リクエストを送信
-      const request: SummarizeRequest = {
-        conversationHistory: history,
-        provider: this.providerManager.getCurrentProvider(),
-        model: this.providerManager.getCurrentModel(),
-      };
-
-      const response = await this.httpClient.post('/api/chat/summarize', request);
-
-      if (response.status < 200 || response.status >= 300) {
-        throw new LLMError(
-          `HTTP error! status: ${response.status}`,
-          'HTTP_ERROR',
-          response.status
-        );
-      }
-
-      const data: SummarizeResponse = response.data;
-
-      // 会話履歴を要約結果で置き換える
-      this.conversationHistory.clear();
-
-      // システムメッセージ（要約）を追加
-      const summaryMessage: ChatMessage = {
-        role: 'system',
-        content: data.summary.content,
-        timestamp: data.summary.timestamp ? new Date(data.summary.timestamp) : new Date(),
-      };
-      this.conversationHistory.addMessage(summaryMessage);
-
-      // 最近のメッセージを復元
-      data.recentMessages.forEach((msg) => {
-        const message: ChatMessage = {
-          role: msg.role as 'user' | 'ai' | 'system',
-          content: msg.content,
-          timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date(),
-        };
-        this.conversationHistory.addMessage(message);
-      });
-
-      logger.info('llm', `Conversation summarized: ${data.originalTokens} -> ${data.compressedTokens} tokens (${(data.compressionRatio * 100).toFixed(1)}% reduction)`);
-
-      return data;
-    } catch (error) {
-      if (error instanceof LLMError) {
-        throw error;
-      }
-      throw new LLMError('要約の作成に失敗しました', 'SUMMARIZATION_ERROR');
-    }
+    return this.summarizationService.summarizeConversation(
+      this.conversationHistory,
+      this.providerManager.getCurrentProvider(),
+      this.providerManager.getCurrentModel()
+    );
   }
 
   /**
@@ -334,41 +276,11 @@ export class LLMService {
     content: string,
     title: string
   ): Promise<DocumentSummarizeResponse> {
-    try {
-      const currentProvider = this.providerManager.getCurrentProvider();
-      const currentModel = this.providerManager.getCurrentModel();
-
-      logger.info('llm', `Summarizing document: title="${title}", content_length=${content.length}, provider=${currentProvider}, model=${currentModel}`);
-
-      // 要約リクエストを送信
-      const request: DocumentSummarizeRequest = {
-        content,
-        title,
-        provider: currentProvider,
-        model: currentModel,
-      };
-
-      const response = await this.httpClient.post('/api/document/summarize', request);
-
-      if (response.status < 200 || response.status >= 300) {
-        throw new LLMError(
-          `HTTP error! status: ${response.status}`,
-          'HTTP_ERROR',
-          response.status
-        );
-      }
-
-      const data: DocumentSummarizeResponse = response.data;
-
-      logger.info('llm', `Document summarization complete: ${data.summary.substring(0, 100)}... (tokens: input=${data.inputTokens}, output=${data.outputTokens})`);
-
-      return data;
-    } catch (error) {
-      if (error instanceof LLMError) {
-        throw error;
-      }
-      logger.error('llm', 'Failed to summarize document:', error);
-      throw new LLMError('文書要約の作成に失敗しました', 'DOCUMENT_SUMMARIZATION_ERROR');
-    }
+    return this.summarizationService.summarizeDocument(
+      content,
+      title,
+      this.providerManager.getCurrentProvider(),
+      this.providerManager.getCurrentModel()
+    );
   }
 }

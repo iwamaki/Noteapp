@@ -7,24 +7,11 @@
 import { logger } from '../../../utils/logger';
 import { ChatMessage } from '../llmService/types/index';
 import { LLMError } from '../llmService/types/LLMError';
+import { ErrorType } from './errorTypes';
+import { ERROR_MESSAGE_TEMPLATES } from './errorMessageTemplates';
 
-/**
- * エラータイプの列挙
- */
-export enum ErrorType {
-  /** ネットワーク接続エラー */
-  NETWORK = 'NETWORK',
-  /** タイムアウトエラー */
-  TIMEOUT = 'TIMEOUT',
-  /** 入力検証エラー */
-  VALIDATION = 'VALIDATION',
-  /** ファイル操作エラー */
-  FILE_OPERATION = 'FILE_OPERATION',
-  /** LLM API エラー */
-  LLM_API = 'LLM_API',
-  /** 不明なエラー */
-  UNKNOWN = 'UNKNOWN',
-}
+// Re-export ErrorType for backward compatibility
+export { ErrorType } from './errorTypes';
 
 /**
  * エラーコンテキスト情報
@@ -111,27 +98,8 @@ export class UnifiedErrorHandler {
    */
   static getUserMessage(errorType: ErrorType, error: unknown): string {
     const baseMessage = error instanceof Error ? error.message : '不明なエラーが発生しました';
-
-    switch (errorType) {
-      case ErrorType.NETWORK:
-        return `❌ **ネットワークエラー**\n\nサーバーとの通信に失敗しました。\n\n**対処方法:**\n- ネットワーク接続を確認してください\n- サーバーが起動していることを確認してください\n- VPNやファイアウォールの設定を確認してください`;
-
-      case ErrorType.TIMEOUT:
-        return `⏱️ **タイムアウトエラー**\n\nリクエストの処理に時間がかかりすぎています。\n\n**対処方法:**\n- もう一度お試しください\n- 送信するメッセージや添付ファイルのサイズを減らしてください\n- サーバーの負荷状況を確認してください`;
-
-      case ErrorType.VALIDATION:
-        return `⚠️ **入力エラー**\n\n${baseMessage}\n\n**対処方法:**\n- 入力内容を確認してください\n- 必要な情報がすべて入力されているか確認してください`;
-
-      case ErrorType.FILE_OPERATION:
-        return `📁 **ファイル操作エラー**\n\n${baseMessage}\n\n**対処方法:**\n- ファイル名が正しいか確認してください\n- ファイルが存在するか確認してください\n- 同じ名前のファイルが既に存在しないか確認してください`;
-
-      case ErrorType.LLM_API:
-        return `🤖 **LLM APIエラー**\n\n${baseMessage}\n\n**対処方法:**\n- サーバーが正常に動作しているか確認してください\n- API設定（プロバイダー、モデル）を確認してください\n- しばらく時間をおいてから再試行してください`;
-
-      case ErrorType.UNKNOWN:
-      default:
-        return `❌ **予期しないエラー**\n\n${baseMessage}\n\n**対処方法:**\n- もう一度お試しください\n- 問題が解決しない場合は、アプリを再起動してください`;
-    }
+    const template = ERROR_MESSAGE_TEMPLATES[errorType] || ERROR_MESSAGE_TEMPLATES[ErrorType.UNKNOWN];
+    return template(baseMessage);
   }
 
   /**

@@ -19,6 +19,7 @@ import { CustomModal } from '../../../components/CustomModal';
 import { useSettingsStore } from '../../../settings/settingsStore';
 import { convertProvidersToModelInfo, type ModelInfo } from '../../../screen/model-selection/constants';
 import APIService from '../llmService/api';
+import { ModelCard } from './ModelCard';
 
 interface ModelSelectionModalProps {
   isVisible: boolean;
@@ -109,53 +110,6 @@ export const ModelSelectionModal: React.FC<ModelSelectionModalProps> = ({
       fontSize: 15,
       fontWeight: 'bold',
     },
-    modelCard: {
-      borderRadius: 8,
-      borderWidth: 2,
-      borderColor: colors.transparent || 'transparent',
-      backgroundColor: colors.secondary,
-      padding: spacing.md,
-      marginBottom: spacing.sm,
-    },
-    modelCardActive: {
-      backgroundColor: colors.secondary,
-    },
-    modelName: {
-      fontSize: 15,
-      fontWeight: 'bold',
-      color: colors.text,
-    },
-    modelDescription: {
-      fontSize: 12,
-      color: colors.textSecondary,
-      marginTop: spacing.xs,
-    },
-    modelTokenRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginTop: spacing.sm,
-    },
-    modelTokenAmount: {
-      fontSize: 13,
-      fontWeight: 'bold',
-    },
-    modelStatusBadge: {
-      borderRadius: 4,
-      paddingVertical: 4,
-      paddingHorizontal: spacing.sm,
-      borderWidth: 1,
-      borderColor: colors.transparent || 'transparent',
-    },
-    modelStatusBadgeActive: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-    },
-    modelStatusText: {
-      fontSize: 11,
-      fontWeight: 'bold',
-    },
     loadingContainer: {
       padding: spacing.xl,
       alignItems: 'center',
@@ -186,62 +140,6 @@ export const ModelSelectionModal: React.FC<ModelSelectionModalProps> = ({
       fontWeight: 'bold',
     },
   });
-
-  // モデル選択カード
-  const renderModelCard = (
-    modelId: string,
-    category: 'quick' | 'think',
-    isActive: boolean,
-    accentColor: string
-  ) => {
-    const model = availableModels.find(m => m.id === modelId);
-    if (!model) return null;
-
-    const tokens = getModelTokens(modelId);
-
-    return (
-      <TouchableOpacity
-        key={modelId}
-        style={[
-          styles.modelCard,
-          isActive && styles.modelCardActive,
-          isActive && { borderColor: accentColor },
-        ]}
-        onPress={() => handleSelectModel(modelId, category)}
-        disabled={tokens <= 0}
-      >
-        {/* モデル名と説明 */}
-        <View>
-          <Text style={styles.modelName}>{model.name}</Text>
-          <Text style={styles.modelDescription}>{model.description}</Text>
-        </View>
-
-        {/* トークン量と適用状態 */}
-        <View style={styles.modelTokenRow}>
-          <Text style={[styles.modelTokenAmount, { color: accentColor }]}>
-            残高：{tokens.toLocaleString()} トークン
-          </Text>
-
-          {isActive ? (
-            <View style={[styles.modelStatusBadge, styles.modelStatusBadgeActive, { backgroundColor: accentColor }]}>
-              <MaterialCommunityIcons
-                name={category === 'quick' ? 'speedometer' : 'speedometer-slow'}
-                size={14}
-                color={colors.white}
-              />
-              <Text style={[styles.modelStatusText, { color: colors.white }]}>適用中</Text>
-            </View>
-          ) : (
-            <View style={[styles.modelStatusBadge, { backgroundColor: colors.background, borderColor: colors.border }]}>
-              <Text style={[styles.modelStatusText, { color: tokens > 0 ? colors.text : colors.textSecondary }]}>
-                {tokens > 0 ? '選択' : '残高なし'}
-              </Text>
-            </View>
-          )}
-        </View>
-      </TouchableOpacity>
-    );
-  };
 
   // コンテンツをレンダリング
   const renderContent = () => {
@@ -286,9 +184,17 @@ export const ModelSelectionModal: React.FC<ModelSelectionModalProps> = ({
             <Text style={[styles.sectionTitle, { color: colors.accentQuick }]}>Quickモデル</Text>
           </View>
 
-          {availableModels.filter(m => m.category === 'quick').map(model =>
-            renderModelCard(model.id, 'quick', model.id === activeQuickModel, colors.accentQuick)
-          )}
+          {availableModels.filter(m => m.category === 'quick').map(model => (
+            <ModelCard
+              key={model.id}
+              model={model}
+              isActive={model.id === activeQuickModel}
+              accentColor={colors.accentQuick}
+              tokens={getModelTokens(model.id)}
+              category="quick"
+              onSelect={handleSelectModel}
+            />
+          ))}
         </View>
 
         {/* Thinkモデル一覧 */}
@@ -303,9 +209,17 @@ export const ModelSelectionModal: React.FC<ModelSelectionModalProps> = ({
             <Text style={[styles.sectionTitle, { color: colors.accentThink }]}>Thinkモデル</Text>
           </View>
 
-          {availableModels.filter(m => m.category === 'think').map(model =>
-            renderModelCard(model.id, 'think', model.id === activeThinkModel, colors.accentThink)
-          )}
+          {availableModels.filter(m => m.category === 'think').map(model => (
+            <ModelCard
+              key={model.id}
+              model={model}
+              isActive={model.id === activeThinkModel}
+              accentColor={colors.accentThink}
+              tokens={getModelTokens(model.id)}
+              category="think"
+              onSelect={handleSelectModel}
+            />
+          ))}
         </View>
       </>
     );
