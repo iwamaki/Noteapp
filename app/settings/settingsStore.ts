@@ -7,6 +7,8 @@
  */
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getModelCategoryFromId } from '../features/chat/llmService/utils/modelCategoryHelper';
+import { providerCache } from '../features/chat/llmService/cache/providerCache';
 
 const SETTINGS_STORAGE_KEY = '@app_settings';
 
@@ -338,23 +340,12 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     const { settings } = get();
     const { allocatedTokens } = settings.tokenBalance;
 
-    // APIServiceのメタデータを使用してカテゴリー判定
-    // 動的インポートで循環依存を回避
-    let getModelCategory: (modelId: string) => 'quick' | 'think';
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const APIService = require('../features/chat/llmService/api').default;
-      getModelCategory = (modelId: string) => APIService.getModelCategory(modelId);
-    } catch {
-      // フォールバック
-      console.warn('Failed to load APIService, using fallback for category detection');
-      getModelCategory = (modelId: string) =>
-        modelId.toLowerCase().includes('flash') ? 'quick' : 'think';
-    }
+    // グローバルキャッシュから取得（循環参照回避）
+    const providersCache = providerCache.getCache();
 
     let total = 0;
     for (const [modelId, balance] of Object.entries(allocatedTokens)) {
-      if (getModelCategory(modelId) === category) {
+      if (getModelCategoryFromId(modelId, providersCache) === category) {
         total += balance;
       }
     }
@@ -428,35 +419,8 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     set({ settings: newSettings });
     console.log(`[ModelLoading] Loaded ${modelId} into ${category} slot, set active category to ${category}`);
 
-    // APIServiceにもモデル変更を通知
-    try {
-      const { default: APIService } = await import('../features/chat/llmService/api');
-
-      // バックエンドから取得したプロバイダー情報を使って、モデルIDに対応するプロバイダーを取得
-      const providers = await APIService.loadLLMProviders();
-      let providerName: string | undefined;
-
-      // どのプロバイダーにこのモデルが含まれているかを探す
-      for (const [name, provider] of Object.entries(providers)) {
-        if (provider.models.includes(modelId)) {
-          providerName = name;
-          break;
-        }
-      }
-
-      if (!providerName) {
-        console.error(`[ModelLoading] Provider not found for model: ${modelId}`);
-        return;
-      }
-
-      // プロバイダーを設定してから、モデルを設定
-      // ProviderManagerはプロバイダーが変わった時のみデフォルトモデルを設定する
-      APIService.setLLMProvider(providerName);
-      APIService.setLLMModel(modelId);
-      console.log(`[ModelLoading] Updated APIService: provider=${providerName}, model=${modelId}`);
-    } catch (error) {
-      console.error('[ModelLoading] Failed to update APIService:', error);
-    }
+    // 注: APIService へのモデル変更通知は、チャット画面などの
+    // 上位コンポーネントで行います（循環参照回避のため）
   },
 
   /**

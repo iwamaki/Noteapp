@@ -5,7 +5,8 @@
  */
 
 import { useSettingsStore } from '../../settings/settingsStore';
-import APIService from '../../features/chat/llmService/api';
+import { getModelCategoryFromId } from '../../features/chat/llmService/utils/modelCategoryHelper';
+import { providerCache } from '../../features/chat/llmService/cache/providerCache';
 
 /**
  * モデルIDがQuick系かどうかを判定
@@ -14,7 +15,8 @@ import APIService from '../../features/chat/llmService/api';
  * @returns Quick系の場合 true
  */
 export function isQuickModel(modelId: string): boolean {
-  return APIService.getModelCategory(modelId) === 'quick';
+  const providers = providerCache.getCache();
+  return getModelCategoryFromId(modelId, providers) === 'quick';
 }
 
 /**
@@ -24,7 +26,8 @@ export function isQuickModel(modelId: string): boolean {
  * @returns Think系の場合 true
  */
 export function isThinkModel(modelId: string): boolean {
-  return APIService.getModelCategory(modelId) === 'think';
+  const providers = providerCache.getCache();
+  return getModelCategoryFromId(modelId, providers) === 'think';
 }
 
 

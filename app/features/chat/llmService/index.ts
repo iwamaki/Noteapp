@@ -22,6 +22,7 @@ import { ErrorHandler } from './utils/ErrorHandler';
 import { ProviderManager } from './core/ProviderManager';
 import { SummarizationService } from './services/SummarizationService';
 import { CHAT_CONFIG } from '../config/chatConfig';
+import { providerCache } from './cache/providerCache';
 
 // Re-export types
 export type { ChatMessage, ChatContext, LLMProvider, LLMResponse, LLMHealthStatus, LLMConfig, LLMCommand, TokenUsageInfo, SummarizeRequest, SummarizeResponse, SummaryResult, DocumentSummarizeRequest, DocumentSummarizeResponse } from './types/index';
@@ -176,6 +177,8 @@ export class LLMService {
 
     try {
       this.cachedProviders = await this.loadingPromise;
+      // グローバルキャッシュにも保存（循環参照回避のため）
+      providerCache.setCache(this.cachedProviders);
       return this.cachedProviders;
     } finally {
       this.loadingPromise = null;
@@ -215,6 +218,7 @@ export class LLMService {
   refreshProviders(): void {
     logger.info('llm', 'Clearing LLM providers cache');
     this.cachedProviders = null;
+    providerCache.clearCache();
   }
 
   async checkHealth(): Promise<LLMHealthStatus> {

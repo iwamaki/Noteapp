@@ -5,6 +5,8 @@
  */
 
 import { ChatContext, LLMResponse, LLMService, SummarizeResponse, DocumentSummarizeResponse } from './index';
+import { getModelCategoryFromId } from './utils/modelCategoryHelper';
+import { providerCache } from './cache/providerCache';
 
 export interface CreateFileRequest {
   title: string;
@@ -94,26 +96,9 @@ export class APIService {
    * @returns カテゴリー（'quick' | 'think'）、メタデータがない場合はフォールバック
    */
   static getModelCategory(modelId: string): 'quick' | 'think' {
-    const providers = this.getCachedLLMProviders();
-    if (!providers) {
-      // キャッシュがない場合はフォールバック
-      console.warn('LLM providers not cached, using fallback for model category');
-      const modelIdLower = modelId.toLowerCase();
-      return (modelIdLower.includes('flash') || modelIdLower.includes('mini')) ? 'quick' : 'think';
-    }
-
-    // すべてのプロバイダーからメタデータを検索
-    for (const provider of Object.values(providers)) {
-      const typedProvider = provider as any;
-      if (typedProvider?.modelMetadata?.[modelId]) {
-        return typedProvider.modelMetadata[modelId].category;
-      }
-    }
-
-    // メタデータがない場合はフォールバック
-    console.warn(`Model metadata not found for ${modelId}, using fallback`);
-    const modelIdLower = modelId.toLowerCase();
-    return (modelIdLower.includes('flash') || modelIdLower.includes('mini')) ? 'quick' : 'think';
+    // グローバルキャッシュから取得（循環参照回避）
+    const providers = providerCache.getCache();
+    return getModelCategoryFromId(modelId, providers);
   }
 
   // 会話履歴を要約
