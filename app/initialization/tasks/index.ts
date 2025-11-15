@@ -17,6 +17,7 @@ import { verifyAppReadyTask } from './verifyAppReady';
 import { loadIconFontsTask } from './loadIconFonts';
 import { loadToolDefinitionsTask } from './loadToolDefinitions';
 import { authenticateDevice } from './authenticateDevice';
+import { restorePendingPurchasesTask } from './restorePendingPurchases';
 import { InitializationTask } from '../types';
 
 /**
@@ -42,6 +43,7 @@ export const allInitializationTasks: InitializationTask[] = [
   configureChatServiceTask,
   initializeWebSocketTask,  // WebSocket接続の初期化
   initializeBillingServiceTask,  // Billing APIの初期化
+  restorePendingPurchasesTask,  // 未完了購入の復元（Billing初期化後に実行）
   loadToolDefinitionsTask,
 
   // Stage 4: READY - UI表示準備完了
@@ -54,6 +56,7 @@ export {
   initializeFileSystemTask,
   loadSettingsTask,
   authenticateDevice,
+  restorePendingPurchasesTask,
   configureLLMServiceTask,
   preloadLLMProvidersTask,
   configureChatServiceTask,
