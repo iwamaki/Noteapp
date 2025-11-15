@@ -11,7 +11,16 @@
     "type-check": "tsc --noEmit",
     "lint": "eslint \"{app,shared}/**/*.{js,jsx,ts,tsx}\"",
     "docs": "typedoc",
-    "depcruise": "node_modules/.bin/depcruise --validate .dependency-cruiser.js --output-type dot app/ > dependency-graph.dot && dot -T svg dependency-graph.dot > dependency-graph.svg"
+    "depcruise": "node_modules/.bin/depcruise --validate .dependency-cruiser.js --output-type dot app/ > dependency-graph.dot && dot -T svg dependency-graph.dot > dependency-graph.svg",
+    "env:dev": "cp .env.development .env",
+    "env:prod": "cp .env.production .env",
+    "start:dev": "npm run env:dev && expo start",
+    "start:prod": "npm run env:prod && expo start",
+    "android:dev": "npm run env:dev && expo start --android",
+    "android:prod": "npm run env:prod && expo start --android",
+    "build:dev": "npm run env:dev && eas build --profile development",
+    "build:preview": "npm run env:prod && eas build --profile preview",
+    "build:prod": "npm run env:prod && eas build --profile production"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
