@@ -8,6 +8,7 @@
 import { InitializationTask, InitializationStage, TaskPriority } from '../types';
 import { initBillingApiService } from '../../billing/services/billingApiService';
 import { useSettingsStore } from '../../settings/settingsStore';
+import { logger } from '../../utils/logger';
 
 /**
  * Billing Service 初期化タスク
@@ -31,23 +32,23 @@ export const initializeBillingServiceTask: InitializationTask = {
     const backendUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
 
     if (!backendUrl) {
-      console.warn('[initializeBillingService] Backend URL not configured. Skipping Billing API initialization.');
+      logger.warn('billing', 'Backend URL not configured, skipping Billing API initialization');
       return;
     }
 
     try {
       // BillingApiServiceを初期化
       initBillingApiService(backendUrl);
-      console.log('[initializeBillingService] BillingApiService initialized:', { backendUrl });
+      logger.info('billing', 'BillingApiService initialized', { backendUrl });
 
       // トークン残高をバックエンドから読み込み
       await useSettingsStore.getState().loadTokenBalance();
-      console.log('[initializeBillingService] Token balance loaded from backend');
+      logger.info('billing', 'Token balance loaded from backend');
 
       // デバッグログ（開発時のみ）
       if (__DEV__) {
         const { tokenBalance } = useSettingsStore.getState().settings;
-        console.log('[initializeBillingService] Current balance:', {
+        logger.debug('billing', 'Current balance', {
           credits: tokenBalance.credits,
           models: Object.keys(tokenBalance.allocatedTokens).length,
         });
@@ -55,15 +56,15 @@ export const initializeBillingServiceTask: InitializationTask = {
     } catch (error) {
       // Billing初期化の失敗は致命的ではない
       // ローカルキャッシュを使用して動作を続行できる
-      console.warn('[initializeBillingService] Billing service initialization failed:', error);
+      logger.warn('billing', 'Billing service initialization failed', error);
       throw error; // フォールバックで処理
     }
   },
 
   fallback: async (error: Error) => {
-    console.warn('[initializeBillingService] Using fallback - Billing API not available:', error);
+    logger.warn('billing', 'Using fallback - Billing API not available', error);
     // フォールバック: ローカルキャッシュを使用
-    console.warn('[initializeBillingService] Using cached token balance from AsyncStorage.');
+    logger.warn('billing', 'Using cached token balance from local storage');
     // 設定は既に loadSettings() で読み込まれているので、キャッシュが使用される
   },
 
