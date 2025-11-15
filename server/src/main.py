@@ -1,6 +1,7 @@
 # @file main.py
 # @summary アプリケーションのメインエントリポイント。FastAPIアプリを初期化し、ルーターを結合します。
 # @responsibility FastAPIアプリケーションのインスタンス化、CORSミドルウェアの設定、および各ルーターのインクルードを行います。
+import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
@@ -51,12 +52,24 @@ app = FastAPI(
 )
 
 # CORS設定
+# 環境変数から許可オリジンを取得
+allowed_origins_str = os.getenv("ALLOWED_ORIGINS", "")
+if allowed_origins_str:
+    allowed_origins = [origin.strip() for origin in allowed_origins_str.split(",")]
+else:
+    # デフォルトは開発環境用
+    allowed_origins = [
+        "http://localhost:8081",
+        "http://localhost:19006",
+        "http://127.0.0.1:8081",
+    ]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 開発環境用。本番環境では適切に設定すること
+    allow_origins=allowed_origins,  # 環境変数から取得
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_headers=["Content-Type", "Authorization", "X-Device-ID"],
 )
 
 # ルーターのインクルード

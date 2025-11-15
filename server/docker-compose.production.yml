@@ -6,7 +6,8 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - .:/app
+      - ./billing.db:/app/billing.db
+      - ./.secrets:/app/.secrets:ro
     environment:
       # ========================================
       # Python 設定
@@ -43,5 +44,7 @@ services:
       # ========================================
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
 
+    env_file:
+      - .env.production  # 本番環境用の.envを読み込む
     restart: unless-stopped
-    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000
