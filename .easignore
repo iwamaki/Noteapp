@@ -6,3 +6,12 @@ ios/build
 android/build
 dist
 .env
+
+# サーバーファイルを除外（フロントエンドビルドには不要）
+server
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.mypy_cache
