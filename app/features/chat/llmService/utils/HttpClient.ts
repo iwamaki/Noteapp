@@ -32,10 +32,7 @@ export class HttpClient {
     // リクエストインターセプターで認証ヘッダーを自動追加
     this.axiosInstance.interceptors.request.use(async (requestConfig) => {
       const authHeaders = await getAuthHeaders();
-      requestConfig.headers = {
-        ...requestConfig.headers,
-        ...authHeaders,
-      };
+      Object.assign(requestConfig.headers, authHeaders);
       return requestConfig;
     });
   }

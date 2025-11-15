@@ -21,6 +21,7 @@ export interface PurchaseRecord {
   id: string; // ユニークID
   type: 'initial' | 'addon'; // 購入タイプ（単発購入のみ）
   productId: string; // プロダクトID
+  purchaseToken: string; // 購入トークン（IAP検証用）
   transactionId: string; // トランザクションID
   purchaseDate: string; // 購入日時（ISO 8601）
   amount: number; // 支払額（円）

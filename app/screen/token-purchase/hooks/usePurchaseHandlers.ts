@@ -48,6 +48,7 @@ export const usePurchaseHandlers = ({
                   id: `mock_${Date.now()}`,
                   type: pkg.isInitial ? 'initial' : 'addon',
                   productId: pkg.productId,
+                  purchaseToken: `mock_purchase_token_${Date.now()}`,
                   transactionId: `mock_transaction_${Date.now()}`,
                   purchaseDate: new Date().toISOString(),
                   amount: pkg.price,
@@ -58,6 +59,8 @@ export const usePurchaseHandlers = ({
                 const { getBillingApiService } = await import('../../../billing/services/billingApiService');
                 const billingService = getBillingApiService();
                 await billingService.addCredits(pkg.credits, mockPurchaseRecord);
+
+                console.log('[usePurchaseHandlers] Mock purchase: Backend verification successful');
 
                 // ローカルキャッシュを更新
                 await refreshTokenBalance();
@@ -101,6 +104,7 @@ export const usePurchaseHandlers = ({
             id: purchase.transactionId || `${Date.now()}`,
             type: pkg.isInitial ? 'initial' : 'addon',
             productId: pkg.productId,
+            purchaseToken: purchase.purchaseToken || '',
             transactionId: purchase.transactionId || '',
             purchaseDate: new Date(purchase.transactionDate).toISOString(),
             amount: pkg.price,
@@ -108,12 +112,21 @@ export const usePurchaseHandlers = ({
           };
 
           // バックエンドにクレジットを追加
+          console.log('[usePurchaseHandlers] Sending credits to backend:', pkg.credits);
           const { getBillingApiService } = await import('../../../billing/services/billingApiService');
           const billingService = getBillingApiService();
           await billingService.addCredits(pkg.credits, purchaseRecord);
+          console.log('[usePurchaseHandlers] Backend addCredits successful');
+
+          // バックエンド検証成功後にトランザクションを完了
+          const { finishTransaction } = await import('react-native-iap');
+          await finishTransaction({ purchase, isConsumable: true });
+          console.log('[usePurchaseHandlers] Transaction finished after backend verification');
 
           // ローカルキャッシュを更新
+          console.log('[usePurchaseHandlers] Calling refreshTokenBalance...');
           await refreshTokenBalance();
+          console.log('[usePurchaseHandlers] refreshTokenBalance completed');
 
           setPurchasing(false);
 

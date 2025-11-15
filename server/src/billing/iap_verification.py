@@ -50,10 +50,10 @@ def verify_purchase(product_id: str, purchase_token: str) -> dict:
         if purchase_state != 0:
             raise ValueError(f"Purchase not completed. State: {purchase_state}")
 
-        # 既に消費済みでないことを確認
-        consumption_state = result.get('consumptionState')
-        if consumption_state == 1:
-            raise ValueError("Purchase already consumed")
+        # 注意: consumption_stateのチェックは行わない
+        # 理由: 消費型アイテム（consumable）は何度でも購入可能
+        #       同じproductIdでも新しいpurchaseTokenが発行される
+        #       二重購入防止はtransaction_idで行う（billing_router.py）
 
         logger.info(
             "Purchase verified successfully",

@@ -21,6 +21,7 @@ export interface TokenBalance {
 
 export interface PurchaseRecord {
   productId: string;
+  purchaseToken: string;
   transactionId: string;
   purchaseDate: string;
   amount: number;
@@ -83,10 +84,7 @@ export class BillingApiService {
 
       // 認証ヘッダーを追加
       const authHeaders = await getAuthHeaders();
-      config.headers = {
-        ...config.headers,
-        ...authHeaders,
-      };
+      Object.assign(config.headers, authHeaders);
 
       return config;
     });
