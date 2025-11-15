@@ -1,12 +1,11 @@
 /**
- * Cost Calculation Helpers
- *
- * 開発モードでのコスト計算とフォーマット機能
- * サブスクリプション機能とは独立して動作します。
+ * @file costCalculation.ts
+ * @summary Cost calculation utilities
+ * @description 開発モードでのコスト計算とフォーマット機能
  */
 
 import { useSettingsStore } from '../../settings/settingsStore';
-import { calculateCost, formatCost, getModelPricing } from '../../constants/pricing';
+import { calculateCost, formatCost, getModelPricing } from '../constants/modelPricing';
 
 /**
  * 月間コスト情報を計算

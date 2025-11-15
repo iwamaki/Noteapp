@@ -18,7 +18,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { RootStackParamList } from '../../navigation/types';
-import { useMonthlyCost } from '../../billing/utils/costCalculationHelpers';
+import { useMonthlyCost } from '../../billing/utils/costCalculation';
 import { useSettingsStore } from '../settingsStore';
 import { ListItem } from '../../components/ListItem';
 

@@ -18,7 +18,7 @@ import { getOrCreateClientId } from './utils/clientId';
 import { useSettingsStore } from '../../settings/settingsStore';
 import { useChatStore } from './store/chatStore';
 import { UnifiedErrorHandler } from './utils/errorHandler';
-import { checkModelTokenLimit } from '../../billing/utils/tokenPurchaseHelpers';
+import { checkModelTokenLimit } from '../../billing/utils/tokenBalance';
 
 /**
  * シングルトンクラスとして機能し、アプリケーション全体でチャットの状態を管理します。
@@ -298,7 +298,7 @@ class ChatService {
 
         // 実際に使用したトークン数を記録（課金対象・モデル別）
         if (response.tokenUsage.inputTokens && response.tokenUsage.outputTokens && response.model) {
-          const { trackAndDeductTokens } = await import('../../billing/utils/tokenTrackingHelper');
+          const { trackAndDeductTokens } = await import('../../billing/utils/tokenBalance');
           await trackAndDeductTokens(
             response.tokenUsage.inputTokens,
             response.tokenUsage.outputTokens,

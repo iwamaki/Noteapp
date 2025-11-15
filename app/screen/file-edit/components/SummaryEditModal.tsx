@@ -67,7 +67,7 @@ export const SummaryEditModal: React.FC<SummaryEditModalProps> = ({
     }
 
     // トークン残量チェック
-    const { checkModelTokenLimit } = await import('../../../billing/utils/tokenPurchaseHelpers');
+    const { checkModelTokenLimit } = await import('../../../billing/utils/tokenBalance');
     const currentModel = APIService.getCurrentLLMModel();
     const tokenLimitCheck = checkModelTokenLimit(currentModel);
 
@@ -88,7 +88,7 @@ export const SummaryEditModal: React.FC<SummaryEditModalProps> = ({
 
       // トークン使用量を記録
       if (response.inputTokens && response.outputTokens && response.model) {
-        const { trackAndDeductTokens } = await import('../../../billing/utils/tokenTrackingHelper');
+        const { trackAndDeductTokens } = await import('../../../billing/utils/tokenBalance');
         await trackAndDeductTokens(response.inputTokens, response.outputTokens, response.model);
       }
     } catch (err) {

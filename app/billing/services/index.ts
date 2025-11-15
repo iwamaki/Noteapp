@@ -6,3 +6,5 @@
  */
 
 export * from './tokenIapService';
+export * from './purchaseRestoration';
+export * from './billingApiService';
