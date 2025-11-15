@@ -100,12 +100,45 @@ export const usePurchaseHandlers = ({
 
             setPurchasing(false);
 
-            // ユーザーに適切なメッセージを表示
-            // パニックを引き起こさず、クレジットが後で追加されることを伝える
+            // リトライ関数を定義
+            const retryBackendVerification = async () => {
+              setPurchasing(true);
+              try {
+                const { getBillingApiService } = await import('../../../billing/services/billingApiService');
+                const billingService = getBillingApiService();
+                await billingService.addCredits(pkg.credits, purchaseRecord);
+                logger.info('billing', 'Backend verification successful on retry');
+
+                const { finishTransaction } = await import('react-native-iap');
+                await finishTransaction({ purchase, isConsumable: true });
+                logger.info('billing', 'Transaction finished successfully on retry');
+
+                await refreshTokenBalance();
+
+                setPurchasing(false);
+                Alert.alert('💰 購入完了', `${pkg.credits}Pのクレジットを追加しました`);
+              } catch (retryError) {
+                logger.error('billing', 'Retry failed', retryError);
+                setPurchasing(false);
+
+                // リトライ失敗時も再度「リトライ」ボタンを表示（無限リトライ可能）
+                Alert.alert(
+                  '通信エラー',
+                  '購入の確認中にエラーが発生しました。\n\n通信状態を確認してから、リトライボタンを押してください。\n\n※ 処理が完了するまで、画面を閉じずにお待ちください。',
+                  [
+                    { text: 'リトライ', onPress: retryBackendVerification }
+                  ]
+                );
+              }
+            };
+
+            // エラーモーダルに「リトライ」ボタンのみ表示
             Alert.alert(
-              '処理中',
-              '購入の確認中です。しばらくしてから再度アプリを起動してください。\n\nクレジットは自動的に追加されます。',
-              [{ text: 'OK' }]
+              '通信エラー',
+              '購入の確認中にエラーが発生しました。\n\n通信状態を確認してから、リトライボタンを押してください。\n\n※ 処理が完了するまで、画面を閉じずにお待ちください。',
+              [
+                { text: 'リトライ', onPress: retryBackendVerification }
+              ]
             );
           }
         },
