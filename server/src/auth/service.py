@@ -93,6 +93,53 @@ class AuthService:
             return device.user_id
         return None
 
+    def verify_device_user(self, device_id: str, client_user_id: str) -> Tuple[bool, str, str]:
+        """
+        デバイスIDとユーザーIDの対応関係を検証
+
+        クライアント側で保持しているuser_idと、サーバー側のdevice_idに
+        紐付いているuser_idが一致しているかを確認する。
+
+        Args:
+            device_id: デバイスID
+            client_user_id: クライアント側で保持しているユーザーID
+
+        Returns:
+            (valid, correct_user_id, message):
+                - valid: 対応関係が正しいか
+                - correct_user_id: サーバー側の正しいユーザーID
+                - message: 結果メッセージ
+
+        Raises:
+            DeviceNotFoundError: デバイスが登録されていない場合
+        """
+        device = self.db.query(DeviceAuth).filter_by(device_id=device_id).first()
+
+        if not device:
+            logger.warning(f"Device verification failed: Device not found - {device_id}")
+            raise DeviceNotFoundError(f"Device not registered: {device_id}")
+
+        server_user_id = device.user_id
+        assert server_user_id is not None, "user_id should not be None"
+
+        # 最終ログイン日時を更新
+        device.last_login_at = datetime.now()
+        self.db.commit()
+
+        if server_user_id != client_user_id:
+            # 不一致の場合
+            logger.warning(
+                f"User ID mismatch detected - "
+                f"device_id: {device_id}, "
+                f"client_user_id: {client_user_id}, "
+                f"server_user_id: {server_user_id}"
+            )
+            return False, server_user_id, "User ID mismatch. Please update to the correct user_id."
+
+        # 一致している場合
+        logger.info(f"Device verification successful - device_id: {device_id}, user_id: {server_user_id}")
+        return True, server_user_id, "Device and user verified successfully"
+
     def _generate_unique_user_id(self) -> str:
         """
         一意なユーザーIDを生成

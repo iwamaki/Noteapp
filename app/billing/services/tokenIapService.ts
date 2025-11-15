@@ -129,15 +129,12 @@ export async function purchaseTokenPackage(
     // レシート検証（Phase 1では簡易的）
     const receipt = purchase.transactionId;
     if (receipt) {
-      // トランザクション完了（消費型アイテムなので isConsumable: true）
-      finishTransaction({ purchase, isConsumable: true })
-        .then(() => {
-          console.log('[Token IAP] Token package transaction finished');
-          onSuccess(purchase);
-        })
-        .catch((error) => {
-          console.error('[Token IAP] Failed to finish token package transaction:', error);
-        });
+      // ⚠️ 重要: finishTransactionは呼ばない
+      // 理由: バックエンドで検証してからacknowledgeする必要がある
+      // finishTransactionを先に呼ぶとGoogle側で消費済みになり、バックエンドの検証が失敗する
+      // finishTransactionはバックエンドのAPI呼び出し成功後に呼ぶ
+      console.log('[Token IAP] Calling onSuccess without finishTransaction (will be done after backend verification)');
+      onSuccess(purchase);
     }
   });
 

@@ -15,6 +15,12 @@ export interface DeviceRegisterResponse {
   message: string;
 }
 
+export interface VerifyDeviceResponse {
+  valid: boolean;
+  user_id: string;
+  message: string;
+}
+
 export interface ErrorResponse {
   detail: string;
 }
@@ -55,6 +61,44 @@ export async function registerDevice(deviceId: string): Promise<DeviceRegisterRe
     return await response.json();
   } catch (error) {
     console.error('[AuthAPI] Device registration error:', error);
+    throw error;
+  }
+}
+
+/**
+ * デバイスIDとユーザーIDの対応関係を検証
+ *
+ * クライアント側で保持しているuser_idとサーバー側のdevice_idに紐付く
+ * user_idが一致しているかを確認する。
+ *
+ * @param deviceId デバイスID
+ * @param userId クライアント側で保持しているユーザーID
+ * @returns 検証結果
+ */
+export async function verifyDevice(
+  deviceId: string,
+  userId: string
+): Promise<VerifyDeviceResponse> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/auth/verify`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        device_id: deviceId,
+        user_id: userId
+      }),
+    });
+
+    if (!response.ok) {
+      const error: ErrorResponse = await response.json();
+      throw new Error(error.detail || 'Device verification failed');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('[AuthAPI] Device verification error:', error);
     throw error;
   }
 }

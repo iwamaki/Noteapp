@@ -18,6 +18,19 @@ class DeviceRegisterResponse(BaseModel):
     message: str = Field(..., description="メッセージ")
 
 
+class VerifyDeviceRequest(BaseModel):
+    """デバイス検証リクエスト"""
+    device_id: str = Field(..., min_length=1, description="デバイスの一意識別子（UUID）")
+    user_id: str = Field(..., min_length=1, description="クライアント側で保持しているユーザーID")
+
+
+class VerifyDeviceResponse(BaseModel):
+    """デバイス検証レスポンス"""
+    valid: bool = Field(..., description="device_idとuser_idの対応が正しいか")
+    user_id: str = Field(..., description="サーバー側の正しいユーザーID")
+    message: str = Field(..., description="メッセージ")
+
+
 class ErrorResponse(BaseModel):
     """エラーレスポンス"""
     error: str = Field(..., description="エラーメッセージ")
