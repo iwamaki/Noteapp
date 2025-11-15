@@ -127,6 +127,12 @@ export const CustomModal: React.FC<CustomModalProps> = ({
       width: '100%',
       marginTop: spacing.md,
     },
+    customComponentWrapper: {
+      flex: 1,
+    },
+    disabledButton: {
+      opacity: 0.5,
+    },
     button: {
       borderRadius: responsive.getResponsiveSize(5, 8, 10),
       paddingVertical: spacing.sm,
@@ -224,7 +230,7 @@ export const CustomModal: React.FC<CustomModalProps> = ({
                 // カスタムコンポーネントが指定されている場合はそれを使用
                 if (button.customComponent) {
                   return (
-                    <View key={index} style={{ flex: 1 }}>
+                    <View key={index} style={styles.customComponentWrapper}>
                       {button.customComponent}
                     </View>
                   );
@@ -240,7 +246,7 @@ export const CustomModal: React.FC<CustomModalProps> = ({
                     style={[
                       styles.button,
                       buttonStyle,
-                      button.disabled && { opacity: 0.5 }
+                      button.disabled && styles.disabledButton
                     ]}
                     onPress={button.onPress}
                     disabled={button.disabled}

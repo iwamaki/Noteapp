@@ -136,6 +136,11 @@ export const SummaryEditModal: React.FC<SummaryEditModalProps> = ({
       color: colors.white,
       textAlign: 'center',
     },
+    generatingContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
     errorText: {
       ...typography.caption,
       color: colors.danger,
@@ -151,7 +156,7 @@ export const SummaryEditModal: React.FC<SummaryEditModalProps> = ({
       onPress={handleGenerateSummary}
     >
       {isGenerating ? (
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+        <View style={styles.generatingContainer}>
           <ActivityIndicator size="small" color={colors.white} />
           <Text style={styles.llmButtonText}>生成中...</Text>
         </View>

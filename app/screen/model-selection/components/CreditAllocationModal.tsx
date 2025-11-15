@@ -243,6 +243,14 @@ export const CreditAllocationModal: React.FC<CreditAllocationModalProps> = ({
       fontSize: typography.caption.fontSize,
       color: colors.danger,
     },
+    loadingContainer: {
+      alignItems: 'center',
+      paddingVertical: spacing.xl,
+    },
+    loadingText: {
+      marginTop: spacing.md,
+      color: colors.textSecondary,
+    },
   });
 
   // ローディング中の表示
@@ -260,9 +268,9 @@ export const CreditAllocationModal: React.FC<CreditAllocationModalProps> = ({
         ]}
         onClose={onClose}
       >
-        <View style={{ alignItems: 'center', paddingVertical: spacing.xl }}>
+        <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={{ marginTop: spacing.md, color: colors.textSecondary }}>
+          <Text style={styles.loadingText}>
             モデル情報を読み込み中...
           </Text>
         </View>

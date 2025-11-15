@@ -7,7 +7,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Animated, PanResponder } from 'react-native';
 import { logger } from '../../../utils/logger';
-import { useSettingsStore } from '../../../settings/settingsStore';
 import ChatService from '../index';
 import { CHAT_CONFIG } from '../config/chatConfig';
 import { useChatStore } from '../store/chatStore';
@@ -24,8 +23,6 @@ export const useChat = () => {
   const isLoading = useChatStore((state) => state.isLoading);
   const attachedFiles = useChatStore((state) => state.attachedFiles);
   const tokenUsage = useChatStore((state) => state.tokenUsage);
-
-  const { settings } = useSettingsStore();
 
   // UI状態（リサイズ中かどうか）はローカルステートとして保持
   const [isResizing, setIsResizing] = useState(false);

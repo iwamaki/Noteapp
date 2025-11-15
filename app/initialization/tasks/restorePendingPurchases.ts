@@ -58,7 +58,7 @@ export const restorePendingPurchasesTask: InitializationTask = {
       logger.info('billing', 'IAP connection ready');
 
       // 未完了購入を検出するためのPromise
-      const pendingPurchaseDetectionPromise = new Promise<void>((resolve, reject) => {
+      const pendingPurchaseDetectionPromise = new Promise<void>((resolve) => {
         const timeoutId = setTimeout(() => {
           // 5秒以内に pending purchases が見つからなければ完了
           logger.debug('billing', 'Pending purchase detection timeout, proceeding');

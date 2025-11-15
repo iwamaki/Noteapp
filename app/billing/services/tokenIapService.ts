@@ -12,7 +12,6 @@ import {
   endConnection,
   fetchProducts,
   requestPurchase,
-  finishTransaction,
   purchaseUpdatedListener,
   purchaseErrorListener,
   getAvailablePurchases,

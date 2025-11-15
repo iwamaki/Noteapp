@@ -174,7 +174,7 @@ function SettingsScreen() {
         {/* LLMプロバイダーとモデルの切り替えはLLMモデル設定画面で行うため、ここでは非表示 */}
 
         {/* トークン残高・使用量セクション（LLM機能のオン/オフに関係なく常に表示） */}
-        <TokenUsageSection renderSection={renderSection} />
+        <TokenUsageSection />
 
         <Text style={styles.infoText}>
           その他の設定項目は今後のアップデートで追加予定です。

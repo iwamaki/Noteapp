@@ -24,21 +24,13 @@ import { ListItem } from '../../components/ListItem';
 
 type SettingsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Settings'>;
 
-interface TokenUsageSectionProps {
-  renderSection: (title: string) => React.ReactElement;
-}
-
-export const TokenUsageSection: React.FC<TokenUsageSectionProps> = ({ renderSection }) => {
+export const TokenUsageSection: React.FC = () => {
   const { colors, spacing, typography } = useTheme();
   const navigation = useNavigation<SettingsScreenNavigationProp>();
-  const { settings, getTotalTokensByCategory } = useSettingsStore();
+  const { settings } = useSettingsStore();
 
   // 月間コスト情報を取得（開発時のみ）
   const costInfo = __DEV__ ? useMonthlyCost() : null;
-
-  // カテゴリーごとの合計トークン数を取得
-  const quickTokens = getTotalTokensByCategory('quick');
-  const thinkTokens = getTotalTokensByCategory('think');
 
   const styles = StyleSheet.create({
     valueText: {
@@ -63,7 +55,7 @@ export const TokenUsageSection: React.FC<TokenUsageSectionProps> = ({ renderSect
     },
     purchaseButtonText: {
       ...typography.body,
-      color: '#FFFFFF',
+      color: colors.white,
       fontWeight: '600',
     },
     usageContainer: {
@@ -133,28 +125,45 @@ export const TokenUsageSection: React.FC<TokenUsageSectionProps> = ({ renderSect
       fontWeight: '700',
       fontSize: 16,
     },
+    containerFlex: {
+      flex: 1,
+    },
+    headerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: spacing.sm,
+    },
+    iconRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    buttonRow: {
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+    },
   });
 
   return (
     <>
       {/* トークン購入・クレジット */}
       <ListItem.Container>
-        <View style={{ flex: 1 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <View style={styles.containerFlex}>
+          <View style={styles.headerRow}>
+            <View style={styles.iconRow}>
               <MaterialCommunityIcons
                 name="wallet"
                 size={20}
                 color={colors.primary}
                 style={styles.iconContainer}
               />
-              <ListItem.Title>クレジット</ListItem.Title>
+              <Text><ListItem.Title>クレジット</ListItem.Title></Text>
             </View>
             {settings.tokenBalance.credits > 0 && (
               <Text style={styles.valueText}>{settings.tokenBalance.credits}P</Text>
             )}
           </View>
-          <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
+          <View style={styles.buttonRow}>
             <TouchableOpacity
               style={styles.purchaseButton}
               onPress={() => navigation.navigate('TokenPurchase' as any)}
@@ -169,17 +178,17 @@ export const TokenUsageSection: React.FC<TokenUsageSectionProps> = ({ renderSect
 
       {/* LLMモデル設定画面遷移 */}
       <ListItem.Container>
-        <View style={{ flex: 1 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.sm }}>
+        <View style={styles.containerFlex}>
+          <View style={styles.iconRow}>
             <MaterialCommunityIcons
               name="cog"
               size={20}
               color={colors.primary}
               style={styles.iconContainer}
             />
-            <ListItem.Title>LLM設定</ListItem.Title>
+            <Text><ListItem.Title>LLM設定</ListItem.Title></Text>
           </View>
-          <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
+          <View style={styles.buttonRow}>
             <TouchableOpacity
               style={styles.purchaseButton}
               onPress={() => navigation.navigate('ModelSelection' as any)}
