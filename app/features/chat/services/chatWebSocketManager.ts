@@ -5,7 +5,7 @@
  */
 
 import { logger } from '../../../utils/logger';
-import WebSocketService from './websocketService';
+import WebSocketService from '../llmService/services/WebSocketService';
 import { getOrCreateClientId } from '../utils/clientId';
 
 /**

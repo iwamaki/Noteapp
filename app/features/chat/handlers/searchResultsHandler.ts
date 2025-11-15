@@ -4,9 +4,9 @@
  * @responsibility fetch_search_resultsリクエストの処理を担当
  */
 
-import { logger } from '../../../../../utils/logger';
+import { logger } from '../../../utils/logger';
 import { FileRepository } from '@data/repositories/fileRepository';
-import { CHAT_CONFIG } from '../../../config/chatConfig';
+import { CHAT_CONFIG } from '../config/chatConfig';
 
 /**
  * fetch_search_resultsリクエスト

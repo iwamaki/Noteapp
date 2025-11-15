@@ -4,16 +4,16 @@
  * @responsibility バックエンドとの双方向通信、ファイル内容リクエストの処理
  */
 
-import { logger } from '../../../utils/logger';
-import { CHAT_CONFIG } from '../config/chatConfig';
+import { logger } from '../../../../utils/logger';
+import { CHAT_CONFIG } from '../../config/chatConfig';
 import {
   handleFetchFileContent,
   FetchFileContentRequest,
-} from './websocket/handlers/fileContentHandler';
+} from '../../handlers/fileContentHandler';
 import {
   handleFetchSearchResults,
   FetchSearchResultsRequest,
-} from './websocket/handlers/searchResultsHandler';
+} from '../../handlers/searchResultsHandler';
 
 /**
  * WebSocketメッセージの型定義

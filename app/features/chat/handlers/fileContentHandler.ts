@@ -4,7 +4,7 @@
  * @responsibility fetch_file_contentリクエストの処理を担当
  */
 
-import { logger } from '../../../../../utils/logger';
+import { logger } from '../../../utils/logger';
 import { FileRepository } from '@data/repositories/fileRepository';
 
 /**
