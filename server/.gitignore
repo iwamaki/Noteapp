@@ -1,0 +1,19 @@
+# Environment files
+.env.production
+
+# Deploy logs
+deploy.log
+deploy-fixed.log
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Database
+*.db
+billing.db
+
+# Secrets
+.secrets/
