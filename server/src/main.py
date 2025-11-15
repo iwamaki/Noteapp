@@ -3,8 +3,12 @@
 # @responsibility FastAPIアプリケーションのインスタンス化、CORSミドルウェアの設定、および各ルーターのインクルードを行います。
 import os
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 from src.llm.routers import chat_router
 from src.llm.routers import llm_providers_router
 from src.llm.routers import tools_router
@@ -50,6 +54,21 @@ app = FastAPI(
     title="LLM File App API",
     lifespan=lifespan
 )
+
+# レート制限の設定
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+
+# レート制限エラーハンドラー
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
+    """レート制限超過時のカスタムエラーハンドラー"""
+    return JSONResponse(
+        status_code=429,
+        content={
+            "detail": "Too many requests. Please try again later.",
+        }
+    )
 
 # CORS設定
 # 環境変数から許可オリジンを取得
