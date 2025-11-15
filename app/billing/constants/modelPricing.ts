@@ -1,8 +1,9 @@
 /**
- * @file pricing.ts
+ * @file modelPricing.ts
  * @summary LLMモデルの料金情報取得（バックエンド経由）
  * @description
  * 各LLMモデルの入力・出力トークン単価をバックエンドから取得。
+ * 開発モードでのコスト計算に使用。
  * すべての価格情報はバックエンドが唯一の情報源（Single Source of Truth）。
  */
 
@@ -31,7 +32,7 @@ export interface ModelPricing {
 export function getModelPricing(modelId: string): ModelPricing | undefined {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const APIService = require('../features/chat/llmService/api').default;
+    const APIService = require('../../features/chat/llmService/api').default;
     const providers = APIService.getCachedLLMProviders();
 
     if (providers) {

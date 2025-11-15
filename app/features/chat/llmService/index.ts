@@ -76,7 +76,7 @@ export class LLMService {
     try {
       // トークン上限チェック（Flash/Pro別、購入トークン残高も考慮）
       const currentModel = this.providerManager.getCurrentModel();
-      const { checkModelTokenLimit } = await import('../../../billing/utils/tokenPurchaseHelpers');
+      const { checkModelTokenLimit } = await import('../../../billing/utils/tokenBalance');
       const tokenLimitCheck = checkModelTokenLimit(currentModel);
 
       if (!tokenLimitCheck.canUse) {

@@ -9,9 +9,8 @@ import { Alert } from 'react-native';
 import type { Product, Purchase } from 'react-native-iap';
 import { useSettingsStore } from '../../../settings/settingsStore';
 import type { PurchaseRecord } from '../../../settings/settingsStore';
-import { purchaseTokenPackage } from '../../../billing/services/tokenIapService';
+import { purchaseTokenPackage, isUserCancelledError } from '../../../billing/services/tokenIapService';
 import type { TokenPackage } from '../../../billing/constants/tokenPackages';
-import { isUserCancelledError } from '../../../billing/utils/purchaseHelpers';
 import { logger } from '../../../utils/logger';
 
 interface UsePurchaseHandlersProps {

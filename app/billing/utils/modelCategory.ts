@@ -1,8 +1,7 @@
 /**
- * Model Helpers
- *
- * モデル種別の判定と使用量集計のヘルパー関数
- * サブスクリプション機能と単発購入機能の両方で共通利用
+ * @file modelCategory.ts
+ * @summary Model category utilities
+ * @description モデル種別の判定と使用量集計のヘルパー関数
  */
 
 import { useSettingsStore } from '../../settings/settingsStore';

@@ -4,7 +4,7 @@ import { ChatMessage, TokenUsageInfo } from '../llmService/index';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { MarkdownRenderer } from '../../../design/markdown/MarkdownRenderer';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { getTokenUsageRatio, getAIIconName } from '../../../billing/utils/tokenUsageHelpers';
+import { getTokenUsageRatio, getAIIconName } from '../utils/tokenUsageHelpers';
 import { CHAT_CONFIG } from '../config/chatConfig';
 
 interface MessageItemProps {

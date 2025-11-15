@@ -25,26 +25,6 @@ export interface TokenPackage {
  * Quick トークンと Think トークンの両方を購入可能
  */
 export const TOKEN_PACKAGES: TokenPackage[] = [
-  // Quick トークン - 初回購入パッケージ（初回のみ表示）
-  // TODO: ユーザー認証システム導入後に有効化
-  // {
-  //   id: 'initial',
-  //   name: '初回購入 (Quick)',
-  //   description: '初めてのトークン購入 - 低コストモデル用',
-  //   price: 300,
-  //   tokens: {
-  //     flash: 1000000, // 1.0M Quick tokens
-  //     pro: 0,
-  //   },
-  //   productId: Platform.select({
-  //     ios: 'noteapp.tokens.first',
-  //     android: 'noteapp.tokens.first',
-  //   }) as string,
-  //   isInitial: true,
-  //   badge: '初回限定',
-  // },
-
-  // クレジットパッケージ（シンプル化）
   {
     id: 'small',
     name: 'スモール',
