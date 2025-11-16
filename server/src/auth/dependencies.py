@@ -1,14 +1,64 @@
 # @file dependencies.py
 # @summary FastAPI認証Dependency
-# @responsibility APIエンドポイントのデバイスID認証
+# @responsibility APIエンドポイントのデバイスID認証・トークン認証
 
 import re
 from fastapi import Depends, HTTPException, Header
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from typing import Optional
 from src.billing.database import get_db
 from src.auth.service import AuthService
+from src.auth.jwt_utils import verify_token, TokenType
 from src.core.logger import logger
+
+# HTTPベアラー認証のスキーマ
+security = HTTPBearer()
+
+
+async def verify_token_auth(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db)
+) -> str:
+    """
+    JWTトークンを検証し、user_idを返す（新しい認証方式）
+
+    Args:
+        credentials: Authorizationヘッダーから取得したトークン
+        db: データベースセッション
+
+    Returns:
+        user_id: 認証されたユーザーID
+
+    Raises:
+        HTTPException: 認証失敗時（401 Unauthorized）
+    """
+    token = credentials.credentials
+
+    # トークン検証
+    payload = verify_token(token, TokenType.ACCESS)
+
+    if not payload:
+        logger.warning("Authentication failed: Invalid or expired token")
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or expired token. Please login again."
+        )
+
+    user_id = payload.get("sub")
+    if not user_id:
+        logger.warning("Authentication failed: Missing user_id in token")
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid token payload"
+        )
+
+    logger.debug(
+        "Token authentication successful",
+        extra={"user_id": user_id}
+    )
+
+    return user_id
 
 
 async def verify_user(

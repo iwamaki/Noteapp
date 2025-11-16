@@ -5,6 +5,7 @@
  */
 
 import { logger } from '../../../utils/logger';
+import { getAccessToken } from '../../../auth/tokenService';
 import {
   WebSocketState,
   WebSocketConfig,
@@ -170,25 +171,32 @@ export class WebSocketClient<T = any> {
   /**
    * WebSocket接続が確立された時のハンドラ
    */
-  private handleOpen(): void {
-    logger.info(this.logContext, 'WebSocket connected');
-    this.setState(WebSocketState.CONNECTED);
-    this.reconnectAttempts = 0;
+  private async handleOpen(): Promise<void> {
+    logger.info(this.logContext, 'WebSocket connected - sending auth message');
 
-    // ハートビートを開始
-    this.startHeartbeat();
+    // 認証メッセージを送信
+    try {
+      const accessToken = await getAccessToken();
 
-    // カスタムハンドラーを呼び出し
-    if (this.eventHandlers.onOpen) {
-      try {
-        this.eventHandlers.onOpen();
-      } catch (error) {
-        logger.error(this.logContext, 'Error in onOpen handler:', error);
+      if (!accessToken) {
+        logger.error(this.logContext, 'No access token available for WebSocket auth');
+        this.ws?.close();
+        return;
       }
-    }
 
-    // 接続確認のpingを送信
-    this.send({ type: 'ping' });
+      // 初回メッセージで認証
+      this.ws?.send(JSON.stringify({
+        type: 'auth',
+        access_token: accessToken,
+      }));
+
+      logger.debug(this.logContext, 'Auth message sent');
+
+      // 認証成功メッセージを待つ（handleMessageで処理）
+    } catch (error) {
+      logger.error(this.logContext, 'Failed to send auth message:', error);
+      this.ws?.close();
+    }
   }
 
   /**
@@ -198,6 +206,29 @@ export class WebSocketClient<T = any> {
     try {
       const message: WebSocketMessage<T> = JSON.parse(event.data);
       logger.debug(this.logContext, 'Message received:', message);
+
+      // 認証成功メッセージの処理
+      if (message.type === 'auth_success') {
+        logger.info(this.logContext, 'WebSocket authentication successful');
+        this.setState(WebSocketState.CONNECTED);
+        this.reconnectAttempts = 0;
+
+        // ハートビートを開始
+        this.startHeartbeat();
+
+        // カスタムハンドラーを呼び出し
+        if (this.eventHandlers.onOpen) {
+          try {
+            this.eventHandlers.onOpen();
+          } catch (error) {
+            logger.error(this.logContext, 'Error in onOpen handler:', error);
+          }
+        }
+
+        // 接続確認のpingを送信
+        this.send({ type: 'ping' });
+        return;
+      }
 
       // pongメッセージの処理
       if (message.type === 'pong') {

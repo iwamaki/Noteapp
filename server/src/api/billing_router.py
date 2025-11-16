@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from src.billing.database import get_db
 from src.billing.service import BillingService
-from src.auth.dependencies import verify_user
+from src.auth.dependencies import verify_token_auth
 from src.billing.schemas import (
     TokenBalanceResponse,
     AddCreditsRequest,
@@ -34,7 +34,7 @@ router = APIRouter(prefix="/api/billing", tags=["billing"])
 
 @router.get("/balance", response_model=TokenBalanceResponse)
 async def get_balance(
-    user_id: str = Depends(verify_user),
+    user_id: str = Depends(verify_token_auth),
     db: Session = Depends(get_db)
 ):
     """トークン残高取得
@@ -62,7 +62,7 @@ async def get_balance(
 @router.get("/balance/category/{category}", response_model=CategoryBalanceResponse)
 async def get_category_balance(
     category: str,
-    user_id: str = Depends(verify_user),
+    user_id: str = Depends(verify_token_auth),
     db: Session = Depends(get_db)
 ):
     """カテゴリー別トークン合計取得
@@ -103,7 +103,7 @@ async def get_category_balance(
 @router.post("/credits/add", response_model=OperationSuccessResponse)
 async def add_credits(
     request: AddCreditsRequest,
-    user_id: str = Depends(verify_user),
+    user_id: str = Depends(verify_token_auth),
     db: Session = Depends(get_db)
 ):
     """クレジット追加（購入時）
@@ -200,7 +200,7 @@ async def add_credits(
 @router.post("/credits/allocate", response_model=OperationSuccessResponse)
 async def allocate_credits(
     request: AllocateCreditsRequest,
-    user_id: str = Depends(verify_user),
+    user_id: str = Depends(verify_token_auth),
     db: Session = Depends(get_db)
 ):
     """クレジット配分
@@ -246,7 +246,7 @@ async def allocate_credits(
 @router.post("/tokens/consume", response_model=ConsumeTokensResponse)
 async def consume_tokens(
     request: ConsumeTokensRequest,
-    user_id: str = Depends(verify_user),
+    user_id: str = Depends(verify_token_auth),
     db: Session = Depends(get_db)
 ):
     """トークン消費
@@ -295,7 +295,7 @@ async def consume_tokens(
 @router.get("/transactions", response_model=List[TransactionResponse])
 async def get_transactions(
     limit: int = 100,
-    user_id: str = Depends(verify_user),
+    user_id: str = Depends(verify_token_auth),
     db: Session = Depends(get_db)
 ):
     """取引履歴取得
@@ -362,7 +362,7 @@ async def get_pricing(db: Session = Depends(get_db)):
 
 @router.post("/reset", response_model=OperationSuccessResponse)
 async def reset_all_data(
-    user_id: str = Depends(verify_user),
+    user_id: str = Depends(verify_token_auth),
     db: Session = Depends(get_db)
 ):
     """全データリセット（デバッグ用）

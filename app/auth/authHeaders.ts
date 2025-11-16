@@ -4,17 +4,26 @@
  * @responsibility 認証ヘッダーを生成する（循環参照を避けるため分離）
  */
 
-import { getOrCreateDeviceId } from './deviceIdService';
+import { getAccessToken } from './tokenService';
+import { logger } from '../utils/logger';
 
 /**
  * 認証ヘッダーを取得
  * すべてのAPIリクエストで使用するヘッダーを返す
- * @returns 認証ヘッダー
+ * @returns 認証ヘッダー（トークンベース）
  */
 export async function getAuthHeaders(): Promise<Record<string, string>> {
-  const deviceId = await getOrCreateDeviceId();
+  const accessToken = await getAccessToken();
+
+  if (!accessToken) {
+    logger.warn('auth', 'No access token found for auth headers');
+    return {
+      'Content-Type': 'application/json',
+    };
+  }
+
   return {
     'Content-Type': 'application/json',
-    'X-Device-ID': deviceId,
+    'Authorization': `Bearer ${accessToken}`,
   };
 }

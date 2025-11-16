@@ -13,6 +13,18 @@ from src.auth.schemas import (
     DeviceRegisterResponse,
     VerifyDeviceRequest,
     VerifyDeviceResponse,
+    RefreshTokenRequest,
+    RefreshTokenResponse,
+    GoogleLoginRequest,
+    GoogleLoginResponse,
+)
+from src.auth.google_auth import get_google_user_info, GoogleAuthError
+from src.auth.jwt_utils import (
+    create_access_token,
+    create_refresh_token,
+    TokenType,
+    get_user_id_from_token,
+    get_device_id_from_token,
 )
 from src.core.logger import logger
 
@@ -49,10 +61,26 @@ async def register_device(
 
         message = "New account created" if is_new_user else "Welcome back"
 
+        # JWTトークンを生成
+        access_token = create_access_token(user_id, body.device_id)
+        refresh_token = create_refresh_token(user_id, body.device_id)
+
+        logger.info(
+            "Tokens issued for user",
+            extra={
+                "user_id": user_id,
+                "is_new_user": is_new_user,
+                "device_id": body.device_id[:20] + "..."
+            }
+        )
+
         return DeviceRegisterResponse(
             user_id=user_id,
             is_new_user=is_new_user,
-            message=message
+            message=message,
+            access_token=access_token,
+            refresh_token=refresh_token,
+            token_type="bearer"
         )
 
     except AuthenticationError as e:
@@ -122,6 +150,235 @@ async def verify_device(
         )
     except Exception as e:
         logger.error(f"Unexpected error in device verification: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error"
+        )
+
+
+@router.post(
+    "/refresh",
+    response_model=RefreshTokenResponse,
+    status_code=status.HTTP_200_OK,
+    summary="トークンリフレッシュ",
+    description="リフレッシュトークンを使用して新しいアクセストークンを取得します。"
+)
+@limiter.limit("20/minute")
+async def refresh_token(
+    request: Request,
+    body: RefreshTokenRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    トークンリフレッシュエンドポイント
+
+    リフレッシュトークンを検証し、新しいアクセストークンと
+    リフレッシュトークンを発行します。
+
+    レート制限: 20リクエスト/分（IPアドレスベース）
+
+    Returns:
+        RefreshTokenResponse: {
+            "access_token": 新しいアクセストークン,
+            "refresh_token": 新しいリフレッシュトークン,
+            "token_type": "bearer"
+        }
+
+    Raises:
+        HTTPException(401): トークンが無効または期限切れの場合
+    """
+    try:
+        # リフレッシュトークンを検証
+        user_id = get_user_id_from_token(body.refresh_token, TokenType.REFRESH)
+        device_id = get_device_id_from_token(body.refresh_token, TokenType.REFRESH)
+
+        if not user_id or not device_id:
+            logger.warning("Refresh token validation failed")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or expired refresh token"
+            )
+
+        # 新しいトークンを生成
+        new_access_token = create_access_token(user_id, device_id)
+        new_refresh_token = create_refresh_token(user_id, device_id)
+
+        logger.info(
+            "Tokens refreshed successfully",
+            extra={"user_id": user_id, "device_id": device_id[:20] + "..."}
+        )
+
+        return RefreshTokenResponse(
+            access_token=new_access_token,
+            refresh_token=new_refresh_token,
+            token_type="bearer"
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error in token refresh: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error"
+        )
+
+
+@router.post(
+    "/google/login",
+    response_model=GoogleLoginResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Google OAuth2 ログイン",
+    description="Google ID Tokenを検証してユーザー認証を行い、JWTトークンを発行します。"
+)
+@limiter.limit("20/minute")
+async def google_login(
+    request: Request,
+    body: GoogleLoginRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Google OAuth2 ログインエンドポイント
+
+    Google ID Tokenを検証し、ユーザーを作成または取得してJWTトークンを発行します。
+    既存のデバイスIDとGoogleアカウントを紐付けることも可能です。
+
+    レート制限: 20リクエスト/分（IPアドレスベース）
+
+    Returns:
+        GoogleLoginResponse: {
+            "user_id": ユーザーID,
+            "is_new_user": 新規ユーザーかどうか,
+            "email": メールアドレス,
+            "display_name": 表示名,
+            "profile_picture_url": プロフィール画像URL,
+            "access_token": アクセストークン（JWT）,
+            "refresh_token": リフレッシュトークン（JWT）,
+            "token_type": "bearer"
+        }
+
+    Raises:
+        HTTPException(400): Google ID Token検証失敗
+        HTTPException(500): サーバーエラー
+    """
+    try:
+        # Google ID Tokenを検証してユーザー情報を取得
+        google_user_info = get_google_user_info(body.id_token)
+        google_id = google_user_info["google_id"]
+        email = google_user_info["email"]
+        display_name = google_user_info.get("name")
+        profile_picture_url = google_user_info.get("picture")
+
+        # Google IDでユーザーを検索
+        from src.billing.models import User, DeviceAuth
+        existing_user = db.query(User).filter_by(google_id=google_id).first()
+
+        # user_idとis_new_userを初期化（型ヒント用）
+        user_id: str
+        is_new_user: bool
+
+        if existing_user:
+            # 既存ユーザー - ユーザー情報を更新
+            # user_idはnullable=Falseなので、必ず存在する
+            assert existing_user.user_id is not None
+            user_id = existing_user.user_id
+            is_new_user = False
+
+            # メールアドレスやプロフィール情報を更新
+            existing_user.email = email
+            existing_user.display_name = display_name
+            existing_user.profile_picture_url = profile_picture_url
+            db.commit()
+
+            logger.info(
+                "Existing Google user logged in",
+                extra={
+                    "user_id": user_id,
+                    "google_id": google_id,
+                    "email": email[:20] + "..."
+                }
+            )
+
+        else:
+            # 新規ユーザー - アカウント作成
+            import uuid
+            user_id = f"user_{uuid.uuid4().hex[:10]}"
+            is_new_user = True
+
+            new_user = User(
+                user_id=user_id,
+                google_id=google_id,
+                email=email,
+                display_name=display_name,
+                profile_picture_url=profile_picture_url
+            )
+            db.add(new_user)
+
+            # クレジットレコードを作成
+            from src.billing.models import Credit
+            credit = Credit(user_id=user_id, credits=0)
+            db.add(credit)
+
+            db.commit()
+
+            logger.info(
+                "New Google user created",
+                extra={
+                    "user_id": user_id,
+                    "google_id": google_id,
+                    "email": email[:20] + "..."
+                }
+            )
+
+        # デバイスIDが提供されている場合、デバイス認証を紐付ける
+        device_id: str = body.device_id if body.device_id else f"google_{google_id[:20]}"
+
+        # デバイス認証レコードを作成または更新
+        existing_device = db.query(DeviceAuth).filter_by(device_id=device_id).first()
+        if existing_device:
+            # 既存デバイスのuser_idを更新
+            existing_device.user_id = user_id
+            from datetime import datetime
+            existing_device.last_login_at = datetime.now()
+        else:
+            # 新規デバイス認証レコードを作成
+            device_auth = DeviceAuth(device_id=device_id, user_id=user_id)
+            db.add(device_auth)
+
+        db.commit()
+
+        # JWTトークンを生成
+        access_token = create_access_token(user_id, device_id)
+        refresh_token = create_refresh_token(user_id, device_id)
+
+        logger.info(
+            "Google login successful - tokens issued",
+            extra={
+                "user_id": user_id,
+                "is_new_user": is_new_user,
+                "device_id": device_id[:20] + "..."
+            }
+        )
+
+        return GoogleLoginResponse(
+            user_id=user_id,
+            is_new_user=is_new_user,
+            email=email,
+            display_name=display_name,
+            profile_picture_url=profile_picture_url,
+            access_token=access_token,
+            refresh_token=refresh_token,
+            token_type="bearer"
+        )
+
+    except GoogleAuthError as e:
+        logger.error(f"Google authentication failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error in Google login: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error"

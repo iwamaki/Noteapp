@@ -9,7 +9,6 @@
 
 import requests
 import time
-from typing import Dict, Any
 
 # バックエンドURL（環境に応じて変更）
 BASE_URL = "http://localhost:8000"
@@ -56,7 +55,7 @@ def test_register_rate_limit():
             return False
 
     print("\n" + "-"*60)
-    print(f"Summary:")
+    print("Summary:")
     print(f"  Successful requests: {success_count}")
     print(f"  Rate limited: {rate_limited}")
 
@@ -65,7 +64,7 @@ def test_register_rate_limit():
         print("  ✅ PASS: Rate limiting is working correctly!")
         return True
     else:
-        print(f"  ❌ FAIL: Expected 10 successful requests and rate limiting")
+        print("  ❌ FAIL: Expected 10 successful requests and rate limiting")
         return False
 
 
@@ -114,7 +113,7 @@ def test_verify_rate_limit():
             return False
 
     print("\n" + "-"*60)
-    print(f"Summary:")
+    print("Summary:")
     print(f"  Successful/NotFound requests: {success_or_not_found_count}")
     print(f"  Rate limited: {rate_limited}")
 
@@ -123,7 +122,7 @@ def test_verify_rate_limit():
         print("  ✅ PASS: Rate limiting is working correctly!")
         return True
     else:
-        print(f"  ❌ FAIL: Expected 20 successful requests and rate limiting")
+        print("  ❌ FAIL: Expected 20 successful requests and rate limiting")
         return False
 
 
@@ -149,10 +148,10 @@ def main():
     print("Rate Limiting Test Suite")
     print("="*60)
     print(f"Base URL: {BASE_URL}")
-    print(f"Test Plan:")
-    print(f"  1. Test /api/auth/register (10/minute)")
-    print(f"  2. Wait 60 seconds for rate limit reset")
-    print(f"  3. Test /api/auth/verify (20/minute)")
+    print("Test Plan:")
+    print("  1. Test /api/auth/register (10/minute)")
+    print("  2. Wait 60 seconds for rate limit reset")
+    print("  3. Test /api/auth/verify (20/minute)")
 
     # Test 1: /register
     register_passed = test_register_rate_limit()

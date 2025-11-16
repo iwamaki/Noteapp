@@ -3,7 +3,7 @@
  * @summary このファイルは、アプリケーションの設定画面をレンダリングします。
  * @responsibility ユーザーがアプリケーションの各種設定（表示、動作、LLM関連など）を閲覧・変更できるUIを提供し、設定の永続化と更新を管理します。
  */
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   Switch,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useSettingsStore } from './settingsStore';
 import { useTheme } from '../design/theme/ThemeContext';
@@ -19,16 +20,111 @@ import { useSettingsHeader } from './hooks/useSettingsHeader';
 import { ListItem } from '../components/ListItem';
 import { TokenUsageSection } from './components/TokenUsageSection';
 import { MainContainer } from '../components/MainContainer';
+import { useGoogleAuth } from '../auth/googleOAuthService';
+import { loginWithGoogle } from '../auth/authApiClient';
+import { getOrCreateDeviceId } from '../auth/deviceIdService';
+import { saveTokens } from '../auth/tokenService';
+import { saveUserId } from '../auth/deviceIdService';
+import {
+  getGoogleUserInfo,
+  saveGoogleUserInfo,
+  clearGoogleUserInfo,
+  GoogleUserInfo,
+} from '../auth/googleUserService';
 
 function SettingsScreen() {
   const { colors, spacing, typography } = useTheme();
   const { settings, loadSettings, updateSettings, isLoading, checkAndResetMonthlyUsageIfNeeded } = useSettingsStore();
+  const [googleUser, setGoogleUser] = useState<GoogleUserInfo | null>(null);
+  const [googleLoginLoading, setGoogleLoginLoading] = useState(false);
+
+  // Google OAuth2認証フック
+  const { promptAsync, idToken, isLoading: isGoogleAuthLoading } = useGoogleAuth();
 
   useEffect(() => {
     loadSettings();
     // 月次使用量のリセットチェック（月が変わったらリセット）
     checkAndResetMonthlyUsageIfNeeded();
+    // Googleユーザー情報をロード
+    loadGoogleUserInfo();
   }, []);
+
+  // Google IDトークンが取得できたらバックエンドにログイン
+  useEffect(() => {
+    if (idToken) {
+      handleGoogleLoginWithToken(idToken);
+    }
+  }, [idToken]);
+
+  // Googleユーザー情報をロード
+  const loadGoogleUserInfo = async () => {
+    const userInfo = await getGoogleUserInfo();
+    setGoogleUser(userInfo);
+  };
+
+  // Google IDトークンを使ってバックエンドにログイン
+  const handleGoogleLoginWithToken = async (token: string) => {
+    setGoogleLoginLoading(true);
+    try {
+      const deviceId = await getOrCreateDeviceId();
+      const response = await loginWithGoogle(token, deviceId);
+
+      // トークンを保存
+      await saveTokens(response.access_token, response.refresh_token);
+      // ユーザーIDを保存
+      await saveUserId(response.user_id);
+      // Googleユーザー情報を保存
+      await saveGoogleUserInfo({
+        email: response.email,
+        displayName: response.display_name,
+        profilePictureUrl: response.profile_picture_url,
+      });
+
+      // UIを更新
+      setGoogleUser({
+        email: response.email,
+        displayName: response.display_name,
+        profilePictureUrl: response.profile_picture_url,
+      });
+
+      Alert.alert(
+        '成功',
+        response.is_new_user
+          ? 'Googleアカウントでログインしました'
+          : 'Googleアカウントにログインしました'
+      );
+    } catch (error) {
+      Alert.alert('エラー', 'Googleログインに失敗しました');
+      console.error('Google login error:', error);
+    } finally {
+      setGoogleLoginLoading(false);
+    }
+  };
+
+  // Googleログインボタンのハンドラー
+  const handleGoogleLogin = async () => {
+    await promptAsync();
+  };
+
+  // Googleログアウトボタンのハンドラー
+  const handleGoogleLogout = async () => {
+    Alert.alert(
+      'ログアウト',
+      'Googleアカウントからログアウトしますか？',
+      [
+        { text: 'キャンセル', style: 'cancel' },
+        {
+          text: 'ログアウト',
+          style: 'destructive',
+          onPress: async () => {
+            await clearGoogleUserInfo();
+            setGoogleUser(null);
+            Alert.alert('完了', 'ログアウトしました');
+          },
+        },
+      ]
+    );
+  };
 
   // ヘッダー設定
   useSettingsHeader();
@@ -87,6 +183,47 @@ function SettingsScreen() {
         ...typography.subtitle,
         color: colors.background,
       },
+      googleButton: {
+        backgroundColor: colors.primary,
+        padding: spacing.lg,
+        borderRadius: 8,
+        alignItems: 'center',
+        flexDirection: 'row',
+        justifyContent: 'center',
+        marginVertical: spacing.md,
+      },
+      googleButtonText: {
+        ...typography.subtitle,
+        color: colors.background,
+        marginLeft: spacing.sm,
+      },
+      accountInfo: {
+        padding: spacing.lg,
+        backgroundColor: colors.secondary,
+        borderRadius: 8,
+        marginBottom: spacing.md,
+      },
+      accountEmail: {
+        ...typography.body,
+        color: colors.text,
+        fontWeight: '600',
+      },
+      accountName: {
+        ...typography.caption,
+        color: colors.textSecondary,
+        marginTop: spacing.xs,
+      },
+      logoutButton: {
+        backgroundColor: colors.danger,
+        padding: spacing.md,
+        borderRadius: 8,
+        alignItems: 'center',
+        marginTop: spacing.sm,
+      },
+      logoutButtonText: {
+        ...typography.body,
+        color: colors.background,
+      },
     }),
     [colors, spacing, typography]
   );
@@ -96,6 +233,38 @@ function SettingsScreen() {
     <MainContainer isLoading={isLoading}>
       <ScrollView style={styles.scrollView}>
       <View style={styles.content}>
+        {renderSection('アカウント')}
+
+        {googleUser ? (
+          // ログイン済み - アカウント情報を表示
+          <>
+            <View style={styles.accountInfo}>
+              <Text style={styles.accountEmail}>{googleUser.email}</Text>
+              {googleUser.displayName && (
+                <Text style={styles.accountName}>{googleUser.displayName}</Text>
+              )}
+            </View>
+            <TouchableOpacity style={styles.logoutButton} onPress={handleGoogleLogout}>
+              <Text style={styles.logoutButtonText}>ログアウト</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          // 未ログイン - Googleログインボタンを表示
+          <TouchableOpacity
+            style={styles.googleButton}
+            onPress={handleGoogleLogin}
+            disabled={googleLoginLoading || isGoogleAuthLoading}
+          >
+            {googleLoginLoading || isGoogleAuthLoading ? (
+              <ActivityIndicator color={colors.background} />
+            ) : (
+              <>
+                <Text style={styles.googleButtonText}>Googleでログイン</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        )}
+
         {renderSection('表示設定')}
 
         {renderPicker(

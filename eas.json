@@ -11,8 +11,12 @@
     "preview": {
       "distribution": "internal",
       "autoIncrement": true,
+      "node": "22.11.0",
+      "env": {
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      },
       "android": {
-        "buildType": "app-bundle"
+        "buildType": "apk"
       }
     },
     "production": {

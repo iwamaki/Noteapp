@@ -7,6 +7,7 @@
 import { InitializationTask, InitializationStage, TaskPriority } from '../types';
 import { getOrCreateDeviceId, saveUserId, getUserId } from '../../auth/deviceIdService';
 import { registerDevice, verifyDevice } from '../../auth/authApiClient';
+import { saveTokens } from '../../auth/tokenService';
 import { logger } from '../../utils/logger';
 
 export const authenticateDevice: InitializationTask = {
@@ -72,6 +73,10 @@ export const authenticateDevice: InitializationTask = {
       // ユーザーIDを保存
       await saveUserId(response.user_id);
       logger.info('auth', 'User ID saved successfully');
+
+      // トークンを保存
+      await saveTokens(response.access_token, response.refresh_token);
+      logger.info('auth', 'Tokens saved successfully');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       logger.error('auth', 'Device authentication failed', { error: errorMessage });

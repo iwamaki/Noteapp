@@ -9,7 +9,7 @@ from src.llm.providers.config import MAX_CONVERSATION_TOKENS, PRESERVE_RECENT_ME
 from src.llm.routers.error_handlers import handle_route_errors
 from src.core.config import settings
 from src.core.logger import logger
-from src.auth.dependencies import verify_user
+from src.auth.dependencies import verify_token_auth
 
 router = APIRouter()
 chat_service = ChatService()
@@ -18,7 +18,7 @@ summarization_service = SummarizationService()
 @router.post("/api/chat")
 async def chat_post(
     request: ChatRequest,
-    user_id: str = Depends(verify_user)
+    user_id: str = Depends(verify_token_auth)
 ):
     """チャットメッセージを処理（POST）"""
     logger.info(f"Received chat request context: {request.context.model_dump_json(indent=2) if request.context else 'None'}")
@@ -42,7 +42,7 @@ async def chat_get(
     message: str,
     provider: str | None = None,
     model: str | None = None,
-    user_id: str = Depends(verify_user)
+    user_id: str = Depends(verify_token_auth)
 ):
     """チャットメッセージを処理（GET）- テスト用"""
     logger.info(f"Authenticated user: {user_id}")
@@ -67,7 +67,7 @@ async def chat_get(
 @handle_route_errors
 async def summarize_conversation(
     request: SummarizeRequest,
-    user_id: str = Depends(verify_user)
+    user_id: str = Depends(verify_token_auth)
 ):
     """会話履歴を要約する
 
@@ -118,7 +118,7 @@ async def summarize_conversation(
 @handle_route_errors
 async def summarize_document(
     request: DocumentSummarizeRequest,
-    user_id: str = Depends(verify_user)
+    user_id: str = Depends(verify_token_auth)
 ) -> DocumentSummarizeResponse:
     """文書内容を要約する
 

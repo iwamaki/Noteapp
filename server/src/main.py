@@ -15,9 +15,11 @@ from src.llm.routers import tools_router
 from src.llm.routers import knowledge_base_router
 from src.llm.rag.collection_manager import CollectionManager
 from src.llm.rag.cleanup_job import start_cleanup_job, stop_cleanup_job
+from typing import Optional
 from src.api.websocket import manager
 from src.api import billing_router
 from src.auth import router as auth_router
+from src.auth.jwt_utils import verify_token, TokenType
 from src.billing.database import init_db
 from src.core.logger import logger
 
@@ -119,24 +121,60 @@ async def root():
     }
 
 # WebSocketエンドポイント
-@app.websocket("/ws/{client_id}")
-async def websocket_endpoint(websocket: WebSocket, client_id: str):
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
     """
-    WebSocketエンドポイント
+    WebSocketエンドポイント（JWT認証付き）
 
     フロントエンドとの双方向通信を確立します。
+    初回メッセージで認証トークンを受け取り、検証します。
+
     主な用途：
     - バックエンドからフロントエンドへのファイル内容リクエスト
     - フロントエンドからバックエンドへのファイル内容レスポンス
 
     Args:
         websocket: WebSocketインスタンス
-        client_id: クライアントの一意識別子（フロントエンドが生成）
     """
-    await manager.connect(websocket, client_id)
-    logger.info(f"WebSocket connection established: {client_id}")
+    await websocket.accept()
+    user_id: Optional[str] = None
 
     try:
+        # 初回メッセージで認証
+        auth_message = await websocket.receive_json()
+
+        if auth_message.get("type") != "auth":
+            logger.warning("WebSocket: Authentication message expected")
+            await websocket.close(code=1008, reason="Authentication required")
+            return
+
+        access_token = auth_message.get("access_token")
+        if not access_token:
+            logger.warning("WebSocket: Missing access token")
+            await websocket.close(code=1008, reason="Access token required")
+            return
+
+        # トークン検証
+        payload = verify_token(access_token, TokenType.ACCESS)
+        if not payload:
+            logger.warning("WebSocket: Invalid or expired token")
+            await websocket.close(code=1008, reason="Invalid or expired token")
+            return
+
+        user_id = payload.get("sub")
+        if not user_id:
+            logger.warning("WebSocket: Missing user_id in token")
+            await websocket.close(code=1008, reason="Invalid token payload")
+            return
+
+        # 認証成功 - 接続を確立
+        await manager.connect(websocket, user_id)
+        logger.info(f"WebSocket authenticated and connected: user_id={user_id}")
+
+        # 認証成功メッセージを送信
+        await manager.send_message(user_id, {"type": "auth_success", "user_id": user_id})
+
+        # メッセージ処理ループ
         while True:
             # フロントエンドからのメッセージを待機
             data = await websocket.receive_json()
@@ -166,18 +204,20 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
 
             elif data.get("type") == "ping":
                 # ピングメッセージ（ハートビート用）
-                manager.handle_ping(client_id)
-                await manager.send_message(client_id, {"type": "pong"})
+                manager.handle_ping(user_id)
+                await manager.send_message(user_id, {"type": "pong"})
 
             else:
                 logger.warning(f"Unknown message type: {data.get('type')}")
 
     except WebSocketDisconnect:
-        logger.info(f"WebSocket disconnected: {client_id}")
-        manager.disconnect(client_id)
+        logger.info(f"WebSocket disconnected: user_id={user_id}")
+        if user_id:
+            manager.disconnect(user_id)
     except Exception as e:
-        logger.error(f"WebSocket error: {client_id}, {e}")
-        manager.disconnect(client_id)
+        logger.error(f"WebSocket error: user_id={user_id if user_id else 'unknown'}, {e}")
+        if user_id:
+            manager.disconnect(user_id)
 
 if __name__ == "__main__":
     import uvicorn

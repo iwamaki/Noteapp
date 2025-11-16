@@ -12,14 +12,19 @@ Base = declarative_base()
 class User(Base):
     """ユーザーテーブル
 
-    将来の認証システム実装に備えたユーザー管理テーブル。
-    現在は "default_user" のみを使用。
+    ユーザー管理テーブル。デバイスID認証とGoogle OAuth2認証に対応。
     """
     __tablename__ = 'users'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(String, unique=True, nullable=False, index=True)
     created_at = Column(DateTime, default=datetime.now)
+
+    # Google OAuth2 認証情報
+    google_id = Column(String, unique=True, nullable=True, index=True)
+    email = Column(String, unique=True, nullable=True, index=True)
+    display_name = Column(String, nullable=True)
+    profile_picture_url = Column(String, nullable=True)
 
 
 class TokenBalance(Base):
