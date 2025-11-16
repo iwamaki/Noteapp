@@ -23,7 +23,7 @@ import { useTheme } from '../../design/theme/ThemeContext';
 import { MainContainer } from '../../components/MainContainer';
 import { CustomModal } from '../../components/CustomModal';
 import { useKeyboardHeight } from '../../contexts/KeyboardHeightContext';
-import { FlatListProvider, useFlatListContext } from './context';
+import { useFlatListStore } from './stores/useFlatListStore';
 import { useNavigation, NavigationProp, useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/types';
 import { FileFlat } from '@data/core/typesFlat';
@@ -48,13 +48,37 @@ import { CategoryOperationsService, CategoryImpact } from '@data/services/catego
 import ChatService from '../../features/chat';
 import { FILE_LIST_FLAT_CONFIG } from './config';
 
-function FileListScreenFlatContent() {
+function FileListScreenFlat() {
   const { colors, spacing } = useTheme();
   const { keyboardHeight, chatInputBarHeight } = useKeyboardHeight();
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const { settings } = useSettingsStore();
 
-  const { state, dispatch, actions } = useFlatListContext();
+  // Zustandストアから状態とアクションを取得
+  const {
+    // 状態
+    files,
+    loading,
+    isMoveMode,
+    moveSourceFileId,
+    modals,
+    // アクション
+    refreshData,
+    createFile,
+    renameFile,
+    deleteSelectedFiles,
+    copySelectedFiles,
+    updateFileCategory,
+    updateFileTags,
+    moveFile,
+    enterMoveMode,
+    exitMoveMode,
+    selectMoveSource,
+    openCreateModal,
+    closeCreateModal,
+    openRenameModal,
+    closeRenameModal,
+  } = useFlatListStore();
 
   // インポート/エクスポート機能
   const { handleImport, handleExportFile, handleExportCategory, isProcessing } = useImportExport();
@@ -95,15 +119,15 @@ function FileListScreenFlatContent() {
   // データ初期読み込み（初回マウント時のみ実行）
   useEffect(() => {
     logger.info('file', 'FileListScreenFlat: Initial data refresh triggered.');
-    actions.refreshData();
+    refreshData();
   }, []);
 
   // 画面がフォーカスされた時にデータを再取得（編集画面から戻ってきた時など）
   useFocusEffect(
     useCallback(() => {
       logger.info('file', 'FileListScreenFlat: Screen focused, refreshing data...');
-      actions.refreshData();
-    }, [actions.refreshData])
+      refreshData();
+    }, [refreshData])
   );
 
   // === ハンドラの実装 ===
@@ -157,14 +181,14 @@ function FileListScreenFlatContent() {
     logger.info('file', `Attempting to delete file: ${fileToDelete.id}`);
     setShowDeleteConfirmModal(false);
     try {
-      await actions.deleteSelectedFiles([fileToDelete.id]);
+      await deleteSelectedFiles([fileToDelete.id]);
       logger.info('file', 'Successfully deleted file.');
       setFileToDelete(null);
     } catch (error: any) {
       logger.error('file', `Failed to delete file: ${error.message}`, error);
       setFileToDelete(null);
     }
-  }, [actions, fileToDelete]);
+  }, [deleteSelectedFiles, fileToDelete]);
 
   /**
    * コピーハンドラ
@@ -172,12 +196,12 @@ function FileListScreenFlatContent() {
   const handleCopyFile = useCallback(async (file: FileFlat) => {
     logger.info('file', `Attempting to copy file: ${file.id}`);
     try {
-      await actions.copySelectedFiles([file.id]);
+      await copySelectedFiles([file.id]);
       logger.info('file', 'Successfully copied file.');
     } catch (error: any) {
       logger.error('file', `Failed to copy file: ${error.message}`, error);
     }
-  }, [actions]);
+  }, [copySelectedFiles]);
 
   /**
    * リネームモーダルを開く
@@ -185,9 +209,9 @@ function FileListScreenFlatContent() {
   const handleOpenRenameModal = useCallback(
     (file: FileFlat) => {
       logger.info('file', `Opening rename modal for file: ${file.id}`);
-      dispatch({ type: 'OPEN_RENAME_MODAL', payload: file });
+      openRenameModal(file);
     },
-    [dispatch]
+    [openRenameModal]
   );
 
   /**
@@ -195,20 +219,20 @@ function FileListScreenFlatContent() {
    */
   const handleRename = useCallback(
     async (newName: string) => {
-      if (state.modals.rename.file) {
-        const file = state.modals.rename.file;
+      if (modals.rename.file) {
+        const file = modals.rename.file;
         logger.info('file', `Attempting to rename file from ${file.title} to ${newName}`);
         try {
-          await actions.renameFile(file.id, newName);
+          await renameFile(file.id, newName);
           logger.info('file', `Successfully renamed file to ${newName}`);
-          dispatch({ type: 'CLOSE_RENAME_MODAL' });
+          closeRenameModal();
         } catch (error: any) {
           logger.error('file', `Failed to rename file to ${newName}: ${error.message}`, error);
           Alert.alert('エラー', error.message);
         }
       }
     },
-    [state.modals.rename.file, actions, dispatch]
+    [modals.rename.file, renameFile, closeRenameModal]
   );
 
   /**
@@ -229,7 +253,7 @@ function FileListScreenFlatContent() {
 
       logger.info('file', `Attempting to update category for file: ${fileForCategoryEdit.id}`);
       try {
-        await actions.updateFileCategory(fileForCategoryEdit.id, category);
+        await updateFileCategory(fileForCategoryEdit.id, category);
         logger.info('file', 'Successfully updated category');
         setShowCategoryEditModal(false);
         setFileForCategoryEdit(null);
@@ -238,7 +262,7 @@ function FileListScreenFlatContent() {
         Alert.alert('エラー', error.message);
       }
     },
-    [fileForCategoryEdit, actions]
+    [fileForCategoryEdit, updateFileCategory]
   );
 
   /**
@@ -259,7 +283,7 @@ function FileListScreenFlatContent() {
 
       logger.info('file', `Attempting to update tags for file: ${fileForTagEdit.id}`);
       try {
-        await actions.updateFileTags(fileForTagEdit.id, tags);
+        await updateFileTags(fileForTagEdit.id, tags);
         logger.info('file', 'Successfully updated tags');
         setShowTagEditModal(false);
         setFileForTagEdit(null);
@@ -268,7 +292,7 @@ function FileListScreenFlatContent() {
         Alert.alert('エラー', error.message);
       }
     },
-    [fileForTagEdit, actions]
+    [fileForTagEdit, updateFileTags]
   );
 
   /**
@@ -318,13 +342,13 @@ function FileListScreenFlatContent() {
       await CategoryOperationsService.deleteCategory(categoryToDelete.path);
       logger.info('file', 'Category deleted successfully');
       setCategoryToDelete(null);
-      await actions.refreshData();
+      await refreshData();
     } catch (error: any) {
       logger.error('file', `Failed to delete category: ${error.message}`, error);
       setCategoryToDelete(null);
       Alert.alert('エラー', error.message);
     }
-  }, [categoryToDelete, actions]);
+  }, [categoryToDelete, refreshData]);
 
   /**
    * カテゴリー名変更モーダルを開く
@@ -364,13 +388,13 @@ function FileListScreenFlatContent() {
         setShowCategoryRenameModal(false);
         setCategoryForRename(null);
         setCategoryRenameImpact(null);
-        await actions.refreshData();
+        await refreshData();
       } catch (error: any) {
         logger.error('file', `Failed to rename category: ${error.message}`, error);
         Alert.alert('エラー', error.message);
       }
     },
-    [categoryForRename, actions]
+    [categoryForRename, refreshData]
   );
 
 
@@ -379,17 +403,17 @@ function FileListScreenFlatContent() {
    */
   const handleStartMove = useCallback((file: FileFlat) => {
     logger.info('file', `Starting move mode for source file: ${file.id}, category: ${file.category}`);
-    dispatch({ type: 'ENTER_MOVE_MODE', payload: file.category || '未分類' });
-    dispatch({ type: 'SELECT_MOVE_SOURCE', payload: file.id });
-  }, [dispatch]);
+    enterMoveMode(file.category || '未分類');
+    selectMoveSource(file.id);
+  }, [enterMoveMode, selectMoveSource]);
 
   /**
    * 移動モード終了ハンドラ
    */
   const handleCancelMove = useCallback(() => {
     logger.info('file', 'Canceling move mode');
-    dispatch({ type: 'EXIT_MOVE_MODE' });
-  }, [dispatch]);
+    exitMoveMode();
+  }, [exitMoveMode]);
 
   /**
    * チャット添付ハンドラ
@@ -436,16 +460,16 @@ function FileListScreenFlatContent() {
     async (title: string, category: string, tags: string[]) => {
       logger.info('file', `Attempting to create new file: ${title}`);
       try {
-        const file = await actions.createFile(title, '', category, tags);
+        const file = await createFile(title, '', category, tags);
         logger.info('file', `Successfully created file: ${file.id}`);
-        dispatch({ type: 'CLOSE_CREATE_MODAL' });
+        closeCreateModal();
         // ファイル一覧に留まるため、遷移しない
       } catch (error: any) {
         logger.error('file', `Failed to create file ${title}: ${error.message}`, error);
         Alert.alert('エラー', error.message);
       }
     },
-    [actions, dispatch]
+    [createFile, closeCreateModal]
   );
 
   // === セクションデータの計算 ===
@@ -456,8 +480,8 @@ function FileListScreenFlatContent() {
    */
   const sections = useMemo(() => {
     console.log(`[FileListScreen] Grouping files with fileSortMethod: ${settings.fileSortMethod}`);
-    return groupFilesByCategoryHierarchical(state.files, settings.categorySortMethod, settings.fileSortMethod);
-  }, [state.files, settings.categorySortMethod, settings.fileSortMethod]);
+    return groupFilesByCategoryHierarchical(files, settings.categorySortMethod, settings.fileSortMethod);
+  }, [files, settings.categorySortMethod, settings.fileSortMethod]);
 
   /**
    * カテゴリーの展開/折りたたみ状態管理
@@ -473,13 +497,13 @@ function FileListScreenFlatContent() {
   const handleMoveTap = useCallback(
     async (file: FileFlat, index: number, categoryPath: string) => {
       // 移動元ファイルがセットされていない場合は何もしない
-      if (!state.moveSourceFileId) {
+      if (!moveSourceFileId) {
         logger.warn('file', 'Move source file not set');
         return;
       }
 
       // 同じファイルをタップした場合は何もしない
-      if (file.id === state.moveSourceFileId) {
+      if (file.id === moveSourceFileId) {
         logger.debug('file', 'Same file tapped, ignoring');
         return;
       }
@@ -487,15 +511,15 @@ function FileListScreenFlatContent() {
       logger.info('file', `Moving file to category: ${categoryPath}, index: ${index}`);
 
       try {
-        await actions.moveFile(state.moveSourceFileId, categoryPath, index);
+        await moveFile(moveSourceFileId, categoryPath, index);
         logger.info('file', 'File moved successfully');
-        dispatch({ type: 'EXIT_MOVE_MODE' });
+        exitMoveMode();
       } catch (error: any) {
         logger.error('file', `Failed to move file: ${error.message}`, error);
         Alert.alert('エラー', 'ファイルの移動に失敗しました');
       }
     },
-    [state.moveSourceFileId, actions, dispatch]
+    [moveSourceFileId, moveFile, exitMoveMode]
   );
 
   /**
@@ -504,7 +528,7 @@ function FileListScreenFlatContent() {
   const handleCategoryHeaderTap = useCallback(
     async (categoryPath: string) => {
       // 移動モードでない場合は何もしない
-      if (!state.isMoveMode || !state.moveSourceFileId) {
+      if (!isMoveMode || !moveSourceFileId) {
         return;
       }
 
@@ -512,15 +536,15 @@ function FileListScreenFlatContent() {
 
       try {
         // カテゴリーの最後に移動（targetIndexを指定しない）
-        await actions.moveFile(state.moveSourceFileId, categoryPath);
+        await moveFile(moveSourceFileId, categoryPath);
         logger.info('file', 'File moved successfully');
-        dispatch({ type: 'EXIT_MOVE_MODE' });
+        exitMoveMode();
       } catch (error: any) {
         logger.error('file', `Failed to move file: ${error.message}`, error);
         Alert.alert('エラー', 'ファイルの移動に失敗しました');
       }
     },
-    [state.isMoveMode, state.moveSourceFileId, actions, dispatch]
+    [isMoveMode, moveSourceFileId, moveFile, exitMoveMode]
   );
 
   // キーボード + ChatInputBarの高さを計算してコンテンツが隠れないようにする
@@ -543,20 +567,20 @@ function FileListScreenFlatContent() {
   const handleImportWithRefresh = useCallback(async () => {
     await handleImport();
     // インポート完了後にデータを再取得
-    await actions.refreshData();
-  }, [handleImport, actions.refreshData]);
+    await refreshData();
+  }, [handleImport, refreshData]);
 
   // ヘッダー設定（新規作成、インポート、設定ボタン）
   useFileListHeader({
-    onCreateNew: () => dispatch({ type: 'OPEN_CREATE_MODAL' }),
+    onCreateNew: openCreateModal,
     onSettings: () => navigation.navigate('Settings'),
     onImport: handleImportWithRefresh,
   });
 
   // チャットコンテキスト（フラット構造版）
   useFileListChatContext({
-    files: state.files,
-    refreshData: actions.refreshData,
+    files,
+    refreshData,
   });
 
   // === レンダリング関数 ===
@@ -592,13 +616,13 @@ function FileListScreenFlatContent() {
           isExpanded={isExpanded}
           hasChildren={hasChildren}
           onToggle={handleToggleCategory}
-          onTap={state.isMoveMode ? () => handleCategoryHeaderTap(section.fullPath) : undefined}
-          onLongPress={!state.isMoveMode ? handleLongPressCategory : undefined}
-          isMoveMode={state.isMoveMode}
+          onTap={isMoveMode ? () => handleCategoryHeaderTap(section.fullPath) : undefined}
+          onLongPress={!isMoveMode ? handleLongPressCategory : undefined}
+          isMoveMode={isMoveMode}
         />
       );
     },
-    [expandedCategories, handleToggleCategory, sections, state.isMoveMode, handleCategoryHeaderTap, handleLongPressCategory]
+    [expandedCategories, handleToggleCategory, sections, isMoveMode, handleCategoryHeaderTap, handleLongPressCategory]
   );
 
   /**
@@ -607,8 +631,7 @@ function FileListScreenFlatContent() {
   const renderFileItem = useCallback(
     ({ item: file, index, section }: { item: FileFlat; index: number; section: { level: number; fullPath: string } }) => {
       // 移動モード時の処理
-      const isMoveMode = state.isMoveMode;
-      const isMoveSource = state.moveSourceFileId === file.id;
+      const isMoveSource = moveSourceFileId === file.id;
 
       return (
         <FlatListItem
@@ -627,13 +650,13 @@ function FileListScreenFlatContent() {
         />
       );
     },
-    [state.isMoveMode, state.moveSourceFileId, handleSelectFile, handleLongPressFile, handleMoveTap]
+    [isMoveMode, moveSourceFileId, handleSelectFile, handleLongPressFile, handleMoveTap]
   );
 
   // レンダリング時のデバッグログ
   logger.debug(
     'file',
-    `FileListScreenFlat: Rendering. files.length: ${state.files.length}, state.loading: ${state.loading}`
+    `FileListScreenFlat: Rendering. files.length: ${files.length}, loading: ${loading}`
   );
 
   const messageTextStyle = useMemo(
@@ -649,9 +672,9 @@ function FileListScreenFlatContent() {
   return (
     <MainContainer
       backgroundColor={colors.background}
-      isLoading={(state.loading && state.files.length === 0) || isProcessing || isSyncing}
+      isLoading={(loading && files.length === 0) || isProcessing || isSyncing}
     >
-      {state.files.length === 0 && !state.loading ? (
+      {files.length === 0 && !loading ? (
         <View style={styles.centered}>
           <Text style={messageTextStyle}>
             ファイルがありません。+ ボタンから新しいファイルを作成してください。
@@ -678,7 +701,7 @@ function FileListScreenFlatContent() {
 
       {/* 移動モード時のキャンセルボタン */}
       {/* eslint-disable react-native/no-inline-styles */}
-      {state.isMoveMode && (
+      {isMoveMode && (
         <View style={[styles.moveBar, { backgroundColor: colors.background }]}>
           <Text style={{ fontSize: FILE_LIST_FLAT_CONFIG.typography.heading, color: colors.text }}>
             移動先をタップしてください
@@ -696,17 +719,17 @@ function FileListScreenFlatContent() {
       {/* eslint-enable react-native/no-inline-styles */}
 
       <CreateFileModal
-        visible={state.modals.create.visible}
-        onClose={() => dispatch({ type: 'CLOSE_CREATE_MODAL' })}
+        visible={modals.create.visible}
+        onClose={closeCreateModal}
         onCreate={handleCreate}
       />
 
-      {state.modals.rename.file && (
+      {modals.rename.file && (
         <RenameItemModal
-          visible={state.modals.rename.visible}
-          initialName={state.modals.rename.file.title}
+          visible={modals.rename.visible}
+          initialName={modals.rename.file.title}
           itemType="file"
-          onClose={() => dispatch({ type: 'CLOSE_RENAME_MODAL' })}
+          onClose={closeRenameModal}
           onRename={handleRename}
         />
       )}
@@ -837,17 +860,6 @@ function FileListScreenFlatContent() {
         />
       )}
     </MainContainer>
-  );
-}
-
-/**
- * FileListScreenFlat (Providerでラップ)
- */
-function FileListScreenFlat() {
-  return (
-    <FlatListProvider>
-      <FileListScreenFlatContent />
-    </FlatListProvider>
   );
 }
 
