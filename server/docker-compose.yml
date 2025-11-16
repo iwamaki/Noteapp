@@ -25,11 +25,19 @@ services:
       - GEMINI_API_SECRET_ID=${GEMINI_API_SECRET_ID}
       - OPENAI_API_SECRET_ID=${OPENAI_API_SECRET_ID}
       - GOOGLE_CSE_API_SECRET_ID=${GOOGLE_CSE_API_SECRET_ID}
+      - GOOGLE_WEB_CLIENT_SECRET_ID=${GOOGLE_WEB_CLIENT_SECRET_ID:-}
 
       # ========================================
       # Google Custom Search
       # ========================================
       - GOOGLE_CSE_ID=${GOOGLE_CSE_ID}
+
+      # ========================================
+      # Google OAuth2
+      # ========================================
+      - GOOGLE_WEB_CLIENT_ID=${GOOGLE_WEB_CLIENT_ID:-}
+      - GOOGLE_WEB_CLIENT_SECRET=${GOOGLE_WEB_CLIENT_SECRET:-}
+      - GOOGLE_OAUTH_REDIRECT_URI=${GOOGLE_OAUTH_REDIRECT_URI:-}
 
       # ========================================
       # アプリケーション設定

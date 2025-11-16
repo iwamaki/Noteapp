@@ -68,3 +68,14 @@ class GoogleLoginResponse(BaseModel):
     access_token: str = Field(..., description="アクセストークン（JWT）")
     refresh_token: str = Field(..., description="リフレッシュトークン（JWT）")
     token_type: str = Field(default="bearer", description="トークンタイプ")
+
+
+class GoogleAuthStartRequest(BaseModel):
+    """Google OAuth2 認証開始リクエスト（Authorization Code Flow）"""
+    device_id: str = Field(..., min_length=1, description="デバイスID")
+
+
+class GoogleAuthStartResponse(BaseModel):
+    """Google OAuth2 認証開始レスポンス"""
+    auth_url: str = Field(..., description="Google 認証URL（WebBrowser で開く）")
+    state: str = Field(..., description="OAuth2 state パラメータ（検証用）")

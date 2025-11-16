@@ -23,7 +23,19 @@
       },
       "edgeToEdgeEnabled": false,
       "predictiveBackGestureEnabled": false,
-      "package": "com.iwash.NoteApp"
+      "package": "com.iwash.NoteApp",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "category": ["BROWSABLE", "DEFAULT"],
+          "data": [
+            {
+              "scheme": "com.googleusercontent.apps.461522030982",
+              "path": "/oauth2redirect"
+            }
+          ]
+        }
+      ]
     },
     "extra": {
       "eas": {

@@ -95,10 +95,11 @@ export function useGoogleAuth(): UseGoogleAuthResult {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // リダイレクトURIを作成（noteapp://）
-  const redirectUri = AuthSession.makeRedirectUri({
-    scheme: 'noteapp',
-  });
+  // リダイレクトURIを作成
+  // Android用: 逆順Client ID形式を使用（AndroidManifest.xmlと一致させる）
+  const clientId = getGoogleClientId();
+  const clientIdPrefix = clientId.split('-')[0]; // 461522030982
+  const redirectUri = `com.googleusercontent.apps.${clientIdPrefix}:/oauth2redirect`;
 
   // Google OAuth2リクエストを作成
   const [request, response, promptAsync] = AuthSession.useAuthRequest(
@@ -107,6 +108,8 @@ export function useGoogleAuth(): UseGoogleAuthResult {
       scopes: GOOGLE_OAUTH_CONFIG.scopes,
       redirectUri,
       responseType: AuthSession.ResponseType.IdToken,
+      // PKCEを無効化（Implicit FlowではPKCEは使えない）
+      usePKCE: false,
       // Google OAuth2のパラメータ
       extraParams: {
         // オフライン アクセスを要求しない（ID Tokenのみで十分）

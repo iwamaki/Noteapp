@@ -2,6 +2,7 @@
 # @summary 認証APIエンドポイント
 # @responsibility デバイスID認証のHTTPエンドポイント
 
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 from slowapi import Limiter
@@ -17,8 +18,17 @@ from src.auth.schemas import (
     RefreshTokenResponse,
     GoogleLoginRequest,
     GoogleLoginResponse,
+    GoogleAuthStartRequest,
+    GoogleAuthStartResponse,
 )
 from src.auth.google_auth import get_google_user_info, GoogleAuthError
+from src.auth.google_oauth_flow import (
+    generate_auth_url,
+    exchange_code_for_tokens,
+    get_user_info_from_access_token,
+    GoogleOAuthFlowError,
+)
+from src.auth.oauth_state_manager import get_state_manager
 from src.auth.jwt_utils import (
     create_access_token,
     create_refresh_token,
@@ -383,6 +393,221 @@ async def google_login(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error"
         )
+
+
+@router.post(
+    "/google/auth-start",
+    response_model=GoogleAuthStartResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Google OAuth2 認証開始（Authorization Code Flow）",
+    description="Google OAuth2 認証フローを開始し、認証 URL を返します。"
+)
+@limiter.limit("20/minute")
+async def google_auth_start(
+    request: Request,
+    body: GoogleAuthStartRequest
+):
+    """
+    Google OAuth2 認証開始エンドポイント（Authorization Code Flow）
+
+    フロー:
+    1. このエンドポイントで state を生成し、認証 URL を取得
+    2. フロントエンドで WebBrowser を開いて認証
+    3. Google が /google/callback にリダイレクト
+    4. バックエンドがトークン交換し、Deep Link でアプリに返却
+
+    レート制限: 20リクエスト/分
+    """
+    try:
+        # OAuth state manager を取得
+        state_manager = get_state_manager()
+
+        # state を生成（device_id と紐付け）
+        state = state_manager.generate_state(body.device_id)
+
+        # Google 認証 URL を生成
+        auth_url = generate_auth_url(state)
+
+        logger.info(
+            "Google OAuth started",
+            extra={"device_id": body.device_id[:20] + "...", "state": state[:10] + "..."}
+        )
+
+        return GoogleAuthStartResponse(
+            auth_url=auth_url,
+            state=state
+        )
+
+    except GoogleOAuthFlowError as e:
+        logger.error(f"Failed to start Google OAuth: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error in Google OAuth start: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error"
+        )
+
+
+@router.get(
+    "/google/callback",
+    status_code=status.HTTP_307_TEMPORARY_REDIRECT,
+    summary="Google OAuth2 コールバック",
+    description="Google からのリダイレクトを処理し、トークンを交換してアプリにリダイレクトします。"
+)
+async def google_callback(
+    code: Optional[str] = None,
+    state: Optional[str] = None,
+    error: Optional[str] = None
+):
+    """
+    Google OAuth2 コールバックエンドポイント
+
+    Google が認証後にこのエンドポイントにリダイレクトします。
+    Authorization Code を受け取り、トークンに交換して、
+    Deep Link でアプリにリダイレクトします。
+    """
+    from fastapi.responses import RedirectResponse
+    from src.billing.models import User, DeviceAuth, Credit
+
+    try:
+        # エラーチェック
+        if error:
+            logger.warning(f"Google OAuth error: {error}")
+            error_url = f"noteapp://auth?error={error}"
+            return RedirectResponse(error_url)
+
+        if not code or not state:
+            logger.warning("Missing code or state in callback")
+            error_url = "noteapp://auth?error=missing_parameters"
+            return RedirectResponse(error_url)
+
+        # state を検証して device_id を取得
+        state_manager = get_state_manager()
+        device_id = state_manager.verify_state(state)
+
+        if not device_id:
+            logger.warning(f"Invalid or expired state: {state[:10]}...")
+            error_url = "noteapp://auth?error=invalid_state"
+            return RedirectResponse(error_url)
+
+        # Authorization Code をトークンに交換
+        tokens = exchange_code_for_tokens(code)
+        access_token = tokens.get("access_token")
+        id_token = tokens.get("id_token")
+
+        if not access_token or not id_token:
+            logger.error("Missing tokens in Google response")
+            error_url = "noteapp://auth?error=token_exchange_failed"
+            return RedirectResponse(error_url)
+
+        # Access Token からユーザー情報を取得
+        user_info = get_user_info_from_access_token(access_token)
+        google_id = user_info.get("id")
+        email = user_info.get("email")
+        display_name = user_info.get("name")
+        profile_picture_url = user_info.get("picture")
+
+        if not google_id or not email:
+            logger.error("Missing user info in Google response")
+            error_url = "noteapp://auth?error=user_info_failed"
+            return RedirectResponse(error_url)
+
+        # DB セッションを取得（依存性注入なしで直接取得）
+        from src.billing.database import get_db
+        db = next(get_db())
+
+        try:
+            # Google ID でユーザーを検索
+            existing_user = db.query(User).filter_by(google_id=google_id).first()
+
+            user_id: str
+            is_new_user: bool
+
+            if existing_user:
+                # 既存ユーザー
+                assert existing_user.user_id is not None
+                user_id = existing_user.user_id
+                is_new_user = False
+
+                # ユーザー情報を更新
+                existing_user.email = email
+                existing_user.display_name = display_name
+                existing_user.profile_picture_url = profile_picture_url
+                db.commit()
+
+                logger.info(f"Existing Google user logged in: user_id={user_id}")
+
+            else:
+                # 新規ユーザー
+                import uuid
+                user_id = f"user_{uuid.uuid4().hex[:10]}"
+                is_new_user = True
+
+                new_user = User(
+                    user_id=user_id,
+                    google_id=google_id,
+                    email=email,
+                    display_name=display_name,
+                    profile_picture_url=profile_picture_url
+                )
+                db.add(new_user)
+
+                # クレジットレコードを作成
+                credit = Credit(user_id=user_id, credits=0)
+                db.add(credit)
+
+                db.commit()
+
+                logger.info(f"New Google user created: user_id={user_id}")
+
+            # デバイス認証レコードを作成または更新
+            existing_device = db.query(DeviceAuth).filter_by(device_id=device_id).first()
+            if existing_device:
+                existing_device.user_id = user_id
+                from datetime import datetime
+                existing_device.last_login_at = datetime.now()
+            else:
+                device_auth = DeviceAuth(device_id=device_id, user_id=user_id)
+                db.add(device_auth)
+
+            db.commit()
+
+            # JWT トークンを生成
+            jwt_access_token = create_access_token(user_id, device_id)
+            jwt_refresh_token = create_refresh_token(user_id, device_id)
+
+            logger.info(f"Google OAuth successful: user_id={user_id}, device_id={device_id[:20]}...")
+
+            # Deep Link でアプリにリダイレクト
+            from urllib.parse import urlencode
+            params = urlencode({
+                "access_token": jwt_access_token,
+                "refresh_token": jwt_refresh_token,
+                "user_id": user_id,
+                "is_new_user": str(is_new_user).lower(),
+                "email": email,
+                "display_name": display_name or "",
+                "profile_picture_url": profile_picture_url or "",
+            })
+            redirect_url = f"noteapp://auth?{params}"
+
+            return RedirectResponse(redirect_url)
+
+        finally:
+            db.close()
+
+    except GoogleOAuthFlowError as e:
+        logger.error(f"Google OAuth flow error: {e}")
+        error_url = "noteapp://auth?error=oauth_flow_error"
+        return RedirectResponse(error_url)
+    except Exception as e:
+        logger.error(f"Unexpected error in Google callback: {e}")
+        error_url = "noteapp://auth?error=internal_error"
+        return RedirectResponse(error_url)
 
 
 @router.get(
