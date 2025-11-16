@@ -5,7 +5,7 @@
  */
 
 import { logger } from '../../../utils/logger';
-import { createHttpClient, HttpClient } from '../../api';
+import { createHttpClient, HttpClient, ApiErrorHandler } from '../../api';
 import type {
   ChatContext,
   LLMProvider,
@@ -18,7 +18,6 @@ import type {
 import { LLMError } from './types/LLMError';
 import { ConversationHistory } from './core/ConversationHistory';
 import { RequestManager } from './core/RequestManager';
-import { ErrorHandler } from './utils/ErrorHandler';
 import { ProviderManager } from './core/ProviderManager';
 import { SummarizationService } from './services/SummarizationService';
 import { CHAT_CONFIG } from '../config/chatConfig';
@@ -152,8 +151,31 @@ export class LLMService {
       logger.info('llm', `Request #${requestId} - Successfully completed`);
       return data;
     } catch (error) {
-      // エラーハンドリングを委譲
-      ErrorHandler.handleError(error, requestId, this.config.apiTimeout);
+      // エラーをログ記録
+      logger.error('llm', `Request #${requestId} - Error occurred:`, error);
+
+      // 既にLLMErrorの場合はそのままスロー
+      if (error instanceof LLMError) {
+        throw error;
+      }
+
+      // タイムアウトエラー
+      if (error instanceof Error && error.message === 'TIMEOUT') {
+        throw new LLMError(
+          `リクエストがタイムアウトしました (${this.config.apiTimeout / 1000}秒)`,
+          'TIMEOUT_ERROR'
+        );
+      }
+
+      // 共通エラーハンドラーを使用してApiErrorに変換し、LLMErrorに変換
+      const errorHandler = new ApiErrorHandler('llm');
+      const apiError = errorHandler.handle(error);
+
+      throw new LLMError(
+        apiError.message,
+        apiError.code || 'UNKNOWN_ERROR',
+        apiError.status
+      );
     } finally {
       // リクエストを終了
       this.requestManager.endRequest(requestId);
@@ -288,5 +310,45 @@ export class LLMService {
       this.providerManager.getCurrentProvider(),
       this.providerManager.getCurrentModel()
     );
+  }
+
+  /**
+   * テキストを知識ベースにアップロード
+   * @param text アップロードするテキスト
+   * @param collectionName コレクション名（デフォルト: "default"）
+   * @param metadataTitle ドキュメントのタイトル（オプション）
+   * @param metadataDescription ドキュメントの説明（オプション）
+   * @returns アップロード結果
+   */
+  async uploadTextToKnowledgeBase(
+    text: string,
+    collectionName: string = 'default',
+    metadataTitle?: string,
+    metadataDescription?: string
+  ): Promise<{
+    success: boolean;
+    message: string;
+    document?: {
+      chunks_created: number;
+      total_characters: number;
+      average_chunk_size: number;
+    };
+    knowledge_base?: {
+      total_documents: number;
+      collection_name: string;
+    };
+  }> {
+    const params: Record<string, string> = {
+      collection_name: collectionName,
+    };
+    if (metadataTitle) params.metadata_title = metadataTitle;
+    if (metadataDescription) params.metadata_description = metadataDescription;
+
+    const response = await this.httpClient.post('/api/knowledge-base/documents/upload-text',
+      { text },
+      { params }
+    );
+
+    return response.data;
   }
 }

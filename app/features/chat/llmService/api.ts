@@ -139,21 +139,12 @@ export class APIService {
       collection_name: string;
     };
   }> {
-    // 共通HttpClientを使用（llmServiceInstanceから取得）
-    const httpClient = this.llmServiceInstance['httpClient'];
-
-    const params: Record<string, string> = {
-      collection_name: collectionName,
-    };
-    if (metadataTitle) params.metadata_title = metadataTitle;
-    if (metadataDescription) params.metadata_description = metadataDescription;
-
-    const response = await httpClient.post('/api/knowledge-base/documents/upload-text',
-      { text },
-      { params }
+    return this.llmServiceInstance.uploadTextToKnowledgeBase(
+      text,
+      collectionName,
+      metadataTitle,
+      metadataDescription
     );
-
-    return response.data;
   }
 
 }
