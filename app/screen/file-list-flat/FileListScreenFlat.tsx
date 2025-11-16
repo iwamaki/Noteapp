@@ -17,18 +17,25 @@
  * - 検索
  */
 
+// ===== React & React Native =====
 import React, { useCallback, useMemo, useEffect, useState } from 'react';
 import { StyleSheet, SectionList, Alert, View, Text, TouchableOpacity } from 'react-native';
-import { useTheme } from '../../design/theme/ThemeContext';
-import { MainContainer } from '../../components/MainContainer';
-import { CustomModal } from '../../components/CustomModal';
-import { useKeyboardHeight } from '../../contexts/KeyboardHeightContext';
-import { useFlatListStore } from './stores/useFlatListStore';
+
+// ===== Navigation =====
 import { useNavigation, NavigationProp, useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/types';
-import { FileFlat } from '@data/core/typesFlat';
-import { logger } from '../../utils/logger';
+
+// ===== Contexts & Stores =====
+import { useTheme } from '../../design/theme/ThemeContext';
+import { useKeyboardHeight } from '../../contexts/KeyboardHeightContext';
+import { useFlatListStore } from './stores/useFlatListStore';
 import { useSettingsStore } from '../../settings/settingsStore';
+
+// ===== Shared Components =====
+import { MainContainer } from '../../components/MainContainer';
+import { CustomModal } from '../../components/CustomModal';
+
+// ===== Local Components =====
 import { FlatListItem } from './components/FlatListItem';
 import { CreateFileModal } from './components/CreateFileModal';
 import { RenameItemModal } from './components/RenameItemModal';
@@ -38,16 +45,26 @@ import { TagEditModal } from './components/TagEditModal';
 import { CategorySectionHeader } from './components/CategorySectionHeader';
 import { CategoryActionsModal } from './components/CategoryActionsModal';
 import { CategoryRenameModal } from './components/CategoryRenameModal';
+
+// ===== Hooks =====
 import { useFileListHeader } from './hooks/useFileListHeader';
 import { useCategoryCollapse } from './hooks/useCategoryCollapse';
 import { useFileListChatContext } from '../../features/chat/hooks/useFileListChatContext';
 import { useImportExport } from './hooks/useImportExport';
 import { useRAGSync } from './hooks/useRAGSync';
+
+// ===== Types =====
+import { FileFlat } from '@data/core/typesFlat';
+import { CategoryImpact } from '@data/services/categoryOperationsService';
+import { CategoryActionInfo, CategoryInfo, CategoryDeleteInfo } from './types';
+
+// ===== Services & Utils =====
 import { groupFilesByCategoryHierarchical } from '@data/services/categoryGroupingService';
-import { CategoryOperationsService, CategoryImpact } from '@data/services/categoryOperationsService';
+import { CategoryOperationsService } from '@data/services/categoryOperationsService';
 import ChatService from '../../features/chat';
-import { FILE_LIST_FLAT_CONFIG } from './config';
+import { logger } from '../../utils/logger';
 import { getCategoryNameFromPath } from './utils';
+import { FILE_LIST_FLAT_CONFIG } from './config';
 
 function FileListScreenFlat() {
   const { colors, spacing } = useTheme();
@@ -100,22 +117,14 @@ function FileListScreenFlat() {
   const [fileForTagEdit, setFileForTagEdit] = useState<FileFlat | null>(null);
 
   // カテゴリーアクションモーダルの状態
-  const [selectedCategoryForActions, setSelectedCategoryForActions] = useState<{
-    path: string;
-    name: string;
-    fileCount: number;
-  } | null>(null);
+  const [selectedCategoryForActions, setSelectedCategoryForActions] = useState<CategoryActionInfo | null>(null);
   // カテゴリー名変更モーダルの状態
   const [showCategoryRenameModal, setShowCategoryRenameModal] = useState(false);
-  const [categoryForRename, setCategoryForRename] = useState<{ path: string; name: string } | null>(null);
+  const [categoryForRename, setCategoryForRename] = useState<CategoryInfo | null>(null);
   const [categoryRenameImpact, setCategoryRenameImpact] = useState<CategoryImpact | null>(null);
   // カテゴリー削除確認モーダルの状態
   const [showCategoryDeleteConfirmModal, setShowCategoryDeleteConfirmModal] = useState(false);
-  const [categoryToDelete, setCategoryToDelete] = useState<{
-    path: string;
-    name: string;
-    impact: CategoryImpact;
-  } | null>(null);
+  const [categoryToDelete, setCategoryToDelete] = useState<CategoryDeleteInfo | null>(null);
 
   // データ初期読み込み（初回マウント時のみ実行）
   useEffect(() => {
@@ -727,7 +736,6 @@ function FileListScreenFlat() {
         <RenameItemModal
           visible={modals.rename.visible}
           initialName={modals.rename.file.title}
-          itemType="file"
           onClose={closeRenameModal}
           onRename={handleRename}
         />

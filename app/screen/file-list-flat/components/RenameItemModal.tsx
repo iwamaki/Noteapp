@@ -1,22 +1,14 @@
 /**
  * @file RenameItemModal.tsx
- * @summary アイテム（ノート/フォルダ）の名前変更モーダル
+ * @summary ノートの名前変更モーダル
  */
 import React from 'react';
 import { InputFormModal } from '../../../components/InputFormModal';
-
-interface RenameItemModalProps {
-  visible: boolean;
-  initialName: string;
-  itemType: 'file' | 'folder';
-  onClose: () => void;
-  onRename: (newName: string) => void;
-}
+import { RenameItemModalProps } from '../types';
 
 export const RenameItemModal: React.FC<RenameItemModalProps> = ({
   visible,
   initialName,
-  itemType,
   onClose,
   onRename,
 }) => {
@@ -28,10 +20,10 @@ export const RenameItemModal: React.FC<RenameItemModalProps> = ({
   return (
     <InputFormModal
       visible={visible}
-      title={itemType === 'folder' ? 'フォルダ名を変更' : 'ノート名を変更'}
-      message={`新しい${itemType === 'folder' ? 'フォルダ名' : 'ノート名'}を入力してください。`}
+      title="ノート名を変更"
+      message="新しいノート名を入力してください。"
       initialValue={initialName}
-      placeholder={itemType === 'folder' ? '新しいフォルダ名' : '新しいノート名'}
+      placeholder="新しいノート名"
       onClose={onClose}
       onSubmit={handleRename}
       submitButtonText="変更"

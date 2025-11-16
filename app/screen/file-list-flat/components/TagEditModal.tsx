@@ -11,14 +11,7 @@ import React from 'react';
 import { StyleSheet, Text } from 'react-native';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { InputFormModal } from '../../../components/InputFormModal';
-
-interface TagEditModalProps {
-  visible: boolean;
-  initialTags: string[];
-  fileName: string;
-  onClose: () => void;
-  onSave: (tags: string[]) => void;
-}
+import { TagEditModalProps } from '../types';
 
 export const TagEditModal: React.FC<TagEditModalProps> = ({
   visible,

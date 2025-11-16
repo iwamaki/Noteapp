@@ -20,12 +20,7 @@ import { CustomModal } from '../../../components/CustomModal';
 import { CustomInlineInput } from '../../../components/CustomInlineInput';
 import { FileRepository } from '../../../data/repositories/fileRepository';
 import { FILE_LIST_FLAT_CONFIG } from '../config';
-
-interface CreateFileModalProps {
-  visible: boolean;
-  onClose: () => void;
-  onCreate: (title: string, category: string, tags: string[]) => void;
-}
+import { CreateFileModalProps } from '../types';
 
 /**
  * ファイル作成モーダル

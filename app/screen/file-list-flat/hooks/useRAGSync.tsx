@@ -15,11 +15,12 @@ import {
   sanitizeCategoryPathForCollection,
   filterFilesByCategory,
 } from '../utils';
+import { UseRAGSyncReturn } from '../types';
 
 /**
  * RAG同期機能を提供するフック
  */
-export const useRAGSync = () => {
+export const useRAGSync = (): UseRAGSyncReturn => {
   const [isSyncing, setIsSyncing] = useState(false);
 
   /**

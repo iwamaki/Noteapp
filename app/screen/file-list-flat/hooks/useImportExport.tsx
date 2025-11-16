@@ -25,6 +25,7 @@ import {
   resolveDuplicateTitle,
   getExistingTitlesSet,
 } from '../utils';
+import { UseImportExportReturn } from '../types';
 
 /**
  * インポート用のJSONデータ構造
@@ -39,7 +40,7 @@ interface ImportFileData {
 /**
  * インポート/エクスポート機能を提供するフック
  */
-export const useImportExport = () => {
+export const useImportExport = (): UseImportExportReturn => {
   const [isProcessing, setIsProcessing] = useState(false);
 
   /**

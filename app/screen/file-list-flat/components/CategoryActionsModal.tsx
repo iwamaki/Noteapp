@@ -10,18 +10,7 @@
 import React from 'react';
 import { ActionsListModal, ActionItem } from '../../../components/ActionsListModal';
 import { FILE_LIST_FLAT_CONFIG } from '../config';
-
-interface CategoryActionsModalProps {
-  visible: boolean;
-  categoryPath: string | null;
-  categoryName: string | null;
-  fileCount: number;
-  onClose: () => void;
-  onDelete: (categoryPath: string) => void;
-  onRename: (categoryPath: string) => void;
-  onExport: (categoryPath: string) => void;
-  onCreateQA: (categoryPath: string, categoryName: string) => void;
-}
+import { CategoryActionsModalProps } from '../types';
 
 export const CategoryActionsModal: React.FC<CategoryActionsModalProps> = ({
   visible,

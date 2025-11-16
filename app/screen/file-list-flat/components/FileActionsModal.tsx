@@ -9,22 +9,8 @@
 
 import React from 'react';
 import { ActionsListModal, ActionItem } from '../../../components/ActionsListModal';
-import { FileFlat } from '@data/core/typesFlat';
 import { getMetadataText } from '../utils';
-
-interface FileActionsModalProps {
-  visible: boolean;
-  file: FileFlat | null;
-  onClose: () => void;
-  onDelete: (file: FileFlat) => void;
-  onCopy: (file: FileFlat) => void;
-  onRename: (file: FileFlat) => void;
-  onEditCategories: (file: FileFlat) => void;
-  onEditTags: (file: FileFlat) => void;
-  onMove: (file: FileFlat) => void;
-  onAttachToChat: (file: FileFlat) => void;
-  onExport: (file: FileFlat) => void;
-}
+import { FileActionsModalProps } from '../types';
 
 export const FileActionsModal: React.FC<FileActionsModalProps> = ({
   visible,

@@ -11,14 +11,7 @@ import React from 'react';
 import { StyleSheet, Text } from 'react-native';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { InputFormModal } from '../../../components/InputFormModal';
-
-interface CategoryEditModalProps {
-  visible: boolean;
-  initialCategory: string;
-  fileName: string;
-  onClose: () => void;
-  onSave: (category: string) => void;
-}
+import { CategoryEditModalProps } from '../types';
 
 export const CategoryEditModal: React.FC<CategoryEditModalProps> = ({
   visible,

@@ -10,17 +10,8 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { InputFormModal } from '../../../components/InputFormModal';
-import { CategoryImpact } from '@data/services/categoryOperationsService';
 import { FILE_LIST_FLAT_CONFIG } from '../config';
-
-interface CategoryRenameModalProps {
-  visible: boolean;
-  categoryPath: string;
-  categoryName: string;
-  impact: CategoryImpact | null;
-  onClose: () => void;
-  onRename: (newPath: string) => void;
-}
+import { CategoryRenameModalProps } from '../types';
 
 export const CategoryRenameModal: React.FC<CategoryRenameModalProps> = ({
   visible,
