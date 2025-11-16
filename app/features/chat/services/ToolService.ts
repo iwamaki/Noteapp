@@ -4,6 +4,7 @@
  * @responsibility サーバーから取得したツール定義を保持し、コマンドの検証機能を提供します
  */
 
+import { createHttpClient, HttpClient } from '../../api';
 import { logger } from '../../../utils/logger';
 import { LLMCommand } from '../llmService/types/index';
 
@@ -34,9 +35,17 @@ class ToolService {
   private tools: ToolSchema[] = [];
   private isInitialized: boolean = false;
   private initializationPromise: Promise<void> | null = null;
+  private httpClient: HttpClient;
 
   private constructor() {
-    // プライベートコンストラクタでシングルトンを保証
+    // 共通HttpClientを初期化
+    const baseUrl = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+    this.httpClient = createHttpClient({
+      baseUrl,
+      timeout: 10000,
+      includeAuth: true,
+      logContext: 'toolService',
+    });
   }
 
   /**
@@ -78,17 +87,10 @@ class ToolService {
     try {
       logger.debug('toolService', 'Fetching tool definitions from server...');
 
-      const baseUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
-      if (!baseUrl) {
-        throw new Error('EXPO_PUBLIC_API_BASE_URL is not set in .env file');
-      }
-      const response = await fetch(`${baseUrl}/api/tools`);
+      // 共通HttpClientを使用
+      const response = await this.httpClient.get<ToolSchema[]>('/api/tools');
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch tools: ${response.status} ${response.statusText}`);
-      }
-
-      this.tools = await response.json();
+      this.tools = response.data;
       this.isInitialized = true;
 
       logger.info('toolService', `Loaded ${this.tools.length} tool definitions:`,

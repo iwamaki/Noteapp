@@ -5,14 +5,23 @@
  */
 
 import { logger } from '../../../utils/logger';
-import WebSocketService from '../llmService/services/WebSocketService';
+import { createWebSocketClient, WebSocketClient, WebSocketMessage } from '../../api';
 import { getOrCreateClientId } from '../utils/clientId';
+import { CHAT_CONFIG } from '../config/chatConfig';
+import {
+  handleFetchFileContent,
+  FetchFileContentRequest,
+} from '../handlers/fileContentHandler';
+import {
+  handleFetchSearchResults,
+  FetchSearchResultsRequest,
+} from '../handlers/searchResultsHandler';
 
 /**
  * ChatService用のWebSocket管理マネージャークラス
  */
 export class ChatWebSocketManager {
-  private wsService: WebSocketService | null = null;
+  private wsClient: WebSocketClient | null = null;
   private clientId: string | null = null;
   private isInitialized: boolean = false;
 
@@ -20,7 +29,7 @@ export class ChatWebSocketManager {
    * WebSocket接続を初期化
    *
    * アプリ起動時に一度だけ呼び出されます（初期化タスクから）。
-   * client_idを生成し、WebSocketサービスを初期化してバックエンドに接続します。
+   * client_idを生成し、共通WebSocketClientを初期化してバックエンドに接続します。
    *
    * @param backendUrl バックエンドのURL（例: "https://xxxxx.ngrok-free.app"）
    */
@@ -35,16 +44,30 @@ export class ChatWebSocketManager {
       this.clientId = await getOrCreateClientId();
       logger.info('chatService', `WebSocket client_id: ${this.clientId}`);
 
-      // WebSocketサービスを初期化
-      this.wsService = WebSocketService.getInstance(this.clientId);
-
-      // WebSocket状態変更リスナーを追加（デバッグ用）
-      this.wsService.addStateListener((state) => {
-        logger.info('chatService', `WebSocket state changed: ${state}`);
-      });
+      // 共通WebSocketClientを使用（自動再接続、ハートビート付き）
+      this.wsClient = createWebSocketClient(
+        `${backendUrl}/ws/${this.clientId}`,
+        {
+          maxReconnectAttempts: CHAT_CONFIG.websocket.maxReconnectAttempts,
+          reconnectDelay: CHAT_CONFIG.websocket.reconnectDelay,
+          heartbeatInterval: CHAT_CONFIG.websocket.heartbeatInterval,
+          heartbeatTimeout: CHAT_CONFIG.websocket.heartbeatTimeout,
+          timeoutCheckInterval: CHAT_CONFIG.websocket.timeoutCheckInterval,
+        },
+        {
+          onMessage: this.handleMessage.bind(this),
+          onStateChange: (state) => {
+            logger.info('chatService', `WebSocket state changed: ${state}`);
+          },
+          onError: (error) => {
+            logger.error('chatService', 'WebSocket error:', error);
+          },
+        },
+        'chat'
+      );
 
       // WebSocket接続を確立
-      this.wsService.connect(backendUrl);
+      this.wsClient.connect();
 
       this.isInitialized = true;
       logger.info('chatService', 'WebSocket initialization completed');
@@ -58,8 +81,8 @@ export class ChatWebSocketManager {
    * WebSocket接続を切断
    */
   disconnect(): void {
-    if (this.wsService) {
-      this.wsService.disconnect();
+    if (this.wsClient) {
+      this.wsClient.disconnect();
       this.isInitialized = false;
       logger.info('chatService', 'WebSocket disconnected');
     }
@@ -73,10 +96,10 @@ export class ChatWebSocketManager {
   }
 
   /**
-   * WebSocketサービスのインスタンスを取得
+   * WebSocketクライアントのインスタンスを取得
    */
-  getService(): WebSocketService | null {
-    return this.wsService;
+  getClient(): WebSocketClient | null {
+    return this.wsClient;
   }
 
   /**
@@ -84,5 +107,39 @@ export class ChatWebSocketManager {
    */
   isWebSocketInitialized(): boolean {
     return this.isInitialized;
+  }
+
+  /**
+   * WebSocketメッセージハンドラー
+   * LLMからのリクエスト（ファイル内容取得、検索結果取得など）に応答します
+   */
+  private async handleMessage(message: WebSocketMessage): Promise<void> {
+    try {
+      logger.debug('chatService', 'Handling WebSocket message:', message);
+
+      switch (message.type) {
+        case 'fetch_file_content': {
+          const response = await handleFetchFileContent(message as FetchFileContentRequest);
+          this.wsClient?.send(response);
+          break;
+        }
+
+        case 'fetch_search_results': {
+          const response = await handleFetchSearchResults(message as FetchSearchResultsRequest);
+          this.wsClient?.send(response);
+          break;
+        }
+
+        case 'pong':
+          // ハートビートのpongは共通WebSocketClientが自動処理
+          logger.debug('chatService', 'Pong received');
+          break;
+
+        default:
+          logger.warn('chatService', `Unknown message type: ${message.type}`);
+      }
+    } catch (error) {
+      logger.error('chatService', 'Failed to handle WebSocket message:', error);
+    }
   }
 }

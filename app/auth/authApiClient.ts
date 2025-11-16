@@ -4,10 +4,31 @@
  * @responsibility バックエンドの認証APIとの通信を管理
  */
 
-import { getOrCreateDeviceId } from './deviceIdService';
 import { logger } from '../utils/logger';
 
+// Re-export getAuthHeaders for backward compatibility
+export { getAuthHeaders } from './authHeaders';
+
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+
+/**
+ * authClient を遅延初期化（循環参照を避けるため）
+ */
+let authClient: any = null;
+function getAuthClient(): any {
+  if (!authClient) {
+    // 初回アクセス時にインポート（モジュール初期化後）
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { createHttpClient } = require('../features/api');
+    authClient = createHttpClient({
+      baseUrl: API_BASE_URL,
+      timeout: 10000,
+      includeAuth: false,
+      logContext: 'auth',
+    });
+  }
+  return authClient;
+}
 
 // 型定義
 export interface DeviceRegisterResponse {
@@ -27,42 +48,21 @@ export interface ErrorResponse {
 }
 
 /**
- * 認証ヘッダーを取得
- * すべてのAPIリクエストで使用するヘッダーを返す
- * @returns 認証ヘッダー
- */
-export async function getAuthHeaders(): Promise<Record<string, string>> {
-  const deviceId = await getOrCreateDeviceId();
-  return {
-    'Content-Type': 'application/json',
-    'X-Device-ID': deviceId,
-  };
-}
-
-/**
  * デバイスIDを登録し、ユーザーアカウントを作成または取得
  * @param deviceId デバイスID
  * @returns レスポンス
  */
 export async function registerDevice(deviceId: string): Promise<DeviceRegisterResponse> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ device_id: deviceId }),
+    const client = getAuthClient();
+    const response = await client.post('/api/auth/register', {
+      device_id: deviceId,
     });
 
-    if (!response.ok) {
-      const error: ErrorResponse = await response.json();
-      throw new Error(error.detail || 'Device registration failed');
-    }
-
-    return await response.json();
+    return response.data;
   } catch (error) {
     logger.error('auth', 'Device registration error', error);
-    throw error;
+    throw new Error((error as any).message || 'Device registration failed');
   }
 }
 
@@ -81,25 +81,15 @@ export async function verifyDevice(
   userId: string
 ): Promise<VerifyDeviceResponse> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/auth/verify`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        device_id: deviceId,
-        user_id: userId
-      }),
+    const client = getAuthClient();
+    const response = await client.post('/api/auth/verify', {
+      device_id: deviceId,
+      user_id: userId,
     });
 
-    if (!response.ok) {
-      const error: ErrorResponse = await response.json();
-      throw new Error(error.detail || 'Device verification failed');
-    }
-
-    return await response.json();
+    return response.data;
   } catch (error) {
     logger.error('auth', 'Device verification error', error);
-    throw error;
+    throw new Error((error as any).message || 'Device verification failed');
   }
 }

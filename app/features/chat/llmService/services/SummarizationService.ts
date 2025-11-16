@@ -5,6 +5,7 @@
  */
 
 import { logger } from '../../../../utils/logger';
+import { HttpClient } from '../../../api';
 import type {
   ChatMessage,
   SummarizeRequest,
@@ -13,7 +14,6 @@ import type {
   DocumentSummarizeResponse,
 } from '../types/index';
 import { LLMError } from '../types/LLMError';
-import { HttpClient } from '../utils/HttpClient';
 import { ConversationHistory } from '../core/ConversationHistory';
 
 /**

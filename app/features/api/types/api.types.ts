@@ -17,6 +17,8 @@ export interface ApiRequestConfig {
   timeout?: number;
   /** 追加ヘッダー */
   headers?: Record<string, string>;
+  /** クエリパラメータ */
+  params?: Record<string, any>;
   /** リトライ設定 */
   retry?: RetryConfig;
   /** 認証ヘッダーを含めるか（デフォルト: true） */
@@ -56,6 +58,11 @@ export interface ApiError {
   statusText?: string;
   code?: string;
   details?: any;
+  response?: {
+    data?: any;
+    status?: number;
+    statusText?: string;
+  };
 }
 
 /**

@@ -5,6 +5,7 @@
  */
 
 import { logger } from '../../../utils/logger';
+import { createHttpClient, HttpClient } from '../../api';
 import type {
   ChatContext,
   LLMProvider,
@@ -16,7 +17,6 @@ import type {
 } from './types/index';
 import { LLMError } from './types/LLMError';
 import { ConversationHistory } from './core/ConversationHistory';
-import { HttpClient } from './utils/HttpClient';
 import { RequestManager } from './core/RequestManager';
 import { ErrorHandler } from './utils/ErrorHandler';
 import { ProviderManager } from './core/ProviderManager';
@@ -51,9 +51,11 @@ export class LLMService {
     };
 
     this.conversationHistory = new ConversationHistory(this.config.maxHistorySize);
-    this.httpClient = new HttpClient({
+    this.httpClient = createHttpClient({
       baseUrl: this.config.baseUrl,
       timeout: this.config.apiTimeout,
+      includeAuth: true,
+      logContext: 'llm',
     });
     this.requestManager = new RequestManager({
       minRequestInterval: CHAT_CONFIG.llm.minRequestInterval,

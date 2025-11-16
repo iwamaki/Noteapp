@@ -243,9 +243,9 @@ class ChatService {
       const chatContext: ChatContext = await this.buildChatContext(screenContext);
 
       // WebSocket接続状態をログに出力（デバッグ用）
-      const wsService = this.wsManager.getService();
-      if (wsService) {
-        logger.info('chatService', `WebSocket state before sending message: ${wsService.getState()}`);
+      const wsClient = this.wsManager.getClient();
+      if (wsClient) {
+        logger.info('chatService', `WebSocket state before sending message: ${wsClient.getState()}`);
       }
 
       // APIにメッセージを送信（client_idと添付ファイル情報も含める）

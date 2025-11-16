@@ -5,7 +5,7 @@
  */
 
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-import { getAuthHeaders } from '../../../auth/authApiClient';
+import { getAuthHeaders } from '../../../auth/authHeaders';
 import { logger } from '../../../utils/logger';
 import { ApiRequestConfig, ApiResponse } from '../types';
 import { withRetry } from '../utils/retry';
@@ -235,6 +235,10 @@ export class HttpClient {
 
     if (config?.timeout) {
       axiosConfig.timeout = config.timeout;
+    }
+
+    if (config?.params) {
+      axiosConfig.params = config.params;
     }
 
     return axiosConfig;

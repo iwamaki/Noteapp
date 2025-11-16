@@ -46,8 +46,8 @@ export class BillingApiService {
 
 ```typescript
 // app/billing/services/billingApiService.ts (新)
-import { createHttpClient, ApiError } from '@/features/api';
-import { logger } from '@/utils/logger';
+import { createHttpClient, ApiError } from '@features/api';
+import { logger } from '@utils/logger';
 
 export class BillingApiService {
   private client: HttpClient;
@@ -101,8 +101,8 @@ export class BillingApiService {
 
 ```typescript
 // app/features/user/services/userApiService.ts
-import { createHttpClient, HttpClient, ApiError } from '@/features/api';
-import { logger } from '@/utils/logger';
+import { createHttpClient, HttpClient, ApiError } from '@features/api';
+import { logger } from '@utils/logger';
 
 export interface User {
   id: string;
@@ -205,8 +205,8 @@ export const userApiService = new UserApiService();
 // app/screen/user-list/UserListScreen.tsx
 import React, { useEffect } from 'react';
 import { View, Text, FlatList, ActivityIndicator } from 'react-native';
-import { useApi } from '@/features/api';
-import { userApiService, User } from '@/features/user/services/userApiService';
+import { useApi } from '@features/api';
+import { userApiService, User } from '@features/user/services/userApiService';
 
 export function UserListScreen() {
   const { state, execute } = useApi<User[]>(
@@ -257,8 +257,8 @@ export function UserListScreen() {
 // app/screen/user-create/UserCreateScreen.tsx
 import React, { useState } from 'react';
 import { View, TextInput, Button, Alert } from 'react-native';
-import { usePost } from '@/features/api';
-import { userApiService } from '@/features/user/services/userApiService';
+import { usePost } from '@features/api';
+import { userApiService } from '@features/user/services/userApiService';
 
 export function UserCreateScreen({ navigation }) {
   const [name, setName] = useState('');
@@ -318,7 +318,7 @@ export function UserCreateScreen({ navigation }) {
 // app/screen/chat/ChatScreen.tsx
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, FlatList } from 'react-native';
-import { useWebSocket, WebSocketMessage } from '@/features/api';
+import { useWebSocket, WebSocketMessage } from '@features/api';
 
 interface ChatMessage {
   id: string;
@@ -409,7 +409,7 @@ export function ChatScreen({ userId }: { userId: string }) {
 
 ```tsx
 // app/features/user/hooks/useUsers.ts
-import { useApi } from '@/features/api';
+import { useApi } from '@features/api';
 import { userApiService, User } from '../services/userApiService';
 
 export function useUsers() {

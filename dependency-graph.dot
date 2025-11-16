@@ -11,6 +11,7 @@ strict digraph "dependency-cruiser output"{
     "app/App.tsx" -> "app/initialization/tasks/index.ts"
     "app/App.tsx" -> "app/navigation/RootNavigator.tsx"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/auth" {label="auth" "app/auth/authApiClient.ts" [label=<authApiClient.ts> tooltip="authApiClient.ts" URL="app/auth/authApiClient.ts" fillcolor="#ddfeff"] } }
+    "app/auth/authApiClient.ts" -> "app/features/api/index.ts" [xlabel="no-circular" tooltip="no-circular" arrowhead="normalnoneodot" fontcolor="orange" color="orange"]
     "app/auth/authApiClient.ts" -> "app/utils/logger.ts"
     "app/auth/authApiClient.ts" -> "app/auth/deviceIdService.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/auth" {label="auth" "app/auth/deviceIdService.ts" [label=<deviceIdService.ts> tooltip="deviceIdService.ts" URL="app/auth/deviceIdService.ts" fillcolor="#ddfeff"] } }
@@ -29,7 +30,7 @@ strict digraph "dependency-cruiser output"{
     "app/billing/index.ts" -> "app/billing/services/index.ts" [arrowhead="inv"]
     "app/billing/index.ts" -> "app/billing/utils/index.ts" [arrowhead="inv"]
     subgraph "cluster_app" {label="app" subgraph "cluster_app/billing" {label="billing" subgraph "cluster_app/billing/services" {label="services" "app/billing/services/billingApiService.ts" [label=<billingApiService.ts> tooltip="billingApiService.ts" URL="app/billing/services/billingApiService.ts" fillcolor="#ddfeff"] } } }
-    "app/billing/services/billingApiService.ts" -> "app/auth/authApiClient.ts"
+    "app/billing/services/billingApiService.ts" -> "app/features/api/index.ts"
     "app/billing/services/billingApiService.ts" -> "app/utils/logger.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/billing" {label="billing" subgraph "cluster_app/billing/services" {label="services" "app/billing/services/index.ts" [label=<index.ts> tooltip="index.ts" URL="app/billing/services/index.ts" fillcolor="#ddfeff"] } } }
     "app/billing/services/index.ts" -> "app/billing/services/billingApiService.ts" [arrowhead="inv"]
@@ -121,6 +122,48 @@ strict digraph "dependency-cruiser output"{
     subgraph "cluster_app" {label="app" subgraph "cluster_app/design" {label="design" subgraph "cluster_app/design/styles" {label="styles" "app/design/styles/responsive.ts" [label=<responsive.ts> tooltip="responsive.ts" URL="app/design/styles/responsive.ts" fillcolor="#ddfeff"] } } }
     subgraph "cluster_app" {label="app" subgraph "cluster_app/design" {label="design" subgraph "cluster_app/design/theme" {label="theme" "app/design/theme/ThemeContext.tsx" [label=<ThemeContext.tsx> tooltip="ThemeContext.tsx" URL="app/design/theme/ThemeContext.tsx" fillcolor="#bbfeff"] } } }
     "app/design/theme/ThemeContext.tsx" -> "app/settings/settingsStore.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/api" {label="api" subgraph "cluster_app/features/api/clients" {label="clients" "app/features/api/clients/HttpClient.ts" [label=<HttpClient.ts> tooltip="HttpClient.ts" URL="app/features/api/clients/HttpClient.ts" fillcolor="#ddfeff"] } } } }
+    "app/features/api/clients/HttpClient.ts" -> "app/auth/authApiClient.ts" [xlabel="no-circular" tooltip="no-circular" arrowhead="normalnoneodot" fontcolor="orange" color="orange"]
+    "app/features/api/clients/HttpClient.ts" -> "app/utils/logger.ts"
+    "app/features/api/clients/HttpClient.ts" -> "app/features/api/services/ApiErrorHandler.ts"
+    "app/features/api/clients/HttpClient.ts" -> "app/features/api/types/index.ts"
+    "app/features/api/clients/HttpClient.ts" -> "app/features/api/utils/retry.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/api" {label="api" subgraph "cluster_app/features/api/clients" {label="clients" "app/features/api/clients/WebSocketClient.ts" [label=<WebSocketClient.ts> tooltip="WebSocketClient.ts" URL="app/features/api/clients/WebSocketClient.ts" fillcolor="#ddfeff"] } } } }
+    "app/features/api/clients/WebSocketClient.ts" -> "app/utils/logger.ts"
+    "app/features/api/clients/WebSocketClient.ts" -> "app/features/api/types/index.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/api" {label="api" subgraph "cluster_app/features/api/clients" {label="clients" "app/features/api/clients/index.ts" [label=<index.ts> tooltip="index.ts" URL="app/features/api/clients/index.ts" fillcolor="#ddfeff"] } } } }
+    "app/features/api/clients/index.ts" -> "app/features/api/clients/HttpClient.ts" [arrowhead="inv"]
+    "app/features/api/clients/index.ts" -> "app/features/api/clients/WebSocketClient.ts" [arrowhead="inv"]
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/api" {label="api" subgraph "cluster_app/features/api/hooks" {label="hooks" "app/features/api/hooks/index.ts" [label=<index.ts> tooltip="index.ts" URL="app/features/api/hooks/index.ts" fillcolor="#ddfeff"] } } } }
+    "app/features/api/hooks/index.ts" -> "app/features/api/hooks/useApi.ts" [arrowhead="inv"]
+    "app/features/api/hooks/index.ts" -> "app/features/api/hooks/useWebSocket.ts" [arrowhead="inv"]
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/api" {label="api" subgraph "cluster_app/features/api/hooks" {label="hooks" "app/features/api/hooks/useApi.ts" [label=<useApi.ts> tooltip="useApi.ts" URL="app/features/api/hooks/useApi.ts" fillcolor="#ddfeff"] } } } }
+    "app/features/api/hooks/useApi.ts" -> "app/features/api/clients/HttpClient.ts" [xlabel="no-circular" tooltip="no-circular" arrowhead="normalnoneodot" fontcolor="orange" color="orange"]
+    "app/features/api/hooks/useApi.ts" -> "app/features/api/types/index.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/api" {label="api" subgraph "cluster_app/features/api/hooks" {label="hooks" "app/features/api/hooks/useWebSocket.ts" [label=<useWebSocket.ts> tooltip="useWebSocket.ts" URL="app/features/api/hooks/useWebSocket.ts" fillcolor="#ddfeff"] } } } }
+    "app/features/api/hooks/useWebSocket.ts" -> "app/features/api/clients/WebSocketClient.ts"
+    "app/features/api/hooks/useWebSocket.ts" -> "app/features/api/types/index.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/api" {label="api" "app/features/api/index.ts" [label=<index.ts> tooltip="index.ts" URL="app/features/api/index.ts" fillcolor="#ddfeff"] } } }
+    "app/features/api/index.ts" -> "app/features/api/clients/HttpClient.ts" [xlabel="no-circular" tooltip="no-circular" arrowhead="normalnoneodot" fontcolor="orange" color="orange"]
+    "app/features/api/index.ts" -> "app/features/api/clients/WebSocketClient.ts" [arrowhead="inv"]
+    "app/features/api/index.ts" -> "app/features/api/hooks/useApi.ts" [xlabel="no-circular" tooltip="no-circular" arrowhead="normalnoneodot" fontcolor="orange" color="orange"]
+    "app/features/api/index.ts" -> "app/features/api/hooks/useWebSocket.ts" [arrowhead="inv"]
+    "app/features/api/index.ts" -> "app/features/api/services/ApiErrorHandler.ts" [arrowhead="inv"]
+    "app/features/api/index.ts" -> "app/features/api/types/index.ts" [arrowhead="inv"]
+    "app/features/api/index.ts" -> "app/features/api/utils/retry.ts" [arrowhead="inv"]
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/api" {label="api" subgraph "cluster_app/features/api/services" {label="services" "app/features/api/services/ApiErrorHandler.ts" [label=<ApiErrorHandler.ts> tooltip="ApiErrorHandler.ts" URL="app/features/api/services/ApiErrorHandler.ts" fillcolor="#ddfeff"] } } } }
+    "app/features/api/services/ApiErrorHandler.ts" -> "app/utils/logger.ts"
+    "app/features/api/services/ApiErrorHandler.ts" -> "app/features/api/types/index.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/api" {label="api" subgraph "cluster_app/features/api/services" {label="services" "app/features/api/services/index.ts" [label=<index.ts> tooltip="index.ts" URL="app/features/api/services/index.ts" fillcolor="#ddfeff"] } } } }
+    "app/features/api/services/index.ts" -> "app/features/api/services/ApiErrorHandler.ts" [arrowhead="inv"]
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/api" {label="api" subgraph "cluster_app/features/api/types" {label="types" "app/features/api/types/api.types.ts" [label=<api.types.ts> tooltip="api.types.ts" URL="app/features/api/types/api.types.ts" fillcolor="#ddfeff"] } } } }
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/api" {label="api" subgraph "cluster_app/features/api/types" {label="types" "app/features/api/types/index.ts" [label=<index.ts> tooltip="index.ts" URL="app/features/api/types/index.ts" fillcolor="#ddfeff"] } } } }
+    "app/features/api/types/index.ts" -> "app/features/api/types/api.types.ts" [arrowhead="inv"]
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/api" {label="api" subgraph "cluster_app/features/api/utils" {label="utils" "app/features/api/utils/index.ts" [label=<index.ts> tooltip="index.ts" URL="app/features/api/utils/index.ts" fillcolor="#ddfeff"] } } } }
+    "app/features/api/utils/index.ts" -> "app/features/api/utils/retry.ts" [arrowhead="inv"]
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/api" {label="api" subgraph "cluster_app/features/api/utils" {label="utils" "app/features/api/utils/retry.ts" [label=<retry.ts> tooltip="retry.ts" URL="app/features/api/utils/retry.ts" fillcolor="#ddfeff"] } } } }
+    "app/features/api/utils/retry.ts" -> "app/utils/logger.ts"
+    "app/features/api/utils/retry.ts" -> "app/features/api/types/index.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/components" {label="components" "app/features/chat/components/AttachedFilesList.tsx" [label=<AttachedFilesList.tsx> tooltip="AttachedFilesList.tsx" URL="app/features/chat/components/AttachedFilesList.tsx" fillcolor="#bbfeff"] } } } }
     "app/features/chat/components/AttachedFilesList.tsx" -> "app/design/theme/ThemeContext.tsx"
     "app/features/chat/components/AttachedFilesList.tsx" -> "app/features/chat/config/chatConfig.ts"
@@ -195,12 +238,19 @@ strict digraph "dependency-cruiser output"{
     "app/features/chat/handlers/editFileLinesHandler.ts" -> "app/features/chat/handlers/types.ts"
     "app/features/chat/handlers/editFileLinesHandler.ts" -> "app/data/core/typesFlat.ts" [arrowhead="onormal" penwidth="1.0"]
     "app/features/chat/handlers/editFileLinesHandler.ts" -> "app/data/repositories/fileRepository.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/handlers" {label="handlers" "app/features/chat/handlers/fileContentHandler.ts" [label=<fileContentHandler.ts> tooltip="fileContentHandler.ts" URL="app/features/chat/handlers/fileContentHandler.ts" fillcolor="#ddfeff"] } } } }
+    "app/features/chat/handlers/fileContentHandler.ts" -> "app/utils/logger.ts"
+    "app/features/chat/handlers/fileContentHandler.ts" -> "app/data/repositories/fileRepository.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/handlers" {label="handlers" "app/features/chat/handlers/renameFileHandlerFlat.ts" [label=<renameFileHandlerFlat.ts> tooltip="renameFileHandlerFlat.ts" URL="app/features/chat/handlers/renameFileHandlerFlat.ts" fillcolor="#ddfeff"] } } } }
     "app/features/chat/handlers/renameFileHandlerFlat.ts" -> "app/utils/logger.ts"
     "app/features/chat/handlers/renameFileHandlerFlat.ts" -> "app/features/chat/llmService/types/index.ts"
     "app/features/chat/handlers/renameFileHandlerFlat.ts" -> "app/features/chat/utils/errorHandler.ts"
     "app/features/chat/handlers/renameFileHandlerFlat.ts" -> "app/features/chat/handlers/types.ts"
     "app/features/chat/handlers/renameFileHandlerFlat.ts" -> "app/data/repositories/fileRepository.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/handlers" {label="handlers" "app/features/chat/handlers/searchResultsHandler.ts" [label=<searchResultsHandler.ts> tooltip="searchResultsHandler.ts" URL="app/features/chat/handlers/searchResultsHandler.ts" fillcolor="#ddfeff"] } } } }
+    "app/features/chat/handlers/searchResultsHandler.ts" -> "app/utils/logger.ts"
+    "app/features/chat/handlers/searchResultsHandler.ts" -> "app/features/chat/config/chatConfig.ts"
+    "app/features/chat/handlers/searchResultsHandler.ts" -> "app/data/repositories/fileRepository.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/handlers" {label="handlers" "app/features/chat/handlers/types.ts" [label=<types.ts> tooltip="types.ts" URL="app/features/chat/handlers/types.ts" fillcolor="#ddfeff"] } } } }
     "app/features/chat/handlers/types.ts" -> "app/features/chat/llmService/types/index.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/hooks" {label="hooks" "app/features/chat/hooks/useChat.ts" [label=<useChat.ts> tooltip="useChat.ts" URL="app/features/chat/hooks/useChat.ts" fillcolor="#ddfeff"] } } } }
@@ -258,6 +308,7 @@ strict digraph "dependency-cruiser output"{
     subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/llmService" {label="llmService" "app/features/chat/llmService/index.ts" [label=<index.ts> tooltip="index.ts" URL="app/features/chat/llmService/index.ts" fillcolor="#ddfeff"] } } } }
     "app/features/chat/llmService/index.ts" -> "app/billing/utils/tokenBalance.ts" [style="dashed"]
     "app/features/chat/llmService/index.ts" -> "app/utils/logger.ts"
+    "app/features/chat/llmService/index.ts" -> "app/features/api/index.ts"
     "app/features/chat/llmService/index.ts" -> "app/features/chat/config/chatConfig.ts"
     "app/features/chat/llmService/index.ts" -> "app/features/chat/llmService/cache/providerCache.ts"
     "app/features/chat/llmService/index.ts" -> "app/features/chat/llmService/core/ConversationHistory.ts"
@@ -267,13 +318,17 @@ strict digraph "dependency-cruiser output"{
     "app/features/chat/llmService/index.ts" -> "app/features/chat/llmService/types/index.ts" [arrowhead="onormal" penwidth="1.0"]
     "app/features/chat/llmService/index.ts" -> "app/features/chat/llmService/types/LLMError.ts"
     "app/features/chat/llmService/index.ts" -> "app/features/chat/llmService/utils/ErrorHandler.ts"
-    "app/features/chat/llmService/index.ts" -> "app/features/chat/llmService/utils/HttpClient.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/llmService" {label="llmService" subgraph "cluster_app/features/chat/llmService/services" {label="services" "app/features/chat/llmService/services/SummarizationService.ts" [label=<SummarizationService.ts> tooltip="SummarizationService.ts" URL="app/features/chat/llmService/services/SummarizationService.ts" fillcolor="#ddfeff"] } } } } }
     "app/features/chat/llmService/services/SummarizationService.ts" -> "app/utils/logger.ts"
+    "app/features/chat/llmService/services/SummarizationService.ts" -> "app/features/api/index.ts"
     "app/features/chat/llmService/services/SummarizationService.ts" -> "app/features/chat/llmService/core/ConversationHistory.ts"
     "app/features/chat/llmService/services/SummarizationService.ts" -> "app/features/chat/llmService/types/index.ts" [arrowhead="onormal" penwidth="1.0"]
     "app/features/chat/llmService/services/SummarizationService.ts" -> "app/features/chat/llmService/types/LLMError.ts"
-    "app/features/chat/llmService/services/SummarizationService.ts" -> "app/features/chat/llmService/utils/HttpClient.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/llmService" {label="llmService" subgraph "cluster_app/features/chat/llmService/services" {label="services" "app/features/chat/llmService/services/WebSocketService.ts" [label=<WebSocketService.ts> tooltip="WebSocketService.ts" URL="app/features/chat/llmService/services/WebSocketService.ts" fillcolor="#ddfeff"] } } } } }
+    "app/features/chat/llmService/services/WebSocketService.ts" -> "app/utils/logger.ts"
+    "app/features/chat/llmService/services/WebSocketService.ts" -> "app/features/chat/config/chatConfig.ts"
+    "app/features/chat/llmService/services/WebSocketService.ts" -> "app/features/chat/handlers/fileContentHandler.ts"
+    "app/features/chat/llmService/services/WebSocketService.ts" -> "app/features/chat/handlers/searchResultsHandler.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/llmService" {label="llmService" subgraph "cluster_app/features/chat/llmService/types" {label="types" "app/features/chat/llmService/types/LLMError.ts" [label=<LLMError.ts> tooltip="LLMError.ts" URL="app/features/chat/llmService/types/LLMError.ts" fillcolor="#ddfeff"] } } } } }
     subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/llmService" {label="llmService" subgraph "cluster_app/features/chat/llmService/types" {label="types" "app/features/chat/llmService/types/command.types.ts" [label=<command.types.ts> tooltip="command.types.ts" URL="app/features/chat/llmService/types/command.types.ts" fillcolor="#ddfeff"] } } } } }
     "app/features/chat/llmService/types/command.types.ts" -> "app/features/chat/llmService/types/config.types.ts"
@@ -302,8 +357,11 @@ strict digraph "dependency-cruiser output"{
     subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/llmService" {label="llmService" subgraph "cluster_app/features/chat/llmService/utils" {label="utils" "app/features/chat/llmService/utils/HttpClient.ts" [label=<HttpClient.ts> tooltip="HttpClient.ts" URL="app/features/chat/llmService/utils/HttpClient.ts" fillcolor="#ddfeff"] } } } } }
     "app/features/chat/llmService/utils/HttpClient.ts" -> "app/auth/authApiClient.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/llmService" {label="llmService" subgraph "cluster_app/features/chat/llmService/utils" {label="utils" "app/features/chat/llmService/utils/modelCategoryHelper.ts" [label=<modelCategoryHelper.ts> tooltip="modelCategoryHelper.ts" URL="app/features/chat/llmService/utils/modelCategoryHelper.ts" fillcolor="#ddfeff"] } } } } }
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/llmService" {label="llmService" subgraph "cluster_app/features/chat/llmService/utils" {label="utils" "app/features/chat/llmService/utils/providerHelper.ts" [label=<providerHelper.ts> tooltip="providerHelper.ts" URL="app/features/chat/llmService/utils/providerHelper.ts" fillcolor="#ddfeff"] } } } } }
+    "app/features/chat/llmService/utils/providerHelper.ts" -> "app/features/chat/llmService/types/provider.types.ts" [arrowhead="onormal" penwidth="1.0"]
     subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/services" {label="services" "app/features/chat/services/ToolService.ts" [label=<ToolService.ts> tooltip="ToolService.ts" URL="app/features/chat/services/ToolService.ts" fillcolor="#ddfeff"] } } } }
     "app/features/chat/services/ToolService.ts" -> "app/utils/logger.ts"
+    "app/features/chat/services/ToolService.ts" -> "app/features/api/index.ts"
     "app/features/chat/services/ToolService.ts" -> "app/features/chat/llmService/types/index.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/services" {label="services" "app/features/chat/services/chatAttachmentService.ts" [label=<chatAttachmentService.ts> tooltip="chatAttachmentService.ts" URL="app/features/chat/services/chatAttachmentService.ts" fillcolor="#ddfeff"] } } } }
     "app/features/chat/services/chatAttachmentService.ts" -> "app/utils/logger.ts"
@@ -321,20 +379,11 @@ strict digraph "dependency-cruiser output"{
     "app/features/chat/services/chatTokenService.ts" -> "app/features/chat/llmService/types/index.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/services" {label="services" "app/features/chat/services/chatWebSocketManager.ts" [label=<chatWebSocketManager.ts> tooltip="chatWebSocketManager.ts" URL="app/features/chat/services/chatWebSocketManager.ts" fillcolor="#ddfeff"] } } } }
     "app/features/chat/services/chatWebSocketManager.ts" -> "app/utils/logger.ts"
+    "app/features/chat/services/chatWebSocketManager.ts" -> "app/features/api/index.ts"
+    "app/features/chat/services/chatWebSocketManager.ts" -> "app/features/chat/config/chatConfig.ts"
+    "app/features/chat/services/chatWebSocketManager.ts" -> "app/features/chat/handlers/fileContentHandler.ts"
+    "app/features/chat/services/chatWebSocketManager.ts" -> "app/features/chat/handlers/searchResultsHandler.ts"
     "app/features/chat/services/chatWebSocketManager.ts" -> "app/features/chat/utils/clientId.ts"
-    "app/features/chat/services/chatWebSocketManager.ts" -> "app/features/chat/services/websocketService.ts"
-    subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/services" {label="services" subgraph "cluster_app/features/chat/services/websocket" {label="websocket" subgraph "cluster_app/features/chat/services/websocket/handlers" {label="handlers" "app/features/chat/services/websocket/handlers/fileContentHandler.ts" [label=<fileContentHandler.ts> tooltip="fileContentHandler.ts" URL="app/features/chat/services/websocket/handlers/fileContentHandler.ts" fillcolor="#ddfeff"] } } } } } }
-    "app/features/chat/services/websocket/handlers/fileContentHandler.ts" -> "app/utils/logger.ts"
-    "app/features/chat/services/websocket/handlers/fileContentHandler.ts" -> "app/data/repositories/fileRepository.ts"
-    subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/services" {label="services" subgraph "cluster_app/features/chat/services/websocket" {label="websocket" subgraph "cluster_app/features/chat/services/websocket/handlers" {label="handlers" "app/features/chat/services/websocket/handlers/searchResultsHandler.ts" [label=<searchResultsHandler.ts> tooltip="searchResultsHandler.ts" URL="app/features/chat/services/websocket/handlers/searchResultsHandler.ts" fillcolor="#ddfeff"] } } } } } }
-    "app/features/chat/services/websocket/handlers/searchResultsHandler.ts" -> "app/utils/logger.ts"
-    "app/features/chat/services/websocket/handlers/searchResultsHandler.ts" -> "app/features/chat/config/chatConfig.ts"
-    "app/features/chat/services/websocket/handlers/searchResultsHandler.ts" -> "app/data/repositories/fileRepository.ts"
-    subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/services" {label="services" "app/features/chat/services/websocketService.ts" [label=<websocketService.ts> tooltip="websocketService.ts" URL="app/features/chat/services/websocketService.ts" fillcolor="#ddfeff"] } } } }
-    "app/features/chat/services/websocketService.ts" -> "app/utils/logger.ts"
-    "app/features/chat/services/websocketService.ts" -> "app/features/chat/config/chatConfig.ts"
-    "app/features/chat/services/websocketService.ts" -> "app/features/chat/services/websocket/handlers/fileContentHandler.ts"
-    "app/features/chat/services/websocketService.ts" -> "app/features/chat/services/websocket/handlers/searchResultsHandler.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" subgraph "cluster_app/features/chat/store" {label="store" "app/features/chat/store/chatStore.ts" [label=<chatStore.ts> tooltip="chatStore.ts" URL="app/features/chat/store/chatStore.ts" fillcolor="#ddfeff"] } } } }
     "app/features/chat/store/chatStore.ts" -> "app/features/chat/llmService/types/index.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/features" {label="features" subgraph "cluster_app/features/chat" {label="chat" "app/features/chat/types.ts" [label=<types.ts> tooltip="types.ts" URL="app/features/chat/types.ts" fillcolor="#ddfeff"] } } }
@@ -354,6 +403,8 @@ strict digraph "dependency-cruiser output"{
     "app/features/chat/utils/tokenUsageHelpers.ts" -> "app/features/chat/llmService/types/index.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/hooks" {label="hooks" "app/hooks/useModelSwitch.ts" [label=<useModelSwitch.ts> tooltip="useModelSwitch.ts" URL="app/hooks/useModelSwitch.ts" fillcolor="#ddfeff"] } }
     "app/hooks/useModelSwitch.ts" -> "app/features/chat/llmService/api.ts"
+    "app/hooks/useModelSwitch.ts" -> "app/features/chat/llmService/cache/providerCache.ts"
+    "app/hooks/useModelSwitch.ts" -> "app/features/chat/llmService/utils/providerHelper.ts"
     "app/hooks/useModelSwitch.ts" -> "app/settings/settingsStore.ts"
     subgraph "cluster_app" {label="app" "app/index.ts" [label=<index.ts> tooltip="index.ts" URL="app/index.ts" fillcolor="#ddfeff"] }
     "app/index.ts" -> "app/App.tsx"
@@ -523,11 +574,13 @@ strict digraph "dependency-cruiser output"{
     "app/screen/file-list-flat/FileListScreenFlat.tsx" -> "app/screen/file-list-flat/components/RenameItemModal.tsx"
     "app/screen/file-list-flat/FileListScreenFlat.tsx" -> "app/screen/file-list-flat/components/TagEditModal.tsx"
     "app/screen/file-list-flat/FileListScreenFlat.tsx" -> "app/screen/file-list-flat/config/index.ts"
-    "app/screen/file-list-flat/FileListScreenFlat.tsx" -> "app/screen/file-list-flat/context/index.ts"
     "app/screen/file-list-flat/FileListScreenFlat.tsx" -> "app/screen/file-list-flat/hooks/useCategoryCollapse.ts"
     "app/screen/file-list-flat/FileListScreenFlat.tsx" -> "app/screen/file-list-flat/hooks/useFileListHeader.tsx"
     "app/screen/file-list-flat/FileListScreenFlat.tsx" -> "app/screen/file-list-flat/hooks/useImportExport.tsx"
     "app/screen/file-list-flat/FileListScreenFlat.tsx" -> "app/screen/file-list-flat/hooks/useRAGSync.tsx"
+    "app/screen/file-list-flat/FileListScreenFlat.tsx" -> "app/screen/file-list-flat/stores/useFlatListStore.ts"
+    "app/screen/file-list-flat/FileListScreenFlat.tsx" -> "app/screen/file-list-flat/types/index.ts"
+    "app/screen/file-list-flat/FileListScreenFlat.tsx" -> "app/screen/file-list-flat/utils/index.ts"
     "app/screen/file-list-flat/FileListScreenFlat.tsx" -> "app/data/core/typesFlat.ts"
     "app/screen/file-list-flat/FileListScreenFlat.tsx" -> "app/data/services/categoryGroupingService.ts"
     "app/screen/file-list-flat/FileListScreenFlat.tsx" -> "app/data/services/categoryOperationsService.ts"
@@ -538,14 +591,16 @@ strict digraph "dependency-cruiser output"{
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/file-list-flat" {label="file-list-flat" subgraph "cluster_app/screen/file-list-flat/components" {label="components" "app/screen/file-list-flat/components/CategoryActionsModal.tsx" [label=<CategoryActionsModal.tsx> tooltip="CategoryActionsModal.tsx" URL="app/screen/file-list-flat/components/CategoryActionsModal.tsx" fillcolor="#bbfeff"] } } } }
     "app/screen/file-list-flat/components/CategoryActionsModal.tsx" -> "app/components/ActionsListModal.tsx"
     "app/screen/file-list-flat/components/CategoryActionsModal.tsx" -> "app/screen/file-list-flat/config/index.ts"
+    "app/screen/file-list-flat/components/CategoryActionsModal.tsx" -> "app/screen/file-list-flat/types/index.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/file-list-flat" {label="file-list-flat" subgraph "cluster_app/screen/file-list-flat/components" {label="components" "app/screen/file-list-flat/components/CategoryEditModal.tsx" [label=<CategoryEditModal.tsx> tooltip="CategoryEditModal.tsx" URL="app/screen/file-list-flat/components/CategoryEditModal.tsx" fillcolor="#bbfeff"] } } } }
     "app/screen/file-list-flat/components/CategoryEditModal.tsx" -> "app/components/InputFormModal.tsx"
     "app/screen/file-list-flat/components/CategoryEditModal.tsx" -> "app/design/theme/ThemeContext.tsx"
+    "app/screen/file-list-flat/components/CategoryEditModal.tsx" -> "app/screen/file-list-flat/types/index.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/file-list-flat" {label="file-list-flat" subgraph "cluster_app/screen/file-list-flat/components" {label="components" "app/screen/file-list-flat/components/CategoryRenameModal.tsx" [label=<CategoryRenameModal.tsx> tooltip="CategoryRenameModal.tsx" URL="app/screen/file-list-flat/components/CategoryRenameModal.tsx" fillcolor="#bbfeff"] } } } }
     "app/screen/file-list-flat/components/CategoryRenameModal.tsx" -> "app/components/InputFormModal.tsx"
     "app/screen/file-list-flat/components/CategoryRenameModal.tsx" -> "app/design/theme/ThemeContext.tsx"
     "app/screen/file-list-flat/components/CategoryRenameModal.tsx" -> "app/screen/file-list-flat/config/index.ts"
-    "app/screen/file-list-flat/components/CategoryRenameModal.tsx" -> "app/data/services/categoryOperationsService.ts"
+    "app/screen/file-list-flat/components/CategoryRenameModal.tsx" -> "app/screen/file-list-flat/types/index.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/file-list-flat" {label="file-list-flat" subgraph "cluster_app/screen/file-list-flat/components" {label="components" "app/screen/file-list-flat/components/CategorySectionHeader.tsx" [label=<CategorySectionHeader.tsx> tooltip="CategorySectionHeader.tsx" URL="app/screen/file-list-flat/components/CategorySectionHeader.tsx" fillcolor="#bbfeff"] } } } }
     "app/screen/file-list-flat/components/CategorySectionHeader.tsx" -> "app/design/theme/ThemeContext.tsx"
     "app/screen/file-list-flat/components/CategorySectionHeader.tsx" -> "app/screen/file-list-flat/config/index.ts"
@@ -556,41 +611,24 @@ strict digraph "dependency-cruiser output"{
     "app/screen/file-list-flat/components/CreateFileModal.tsx" -> "app/data/repositories/fileRepository.ts"
     "app/screen/file-list-flat/components/CreateFileModal.tsx" -> "app/design/theme/ThemeContext.tsx"
     "app/screen/file-list-flat/components/CreateFileModal.tsx" -> "app/screen/file-list-flat/config/index.ts"
+    "app/screen/file-list-flat/components/CreateFileModal.tsx" -> "app/screen/file-list-flat/types/index.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/file-list-flat" {label="file-list-flat" subgraph "cluster_app/screen/file-list-flat/components" {label="components" "app/screen/file-list-flat/components/FileActionsModal.tsx" [label=<FileActionsModal.tsx> tooltip="FileActionsModal.tsx" URL="app/screen/file-list-flat/components/FileActionsModal.tsx" fillcolor="#bbfeff"] } } } }
     "app/screen/file-list-flat/components/FileActionsModal.tsx" -> "app/components/ActionsListModal.tsx"
-    "app/screen/file-list-flat/components/FileActionsModal.tsx" -> "app/data/core/typesFlat.ts"
+    "app/screen/file-list-flat/components/FileActionsModal.tsx" -> "app/screen/file-list-flat/types/index.ts"
+    "app/screen/file-list-flat/components/FileActionsModal.tsx" -> "app/screen/file-list-flat/utils/index.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/file-list-flat" {label="file-list-flat" subgraph "cluster_app/screen/file-list-flat/components" {label="components" "app/screen/file-list-flat/components/FlatListItem.tsx" [label=<FlatListItem.tsx> tooltip="FlatListItem.tsx" URL="app/screen/file-list-flat/components/FlatListItem.tsx" fillcolor="#bbfeff"] } } } }
     "app/screen/file-list-flat/components/FlatListItem.tsx" -> "app/components/ListItem.tsx"
     "app/screen/file-list-flat/components/FlatListItem.tsx" -> "app/design/theme/ThemeContext.tsx"
-    "app/screen/file-list-flat/components/FlatListItem.tsx" -> "app/settings/settingsStore.ts"
     "app/screen/file-list-flat/components/FlatListItem.tsx" -> "app/screen/file-list-flat/config/index.ts"
     "app/screen/file-list-flat/components/FlatListItem.tsx" -> "app/data/core/typesFlat.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/file-list-flat" {label="file-list-flat" subgraph "cluster_app/screen/file-list-flat/components" {label="components" "app/screen/file-list-flat/components/RenameItemModal.tsx" [label=<RenameItemModal.tsx> tooltip="RenameItemModal.tsx" URL="app/screen/file-list-flat/components/RenameItemModal.tsx" fillcolor="#bbfeff"] } } } }
     "app/screen/file-list-flat/components/RenameItemModal.tsx" -> "app/components/InputFormModal.tsx"
+    "app/screen/file-list-flat/components/RenameItemModal.tsx" -> "app/screen/file-list-flat/types/index.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/file-list-flat" {label="file-list-flat" subgraph "cluster_app/screen/file-list-flat/components" {label="components" "app/screen/file-list-flat/components/TagEditModal.tsx" [label=<TagEditModal.tsx> tooltip="TagEditModal.tsx" URL="app/screen/file-list-flat/components/TagEditModal.tsx" fillcolor="#bbfeff"] } } } }
     "app/screen/file-list-flat/components/TagEditModal.tsx" -> "app/components/InputFormModal.tsx"
     "app/screen/file-list-flat/components/TagEditModal.tsx" -> "app/design/theme/ThemeContext.tsx"
+    "app/screen/file-list-flat/components/TagEditModal.tsx" -> "app/screen/file-list-flat/types/index.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/file-list-flat" {label="file-list-flat" subgraph "cluster_app/screen/file-list-flat/config" {label="config" "app/screen/file-list-flat/config/index.ts" [label=<index.ts> tooltip="index.ts" URL="app/screen/file-list-flat/config/index.ts" fillcolor="#ddfeff"] } } } }
-    subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/file-list-flat" {label="file-list-flat" subgraph "cluster_app/screen/file-list-flat/context" {label="context" "app/screen/file-list-flat/context/FlatListContext.tsx" [label=<FlatListContext.tsx> tooltip="FlatListContext.tsx" URL="app/screen/file-list-flat/context/FlatListContext.tsx" fillcolor="#bbfeff"] } } } }
-    "app/screen/file-list-flat/context/FlatListContext.tsx" -> "app/screen/file-list-flat/context/types.ts"
-    subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/file-list-flat" {label="file-list-flat" subgraph "cluster_app/screen/file-list-flat/context" {label="context" "app/screen/file-list-flat/context/FlatListProvider.tsx" [label=<FlatListProvider.tsx> tooltip="FlatListProvider.tsx" URL="app/screen/file-list-flat/context/FlatListProvider.tsx" fillcolor="#bbfeff"] } } } }
-    "app/screen/file-list-flat/context/FlatListProvider.tsx" -> "app/utils/logger.ts"
-    "app/screen/file-list-flat/context/FlatListProvider.tsx" -> "app/screen/file-list-flat/application/FileListUseCasesFlat.ts"
-    "app/screen/file-list-flat/context/FlatListProvider.tsx" -> "app/screen/file-list-flat/context/FlatListContext.tsx"
-    "app/screen/file-list-flat/context/FlatListProvider.tsx" -> "app/screen/file-list-flat/context/flatListReducer.ts"
-    "app/screen/file-list-flat/context/FlatListProvider.tsx" -> "app/screen/file-list-flat/context/types.ts"
-    "app/screen/file-list-flat/context/FlatListProvider.tsx" -> "app/data/core/typesFlat.ts"
-    subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/file-list-flat" {label="file-list-flat" subgraph "cluster_app/screen/file-list-flat/context" {label="context" "app/screen/file-list-flat/context/flatListReducer.ts" [label=<flatListReducer.ts> tooltip="flatListReducer.ts" URL="app/screen/file-list-flat/context/flatListReducer.ts" fillcolor="#ddfeff"] } } } }
-    "app/screen/file-list-flat/context/flatListReducer.ts" -> "app/screen/file-list-flat/context/types.ts"
-    subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/file-list-flat" {label="file-list-flat" subgraph "cluster_app/screen/file-list-flat/context" {label="context" "app/screen/file-list-flat/context/index.ts" [label=<index.ts> tooltip="index.ts" URL="app/screen/file-list-flat/context/index.ts" fillcolor="#ddfeff"] } } } }
-    "app/screen/file-list-flat/context/index.ts" -> "app/screen/file-list-flat/context/FlatListContext.tsx" [arrowhead="inv"]
-    "app/screen/file-list-flat/context/index.ts" -> "app/screen/file-list-flat/context/FlatListProvider.tsx" [arrowhead="inv"]
-    "app/screen/file-list-flat/context/index.ts" -> "app/screen/file-list-flat/context/types.ts" [arrowhead="inv"]
-    "app/screen/file-list-flat/context/index.ts" -> "app/screen/file-list-flat/context/useFlatListContext.ts" [arrowhead="inv"]
-    subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/file-list-flat" {label="file-list-flat" subgraph "cluster_app/screen/file-list-flat/context" {label="context" "app/screen/file-list-flat/context/types.ts" [label=<types.ts> tooltip="types.ts" URL="app/screen/file-list-flat/context/types.ts" fillcolor="#ddfeff"] } } } }
-    "app/screen/file-list-flat/context/types.ts" -> "app/data/core/typesFlat.ts"
-    subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/file-list-flat" {label="file-list-flat" subgraph "cluster_app/screen/file-list-flat/context" {label="context" "app/screen/file-list-flat/context/useFlatListContext.ts" [label=<useFlatListContext.ts> tooltip="useFlatListContext.ts" URL="app/screen/file-list-flat/context/useFlatListContext.ts" fillcolor="#ddfeff"] } } } }
-    "app/screen/file-list-flat/context/useFlatListContext.ts" -> "app/screen/file-list-flat/context/FlatListContext.tsx"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/file-list-flat" {label="file-list-flat" subgraph "cluster_app/screen/file-list-flat/hooks" {label="hooks" "app/screen/file-list-flat/hooks/useCategoryCollapse.ts" [label=<useCategoryCollapse.ts> tooltip="useCategoryCollapse.ts" URL="app/screen/file-list-flat/hooks/useCategoryCollapse.ts" fillcolor="#ddfeff"] } } } }
     "app/screen/file-list-flat/hooks/useCategoryCollapse.ts" -> "app/utils/logger.ts"
     "app/screen/file-list-flat/hooks/useCategoryCollapse.ts" -> "app/data/core/typesFlat.ts"
@@ -600,12 +638,32 @@ strict digraph "dependency-cruiser output"{
     "app/screen/file-list-flat/hooks/useFileListHeader.tsx" -> "app/navigation/types.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/file-list-flat" {label="file-list-flat" subgraph "cluster_app/screen/file-list-flat/hooks" {label="hooks" "app/screen/file-list-flat/hooks/useImportExport.tsx" [label=<useImportExport.tsx> tooltip="useImportExport.tsx" URL="app/screen/file-list-flat/hooks/useImportExport.tsx" fillcolor="#bbfeff"] } } } }
     "app/screen/file-list-flat/hooks/useImportExport.tsx" -> "app/utils/logger.ts"
+    "app/screen/file-list-flat/hooks/useImportExport.tsx" -> "app/screen/file-list-flat/types/index.ts"
+    "app/screen/file-list-flat/hooks/useImportExport.tsx" -> "app/screen/file-list-flat/utils/index.ts"
     "app/screen/file-list-flat/hooks/useImportExport.tsx" -> "app/data/core/typesFlat.ts"
     "app/screen/file-list-flat/hooks/useImportExport.tsx" -> "app/data/repositories/fileRepository.ts"
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/file-list-flat" {label="file-list-flat" subgraph "cluster_app/screen/file-list-flat/hooks" {label="hooks" "app/screen/file-list-flat/hooks/useRAGSync.tsx" [label=<useRAGSync.tsx> tooltip="useRAGSync.tsx" URL="app/screen/file-list-flat/hooks/useRAGSync.tsx" fillcolor="#bbfeff"] } } } }
     "app/screen/file-list-flat/hooks/useRAGSync.tsx" -> "app/features/chat/llmService/api.ts"
     "app/screen/file-list-flat/hooks/useRAGSync.tsx" -> "app/utils/logger.ts"
+    "app/screen/file-list-flat/hooks/useRAGSync.tsx" -> "app/screen/file-list-flat/types/index.ts"
+    "app/screen/file-list-flat/hooks/useRAGSync.tsx" -> "app/screen/file-list-flat/utils/index.ts"
     "app/screen/file-list-flat/hooks/useRAGSync.tsx" -> "app/data/repositories/fileRepository.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/file-list-flat" {label="file-list-flat" subgraph "cluster_app/screen/file-list-flat/stores" {label="stores" "app/screen/file-list-flat/stores/useFlatListStore.ts" [label=<useFlatListStore.ts> tooltip="useFlatListStore.ts" URL="app/screen/file-list-flat/stores/useFlatListStore.ts" fillcolor="#ddfeff"] } } } }
+    "app/screen/file-list-flat/stores/useFlatListStore.ts" -> "app/utils/logger.ts"
+    "app/screen/file-list-flat/stores/useFlatListStore.ts" -> "app/screen/file-list-flat/application/FileListUseCasesFlat.ts"
+    "app/screen/file-list-flat/stores/useFlatListStore.ts" -> "app/data/core/typesFlat.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/file-list-flat" {label="file-list-flat" subgraph "cluster_app/screen/file-list-flat/types" {label="types" "app/screen/file-list-flat/types/index.ts" [label=<index.ts> tooltip="index.ts" URL="app/screen/file-list-flat/types/index.ts" fillcolor="#ddfeff"] } } } }
+    "app/screen/file-list-flat/types/index.ts" -> "app/data/core/typesFlat.ts"
+    "app/screen/file-list-flat/types/index.ts" -> "app/data/services/categoryOperationsService.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/file-list-flat" {label="file-list-flat" subgraph "cluster_app/screen/file-list-flat/utils" {label="utils" "app/screen/file-list-flat/utils/categoryPath.ts" [label=<categoryPath.ts> tooltip="categoryPath.ts" URL="app/screen/file-list-flat/utils/categoryPath.ts" fillcolor="#ddfeff"] } } } }
+    "app/screen/file-list-flat/utils/categoryPath.ts" -> "app/data/core/typesFlat.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/file-list-flat" {label="file-list-flat" subgraph "cluster_app/screen/file-list-flat/utils" {label="utils" "app/screen/file-list-flat/utils/fileUtils.ts" [label=<fileUtils.ts> tooltip="fileUtils.ts" URL="app/screen/file-list-flat/utils/fileUtils.ts" fillcolor="#ddfeff"] } } } }
+    "app/screen/file-list-flat/utils/fileUtils.ts" -> "app/data/core/typesFlat.ts"
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/file-list-flat" {label="file-list-flat" subgraph "cluster_app/screen/file-list-flat/utils" {label="utils" "app/screen/file-list-flat/utils/index.ts" [label=<index.ts> tooltip="index.ts" URL="app/screen/file-list-flat/utils/index.ts" fillcolor="#ddfeff"] } } } }
+    "app/screen/file-list-flat/utils/index.ts" -> "app/screen/file-list-flat/utils/categoryPath.ts" [arrowhead="inv"]
+    "app/screen/file-list-flat/utils/index.ts" -> "app/screen/file-list-flat/utils/fileUtils.ts" [arrowhead="inv"]
+    "app/screen/file-list-flat/utils/index.ts" -> "app/screen/file-list-flat/utils/sanitization.ts" [arrowhead="inv"]
+    subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/file-list-flat" {label="file-list-flat" subgraph "cluster_app/screen/file-list-flat/utils" {label="utils" "app/screen/file-list-flat/utils/sanitization.ts" [label=<sanitization.ts> tooltip="sanitization.ts" URL="app/screen/file-list-flat/utils/sanitization.ts" fillcolor="#ddfeff"] } } } }
     subgraph "cluster_app" {label="app" subgraph "cluster_app/screen" {label="screen" subgraph "cluster_app/screen/model-selection" {label="model-selection" "app/screen/model-selection/ModelSelectionScreen.tsx" [label=<ModelSelectionScreen.tsx> tooltip="ModelSelectionScreen.tsx" URL="app/screen/model-selection/ModelSelectionScreen.tsx" fillcolor="#bbfeff"] } } }
     "app/screen/model-selection/ModelSelectionScreen.tsx" -> "app/components/CustomHeader.tsx"
     "app/screen/model-selection/ModelSelectionScreen.tsx" -> "app/components/MainContainer.tsx"

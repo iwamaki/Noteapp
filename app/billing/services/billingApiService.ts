@@ -6,9 +6,8 @@
  * Replaces local AsyncStorage-based token management with server-side validation.
  */
 
-import axios, { AxiosInstance, AxiosError } from 'axios';
+import { createHttpClient, HttpClient, ApiError } from '../../features/api';
 import { logger } from '../../utils/logger';
-import { getAuthHeaders } from '../../auth/authApiClient';
 
 // ======================
 // Type Definitions
@@ -65,40 +64,19 @@ export interface CategoryBalanceResponse {
 // ======================
 
 export class BillingApiService {
-  private client: AxiosInstance;
+  private client: HttpClient;
   private baseUrl: string;
 
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
-    this.client = axios.create({
-      baseURL: `${baseUrl}/api/billing`,
+
+    // 共通HttpClientを使用（認証ヘッダー自動追加、ログ記録、リトライ機能付き）
+    this.client = createHttpClient({
+      baseUrl: `${baseUrl}/api/billing`,
       timeout: 10000,
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      includeAuth: true,
+      logContext: 'billingApi',
     });
-
-    // リクエスト/レスポンスインターセプターでログ出力と認証ヘッダー追加
-    this.client.interceptors.request.use(async (config) => {
-      logger.debug('billingApi', `Request: ${config.method?.toUpperCase()} ${config.url}`);
-
-      // 認証ヘッダーを追加
-      const authHeaders = await getAuthHeaders();
-      Object.assign(config.headers, authHeaders);
-
-      return config;
-    });
-
-    this.client.interceptors.response.use(
-      (response) => {
-        logger.debug('billingApi', `Response: ${response.status} ${response.config.url}`);
-        return response;
-      },
-      (error: AxiosError) => {
-        logger.error('billingApi', `Error: ${error.message}`, error.response?.data);
-        return Promise.reject(error);
-      }
-    );
   }
 
   /**
@@ -251,16 +229,17 @@ export class BillingApiService {
   }
 
   /**
-   * エラーハンドリング
+   * エラーハンドリング（共通ApiErrorを使用）
    */
   private handleError(error: unknown, defaultMessage: string): Error {
-    if (axios.isAxiosError(error)) {
-      const axiosError = error as AxiosError<{ detail?: string }>;
-      const detail = axiosError.response?.data?.detail;
-      const message = detail || axiosError.message || defaultMessage;
-      return new Error(message);
-    }
-    return new Error(defaultMessage);
+    // 共通APIエラーとして処理
+    const apiError = error as ApiError;
+
+    // バックエンドのdetailメッセージを優先
+    const detail = apiError.response?.data?.detail;
+    const message = detail || apiError.message || defaultMessage;
+
+    return new Error(message);
   }
 }
 

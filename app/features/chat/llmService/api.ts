@@ -139,8 +139,8 @@ export class APIService {
       collection_name: string;
     };
   }> {
-    const baseUrl = this.llmServiceInstance['config'].baseUrl;
-    const url = `${baseUrl}/api/knowledge-base/documents/upload-text`;
+    // 共通HttpClientを使用（llmServiceInstanceから取得）
+    const httpClient = this.llmServiceInstance['httpClient'];
 
     const params: Record<string, string> = {
       collection_name: collectionName,
@@ -148,22 +148,12 @@ export class APIService {
     if (metadataTitle) params.metadata_title = metadataTitle;
     if (metadataDescription) params.metadata_description = metadataDescription;
 
-    const queryString = new URLSearchParams(params).toString();
-    const fullUrl = `${url}?${queryString}`;
+    const response = await httpClient.post('/api/knowledge-base/documents/upload-text',
+      { text },
+      { params }
+    );
 
-    const response = await fetch(fullUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ text }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`RAG upload failed: ${response.status} ${response.statusText}`);
-    }
-
-    return response.json();
+    return response.data;
   }
 
 }
