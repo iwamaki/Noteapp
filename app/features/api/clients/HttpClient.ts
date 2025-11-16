@@ -54,6 +54,8 @@ export class HttpClient {
       timeout: this.timeout,
       headers: {
         'Content-Type': 'application/json',
+        // ngrokの警告画面をスキップ（開発環境用）
+        'ngrok-skip-browser-warning': 'true',
       },
     });
 
