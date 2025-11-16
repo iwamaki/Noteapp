@@ -11,22 +11,10 @@ import { Alert } from 'react-native';
 import { FileRepository } from '@data/repositories/fileRepository';
 import { logger } from '../../../utils/logger';
 import APIService from '../../../features/chat/llmService/api';
-
-/**
- * カテゴリーパスをコレクション名にサニタイズ
- * @param categoryPath カテゴリーのパス（例: "01_調べ物/技術"）
- * @returns サニタイズされたコレクション名（例: "category_01_調べ物_技術"）
- */
-function sanitizeCategoryPath(categoryPath: string): string {
-  // スラッシュをアンダースコアに置換
-  let sanitized = categoryPath.replace(/\//g, '_');
-  // 連続するアンダースコアを1つに
-  sanitized = sanitized.replace(/_+/g, '_');
-  // 前後のアンダースコアを削除
-  sanitized = sanitized.replace(/^_|_$/g, '');
-  // プレフィックスを追加
-  return `category_${sanitized}`;
-}
+import {
+  sanitizeCategoryPathForCollection,
+  filterFilesByCategory,
+} from '../utils';
 
 /**
  * RAG同期機能を提供するフック
@@ -48,10 +36,7 @@ export const useRAGSync = () => {
       const allFiles = await FileRepository.getAll();
 
       // 指定されたカテゴリーとそのサブカテゴリーに属するファイルをフィルタリング
-      const categoryFiles = allFiles.filter(file => {
-        // カテゴリーが完全一致、または指定されたカテゴリーで始まる（サブカテゴリーを含む）
-        return file.category === categoryPath || file.category.startsWith(categoryPath + '/');
-      });
+      const categoryFiles = filterFilesByCategory(allFiles, categoryPath);
 
       if (categoryFiles.length === 0) {
         Alert.alert('Q&A作成', 'このカテゴリーにファイルがありません');
@@ -74,7 +59,7 @@ export const useRAGSync = () => {
       logger.debug('rag', `Combined text length: ${combinedText.length} characters`);
 
       // カテゴリーパスからコレクション名を生成
-      const collectionName = sanitizeCategoryPath(categoryPath);
+      const collectionName = sanitizeCategoryPathForCollection(categoryPath);
       logger.info('rag', `Using collection name: ${collectionName} for category: ${categoryPath}`);
 
       // バックエンドのRAGにアップロード（カテゴリー専用の永久コレクション）

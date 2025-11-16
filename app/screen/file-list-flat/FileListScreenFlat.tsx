@@ -47,6 +47,7 @@ import { groupFilesByCategoryHierarchical } from '@data/services/categoryGroupin
 import { CategoryOperationsService, CategoryImpact } from '@data/services/categoryOperationsService';
 import ChatService from '../../features/chat';
 import { FILE_LIST_FLAT_CONFIG } from './config';
+import { getCategoryNameFromPath } from './utils';
 
 function FileListScreenFlat() {
   const { colors, spacing } = useTheme();
@@ -316,8 +317,7 @@ function FileListScreenFlat() {
       try {
         // 影響範囲を取得
         const impact = await CategoryOperationsService.getCategoryImpact(categoryPath);
-        const parts = categoryPath.split('/');
-        const categoryName = parts[parts.length - 1];
+        const categoryName = getCategoryNameFromPath(categoryPath);
 
         setCategoryToDelete({ path: categoryPath, name: categoryName, impact });
         setShowCategoryDeleteConfirmModal(true);
@@ -359,8 +359,7 @@ function FileListScreenFlat() {
 
       try {
         const impact = await CategoryOperationsService.getCategoryImpact(categoryPath);
-        const parts = categoryPath.split('/');
-        const categoryName = parts[parts.length - 1];
+        const categoryName = getCategoryNameFromPath(categoryPath);
 
         setCategoryForRename({ path: categoryPath, name: categoryName });
         setCategoryRenameImpact(impact);

@@ -10,6 +10,7 @@
 import React from 'react';
 import { ActionsListModal, ActionItem } from '../../../components/ActionsListModal';
 import { FileFlat } from '@data/core/typesFlat';
+import { getMetadataText } from '../utils';
 
 interface FileActionsModalProps {
   visible: boolean;
@@ -39,18 +40,6 @@ export const FileActionsModal: React.FC<FileActionsModalProps> = ({
   onExport,
 }) => {
   if (!file) return null;
-
-  // メタデータ表示用のテキスト
-  const getMetadataText = () => {
-    const parts = [];
-    if (file.category) {
-      parts.push(file.category);
-    }
-    if (file.tags.length > 0) {
-      parts.push(file.tags.map(tag => `#${tag}`).join(' '));
-    }
-    return parts.length > 0 ? parts.join(' • ') : 'メタデータなし';
-  };
 
   const actions: ActionItem[] = [
     {
@@ -127,7 +116,7 @@ export const FileActionsModal: React.FC<FileActionsModalProps> = ({
       itemInfo={{
         icon: 'document-text',
         name: file.title,
-        metadata: getMetadataText(),
+        metadata: getMetadataText(file),
       }}
       actions={actions}
       onClose={onClose}

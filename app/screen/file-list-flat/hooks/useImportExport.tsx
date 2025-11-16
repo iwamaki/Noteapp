@@ -13,8 +13,18 @@ import { Paths, Directory, File as FSFile } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import JSZip from 'jszip';
 import { FileRepository } from '@data/repositories/fileRepository';
-import { CreateFileDataFlat } from '@data/core/typesFlat';
+import { CreateFileDataFlat, FileFlat } from '@data/core/typesFlat';
 import { logger } from '../../../utils/logger';
+import {
+  sanitizeFilename,
+  sanitizeCategoryPathForFileSystem,
+  sanitizeDateForFilename,
+  filterFilesByCategory,
+  getCategoryNameFromPath,
+  generateUniqueKey,
+  resolveDuplicateTitle,
+  getExistingTitlesSet,
+} from '../utils';
 
 /**
  * インポート用のJSONデータ構造
@@ -33,17 +43,9 @@ export const useImportExport = () => {
   const [isProcessing, setIsProcessing] = useState(false);
 
   /**
-   * ファイル名をサニタイズ（不正な文字を除去）
-   */
-  const sanitizeFilename = (filename: string): string => {
-    // ファイルシステムで使用できない文字を置換
-    return filename.replace(/[<>:"/\\|?*]/g, '_').trim();
-  };
-
-  /**
    * ファイルをZIPにまとめてエクスポートする共通処理
    */
-  const exportFilesToZip = async (files: any[], zipFileName: string) => {
+  const exportFilesToZip = async (files: FileFlat[], zipFileName: string) => {
     if (files.length === 0) {
       Alert.alert('エクスポート', 'エクスポートするファイルがありません');
       return;
@@ -63,8 +65,8 @@ export const useImportExport = () => {
       let categoryPath = '';
       if (file.category && file.category.trim() !== '') {
         // カテゴリの各階層をサニタイズ
-        const categoryParts = file.category.split('/').map((part: string) => sanitizeFilename(part.trim()));
-        categoryPath = categoryParts.join('/') + '/';
+        const sanitizedCategory = sanitizeCategoryPathForFileSystem(file.category);
+        categoryPath = sanitizedCategory ? sanitizedCategory + '/' : '';
       }
 
       // フルパス（カテゴリ + ファイル名）を作成
@@ -92,7 +94,7 @@ export const useImportExport = () => {
 
     // キャッシュディレクトリに保存
     const cacheDir = new Directory(Paths.cache);
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('T')[0];
+    const timestamp = sanitizeDateForFilename(new Date().toISOString()).split('T')[0];
     const fullZipFileName = zipFileName || `noteapp-export-${timestamp}.zip`;
     const zipFile = new FSFile(cacheDir, fullZipFileName);
 
@@ -128,7 +130,7 @@ export const useImportExport = () => {
       const files = await FileRepository.getAll();
 
       // 共通処理を使用してエクスポート
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('T')[0];
+      const timestamp = sanitizeDateForFilename(new Date().toISOString()).split('T')[0];
       await exportFilesToZip(files, `noteapp-export-${timestamp}.zip`);
     } catch (error: any) {
       logger.error('file', `Export failed: ${error.message}`, error);
@@ -137,19 +139,6 @@ export const useImportExport = () => {
       setIsProcessing(false);
     }
   }, []);
-
-  /**
-   * 重複タイトルの解決
-   */
-  const resolveDuplicateTitle = (title: string, existingTitles: Set<string>): string => {
-    let finalTitle = title;
-    let copyCounter = 1;
-    while (existingTitles.has(finalTitle)) {
-      finalTitle = `${title} (コピー${copyCounter > 1 ? copyCounter : ''})`;
-      copyCounter++;
-    }
-    return finalTitle;
-  };
 
   /**
    * ZIPファイルからインポート
@@ -184,7 +173,7 @@ export const useImportExport = () => {
         }
 
         // タイトルの重複チェック（カテゴリを考慮したユニークキーで管理）
-        const uniqueKey = `${category}/${title}`;
+        const uniqueKey = generateUniqueKey(category, title);
         let finalTitle = title;
         if (existingTitles.has(uniqueKey)) {
           finalTitle = resolveDuplicateTitle(title, existingTitles);
@@ -199,7 +188,7 @@ export const useImportExport = () => {
         };
 
         await FileRepository.create(createData);
-        existingTitles.add(`${category}/${finalTitle}`);
+        existingTitles.add(generateUniqueKey(category, finalTitle));
         successCount++;
         logger.debug('file', `Imported from ZIP: ${category ? category + '/' : ''}${finalTitle}`);
       } catch (error: any) {
@@ -245,7 +234,7 @@ export const useImportExport = () => {
 
         // カテゴリを取得（JSONにカテゴリ情報があれば使用）
         const category = item.category || '';
-        const uniqueKey = `${category}/${item.title}`;
+        const uniqueKey = generateUniqueKey(category, item.title);
 
         let finalTitle = item.title;
         if (existingTitles.has(uniqueKey)) {
@@ -261,7 +250,7 @@ export const useImportExport = () => {
         };
 
         await FileRepository.create(createData);
-        existingTitles.add(`${category}/${finalTitle}`);
+        existingTitles.add(generateUniqueKey(category, finalTitle));
         successCount++;
         logger.debug('file', `Imported from JSON: ${category ? category + '/' : ''}${finalTitle}`);
       } catch (error: any) {
@@ -282,7 +271,7 @@ export const useImportExport = () => {
 
     // 未分類カテゴリとして扱う
     const category = '';
-    const uniqueKey = `${category}/${filename}`;
+    const uniqueKey = generateUniqueKey(category, filename);
 
     let finalTitle = filename;
     if (existingTitles.has(uniqueKey)) {
@@ -298,7 +287,7 @@ export const useImportExport = () => {
     };
 
     await FileRepository.create(createData);
-    existingTitles.add(`${category}/${finalTitle}`);
+    existingTitles.add(generateUniqueKey(category, finalTitle));
     logger.debug('file', `Imported text file: ${finalTitle}`);
 
     return { successCount: 1, errorCount: 0 };
@@ -330,7 +319,7 @@ export const useImportExport = () => {
       // 既存のファイル名を取得（重複チェック用）
       // カテゴリとタイトルの組み合わせをユニークキーとして管理
       const existingFiles = await FileRepository.getAll();
-      const existingTitles = new Set(existingFiles.map(f => `${f.category || ''}/${f.title}`));
+      const existingTitles = getExistingTitlesSet(existingFiles);
 
       let result_stats: { successCount: number; errorCount: number };
 
@@ -385,7 +374,7 @@ export const useImportExport = () => {
 
       // ファイル名をサニタイズしてZIPファイル名を作成
       const safeFileName = sanitizeFilename(file.title);
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('T')[0];
+      const timestamp = sanitizeDateForFilename(new Date().toISOString()).split('T')[0];
       const zipFileName = `${safeFileName}-${timestamp}.zip`;
 
       // 共通処理を使用してエクスポート
@@ -411,10 +400,7 @@ export const useImportExport = () => {
       const allFiles = await FileRepository.getAll();
 
       // 指定されたカテゴリーとそのサブカテゴリーに属するファイルをフィルタリング
-      const categoryFiles = allFiles.filter(file => {
-        // カテゴリーが完全一致、または指定されたカテゴリーで始まる（サブカテゴリーを含む）
-        return file.category === categoryPath || file.category.startsWith(categoryPath + '/');
-      });
+      const categoryFiles = filterFilesByCategory(allFiles, categoryPath);
 
       if (categoryFiles.length === 0) {
         Alert.alert('エクスポート', 'このカテゴリーにファイルがありません');
@@ -422,10 +408,9 @@ export const useImportExport = () => {
       }
 
       // カテゴリー名をサニタイズしてZIPファイル名を作成
-      const categoryParts = categoryPath.split('/');
-      const categoryName = categoryParts[categoryParts.length - 1];
+      const categoryName = getCategoryNameFromPath(categoryPath);
       const safeCategoryName = sanitizeFilename(categoryName);
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('T')[0];
+      const timestamp = sanitizeDateForFilename(new Date().toISOString()).split('T')[0];
       const zipFileName = `${safeCategoryName}-${timestamp}.zip`;
 
       // 共通処理を使用してエクスポート
