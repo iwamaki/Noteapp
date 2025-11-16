@@ -12,7 +12,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { FileFlat } from '@data/core/typesFlat';
 import { ListItem } from '../../../components/ListItem';
-import { useSettingsStore } from '../../../settings/settingsStore';
 import { FILE_LIST_FLAT_CONFIG } from '../config';
 
 interface FlatListItemProps {
@@ -22,6 +21,7 @@ interface FlatListItemProps {
   isSelectionMode: boolean;
   onPress: () => void;
   onLongPress: () => void;
+  showSummary?: boolean;  // 要約表示フラグを外部から受け取る
 }
 
 /**
@@ -39,9 +39,9 @@ const FlatListItemComponent: React.FC<FlatListItemProps> = ({
   isSelectionMode,
   onPress,
   onLongPress,
+  showSummary,
 }) => {
   const { colors, spacing, iconSizes, typography } = useTheme();
-  const { settings } = useSettingsStore();
 
   // 階層インデント計算（親カテゴリーの子要素として、同じ階層の子カテゴリーと同じ位置）
   const itemPaddingLeft = (level + 1) * FILE_LIST_FLAT_CONFIG.spacing.indentPerLevel;
@@ -81,7 +81,7 @@ const FlatListItemComponent: React.FC<FlatListItemProps> = ({
       <ListItem.Title>{file.title}</ListItem.Title>
 
       {/* 要約コンテナ */}
-      {settings.showSummary && file.summary && (
+      {showSummary && file.summary && (
         <View style={summaryContainerStyle}>
           <Text style={summaryTextStyle}>
             <Text style={styles.label}>要約：</Text>

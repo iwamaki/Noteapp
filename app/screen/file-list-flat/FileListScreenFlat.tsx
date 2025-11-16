@@ -634,12 +634,31 @@ function FileListScreenFlat() {
   );
 
   /**
+   * ファイルアイテムのプレスハンドラー（メモ化用）
+   */
+  const handleFilePress = useCallback(
+    (file: FileFlat, index: number, categoryPath: string) => {
+      if (isMoveMode) {
+        handleMoveTap(file, index, categoryPath);
+      } else {
+        handleSelectFile(file);
+      }
+    },
+    [isMoveMode, handleMoveTap, handleSelectFile]
+  );
+
+  /**
    * ファイルアイテムのレンダリング
+   * パフォーマンス最適化: インライン関数を避け、メモ化を有効にする
    */
   const renderFileItem = useCallback(
     ({ item: file, index, section }: { item: FileFlat; index: number; section: { level: number; fullPath: string } }) => {
       // 移動モード時の処理
       const isMoveSource = moveSourceFileId === file.id;
+
+      // インライン関数を避けるため、一時変数として定義
+      const handlePress = () => handleFilePress(file, index, section.fullPath);
+      const handleLongPress = () => handleLongPressFile(file);
 
       return (
         <FlatListItem
@@ -647,18 +666,13 @@ function FileListScreenFlat() {
           level={section.level}
           isSelected={isMoveSource}
           isSelectionMode={isMoveMode}
-          onPress={() => {
-            if (isMoveMode) {
-              handleMoveTap(file, index, section.fullPath);
-            } else {
-              handleSelectFile(file);
-            }
-          }}
-          onLongPress={() => handleLongPressFile(file)}
+          onPress={handlePress}
+          onLongPress={handleLongPress}
+          showSummary={settings.showSummary}
         />
       );
     },
-    [isMoveMode, moveSourceFileId, handleSelectFile, handleLongPressFile, handleMoveTap]
+    [isMoveMode, moveSourceFileId, handleFilePress, handleLongPressFile, settings.showSummary]
   );
 
   // レンダリング時のデバッグログ

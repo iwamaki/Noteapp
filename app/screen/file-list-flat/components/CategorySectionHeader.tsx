@@ -42,7 +42,7 @@ interface CategorySectionHeaderProps {
  *   onToggle={handleToggleCategory}
  * />
  */
-export const CategorySectionHeader: React.FC<CategorySectionHeaderProps> = ({
+const CategorySectionHeaderComponent: React.FC<CategorySectionHeaderProps> = ({
   section,
   isExpanded,
   hasChildren,
@@ -157,6 +157,14 @@ export const CategorySectionHeader: React.FC<CategorySectionHeaderProps> = ({
     </TouchableOpacity>
   );
 };
+
+CategorySectionHeaderComponent.displayName = 'CategorySectionHeader';
+
+/**
+ * メモ化されたカテゴリーセクションヘッダー
+ * Props変更時のみ再レンダリングされ、パフォーマンスを向上
+ */
+export const CategorySectionHeader = React.memo(CategorySectionHeaderComponent);
 
 const styles = StyleSheet.create({
   sectionHeaderWrapper: {
