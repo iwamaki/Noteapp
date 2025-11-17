@@ -120,6 +120,34 @@ async def root():
         }
     }
 
+# Android App Links verification endpoint
+@app.get("/.well-known/assetlinks.json")
+async def assetlinks():
+    """
+    Android App Links検証用エンドポイント
+
+    Androidがアプリとドメインの関連付けを検証するために使用します。
+    開発環境でもこのエンドポイントが必要です（検証なしでもダイアログ経由で動作）。
+
+    Returns:
+        JSONレスポンス: Digital Asset Linksフォーマットのアプリ認証情報
+    """
+    package_name = os.getenv("ANDROID_PACKAGE_NAME", "com.iwash.NoteApp")
+
+    return JSONResponse(
+        content=[{
+            "relation": ["delegate_permission/common.handle_all_urls"],
+            "target": {
+                "namespace": "android_app",
+                "package_name": package_name,
+                "sha256_cert_fingerprints": [
+                    "C9:EF:19:28:73:42:6E:06:FB:55:E4:8D:13:6F:B6:F7:CA:8A:C6:77:24:81:E2:EF:FA:36:83:92:67:DD:DF:E3"
+                ]
+            }
+        }],
+        media_type="application/json"
+    )
+
 # WebSocketエンドポイント
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):

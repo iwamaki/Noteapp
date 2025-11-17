@@ -2,6 +2,7 @@
 # @summary 認証APIエンドポイント
 # @responsibility デバイスID認証のHTTPエンドポイント
 
+import os
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -594,93 +595,26 @@ async def google_callback(
                 "profile_picture_url": profile_picture_url or "",
             })
 
-            # Deep Link for app callback
-            deep_link = f"noteapp://auth?{params}"
+            # App Links URL (HTTPS) for app callback
+            # Backend URL from environment variable
+            backend_url = os.getenv("BACKEND_URL", "http://localhost:8000")
+            # Use HTTPS version of ngrok URL for App Links
+            if "ngrok" in backend_url or "localhost" in backend_url:
+                # Get ngrok URL from OAuth redirect URI (which is already HTTPS)
+                oauth_redirect_uri = os.getenv("GOOGLE_OAUTH_REDIRECT_URI", "")
+                if oauth_redirect_uri:
+                    # Extract base URL (e.g., https://99f150da2530.ngrok-free.app)
+                    from urllib.parse import urlparse
+                    parsed = urlparse(oauth_redirect_uri)
+                    backend_url = f"{parsed.scheme}://{parsed.netloc}"
 
-            logger.debug(f"Generating callback page with Deep Link: {deep_link[:100]}...")
+            app_link = f"{backend_url}/auth/callback?{params}"
 
-            # Chrome Custom Tabs require user gesture to open custom scheme
-            # Show interstitial page with button for user to click
-            from fastapi.responses import HTMLResponse
-            html_content = f"""
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>認証成功</title>
-                <style>
-                    body {{
-                        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                        display: flex;
-                        justify-content: center;
-                        align-items: center;
-                        height: 100vh;
-                        margin: 0;
-                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    }}
-                    .container {{
-                        text-align: center;
-                        background: white;
-                        padding: 2rem;
-                        border-radius: 1rem;
-                        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-                        max-width: 400px;
-                        margin: 1rem;
-                    }}
-                    h1 {{
-                        color: #333;
-                        margin-bottom: 1rem;
-                    }}
-                    p {{
-                        color: #666;
-                        margin-bottom: 2rem;
-                    }}
-                    .btn {{
-                        display: inline-block;
-                        background: #667eea;
-                        color: white;
-                        padding: 1rem 2rem;
-                        border-radius: 0.5rem;
-                        text-decoration: none;
-                        font-weight: bold;
-                        font-size: 1.1rem;
-                        transition: background 0.3s;
-                    }}
-                    .btn:hover {{
-                        background: #5568d3;
-                    }}
-                    .checkmark {{
-                        font-size: 3rem;
-                        color: #4CAF50;
-                        margin-bottom: 1rem;
-                    }}
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="checkmark">✓</div>
-                    <h1>認証成功！</h1>
-                    <p>ログインに成功しました。<br>アプリに戻ってください。</p>
-                    <a href="{deep_link}" class="btn" id="returnBtn">アプリに戻る</a>
-                    <p style="margin-top: 1rem; font-size: 0.9rem; color: #999;">3秒後に自動的に戻ります...</p>
-                </div>
-                <script>
-                    // Auto-redirect after 3 seconds
-                    setTimeout(function() {{
-                        window.location.href = '{deep_link}';
-                    }}, 3000);
+            logger.debug(f"Generating App Links redirect: {app_link[:100]}...")
 
-                    // Manual button click
-                    document.getElementById('returnBtn').addEventListener('click', function(e) {{
-                        e.preventDefault();
-                        window.location.href = '{deep_link}';
-                    }});
-                </script>
-            </body>
-            </html>
-            """
-            return HTMLResponse(content=html_content, status_code=200)
+            # Use HTTP 307 redirect for App Links (preserves POST method)
+            # Chrome Custom Tabs will automatically redirect to the app via App Links
+            return RedirectResponse(url=app_link, status_code=307)
 
         finally:
             db.close()
@@ -688,7 +622,6 @@ async def google_callback(
     except GoogleOAuthFlowError as e:
         logger.error(f"Google OAuth flow error: {e}")
         error_url = "noteapp://auth?error=oauth_flow_error"
-        from fastapi.responses import HTMLResponse
         html_content = f"""
         <!DOCTYPE html>
         <html>

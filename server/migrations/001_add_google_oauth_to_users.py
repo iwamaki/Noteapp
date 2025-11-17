@@ -10,7 +10,6 @@ Usage:
 
 import sqlite3
 import sys
-from pathlib import Path
 
 
 def run_migration():

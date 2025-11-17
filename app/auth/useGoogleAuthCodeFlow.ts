@@ -119,13 +119,17 @@ export function useGoogleAuthCodeFlow(): UseGoogleAuthCodeFlowResult {
   }, []);
 
   /**
-   * Deep Link を処理
+   * Deep Link を処理（Custom URI Scheme & App Links 両対応）
    */
   const handleDeepLink = useCallback((url: string) => {
     console.log('[GoogleAuth] Deep link received:', url);
 
-    // noteapp://auth?... の形式かチェック
-    if (!url.startsWith('noteapp://auth')) {
+    // Custom URI Scheme (noteapp://auth?...) または
+    // App Links (https://99f150da2530.ngrok-free.app/auth/callback?...) の形式かチェック
+    const isCustomScheme = url.startsWith('noteapp://auth');
+    const isAppLink = url.includes('/auth/callback');
+
+    if (!isCustomScheme && !isAppLink) {
       return;
     }
 
@@ -133,7 +137,14 @@ export function useGoogleAuthCodeFlow(): UseGoogleAuthCodeFlowResult {
     WebBrowser.dismissBrowser();
 
     // URL パラメータをパース
-    const params = new URL(url.replace('noteapp://', 'https://noteapp.app/')).searchParams;
+    let params: URLSearchParams;
+    if (isCustomScheme) {
+      // Custom URI Scheme: noteapp://auth?... → https://noteapp.app/auth?...
+      params = new URL(url.replace('noteapp://', 'https://noteapp.app/')).searchParams;
+    } else {
+      // App Links: https://99f150da2530.ngrok-free.app/auth/callback?...
+      params = new URL(url).searchParams;
+    }
 
     // エラーチェック
     const errorParam = params.get('error');
@@ -221,9 +232,11 @@ export function useGoogleAuthCodeFlow(): UseGoogleAuthCodeFlowResult {
       console.log('[GoogleAuth] Opening browser for authentication...');
 
       // WebBrowser で認証画面を開く
+      // App Links (HTTPS) を使用（Custom URI Schemeはフォールバック）
+      const redirectUrl = `${apiBaseUrl}/auth/callback`;
       const browserResult = await WebBrowser.openAuthSessionAsync(
         auth_url,
-        'noteapp://auth'
+        redirectUrl
       );
 
       console.log('[GoogleAuth] Browser result:', browserResult.type);

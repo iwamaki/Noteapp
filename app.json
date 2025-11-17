@@ -37,10 +37,13 @@
         },
         {
           "action": "VIEW",
+          "autoVerify": true,
           "category": ["BROWSABLE", "DEFAULT"],
           "data": [
             {
-              "scheme": "noteapp"
+              "scheme": "https",
+              "host": "99f150da2530.ngrok-free.app",
+              "pathPrefix": "/auth"
             }
           ]
         }
