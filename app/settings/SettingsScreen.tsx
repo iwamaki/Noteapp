@@ -20,9 +20,7 @@ import { useSettingsHeader } from './hooks/useSettingsHeader';
 import { ListItem } from '../components/ListItem';
 import { TokenUsageSection } from './components/TokenUsageSection';
 import { MainContainer } from '../components/MainContainer';
-import { useGoogleAuth } from '../auth/googleOAuthService';
-import { loginWithGoogle } from '../auth/authApiClient';
-import { getOrCreateDeviceId } from '../auth/deviceIdService';
+import { useGoogleAuthCodeFlow } from '../auth/useGoogleAuthCodeFlow';
 import { saveTokens } from '../auth/tokenService';
 import { saveUserId } from '../auth/deviceIdService';
 import {
@@ -36,10 +34,9 @@ function SettingsScreen() {
   const { colors, spacing, typography } = useTheme();
   const { settings, loadSettings, updateSettings, isLoading, checkAndResetMonthlyUsageIfNeeded } = useSettingsStore();
   const [googleUser, setGoogleUser] = useState<GoogleUserInfo | null>(null);
-  const [googleLoginLoading, setGoogleLoginLoading] = useState(false);
 
-  // Google OAuth2認証フック
-  const { promptAsync, idToken, isLoading: isGoogleAuthLoading } = useGoogleAuth();
+  // Google OAuth2認証フック（Authorization Code Flow）
+  const { login, result, isLoading: isGoogleAuthLoading, error: googleAuthError } = useGoogleAuthCodeFlow();
 
   useEffect(() => {
     loadSettings();
@@ -49,12 +46,19 @@ function SettingsScreen() {
     loadGoogleUserInfo();
   }, []);
 
-  // Google IDトークンが取得できたらバックエンドにログイン
+  // Google認証結果を処理
   useEffect(() => {
-    if (idToken) {
-      handleGoogleLoginWithToken(idToken);
+    if (result) {
+      handleGoogleAuthResult(result);
     }
-  }, [idToken]);
+  }, [result]);
+
+  // Google認証エラーを表示
+  useEffect(() => {
+    if (googleAuthError) {
+      Alert.alert('エラー', `Googleログインに失敗しました: ${googleAuthError}`);
+    }
+  }, [googleAuthError]);
 
   // Googleユーザー情報をロード
   const loadGoogleUserInfo = async () => {
@@ -62,48 +66,42 @@ function SettingsScreen() {
     setGoogleUser(userInfo);
   };
 
-  // Google IDトークンを使ってバックエンドにログイン
-  const handleGoogleLoginWithToken = async (token: string) => {
-    setGoogleLoginLoading(true);
+  // Google認証結果を処理（Authorization Code Flow）
+  const handleGoogleAuthResult = async (authResult: any) => {
     try {
-      const deviceId = await getOrCreateDeviceId();
-      const response = await loginWithGoogle(token, deviceId);
-
       // トークンを保存
-      await saveTokens(response.access_token, response.refresh_token);
+      await saveTokens(authResult.access_token, authResult.refresh_token);
       // ユーザーIDを保存
-      await saveUserId(response.user_id);
+      await saveUserId(authResult.user_id);
       // Googleユーザー情報を保存
       await saveGoogleUserInfo({
-        email: response.email,
-        displayName: response.display_name,
-        profilePictureUrl: response.profile_picture_url,
+        email: authResult.email,
+        displayName: authResult.display_name,
+        profilePictureUrl: authResult.profile_picture_url,
       });
 
       // UIを更新
       setGoogleUser({
-        email: response.email,
-        displayName: response.display_name,
-        profilePictureUrl: response.profile_picture_url,
+        email: authResult.email,
+        displayName: authResult.display_name,
+        profilePictureUrl: authResult.profile_picture_url,
       });
 
       Alert.alert(
         '成功',
-        response.is_new_user
+        authResult.is_new_user
           ? 'Googleアカウントでログインしました'
           : 'Googleアカウントにログインしました'
       );
     } catch (error) {
-      Alert.alert('エラー', 'Googleログインに失敗しました');
-      console.error('Google login error:', error);
-    } finally {
-      setGoogleLoginLoading(false);
+      Alert.alert('エラー', 'Googleログイン処理に失敗しました');
+      console.error('Google auth result handling error:', error);
     }
   };
 
-  // Googleログインボタンのハンドラー
+  // Googleログインボタンのハンドラー（Authorization Code Flow）
   const handleGoogleLogin = async () => {
-    await promptAsync();
+    await login();
   };
 
   // Googleログアウトボタンのハンドラー
@@ -253,9 +251,9 @@ function SettingsScreen() {
           <TouchableOpacity
             style={styles.googleButton}
             onPress={handleGoogleLogin}
-            disabled={googleLoginLoading || isGoogleAuthLoading}
+            disabled={isGoogleAuthLoading}
           >
-            {googleLoginLoading || isGoogleAuthLoading ? (
+            {isGoogleAuthLoading ? (
               <ActivityIndicator color={colors.background} />
             ) : (
               <>

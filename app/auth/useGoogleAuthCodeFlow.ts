@@ -129,6 +129,9 @@ export function useGoogleAuthCodeFlow(): UseGoogleAuthCodeFlowResult {
       return;
     }
 
+    // WebBrowser を閉じる（Deep Link を受け取ったので）
+    WebBrowser.dismissBrowser();
+
     // URL パラメータをパース
     const params = new URL(url.replace('noteapp://', 'https://noteapp.app/')).searchParams;
 
