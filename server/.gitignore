@@ -1,5 +1,7 @@
 # Environment files
-.env.production
+.env
+.env.*
+!.env.example
 
 # Deploy logs
 deploy.log
