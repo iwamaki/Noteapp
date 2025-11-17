@@ -4,7 +4,7 @@
 
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from slowapi import Limiter
 from slowapi.util import get_remote_address
@@ -455,7 +455,7 @@ async def google_auth_start(
 
 @router.get(
     "/google/callback",
-    response_class=HTMLResponse,
+    status_code=status.HTTP_307_TEMPORARY_REDIRECT,
     summary="Google OAuth2 コールバック",
     description="Google からのリダイレクトを処理し、トークンを交換してアプリにリダイレクトします。"
 )
@@ -582,7 +582,7 @@ async def google_callback(
 
             logger.info(f"Google OAuth successful: user_id={user_id}, device_id={device_id[:20]}...")
 
-            # Deep Link でアプリにリダイレクト（HTML + JavaScript）
+            # Deep Link でアプリにリダイレクト
             from urllib.parse import urlencode
             params = urlencode({
                 "access_token": jwt_access_token,
@@ -593,77 +593,29 @@ async def google_callback(
                 "display_name": display_name or "",
                 "profile_picture_url": profile_picture_url or "",
             })
-            redirect_url = f"noteapp://auth?{params}"
 
-            # JavaScript で Deep Link を開く HTML を返す
-            html_content = f"""
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>認証成功</title>
-                <meta charset="utf-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1">
-                <meta http-equiv="refresh" content="0;url={redirect_url}">
-            </head>
-            <body>
-                <h1>認証成功</h1>
-                <p>アプリに戻っています...</p>
-                <p>自動で戻らない場合は、<a href="{redirect_url}">こちらをタップ</a>してください。</p>
-                <script>
-                    setTimeout(function() {{
-                        window.location.href = "{redirect_url}";
-                    }}, 100);
-                </script>
-            </body>
-            </html>
-            """
-            return HTMLResponse(content=html_content)
+            # Android Custom Tabs compatible Intent URI
+            # https://developer.chrome.com/docs/android/intents/
+            deep_link = f"noteapp://auth?{params}"
+            intent_uri = f"intent://auth?{params}#Intent;scheme=noteapp;package=com.iwash.NoteApp;end"
+
+            logger.debug(f"Deep link: {deep_link[:100]}...")
+            logger.debug(f"Intent URI: {intent_uri[:100]}...")
+
+            # Try Intent URI first (works better with Custom Tabs)
+            return RedirectResponse(intent_uri, status_code=307)
 
         finally:
             db.close()
 
     except GoogleOAuthFlowError as e:
         logger.error(f"Google OAuth flow error: {e}")
-        error_url = "noteapp://auth?error=oauth_flow_error"
-        html_content = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>認証エラー</title>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1">
-        </head>
-        <body>
-            <h1>認証エラー</h1>
-            <p>アプリに戻っています...</p>
-            <script>
-                window.location.href = "{error_url}";
-            </script>
-        </body>
-        </html>
-        """
-        return HTMLResponse(content=html_content)
+        intent_uri = "intent://auth?error=oauth_flow_error#Intent;scheme=noteapp;package=com.iwash.NoteApp;end"
+        return RedirectResponse(intent_uri, status_code=307)
     except Exception as e:
         logger.error(f"Unexpected error in Google callback: {e}")
-        error_url = "noteapp://auth?error=internal_error"
-        html_content = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>認証エラー</title>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1">
-        </head>
-        <body>
-            <h1>認証エラー</h1>
-            <p>アプリに戻っています...</p>
-            <script>
-                window.location.href = "{error_url}";
-            </script>
-        </body>
-        </html>
-        """
-        return HTMLResponse(content=html_content)
+        intent_uri = "intent://auth?error=internal_error#Intent;scheme=noteapp;package=com.iwash.NoteApp;end"
+        return RedirectResponse(intent_uri, status_code=307)
 
 
 @router.get(
