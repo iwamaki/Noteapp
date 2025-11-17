@@ -594,28 +594,229 @@ async def google_callback(
                 "profile_picture_url": profile_picture_url or "",
             })
 
-            # Android Custom Tabs compatible Intent URI
-            # https://developer.chrome.com/docs/android/intents/
+            # Deep Link for app callback
             deep_link = f"noteapp://auth?{params}"
-            intent_uri = f"intent://auth?{params}#Intent;scheme=noteapp;package=com.iwash.NoteApp;end"
 
-            logger.debug(f"Deep link: {deep_link[:100]}...")
-            logger.debug(f"Intent URI: {intent_uri[:100]}...")
+            logger.debug(f"Generating callback page with Deep Link: {deep_link[:100]}...")
 
-            # Try Intent URI first (works better with Custom Tabs)
-            return RedirectResponse(intent_uri, status_code=307)
+            # Chrome Custom Tabs require user gesture to open custom scheme
+            # Show interstitial page with button for user to click
+            from fastapi.responses import HTMLResponse
+            html_content = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>認証成功</title>
+                <style>
+                    body {{
+                        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        height: 100vh;
+                        margin: 0;
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    }}
+                    .container {{
+                        text-align: center;
+                        background: white;
+                        padding: 2rem;
+                        border-radius: 1rem;
+                        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+                        max-width: 400px;
+                        margin: 1rem;
+                    }}
+                    h1 {{
+                        color: #333;
+                        margin-bottom: 1rem;
+                    }}
+                    p {{
+                        color: #666;
+                        margin-bottom: 2rem;
+                    }}
+                    .btn {{
+                        display: inline-block;
+                        background: #667eea;
+                        color: white;
+                        padding: 1rem 2rem;
+                        border-radius: 0.5rem;
+                        text-decoration: none;
+                        font-weight: bold;
+                        font-size: 1.1rem;
+                        transition: background 0.3s;
+                    }}
+                    .btn:hover {{
+                        background: #5568d3;
+                    }}
+                    .checkmark {{
+                        font-size: 3rem;
+                        color: #4CAF50;
+                        margin-bottom: 1rem;
+                    }}
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="checkmark">✓</div>
+                    <h1>認証成功！</h1>
+                    <p>ログインに成功しました。<br>アプリに戻ってください。</p>
+                    <a href="{deep_link}" class="btn" id="returnBtn">アプリに戻る</a>
+                    <p style="margin-top: 1rem; font-size: 0.9rem; color: #999;">3秒後に自動的に戻ります...</p>
+                </div>
+                <script>
+                    // Auto-redirect after 3 seconds
+                    setTimeout(function() {{
+                        window.location.href = '{deep_link}';
+                    }}, 3000);
+
+                    // Manual button click
+                    document.getElementById('returnBtn').addEventListener('click', function(e) {{
+                        e.preventDefault();
+                        window.location.href = '{deep_link}';
+                    }});
+                </script>
+            </body>
+            </html>
+            """
+            return HTMLResponse(content=html_content, status_code=200)
 
         finally:
             db.close()
 
     except GoogleOAuthFlowError as e:
         logger.error(f"Google OAuth flow error: {e}")
-        intent_uri = "intent://auth?error=oauth_flow_error#Intent;scheme=noteapp;package=com.iwash.NoteApp;end"
-        return RedirectResponse(intent_uri, status_code=307)
+        error_url = "noteapp://auth?error=oauth_flow_error"
+        from fastapi.responses import HTMLResponse
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>認証エラー</title>
+            <style>
+                body {{
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    height: 100vh;
+                    margin: 0;
+                    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                }}
+                .container {{
+                    text-align: center;
+                    background: white;
+                    padding: 2rem;
+                    border-radius: 1rem;
+                    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+                    max-width: 400px;
+                    margin: 1rem;
+                }}
+                h1 {{
+                    color: #333;
+                    margin-bottom: 1rem;
+                }}
+                p {{
+                    color: #666;
+                    margin-bottom: 2rem;
+                }}
+                .btn {{
+                    display: inline-block;
+                    background: #f5576c;
+                    color: white;
+                    padding: 1rem 2rem;
+                    border-radius: 0.5rem;
+                    text-decoration: none;
+                    font-weight: bold;
+                    font-size: 1.1rem;
+                }}
+                .error-icon {{
+                    font-size: 3rem;
+                    color: #f5576c;
+                    margin-bottom: 1rem;
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="error-icon">✗</div>
+                <h1>認証エラー</h1>
+                <p>認証中にエラーが発生しました。<br>アプリに戻って再試行してください。</p>
+                <a href="{error_url}" class="btn">アプリに戻る</a>
+            </div>
+        </body>
+        </html>
+        """
+        return HTMLResponse(content=html_content, status_code=200)
     except Exception as e:
         logger.error(f"Unexpected error in Google callback: {e}")
-        intent_uri = "intent://auth?error=internal_error#Intent;scheme=noteapp;package=com.iwash.NoteApp;end"
-        return RedirectResponse(intent_uri, status_code=307)
+        error_url = "noteapp://auth?error=internal_error"
+        from fastapi.responses import HTMLResponse
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>エラー</title>
+            <style>
+                body {{
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    height: 100vh;
+                    margin: 0;
+                    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                }}
+                .container {{
+                    text-align: center;
+                    background: white;
+                    padding: 2rem;
+                    border-radius: 1rem;
+                    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+                    max-width: 400px;
+                    margin: 1rem;
+                }}
+                h1 {{
+                    color: #333;
+                    margin-bottom: 1rem;
+                }}
+                p {{
+                    color: #666;
+                    margin-bottom: 2rem;
+                }}
+                .btn {{
+                    display: inline-block;
+                    background: #f5576c;
+                    color: white;
+                    padding: 1rem 2rem;
+                    border-radius: 0.5rem;
+                    text-decoration: none;
+                    font-weight: bold;
+                    font-size: 1.1rem;
+                }}
+                .error-icon {{
+                    font-size: 3rem;
+                    color: #f5576c;
+                    margin-bottom: 1rem;
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="error-icon">✗</div>
+                <h1>エラー</h1>
+                <p>予期しないエラーが発生しました。<br>アプリに戻って再試行してください。</p>
+                <a href="{error_url}" class="btn">アプリに戻る</a>
+            </div>
+        </body>
+        </html>
+        """
+        return HTMLResponse(content=html_content, status_code=200)
 
 
 @router.get(

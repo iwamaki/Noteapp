@@ -40,8 +40,7 @@
           "category": ["BROWSABLE", "DEFAULT"],
           "data": [
             {
-              "scheme": "noteapp",
-              "host": "auth"
+              "scheme": "noteapp"
             }
           ]
         }
