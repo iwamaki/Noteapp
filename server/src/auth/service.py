@@ -7,8 +7,10 @@ import string
 from datetime import datetime
 from typing import Optional, Tuple
 from sqlalchemy.orm import Session
+from jose import jwt
 from src.billing.models import User, DeviceAuth, Credit
 from src.core.logger import logger
+from src.auth.token_blacklist_manager import get_blacklist_manager
 
 
 class AuthenticationError(Exception):
@@ -139,6 +141,56 @@ class AuthService:
         # 一致している場合
         logger.info(f"Device verification successful - device_id: {device_id}, user_id: {server_user_id}")
         return True, server_user_id, "Device and user verified successfully"
+
+    def logout(self, access_token: str, refresh_token: str) -> None:
+        """
+        ログアウト処理
+
+        アクセストークンとリフレッシュトークンをブラックリストに追加し、
+        それらのトークンを無効化します。
+
+        Args:
+            access_token: 無効化するアクセストークン
+            refresh_token: 無効化するリフレッシュトークン
+
+        Raises:
+            AuthenticationError: トークンの無効化に失敗した場合
+        """
+        try:
+            blacklist_manager = get_blacklist_manager()
+
+            # トークンの有効期限を取得（署名検証なし）
+            access_payload = jwt.decode(access_token, "", options={"verify_signature": False})
+            refresh_payload = jwt.decode(refresh_token, "", options={"verify_signature": False})
+
+            # 現在時刻と有効期限の差分を計算（秒）
+            current_time = datetime.utcnow().timestamp()
+            access_expires_in = max(0, int(access_payload.get("exp", 0) - current_time))
+            refresh_expires_in = max(0, int(refresh_payload.get("exp", 0) - current_time))
+
+            # ブラックリストに追加（有効期限が切れるまで保持）
+            if access_expires_in > 0:
+                blacklist_manager.add_to_blacklist(access_token, access_expires_in)
+                logger.debug(f"Access token blacklisted: expires_in={access_expires_in}s")
+
+            if refresh_expires_in > 0:
+                blacklist_manager.add_to_blacklist(refresh_token, refresh_expires_in)
+                logger.debug(f"Refresh token blacklisted: expires_in={refresh_expires_in}s")
+
+            user_id = access_payload.get("sub")
+            device_id = access_payload.get("device_id")
+
+            logger.info(
+                "User logged out successfully",
+                extra={
+                    "user_id": user_id,
+                    "device_id": device_id[:20] + "..." if device_id else "unknown"
+                }
+            )
+
+        except Exception as e:
+            logger.error(f"Failed to logout: {e}")
+            raise AuthenticationError(f"Logout failed: {e}")
 
     def _generate_unique_user_id(self) -> str:
         """

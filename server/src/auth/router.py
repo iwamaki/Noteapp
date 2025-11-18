@@ -20,6 +20,8 @@ from src.auth.schemas import (
     RefreshTokenResponse,
     GoogleAuthStartRequest,
     GoogleAuthStartResponse,
+    LogoutRequest,
+    LogoutResponse,
 )
 from src.auth.google_oauth_flow import (
     generate_auth_url,
@@ -227,6 +229,62 @@ async def refresh_token(
         raise
     except Exception as e:
         logger.error(f"Unexpected error in token refresh: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error"
+        )
+
+
+@router.post(
+    "/logout",
+    response_model=LogoutResponse,
+    status_code=status.HTTP_200_OK,
+    summary="ログアウト",
+    description="アクセストークンとリフレッシュトークンを無効化してログアウトします。"
+)
+@limiter.limit("20/minute")
+async def logout(
+    request: Request,
+    body: LogoutRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    ログアウトエンドポイント
+
+    アクセストークンとリフレッシュトークンをブラックリストに追加し、
+    無効化します。トークンは有効期限まで再利用できなくなります。
+
+    レート制限: 20リクエスト/分（IPアドレスベース）
+
+    Returns:
+        LogoutResponse: {
+            "message": "Logged out successfully",
+            "success": true
+        }
+
+    Raises:
+        HTTPException(400): トークンの無効化に失敗した場合
+        HTTPException(500): サーバーエラー
+    """
+    try:
+        auth_service = AuthService(db)
+        auth_service.logout(body.access_token, body.refresh_token)
+
+        logger.info("User logged out successfully")
+
+        return LogoutResponse(
+            message="Logged out successfully",
+            success=True
+        )
+
+    except AuthenticationError as e:
+        logger.error(f"Logout failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error in logout: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error"

@@ -56,6 +56,11 @@ export interface ErrorResponse {
   detail: string;
 }
 
+export interface LogoutResponse {
+  message: string;
+  success: boolean;
+}
+
 /**
  * デバイスIDを登録し、ユーザーアカウントを作成または取得
  * @param deviceId デバイスID
@@ -119,5 +124,27 @@ export async function refreshAccessToken(refreshToken: string): Promise<RefreshT
   } catch (error) {
     logger.error('auth', 'Token refresh error', error);
     throw new Error((error as any).message || 'Token refresh failed');
+  }
+}
+
+/**
+ * ログアウトしてトークンを無効化
+ * @param accessToken 無効化するアクセストークン
+ * @param refreshToken 無効化するリフレッシュトークン
+ * @returns ログアウト結果
+ */
+export async function logout(accessToken: string, refreshToken: string): Promise<LogoutResponse> {
+  try {
+    const client = getAuthClient();
+    const response = await client.post('/api/auth/logout', {
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    });
+
+    logger.info('auth', 'User logged out successfully');
+    return response.data;
+  } catch (error) {
+    logger.error('auth', 'Logout error', error);
+    throw new Error((error as any).message || 'Logout failed');
   }
 }

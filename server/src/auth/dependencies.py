@@ -10,6 +10,7 @@ from typing import Optional
 from src.billing.database import get_db
 from src.auth.service import AuthService
 from src.auth.jwt_utils import verify_token, TokenType
+from src.auth.token_blacklist_manager import get_blacklist_manager
 from src.core.logger import logger
 
 # HTTPベアラー認証のスキーマ
@@ -34,6 +35,15 @@ async def verify_token_auth(
         HTTPException: 認証失敗時（401 Unauthorized）
     """
     token = credentials.credentials
+
+    # トークンがブラックリストに含まれているかチェック
+    blacklist_manager = get_blacklist_manager()
+    if blacklist_manager.is_blacklisted(token):
+        logger.warning("Authentication failed: Token has been revoked (logged out)")
+        raise HTTPException(
+            status_code=401,
+            detail="Token has been revoked. Please login again."
+        )
 
     # トークン検証
     payload = verify_token(token, TokenType.ACCESS)

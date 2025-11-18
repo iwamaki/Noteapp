@@ -61,3 +61,15 @@ class GoogleAuthStartResponse(BaseModel):
     """Google OAuth2 認証開始レスポンス"""
     auth_url: str = Field(..., description="Google 認証URL（WebBrowser で開く）")
     state: str = Field(..., description="OAuth2 state パラメータ（検証用）")
+
+
+class LogoutRequest(BaseModel):
+    """ログアウトリクエスト"""
+    access_token: str = Field(..., min_length=1, description="無効化するアクセストークン")
+    refresh_token: str = Field(..., min_length=1, description="無効化するリフレッシュトークン")
+
+
+class LogoutResponse(BaseModel):
+    """ログアウトレスポンス"""
+    message: str = Field(..., description="ログアウト結果メッセージ")
+    success: bool = Field(..., description="ログアウト成功フラグ")
