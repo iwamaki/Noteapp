@@ -491,18 +491,24 @@ case 403: return "アクセスが拒否されました";
   - [ ] ログアウト後の画面遷移
   - [ ] セッション完全クリア確認
 
-- [ ] **#8** JWT_SECRET_KEY起動時バリデーション (`server/src/auth/jwt_utils.py`)
-  - [ ] 環境変数未設定時にエラー送出
-  - [ ] main.py の startup イベントでチェック
-  - [ ] デフォルト値の削除
+- [x] **#8** JWT_SECRET_KEY起動時バリデーション (`server/src/auth/jwt_utils.py`)
+  - [x] 環境変数未設定時にエラー送出
+  - [x] main.py の startup イベントでチェック
+  - [x] デフォルト値の削除
+  - [x] 動作確認完了（未設定時・設定時の両方） ✅ 2025-11-18
+  - [x] **Secret Manager対応追加** (`server/src/auth/jwt_utils.py:25-89`)
+    - [x] Secret Managerからの読み取り機能実装
+    - [x] 優先順位: Secret Manager → 環境変数（開発用）
+    - [x] セットアップガイド作成 (`server/docs/JWT_SECRET_SETUP.md`)
+    - [x] Secret Manager動作確認完了 ✅ 2025-11-18
 
 ### 🟡 高優先対応（2週間以内）
 
-- [ ] **#5** WebSocket認証トークンリフレッシュ (`app/features/api/clients/WebSocketClient.ts`)
-  - [ ] トークン有効期限監視タイマー追加
-  - [ ] 期限前（25分）に自動リフレッシュ
-  - [ ] 新トークンで再認証メッセージ送信
-  - [ ] 長時間接続での動作確認
+- [x] **#5** WebSocket認証トークンリフレッシュ (`app/features/api/clients/WebSocketClient.ts`)
+  - [x] トークン有効期限監視タイマー追加
+  - [x] 期限前（25分）に自動リフレッシュ
+  - [x] 新トークンで再認証メッセージ送信
+  - [x] 長時間接続での動作確認
 
 - [ ] **#6** マルチデバイス対応
   - [ ] データベーススキーマ見直し

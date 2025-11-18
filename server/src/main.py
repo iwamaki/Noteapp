@@ -19,7 +19,7 @@ from typing import Optional
 from src.api.websocket import manager
 from src.api import billing_router
 from src.auth import router as auth_router
-from src.auth.jwt_utils import verify_token, TokenType
+from src.auth.jwt_utils import verify_token, TokenType, validate_jwt_secret
 from src.billing.database import init_db
 from src.core.logger import logger
 
@@ -32,6 +32,16 @@ async def lifespan(app: FastAPI):
     """
     # 起動時の処理
     logger.info("Application startup...")
+
+    # JWT_SECRET_KEYのバリデーション（セキュリティチェック）
+    try:
+        validate_jwt_secret()
+    except ValueError as e:
+        logger.error(f"JWT secret key validation failed: {e}")
+        raise RuntimeError(
+            "Application startup aborted due to invalid JWT_SECRET_KEY. "
+            "Please set a strong JWT_SECRET_KEY environment variable (minimum 32 characters)."
+        ) from e
 
     # Billingデータベースを初期化
     init_db()
