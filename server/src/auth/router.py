@@ -18,12 +18,9 @@ from src.auth.schemas import (
     VerifyDeviceResponse,
     RefreshTokenRequest,
     RefreshTokenResponse,
-    GoogleLoginRequest,
-    GoogleLoginResponse,
     GoogleAuthStartRequest,
     GoogleAuthStartResponse,
 )
-from src.auth.google_auth import get_google_user_info, GoogleAuthError
 from src.auth.google_oauth_flow import (
     generate_auth_url,
     exchange_code_for_tokens,
@@ -237,167 +234,6 @@ async def refresh_token(
 
 
 @router.post(
-    "/google/login",
-    response_model=GoogleLoginResponse,
-    status_code=status.HTTP_200_OK,
-    summary="Google OAuth2 ログイン",
-    description="Google ID Tokenを検証してユーザー認証を行い、JWTトークンを発行します。"
-)
-@limiter.limit("20/minute")
-async def google_login(
-    request: Request,
-    body: GoogleLoginRequest,
-    db: Session = Depends(get_db)
-):
-    """
-    Google OAuth2 ログインエンドポイント
-
-    Google ID Tokenを検証し、ユーザーを作成または取得してJWTトークンを発行します。
-    既存のデバイスIDとGoogleアカウントを紐付けることも可能です。
-
-    レート制限: 20リクエスト/分（IPアドレスベース）
-
-    Returns:
-        GoogleLoginResponse: {
-            "user_id": ユーザーID,
-            "is_new_user": 新規ユーザーかどうか,
-            "email": メールアドレス,
-            "display_name": 表示名,
-            "profile_picture_url": プロフィール画像URL,
-            "access_token": アクセストークン（JWT）,
-            "refresh_token": リフレッシュトークン（JWT）,
-            "token_type": "bearer"
-        }
-
-    Raises:
-        HTTPException(400): Google ID Token検証失敗
-        HTTPException(500): サーバーエラー
-    """
-    try:
-        # Google ID Tokenを検証してユーザー情報を取得
-        google_user_info = get_google_user_info(body.id_token)
-        google_id = google_user_info["google_id"]
-        email = google_user_info["email"]
-        display_name = google_user_info.get("name")
-        profile_picture_url = google_user_info.get("picture")
-
-        # Google IDでユーザーを検索
-        from src.billing.models import User, DeviceAuth
-        existing_user = db.query(User).filter_by(google_id=google_id).first()
-
-        # user_idとis_new_userを初期化（型ヒント用）
-        user_id: str
-        is_new_user: bool
-
-        if existing_user:
-            # 既存ユーザー - ユーザー情報を更新
-            # user_idはnullable=Falseなので、必ず存在する
-            assert existing_user.user_id is not None
-            user_id = existing_user.user_id
-            is_new_user = False
-
-            # メールアドレスやプロフィール情報を更新
-            existing_user.email = email
-            existing_user.display_name = display_name
-            existing_user.profile_picture_url = profile_picture_url
-            db.commit()
-
-            logger.info(
-                "Existing Google user logged in",
-                extra={
-                    "user_id": user_id,
-                    "google_id": google_id,
-                    "email": email[:20] + "..."
-                }
-            )
-
-        else:
-            # 新規ユーザー - アカウント作成
-            import uuid
-            user_id = f"user_{uuid.uuid4().hex[:10]}"
-            is_new_user = True
-
-            new_user = User(
-                user_id=user_id,
-                google_id=google_id,
-                email=email,
-                display_name=display_name,
-                profile_picture_url=profile_picture_url
-            )
-            db.add(new_user)
-
-            # クレジットレコードを作成
-            from src.billing.models import Credit
-            credit = Credit(user_id=user_id, credits=0)
-            db.add(credit)
-
-            db.commit()
-
-            logger.info(
-                "New Google user created",
-                extra={
-                    "user_id": user_id,
-                    "google_id": google_id,
-                    "email": email[:20] + "..."
-                }
-            )
-
-        # デバイスIDが提供されている場合、デバイス認証を紐付ける
-        device_id: str = body.device_id if body.device_id else f"google_{google_id[:20]}"
-
-        # デバイス認証レコードを作成または更新
-        existing_device = db.query(DeviceAuth).filter_by(device_id=device_id).first()
-        if existing_device:
-            # 既存デバイスのuser_idを更新
-            existing_device.user_id = user_id
-            from datetime import datetime
-            existing_device.last_login_at = datetime.now()
-        else:
-            # 新規デバイス認証レコードを作成
-            device_auth = DeviceAuth(device_id=device_id, user_id=user_id)
-            db.add(device_auth)
-
-        db.commit()
-
-        # JWTトークンを生成
-        access_token = create_access_token(user_id, device_id)
-        refresh_token = create_refresh_token(user_id, device_id)
-
-        logger.info(
-            "Google login successful - tokens issued",
-            extra={
-                "user_id": user_id,
-                "is_new_user": is_new_user,
-                "device_id": device_id[:20] + "..."
-            }
-        )
-
-        return GoogleLoginResponse(
-            user_id=user_id,
-            is_new_user=is_new_user,
-            email=email,
-            display_name=display_name,
-            profile_picture_url=profile_picture_url,
-            access_token=access_token,
-            refresh_token=refresh_token,
-            token_type="bearer"
-        )
-
-    except GoogleAuthError as e:
-        logger.error(f"Google authentication failed: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
-    except Exception as e:
-        logger.error(f"Unexpected error in Google login: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error"
-        )
-
-
-@router.post(
     "/google/auth-start",
     response_model=GoogleAuthStartResponse,
     status_code=status.HTTP_200_OK,
@@ -475,15 +311,22 @@ async def google_callback(
     from src.billing.models import User, DeviceAuth, Credit
 
     try:
+        # Get base URL for App Links
+        oauth_redirect_uri = os.getenv("GOOGLE_OAUTH_REDIRECT_URI", "")
+        if oauth_redirect_uri:
+            base_url = oauth_redirect_uri.replace("/api/auth/google/callback", "")
+        else:
+            base_url = "https://99f150da2530.ngrok-free.app"
+
         # エラーチェック
         if error:
             logger.warning(f"Google OAuth error: {error}")
-            error_url = f"noteapp://auth?error={error}"
+            error_url = f"{base_url}/auth/callback?error={error}"
             return RedirectResponse(error_url)
 
         if not code or not state:
             logger.warning("Missing code or state in callback")
-            error_url = "noteapp://auth?error=missing_parameters"
+            error_url = f"{base_url}/auth/callback?error=missing_parameters"
             return RedirectResponse(error_url)
 
         # state を検証して device_id を取得
@@ -492,7 +335,7 @@ async def google_callback(
 
         if not device_id:
             logger.warning(f"Invalid or expired state: {state[:10]}...")
-            error_url = "noteapp://auth?error=invalid_state"
+            error_url = f"{base_url}/auth/callback?error=invalid_state"
             return RedirectResponse(error_url)
 
         # Authorization Code をトークンに交換
@@ -502,7 +345,7 @@ async def google_callback(
 
         if not access_token or not id_token:
             logger.error("Missing tokens in Google response")
-            error_url = "noteapp://auth?error=token_exchange_failed"
+            error_url = f"{base_url}/auth/callback?error=token_exchange_failed"
             return RedirectResponse(error_url)
 
         # Access Token からユーザー情報を取得
@@ -514,7 +357,7 @@ async def google_callback(
 
         if not google_id or not email:
             logger.error("Missing user info in Google response")
-            error_url = "noteapp://auth?error=user_info_failed"
+            error_url = f"{base_url}/auth/callback?error=user_info_failed"
             return RedirectResponse(error_url)
 
         # DB セッションを取得（依存性注入なしで直接取得）
@@ -595,33 +438,36 @@ async def google_callback(
                 "profile_picture_url": profile_picture_url or "",
             })
 
-            # App Links URL (HTTPS) for app callback
-            # Backend URL from environment variable
-            backend_url = os.getenv("BACKEND_URL", "http://localhost:8000")
-            # Use HTTPS version of ngrok URL for App Links
-            if "ngrok" in backend_url or "localhost" in backend_url:
-                # Get ngrok URL from OAuth redirect URI (which is already HTTPS)
-                oauth_redirect_uri = os.getenv("GOOGLE_OAUTH_REDIRECT_URI", "")
-                if oauth_redirect_uri:
-                    # Extract base URL (e.g., https://99f150da2530.ngrok-free.app)
-                    from urllib.parse import urlparse
-                    parsed = urlparse(oauth_redirect_uri)
-                    backend_url = f"{parsed.scheme}://{parsed.netloc}"
+            # Android App Links redirect (HTTPS)
+            # Extract base URL from GOOGLE_OAUTH_REDIRECT_URI environment variable
+            oauth_redirect_uri = os.getenv("GOOGLE_OAUTH_REDIRECT_URI", "")
+            if oauth_redirect_uri:
+                # Remove /api/auth/google/callback to get base URL
+                base_url = oauth_redirect_uri.replace("/api/auth/google/callback", "")
+            else:
+                # Fallback to default ngrok URL
+                base_url = "https://99f150da2530.ngrok-free.app"
 
-            app_link = f"{backend_url}/auth/callback?{params}"
+            # Construct App Links URL (Android Intent Filter will intercept this)
+            app_links_url = f"{base_url}/auth/callback?{params}"
 
-            logger.debug(f"Generating App Links redirect: {app_link[:100]}...")
+            logger.debug(f"Redirecting to App Links URL: {app_links_url[:100]}...")
 
-            # Use HTTP 307 redirect for App Links (preserves POST method)
-            # Chrome Custom Tabs will automatically redirect to the app via App Links
-            return RedirectResponse(url=app_link, status_code=307)
+            # Redirect to HTTPS URL (Chrome Custom Tabs allows this, Android intercepts)
+            return RedirectResponse(url=app_links_url, status_code=307)
 
         finally:
             db.close()
 
     except GoogleOAuthFlowError as e:
         logger.error(f"Google OAuth flow error: {e}")
-        error_url = "noteapp://auth?error=oauth_flow_error"
+        # Get base URL for App Links
+        oauth_redirect_uri = os.getenv("GOOGLE_OAUTH_REDIRECT_URI", "")
+        if oauth_redirect_uri:
+            base_url = oauth_redirect_uri.replace("/api/auth/google/callback", "")
+        else:
+            base_url = "https://99f150da2530.ngrok-free.app"
+        error_url = f"{base_url}/auth/callback?error=oauth_flow_error"
         html_content = f"""
         <!DOCTYPE html>
         <html>
@@ -686,8 +532,13 @@ async def google_callback(
         return HTMLResponse(content=html_content, status_code=200)
     except Exception as e:
         logger.error(f"Unexpected error in Google callback: {e}")
-        error_url = "noteapp://auth?error=internal_error"
-        from fastapi.responses import HTMLResponse
+        # Get base URL for App Links
+        oauth_redirect_uri = os.getenv("GOOGLE_OAUTH_REDIRECT_URI", "")
+        if oauth_redirect_uri:
+            base_url = oauth_redirect_uri.replace("/api/auth/google/callback", "")
+        else:
+            base_url = "https://99f150da2530.ngrok-free.app"
+        error_url = f"{base_url}/auth/callback?error=internal_error"
         html_content = f"""
         <!DOCTYPE html>
         <html>
@@ -750,6 +601,101 @@ async def google_callback(
         </html>
         """
         return HTMLResponse(content=html_content, status_code=200)
+
+
+@router.get(
+    "/callback",
+    status_code=status.HTTP_200_OK,
+    summary="App Links OAuth コールバック",
+    description="Android App Links 用の OAuth コールバックエンドポイント"
+)
+async def app_links_callback(request: Request):
+    """
+    App Links 用の OAuth コールバックエンドポイント
+
+    Android の Intent Filter がこの URL を検出してアプリに自動的に渡します。
+    フォールバックとして、カスタム URI スキームにリダイレクトする HTML ページを返します。
+    """
+    from urllib.parse import urlencode
+
+    # すべてのクエリパラメータを取得
+    query_params = dict(request.query_params)
+
+    # カスタム URI スキーム URL を生成
+    params_str = urlencode(query_params)
+    deep_link = f"noteapp://auth?{params_str}"
+
+    logger.debug(f"App Links callback received: {len(query_params)} params")
+
+    # HTML ページを返す（App Links が機能しない場合のフォールバック）
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>認証完了</title>
+        <style>
+            body {{
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                margin: 0;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            }}
+            .container {{
+                background: white;
+                padding: 2rem;
+                border-radius: 1rem;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+                text-align: center;
+                max-width: 400px;
+            }}
+            h1 {{
+                color: #333;
+                margin-bottom: 1rem;
+            }}
+            p {{
+                color: #666;
+                margin-bottom: 2rem;
+            }}
+            .btn {{
+                display: inline-block;
+                background: #667eea;
+                color: white;
+                padding: 1rem 2rem;
+                border-radius: 0.5rem;
+                text-decoration: none;
+                font-weight: bold;
+                font-size: 1.1rem;
+            }}
+            .success-icon {{
+                font-size: 3rem;
+                color: #4caf50;
+                margin-bottom: 1rem;
+            }}
+        </style>
+        <script>
+            // 自動リダイレクト（3秒後）
+            setTimeout(function() {{
+                window.location.href = "{deep_link}";
+            }}, 3000);
+        </script>
+    </head>
+    <body>
+        <div class="container">
+            <div class="success-icon">✓</div>
+            <h1>認証成功</h1>
+            <p>自動的にアプリに戻ります...<br>戻らない場合は下のボタンをタップしてください。</p>
+            <a href="{deep_link}" class="btn">アプリに戻る</a>
+        </div>
+    </body>
+    </html>
+    """
+
+    return HTMLResponse(content=html_content, status_code=200)
 
 
 @router.get(

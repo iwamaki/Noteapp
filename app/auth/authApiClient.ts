@@ -56,17 +56,6 @@ export interface ErrorResponse {
   detail: string;
 }
 
-export interface GoogleLoginResponse {
-  user_id: string;
-  is_new_user: boolean;
-  email: string;
-  display_name?: string;
-  profile_picture_url?: string;
-  access_token: string;
-  refresh_token: string;
-  token_type: string;
-}
-
 /**
  * デバイスIDを登録し、ユーザーアカウントを作成または取得
  * @param deviceId デバイスID
@@ -130,34 +119,5 @@ export async function refreshAccessToken(refreshToken: string): Promise<RefreshT
   } catch (error) {
     logger.error('auth', 'Token refresh error', error);
     throw new Error((error as any).message || 'Token refresh failed');
-  }
-}
-
-/**
- * Google OAuth2 IDトークンを使用してログイン
- * @param idToken Google ID Token
- * @param deviceId デバイスID（任意）
- * @returns レスポンス
- */
-export async function loginWithGoogle(
-  idToken: string,
-  deviceId?: string
-): Promise<GoogleLoginResponse> {
-  try {
-    const client = getAuthClient();
-    const response = await client.post('/api/auth/google/login', {
-      id_token: idToken,
-      device_id: deviceId,
-    });
-
-    logger.info('auth', 'Google login successful', {
-      user_id: response.data.user_id,
-      is_new_user: response.data.is_new_user,
-    });
-
-    return response.data;
-  } catch (error) {
-    logger.error('auth', 'Google login error', error);
-    throw new Error((error as any).message || 'Google login failed');
   }
 }

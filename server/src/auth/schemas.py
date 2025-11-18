@@ -52,24 +52,6 @@ class ErrorResponse(BaseModel):
     detail: Optional[str] = Field(None, description="詳細情報")
 
 
-class GoogleLoginRequest(BaseModel):
-    """Google OAuth2 ログインリクエスト"""
-    id_token: str = Field(..., min_length=1, description="Google ID Token")
-    device_id: Optional[str] = Field(None, description="デバイスID（任意）")
-
-
-class GoogleLoginResponse(BaseModel):
-    """Google OAuth2 ログインレスポンス"""
-    user_id: str = Field(..., description="ユーザーID")
-    is_new_user: bool = Field(..., description="新規ユーザーかどうか")
-    email: str = Field(..., description="Googleアカウントのメールアドレス")
-    display_name: Optional[str] = Field(None, description="表示名")
-    profile_picture_url: Optional[str] = Field(None, description="プロフィール画像URL")
-    access_token: str = Field(..., description="アクセストークン（JWT）")
-    refresh_token: str = Field(..., description="リフレッシュトークン（JWT）")
-    token_type: str = Field(default="bearer", description="トークンタイプ")
-
-
 class GoogleAuthStartRequest(BaseModel):
     """Google OAuth2 認証開始リクエスト（Authorization Code Flow）"""
     device_id: str = Field(..., min_length=1, description="デバイスID")

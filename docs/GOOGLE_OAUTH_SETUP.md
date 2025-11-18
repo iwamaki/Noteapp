@@ -1,11 +1,20 @@
-# Google OAuth2 セットアップガイド
+# Google OAuth2 セットアップガイド (Authorization Code Flow)
 
-このドキュメントでは、NoteAppでGoogle OAuth2認証を使用するために必要なGoogle Cloud Console設定を説明します。
+このドキュメントでは、NoteAppでGoogle OAuth2認証（**Authorization Code Flow**）を使用するために必要なGoogle Cloud Console設定を説明します。
+
+## OAuth実装について
+
+本アプリは **Authorization Code Flow** を採用しています。これは以下のセキュリティ上の理由からです:
+
+- **Client Secret がサーバー側のみで使用される** - クライアントサイドに秘密情報が露出しない
+- **CSRF攻撃保護** - state パラメータによる保護
+- **推奨される標準フロー** - Google が推奨する最もセキュアな認証方式
 
 ## 前提条件
 
 - Googleアカウント
 - Google Cloud Console へのアクセス権限
+- バックエンドサーバー（FastAPI）が稼働していること
 
 ## セットアップ手順
 
@@ -70,16 +79,20 @@ keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -sto
 4. 「作成」をクリック
 5. **Client ID**をコピーして保存
 
-#### Web用クライアントID（Expo Go用 - 開発時のみ）
+#### Web Application用クライアントID（**必須** - Authorization Code Flow用）
 
 1. 「認証情報を作成」→「OAuth クライアントID」をクリック
-2. アプリケーションの種類で「ウェブアプリケーション」を選択
+2. アプリケーションの種類で「**ウェブアプリケーション**」を選択
 3. 以下の情報を入力：
-   - **名前**: NoteApp (Expo Go)
+   - **名前**: NoteApp (Backend)
    - **承認済みのリダイレクトURI**:
-     - `https://auth.expo.io/@<your-expo-username>/NoteApp`
+     - 開発環境: `http://localhost:8000/api/auth/google/callback`
+     - 本番環境: `https://your-domain.com/api/auth/google/callback`
+     - ngrok使用時: `https://<your-ngrok-id>.ngrok-free.app/api/auth/google/callback`
 4. 「作成」をクリック
-5. **Client ID**をコピーして保存
+5. **Client ID** と **Client Secret** の両方をコピーして保存
+
+**重要**: Client Secret は絶対に公開しないこと。サーバー側の環境変数のみに保存してください。
 
 ### 4. 環境変数の設定
 
@@ -104,22 +117,62 @@ EXPO_PUBLIC_API_BASE_URL=http://localhost:8000
 `server/.env` ファイルに以下を追加：
 
 ```bash
-# Google OAuth2 設定
-# Web用Client IDをバックエンドでも使用（IDトークンの検証用）
-GOOGLE_CLIENT_ID=<Web用Client ID>.apps.googleusercontent.com
+# Google OAuth2 設定 (Authorization Code Flow)
+GOOGLE_CLIENT_ID=<Web Application用Client ID>.apps.googleusercontent.com
+GOOGLE_WEB_CLIENT_SECRET=<Web Application用Client Secret>
+GOOGLE_OAUTH_REDIRECT_URI=http://localhost:8000/api/auth/google/callback
+
+# 本番環境の場合
+# GOOGLE_OAUTH_REDIRECT_URI=https://your-domain.com/api/auth/google/callback
 ```
 
-### 5. リダイレクトURIの確認
+**セキュリティ警告**:
+- `GOOGLE_WEB_CLIENT_SECRET` は **絶対にGitにコミットしないこと**
+- `.gitignore` に `.env` ファイルが含まれていることを確認
+- 本番環境では環境変数またはSecret Managerを使用
 
-app.jsonで設定したスキーマ（`noteapp`）が正しく設定されていることを確認：
+### 5. Deep Link / App Links の設定
+
+Authorization Code Flowでは、OAuth認証後にアプリに戻るためのDeep LinkまたはApp Linksが必要です。
+
+#### app.json の設定確認
 
 ```json
 {
   "expo": {
-    "scheme": "noteapp"
+    "scheme": "noteapp",
+    "android": {
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "your-domain.com",
+              "pathPrefix": "/auth"
+            },
+            {
+              "scheme": "com.googleusercontent.apps.461522030982",
+              "pathPrefix": "/oauth2redirect"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
+    }
   }
 }
 ```
+
+**Deep Link フロー**:
+1. ユーザーが「Googleでログイン」をタップ
+2. バックエンドが認証URLを生成（state付き）
+3. WebBrowserでGoogle認証画面を開く
+4. ユーザーが認証を完了
+5. バックエンドの `/api/auth/google/callback` にリダイレクト
+6. バックエンドがトークンを交換し、JWTを生成
+7. Deep Link経由でアプリにトークンを返却
 
 ### 6. 動作確認
 
@@ -159,15 +212,22 @@ app.jsonで設定したスキーマ（`noteapp`）が正しく設定されてい
 - OAuth同意画面で承認済みのリダイレクトURIが正しく設定されているか確認
 - app.jsonの`scheme`が正しく設定されているか確認
 
-### エラー: "Token verification failed"
+### エラー: "Token exchange failed"
 
-- バックエンドの`GOOGLE_CLIENT_ID`環境変数が正しく設定されているか確認
-- フロントエンドとバックエンドで同じClient IDを使用しているか確認
+- バックエンドの `GOOGLE_WEB_CLIENT_SECRET` が正しく設定されているか確認
+- `GOOGLE_OAUTH_REDIRECT_URI` がGoogle Cloud Consoleの設定と一致しているか確認
 
-### Expo Go で動作しない
+### エラー: "Invalid state"
 
-- Expo GoでGoogle OAuth2は制限があるため、開発ビルドまたはEAS Buildを使用してください
-- 詳細: https://docs.expo.dev/guides/authentication/#google
+- CSRF保護のためのstateパラメータが期限切れまたは無効
+- 認証フローをやり直してください
+- サーバー側の `oauth_state_manager.py` で state の有効期限（デフォルト5分）を確認
+
+### Deep Link が動作しない
+
+- Android: Intent Filterが正しく設定されているか確認（AndroidManifest.xml）
+- iOS: URL Schemeが正しく設定されているか確認（Info.plist）
+- WebBrowserのセッションが正しく終了しているか確認
 
 ## 本番環境への移行
 
