@@ -3,7 +3,7 @@
  * @summary このファイルは、アプリケーションの設定画面をレンダリングします。
  * @responsibility ユーザーがアプリケーションの各種設定（表示、動作、LLM関連など）を閲覧・変更できるUIを提供し、設定の永続化と更新を管理します。
  */
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -21,19 +21,21 @@ import { ListItem } from '../components/ListItem';
 import { TokenUsageSection } from './components/TokenUsageSection';
 import { MainContainer } from '../components/MainContainer';
 import { useGoogleAuthCodeFlow } from '../auth/useGoogleAuthCodeFlow';
-import { saveTokens } from '../auth/tokenService';
-import { saveUserId } from '../auth/deviceIdService';
-import {
-  getGoogleUserInfo,
-  saveGoogleUserInfo,
-  clearGoogleUserInfo,
-  GoogleUserInfo,
-} from '../auth/googleUserService';
+import { useAuth } from '../auth/authStore';
 
 function SettingsScreen() {
   const { colors, spacing, typography } = useTheme();
   const { settings, loadSettings, updateSettings, isLoading, checkAndResetMonthlyUsageIfNeeded } = useSettingsStore();
-  const [googleUser, setGoogleUser] = useState<GoogleUserInfo | null>(null);
+
+  // 認証ストアから状態とアクションを取得
+  const {
+    googleUser,
+    isLoggingIn,
+    isLoggingOut,
+    handleGoogleAuthResult,
+    logout,
+    error: authError,
+  } = useAuth();
 
   // Google OAuth2認証フック（Authorization Code Flow）
   const { login, result, isLoading: isGoogleAuthLoading, error: googleAuthError } = useGoogleAuthCodeFlow();
@@ -42,14 +44,12 @@ function SettingsScreen() {
     loadSettings();
     // 月次使用量のリセットチェック（月が変わったらリセット）
     checkAndResetMonthlyUsageIfNeeded();
-    // Googleユーザー情報をロード
-    loadGoogleUserInfo();
   }, []);
 
   // Google認証結果を処理
   useEffect(() => {
     if (result) {
-      handleGoogleAuthResult(result);
+      handleAuthResult(result);
     }
   }, [result]);
 
@@ -60,32 +60,18 @@ function SettingsScreen() {
     }
   }, [googleAuthError]);
 
-  // Googleユーザー情報をロード
-  const loadGoogleUserInfo = async () => {
-    const userInfo = await getGoogleUserInfo();
-    setGoogleUser(userInfo);
-  };
+  // 認証ストアのエラーを表示
+  useEffect(() => {
+    if (authError) {
+      Alert.alert('エラー', authError);
+    }
+  }, [authError]);
 
   // Google認証結果を処理（Authorization Code Flow）
-  const handleGoogleAuthResult = async (authResult: any) => {
+  const handleAuthResult = async (authResult: any) => {
     try {
-      // トークンを保存
-      await saveTokens(authResult.access_token, authResult.refresh_token);
-      // ユーザーIDを保存
-      await saveUserId(authResult.user_id);
-      // Googleユーザー情報を保存
-      await saveGoogleUserInfo({
-        email: authResult.email,
-        displayName: authResult.display_name,
-        profilePictureUrl: authResult.profile_picture_url,
-      });
-
-      // UIを更新
-      setGoogleUser({
-        email: authResult.email,
-        displayName: authResult.display_name,
-        profilePictureUrl: authResult.profile_picture_url,
-      });
+      // 認証ストアに処理を委譲
+      await handleGoogleAuthResult(authResult);
 
       Alert.alert(
         '成功',
@@ -115,8 +101,7 @@ function SettingsScreen() {
           text: 'ログアウト',
           style: 'destructive',
           onPress: async () => {
-            await clearGoogleUserInfo();
-            setGoogleUser(null);
+            await logout();
             Alert.alert('完了', 'ログアウトしました');
           },
         },
@@ -242,8 +227,16 @@ function SettingsScreen() {
                 <Text style={styles.accountName}>{googleUser.displayName}</Text>
               )}
             </View>
-            <TouchableOpacity style={styles.logoutButton} onPress={handleGoogleLogout}>
-              <Text style={styles.logoutButtonText}>ログアウト</Text>
+            <TouchableOpacity
+              style={styles.logoutButton}
+              onPress={handleGoogleLogout}
+              disabled={isLoggingOut}
+            >
+              {isLoggingOut ? (
+                <ActivityIndicator color={colors.background} />
+              ) : (
+                <Text style={styles.logoutButtonText}>ログアウト</Text>
+              )}
             </TouchableOpacity>
           </>
         ) : (
@@ -251,9 +244,9 @@ function SettingsScreen() {
           <TouchableOpacity
             style={styles.googleButton}
             onPress={handleGoogleLogin}
-            disabled={isGoogleAuthLoading}
+            disabled={isGoogleAuthLoading || isLoggingIn}
           >
-            {isGoogleAuthLoading ? (
+            {isGoogleAuthLoading || isLoggingIn ? (
               <ActivityIndicator color={colors.background} />
             ) : (
               <>
