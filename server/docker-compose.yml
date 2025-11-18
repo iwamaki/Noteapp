@@ -9,6 +9,8 @@ services:
       - .:/app
     env_file:
       - .env.development
+    depends_on:
+      - redis
     environment:
       # ========================================
       # Python 設定
@@ -51,5 +53,23 @@ services:
       # ========================================
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
 
+      # ========================================
+      # OAuth State 管理（Redis）
+      # ========================================
+      - OAUTH_STATE_STORAGE=redis
+      - REDIS_URL=redis://redis:6379/0
+
     restart: unless-stopped
     command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+volumes:
+  redis_data:

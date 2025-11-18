@@ -470,12 +470,14 @@ case 403: return "アクセスが拒否されました";
   - [x] 既存のデバイスID生成ロジックを削除
   - [x] 動作確認（OAuth認証フロー全体） ✅ UUID v4形式で認証成功
 
-- [ ] **#2** OAuth State ManagerのRedis移行 (`server/src/auth/oauth_state_manager.py`)
-  - [ ] Redis接続設定追加
-  - [ ] RedisStateManager クラス実装
-  - [ ] インメモリ実装との互換性確保
-  - [ ] 環境変数でストレージ切り替え可能に
-  - [ ] ローカル開発環境でのRedis起動確認
+- [x] **#2** OAuth State ManagerのRedis移行 (`server/src/auth/oauth_state_manager.py`)
+  - [x] Redis接続設定追加 ✅ 2025-11-18
+  - [x] RedisStateManager クラス実装 ✅ 2025-11-18
+  - [x] インメモリ実装との互換性確保 ✅ 2025-11-18
+  - [x] 環境変数でストレージ切り替え可能に ✅ 2025-11-18
+  - [x] セットアップガイド作成 (`server/docs/OAUTH_STATE_REDIS_SETUP.md`) ✅ 2025-11-18
+  - [x] 開発環境での動作確認完了 ✅ 2025-11-18
+  - [ ] 本番環境へのデプロイと動作確認（Redis必須）
 
 - [x] **#3** トークン自動リフレッシュ機構実装 (`app/features/api/clients/HttpClient.ts`)
   - [x] 401レスポンスインターセプター追加

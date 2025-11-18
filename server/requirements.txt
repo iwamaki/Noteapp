@@ -33,3 +33,6 @@ google-auth-httplib2==0.2.0
 # JWT認証の依存関係
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
+
+# OAuth State管理の依存関係
+redis==5.0.1
