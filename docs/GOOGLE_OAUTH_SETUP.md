@@ -118,7 +118,7 @@ EXPO_PUBLIC_API_BASE_URL=http://localhost:8000
 
 ```bash
 # Google OAuth2 設定 (Authorization Code Flow)
-GOOGLE_CLIENT_ID=<Web Application用Client ID>.apps.googleusercontent.com
+GOOGLE_WEB_CLIENT_ID=<Web Application用Client ID>.apps.googleusercontent.com
 GOOGLE_WEB_CLIENT_SECRET=<Web Application用Client Secret>
 GOOGLE_OAUTH_REDIRECT_URI=http://localhost:8000/api/auth/google/callback
 
