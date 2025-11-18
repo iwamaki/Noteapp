@@ -9,29 +9,10 @@ import { useState, useEffect, useCallback } from 'react';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
 import * as SecureStore from 'expo-secure-store';
-import { Platform } from 'react-native';
-import Constants from 'expo-constants';
+import { getOrCreateDeviceId } from './deviceIdService';
 
 // WebBrowser セッションの自動終了を有効化（iOS で推奨）
 WebBrowser.maybeCompleteAuthSession();
-
-/**
- * デバイス ID を取得
- */
-async function getDeviceId(): Promise<string> {
-  const KEY = 'device_id';
-
-  // 既存のデバイス ID を取得
-  let deviceId = await SecureStore.getItemAsync(KEY);
-
-  if (!deviceId) {
-    // 新しいデバイス ID を生成
-    deviceId = `${Platform.OS}_${Constants.deviceId || 'unknown'}_${Date.now()}`;
-    await SecureStore.setItemAsync(KEY, deviceId);
-  }
-
-  return deviceId;
-}
 
 /**
  * Google OAuth2 認証結果の型
@@ -208,8 +189,8 @@ export function useGoogleAuthCodeFlow(): UseGoogleAuthCodeFlowResult {
     setResult(null);
 
     try {
-      // デバイス ID を取得
-      const deviceId = await getDeviceId();
+      // デバイス ID を取得（UUID v4形式）
+      const deviceId = await getOrCreateDeviceId();
 
       // バックエンドに認証開始リクエスト
       const apiBaseUrl = getApiBaseUrl();
