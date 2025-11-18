@@ -3,7 +3,8 @@
 # @responsibility リクエスト/レスポンスのバリデーションとシリアライゼーション
 
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, List
+from datetime import datetime
 
 
 class DeviceRegisterRequest(BaseModel):
@@ -73,3 +74,28 @@ class LogoutResponse(BaseModel):
     """ログアウトレスポンス"""
     message: str = Field(..., description="ログアウト結果メッセージ")
     success: bool = Field(..., description="ログアウト成功フラグ")
+
+
+class DeviceInfo(BaseModel):
+    """デバイス情報"""
+    device_id: str = Field(..., description="デバイスID")
+    device_name: Optional[str] = Field(None, description="デバイス名（例: iPhone 14 Pro）")
+    device_type: Optional[str] = Field(None, description="デバイスタイプ（ios, android）")
+    is_active: bool = Field(..., description="アクティブフラグ")
+    created_at: datetime = Field(..., description="作成日時")
+    last_login_at: datetime = Field(..., description="最終ログイン日時")
+
+    class Config:
+        from_attributes = True
+
+
+class DeviceListResponse(BaseModel):
+    """デバイス一覧レスポンス"""
+    devices: List[DeviceInfo] = Field(..., description="デバイス一覧")
+    total_count: int = Field(..., description="デバイス総数")
+
+
+class DeleteDeviceResponse(BaseModel):
+    """デバイス削除レスポンス"""
+    message: str = Field(..., description="削除結果メッセージ")
+    success: bool = Field(..., description="削除成功フラグ")

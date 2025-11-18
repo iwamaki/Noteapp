@@ -2,7 +2,7 @@
 # @summary SQLAlchemyモデル定義 - トークン管理用のデータベーステーブル
 # @responsibility データベーススキーマの定義、トークン残高・クレジット・取引履歴・価格情報のモデル化
 
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
 
@@ -99,12 +99,15 @@ class DeviceAuth(Base):
     """デバイス認証テーブル
 
     デバイスIDとユーザーIDの紐付けを管理。
-    1つのデバイスIDに対して1つのユーザーアカウントを割り当てる。
+    マルチデバイス対応: 1ユーザーが複数のデバイスを持つことが可能。
     """
     __tablename__ = 'device_auth'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     device_id = Column(String, unique=True, nullable=False, index=True)  # デバイスの一意識別子（UUID）
     user_id = Column(String, ForeignKey('users.user_id'), nullable=False, index=True)
+    device_name = Column(String, nullable=True)  # デバイス名（例: "iPhone 14 Pro"）
+    device_type = Column(String, nullable=True)  # デバイスタイプ（"ios", "android"）
+    is_active = Column(Boolean, default=True, nullable=False)  # アクティブフラグ（論理削除用）
     created_at = Column(DateTime, default=datetime.now, nullable=False)
     last_login_at = Column(DateTime, default=datetime.now, onupdate=datetime.now, nullable=False)

@@ -5,7 +5,7 @@
 import secrets
 import string
 from datetime import datetime
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
 from sqlalchemy.orm import Session
 from jose import jwt
 from src.billing.models import User, DeviceAuth, Credit
@@ -20,6 +20,11 @@ class AuthenticationError(Exception):
 
 class DeviceNotFoundError(AuthenticationError):
     """デバイスが見つからない"""
+    pass
+
+
+class DeviceAccessDeniedError(AuthenticationError):
+    """デバイスへのアクセスが拒否された"""
     pass
 
 
@@ -209,4 +214,111 @@ class AuthService:
             existing = self.db.query(User).filter_by(user_id=user_id).first()
             if not existing:
                 return user_id
+
+    def get_user_devices(self, user_id: str) -> List[DeviceAuth]:
+        """
+        ユーザーの全デバイスを取得
+
+        Args:
+            user_id: ユーザーID
+
+        Returns:
+            デバイス認証レコードのリスト
+
+        Raises:
+            AuthenticationError: データベースエラーが発生した場合
+        """
+        try:
+            devices = self.db.query(DeviceAuth).filter_by(user_id=user_id).all()
+            logger.info(f"Retrieved {len(devices)} devices for user_id={user_id}")
+            return devices
+        except Exception as e:
+            logger.error(f"Failed to get user devices: {e}")
+            raise AuthenticationError(f"Failed to get user devices: {e}")
+
+    def delete_device(self, user_id: str, device_id: str) -> None:
+        """
+        デバイスを削除（論理削除）
+
+        Args:
+            user_id: ユーザーID（認可確認用）
+            device_id: 削除するデバイスID
+
+        Raises:
+            DeviceNotFoundError: デバイスが見つからない場合
+            DeviceAccessDeniedError: デバイスが別のユーザーに属している場合
+            AuthenticationError: データベースエラーが発生した場合
+        """
+        try:
+            device = self.db.query(DeviceAuth).filter_by(device_id=device_id).first()
+
+            if not device:
+                raise DeviceNotFoundError(f"Device not found: {device_id}")
+
+            # ユーザーの所有確認
+            if device.user_id != user_id:
+                logger.warning(
+                    f"Device access denied: user_id={user_id}, "
+                    f"device_id={device_id}, owner={device.user_id}"
+                )
+                raise DeviceAccessDeniedError(
+                    "You don't have permission to delete this device"
+                )
+
+            # 論理削除
+            device.is_active = False
+            self.db.commit()
+
+            logger.info(f"Device deleted: user_id={user_id}, device_id={device_id}")
+
+        except (DeviceNotFoundError, DeviceAccessDeniedError):
+            raise
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"Failed to delete device: {e}")
+            raise AuthenticationError(f"Failed to delete device: {e}")
+
+    def update_device_info(
+        self,
+        device_id: str,
+        device_name: Optional[str] = None,
+        device_type: Optional[str] = None
+    ) -> None:
+        """
+        デバイス情報を更新
+
+        Args:
+            device_id: デバイスID
+            device_name: デバイス名（Noneの場合は更新しない）
+            device_type: デバイスタイプ（Noneの場合は更新しない）
+
+        Raises:
+            DeviceNotFoundError: デバイスが見つからない場合
+            AuthenticationError: データベースエラーが発生した場合
+        """
+        try:
+            device = self.db.query(DeviceAuth).filter_by(device_id=device_id).first()
+
+            if not device:
+                raise DeviceNotFoundError(f"Device not found: {device_id}")
+
+            # 更新
+            if device_name is not None:
+                device.device_name = device_name
+            if device_type is not None:
+                device.device_type = device_type
+
+            self.db.commit()
+
+            logger.info(
+                f"Device info updated: device_id={device_id}, "
+                f"name={device_name}, type={device_type}"
+            )
+
+        except DeviceNotFoundError:
+            raise
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"Failed to update device info: {e}")
+            raise AuthenticationError(f"Failed to update device info: {e}")
 

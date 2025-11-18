@@ -3,6 +3,7 @@
 # @responsibility デバイスID認証のHTTPエンドポイント
 
 import os
+from datetime import datetime
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -10,7 +11,8 @@ from sqlalchemy.orm import Session
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from src.billing.database import get_db
-from src.auth.service import AuthService, AuthenticationError, DeviceNotFoundError
+from src.auth.service import AuthService, AuthenticationError, DeviceNotFoundError, DeviceAccessDeniedError
+from src.auth.dependencies import verify_token_auth
 from src.auth.schemas import (
     DeviceRegisterRequest,
     DeviceRegisterResponse,
@@ -22,6 +24,9 @@ from src.auth.schemas import (
     GoogleAuthStartResponse,
     LogoutRequest,
     LogoutResponse,
+    DeviceInfo,
+    DeviceListResponse,
+    DeleteDeviceResponse,
 )
 from src.auth.google_oauth_flow import (
     generate_auth_url,
@@ -472,6 +477,16 @@ async def google_callback(
             # デバイス認証レコードを作成または更新
             existing_device = db.query(DeviceAuth).filter_by(device_id=device_id).first()
             if existing_device:
+                # 既存デバイスが別のユーザーに紐付けられている場合は警告
+                if existing_device.user_id != user_id:
+                    logger.warning(
+                        "Device reassignment detected during OAuth login",
+                        extra={
+                            "device_id": device_id[:20] + "...",
+                            "old_user_id": existing_device.user_id,
+                            "new_user_id": user_id
+                        }
+                    )
                 existing_device.user_id = user_id
                 from datetime import datetime
                 existing_device.last_login_at = datetime.now()
@@ -749,6 +764,154 @@ async def app_links_callback(request: Request):
     """
 
     return HTMLResponse(content=html_content, status_code=200)
+
+
+@router.get(
+    "/devices",
+    response_model=DeviceListResponse,
+    status_code=status.HTTP_200_OK,
+    summary="デバイス一覧取得",
+    description="認証済みユーザーの全デバイス一覧を取得します。"
+)
+@limiter.limit("30/minute")
+async def get_devices(
+    request: Request,
+    user_id: str = Depends(verify_token_auth),
+    db: Session = Depends(get_db)
+):
+    """
+    デバイス一覧取得エンドポイント
+
+    認証済みユーザーの全デバイス（アクティブ・非アクティブ含む）を取得します。
+
+    レート制限: 30リクエスト/分（IPアドレスベース）
+
+    Returns:
+        DeviceListResponse: {
+            "devices": [DeviceInfo, ...],
+            "total_count": int
+        }
+
+    Raises:
+        HTTPException(401): 認証失敗
+        HTTPException(500): サーバーエラー
+    """
+    try:
+        auth_service = AuthService(db)
+        devices = auth_service.get_user_devices(user_id)
+
+        # DeviceAuth モデルを DeviceInfo スキーマに変換
+        device_list = [
+            DeviceInfo(
+                device_id=device.device_id or "",
+                device_name=device.device_name,
+                device_type=device.device_type,
+                is_active=device.is_active if device.is_active is not None else True,
+                created_at=device.created_at or datetime.now(),
+                last_login_at=device.last_login_at or datetime.now()
+            )
+            for device in devices
+        ]
+
+        logger.info(
+            "Device list retrieved successfully",
+            extra={"user_id": user_id, "device_count": len(device_list)}
+        )
+
+        return DeviceListResponse(
+            devices=device_list,
+            total_count=len(device_list)
+        )
+
+    except AuthenticationError as e:
+        logger.error(f"Failed to get device list: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error in get devices: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error"
+        )
+
+
+@router.delete(
+    "/devices/{device_id}",
+    response_model=DeleteDeviceResponse,
+    status_code=status.HTTP_200_OK,
+    summary="デバイス削除",
+    description="指定したデバイスを削除（論理削除）します。"
+)
+@limiter.limit("20/minute")
+async def delete_device(
+    request: Request,
+    device_id: str,
+    user_id: str = Depends(verify_token_auth),
+    db: Session = Depends(get_db)
+):
+    """
+    デバイス削除エンドポイント
+
+    指定したデバイスを論理削除します。
+    デバイスは物理的には削除されず、is_active フラグが False に設定されます。
+
+    レート制限: 20リクエスト/分（IPアドレスベース）
+
+    Args:
+        device_id: 削除するデバイスID（パスパラメータ）
+
+    Returns:
+        DeleteDeviceResponse: {
+            "message": str,
+            "success": bool
+        }
+
+    Raises:
+        HTTPException(401): 認証失敗
+        HTTPException(403): アクセス権限なし（別ユーザーのデバイス）
+        HTTPException(404): デバイスが見つからない
+        HTTPException(500): サーバーエラー
+    """
+    try:
+        auth_service = AuthService(db)
+        auth_service.delete_device(user_id, device_id)
+
+        logger.info(
+            "Device deleted successfully",
+            extra={"user_id": user_id, "device_id": device_id[:20] + "..."}
+        )
+
+        return DeleteDeviceResponse(
+            message=f"Device {device_id} deleted successfully",
+            success=True
+        )
+
+    except DeviceNotFoundError as e:
+        logger.warning(f"Device deletion failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+    except DeviceAccessDeniedError as e:
+        logger.warning(f"Device deletion denied: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(e)
+        )
+    except AuthenticationError as e:
+        logger.error(f"Failed to delete device: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error in delete device: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error"
+        )
 
 
 @router.get(

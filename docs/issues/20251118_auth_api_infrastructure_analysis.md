@@ -512,11 +512,26 @@ case 403: return "アクセスが拒否されました";
   - [x] 新トークンで再認証メッセージ送信
   - [x] 長時間接続での動作確認
 
-- [ ] **#6** マルチデバイス対応
-  - [ ] データベーススキーマ見直し
-  - [ ] デバイス管理エンドポイント追加
-  - [ ] デバイス一覧取得API
-  - [ ] フロントエンド: デバイス管理UI
+- [x] **#6** マルチデバイス対応 ✅ 2025-11-19
+  - [x] データベーススキーマ見直し (`server/src/billing/models.py:98-114`)
+    - [x] `device_name` フィールド追加（デバイス名）
+    - [x] `device_type` フィールド追加（"ios", "android"）
+    - [x] `is_active` フィールド追加（論理削除用）
+  - [x] デバイス管理エンドポイント追加 (`server/src/auth/router.py:758-903`)
+    - [x] `GET /api/auth/devices` - デバイス一覧取得
+    - [x] `DELETE /api/auth/devices/{device_id}` - デバイス削除
+  - [x] AuthService にデバイス管理メソッド追加 (`server/src/auth/service.py:218-323`)
+    - [x] `get_user_devices()` - ユーザーの全デバイス取得
+    - [x] `delete_device()` - デバイス削除（論理削除）
+    - [x] `update_device_info()` - デバイス情報更新
+  - [x] Pydantic スキーマ追加 (`server/src/auth/schemas.py:79-101`)
+    - [x] `DeviceInfo` - デバイス情報レスポンス
+    - [x] `DeviceListResponse` - デバイス一覧レスポンス
+    - [x] `DeleteDeviceResponse` - 削除結果レスポンス
+  - [x] OAuth認証フロー改善 (`server/src/auth/router.py:479-488`)
+    - [x] デバイス再割り当て時の警告ログ追加
+  - [x] データベース再生成手順書作成 (`server/docs/DATABASE_REGENERATION.md`)
+  - [ ] フロントエンド: デバイス管理UI（将来対応）
 
 - [x] **#7** 認証状態の集中管理
   - [x] React Context または Zustand でストア作成 ✅ 2025-11-18
