@@ -46,7 +46,7 @@ export class ChatWebSocketManager {
 
       // 共通WebSocketClientを使用（自動再接続、ハートビート付き）
       this.wsClient = createWebSocketClient(
-        `${backendUrl}/ws/${this.clientId}`,
+        `${backendUrl}/ws`,
         {
           maxReconnectAttempts: CHAT_CONFIG.websocket.maxReconnectAttempts,
           reconnectDelay: CHAT_CONFIG.websocket.reconnectDelay,

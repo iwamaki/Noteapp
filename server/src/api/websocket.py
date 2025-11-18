@@ -46,7 +46,7 @@ class ConnectionManager:
             websocket: WebSocketインスタンス
             client_id: クライアントの一意識別子
         """
-        await websocket.accept()
+        # Note: websocket.accept() は呼び出し元のエンドポイントハンドラーで既に実行済み
         self.active_connections[client_id] = websocket
         self.client_requests[client_id] = set()
 

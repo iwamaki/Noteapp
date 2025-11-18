@@ -235,6 +235,37 @@ async def websocket_endpoint(websocket: WebSocket):
                 manager.handle_ping(user_id)
                 await manager.send_message(user_id, {"type": "pong"})
 
+            elif data.get("type") == "auth":
+                # 再認証メッセージ（トークンリフレッシュ後）
+                access_token = data.get("access_token")
+                if not access_token:
+                    logger.warning(f"Re-auth message missing access_token from user_id={user_id}")
+                    continue
+
+                # トークン検証
+                payload = verify_token(access_token, TokenType.ACCESS)
+                if not payload:
+                    logger.warning(f"Re-auth failed: Invalid or expired token from user_id={user_id}")
+                    await manager.send_message(user_id, {
+                        "type": "auth_error",
+                        "message": "Invalid or expired token"
+                    })
+                    continue
+
+                # トークンのユーザーIDが既存の接続と一致するか確認
+                token_user_id = payload.get("sub")
+                if token_user_id != user_id:
+                    logger.warning(f"Re-auth failed: User ID mismatch (current={user_id}, token={token_user_id})")
+                    await manager.send_message(user_id, {
+                        "type": "auth_error",
+                        "message": "User ID mismatch"
+                    })
+                    continue
+
+                # 再認証成功
+                logger.info(f"Re-authentication successful: user_id={user_id}")
+                await manager.send_message(user_id, {"type": "auth_success", "user_id": user_id})
+
             else:
                 logger.warning(f"Unknown message type: {data.get('type')}")
 

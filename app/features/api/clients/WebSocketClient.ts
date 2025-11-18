@@ -5,7 +5,8 @@
  */
 
 import { logger } from '../../../utils/logger';
-import { getAccessToken } from '../../../auth/tokenService';
+import { getAccessToken, saveTokens, clearTokens } from '../../../auth/tokenService';
+import { getJwtTimeToExpiry } from '../../../auth/jwtUtils';
 import {
   WebSocketState,
   WebSocketConfig,
@@ -50,6 +51,10 @@ export class WebSocketClient<T = any> {
   private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
   private heartbeatTimeoutCheck: ReturnType<typeof setInterval> | null = null;
   private lastPongTime: number = 0;
+
+  // トークン監視関連
+  private tokenExpiryCheckTimeout: ReturnType<typeof setTimeout> | null = null;
+  private isRefreshingToken: boolean = false;
 
   // ステート変更リスナー
   private stateListeners: Set<(state: WebSocketState) => void> = new Set();
@@ -99,6 +104,7 @@ export class WebSocketClient<T = any> {
     logger.info(this.logContext, 'Disconnecting WebSocket');
 
     this.stopHeartbeat();
+    this.stopTokenExpiryCheck();
 
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout);
@@ -216,6 +222,9 @@ export class WebSocketClient<T = any> {
         // ハートビートを開始
         this.startHeartbeat();
 
+        // トークン有効期限の監視を開始
+        this.startTokenExpiryCheck();
+
         // カスタムハンドラーを呼び出し
         if (this.eventHandlers.onOpen) {
           try {
@@ -255,6 +264,7 @@ export class WebSocketClient<T = any> {
   private handleError(error: Event): void {
     logger.error(this.logContext, 'WebSocket error:', error);
     this.setState(WebSocketState.ERROR);
+    this.stopTokenExpiryCheck();
 
     // カスタムハンドラーを呼び出し
     if (this.eventHandlers.onError) {
@@ -276,6 +286,7 @@ export class WebSocketClient<T = any> {
     );
     this.setState(WebSocketState.DISCONNECTED);
     this.ws = null;
+    this.stopTokenExpiryCheck();
 
     // カスタムハンドラーを呼び出し
     if (this.eventHandlers.onClose) {
@@ -446,6 +457,135 @@ export class WebSocketClient<T = any> {
           logger.error(this.logContext, 'Error in onStateChange handler:', error);
         }
       }
+    }
+  }
+
+  /**
+   * トークン有効期限の監視を開始
+   */
+  private async startTokenExpiryCheck(): Promise<void> {
+    try {
+      // 既存のタイマーをクリア
+      this.stopTokenExpiryCheck();
+
+      const accessToken = await getAccessToken();
+      if (!accessToken) {
+        logger.warn(this.logContext, 'No access token available for expiry check');
+        return;
+      }
+
+      // トークンの残り有効時間を取得（ミリ秒）
+      const timeToExpiry = getJwtTimeToExpiry(accessToken);
+
+      if (timeToExpiry <= 0) {
+        logger.warn(this.logContext, 'Access token already expired');
+        // 即座にリフレッシュを試みる
+        await this.handleTokenRefresh();
+        return;
+      }
+
+      // 期限の5分前にリフレッシュ
+      const REFRESH_BUFFER_MS = 5 * 60 * 1000; // 5分前
+      const timeUntilRefresh = Math.max(0, timeToExpiry - REFRESH_BUFFER_MS);
+
+      logger.info(
+        this.logContext,
+        `Token expiry check scheduled in ${Math.floor(timeUntilRefresh / 1000)}s (expires in ${Math.floor(timeToExpiry / 1000)}s)`
+      );
+
+      this.tokenExpiryCheckTimeout = setTimeout(async () => {
+        logger.info(this.logContext, 'Token approaching expiry - initiating refresh');
+        await this.handleTokenRefresh();
+      }, timeUntilRefresh);
+    } catch (error) {
+      logger.error(this.logContext, 'Failed to start token expiry check', error);
+    }
+  }
+
+  /**
+   * トークン有効期限の監視を停止
+   */
+  private stopTokenExpiryCheck(): void {
+    if (this.tokenExpiryCheckTimeout) {
+      clearTimeout(this.tokenExpiryCheckTimeout);
+      this.tokenExpiryCheckTimeout = null;
+      logger.debug(this.logContext, 'Token expiry check stopped');
+    }
+  }
+
+  /**
+   * トークンをリフレッシュして再認証
+   */
+  private async handleTokenRefresh(): Promise<void> {
+    // 既にリフレッシュ中の場合はスキップ
+    if (this.isRefreshingToken) {
+      logger.debug(this.logContext, 'Token refresh already in progress');
+      return;
+    }
+
+    this.isRefreshingToken = true;
+
+    try {
+      logger.info(this.logContext, 'Starting WebSocket token refresh');
+
+      // refreshAccessToken を遅延ロード（循環参照回避）
+      const { refreshAccessToken } = await import('../../../auth/authApiClient');
+      const { getRefreshToken } = await import('../../../auth/tokenService');
+
+      // リフレッシュトークンを取得
+      const refreshToken = await getRefreshToken();
+      if (!refreshToken) {
+        throw new Error('No refresh token available');
+      }
+
+      // 新しいトークンを取得
+      const response = await refreshAccessToken(refreshToken);
+
+      // 新しいトークンを保存
+      await saveTokens(response.access_token, response.refresh_token);
+
+      logger.info(this.logContext, 'Token refresh successful');
+
+      // 新しいトークンで再認証メッセージを送信
+      await this.sendReauthMessage(response.access_token);
+
+      // 次回のトークン期限監視を開始
+      await this.startTokenExpiryCheck();
+    } catch (error) {
+      logger.error(this.logContext, 'Token refresh failed', error);
+
+      // リフレッシュ失敗時はトークンをクリアして接続を閉じる
+      await clearTokens();
+      if (this.ws) {
+        this.ws.close(1000, 'Token refresh failed');
+      }
+    } finally {
+      this.isRefreshingToken = false;
+    }
+  }
+
+  /**
+   * 再認証メッセージを送信
+   */
+  private async sendReauthMessage(accessToken: string): Promise<void> {
+    if (!this.ws || this.state !== WebSocketState.CONNECTED) {
+      logger.warn(this.logContext, 'Cannot send reauth message: not connected');
+      return;
+    }
+
+    try {
+      // 再認証メッセージを送信（初回認証と同じフォーマット）
+      this.ws.send(
+        JSON.stringify({
+          type: 'auth',
+          access_token: accessToken,
+        })
+      );
+
+      logger.info(this.logContext, 'Reauth message sent with new token');
+    } catch (error) {
+      logger.error(this.logContext, 'Failed to send reauth message', error);
+      throw error;
     }
   }
 }
