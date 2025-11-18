@@ -27,22 +27,12 @@
       "intentFilters": [
         {
           "action": "VIEW",
-          "category": ["BROWSABLE", "DEFAULT"],
-          "data": [
-            {
-              "scheme": "com.googleusercontent.apps.461522030982",
-              "path": "/oauth2redirect"
-            }
-          ]
-        },
-        {
-          "action": "VIEW",
           "autoVerify": true,
           "category": ["BROWSABLE", "DEFAULT"],
           "data": [
             {
               "scheme": "https",
-              "host": "99f150da2530.ngrok-free.app",
+              "host": "iwamaki.tail80450d.ts.net",
               "pathPrefix": "/auth"
             }
           ]

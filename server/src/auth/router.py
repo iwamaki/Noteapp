@@ -313,10 +313,13 @@ async def google_callback(
     try:
         # Get base URL for App Links
         oauth_redirect_uri = os.getenv("GOOGLE_OAUTH_REDIRECT_URI", "")
-        if oauth_redirect_uri:
-            base_url = oauth_redirect_uri.replace("/api/auth/google/callback", "")
-        else:
-            base_url = "https://99f150da2530.ngrok-free.app"
+        if not oauth_redirect_uri:
+            logger.error("GOOGLE_OAUTH_REDIRECT_URI environment variable not configured")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="OAuth redirect URI not configured"
+            )
+        base_url = oauth_redirect_uri.replace("/api/auth/google/callback", "")
 
         # エラーチェック
         if error:
@@ -438,16 +441,6 @@ async def google_callback(
                 "profile_picture_url": profile_picture_url or "",
             })
 
-            # Android App Links redirect (HTTPS)
-            # Extract base URL from GOOGLE_OAUTH_REDIRECT_URI environment variable
-            oauth_redirect_uri = os.getenv("GOOGLE_OAUTH_REDIRECT_URI", "")
-            if oauth_redirect_uri:
-                # Remove /api/auth/google/callback to get base URL
-                base_url = oauth_redirect_uri.replace("/api/auth/google/callback", "")
-            else:
-                # Fallback to default ngrok URL
-                base_url = "https://99f150da2530.ngrok-free.app"
-
             # Construct App Links URL (Android Intent Filter will intercept this)
             app_links_url = f"{base_url}/auth/callback?{params}"
 
@@ -465,9 +458,10 @@ async def google_callback(
         oauth_redirect_uri = os.getenv("GOOGLE_OAUTH_REDIRECT_URI", "")
         if oauth_redirect_uri:
             base_url = oauth_redirect_uri.replace("/api/auth/google/callback", "")
+            error_url = f"{base_url}/auth/callback?error=oauth_flow_error"
         else:
-            base_url = "https://99f150da2530.ngrok-free.app"
-        error_url = f"{base_url}/auth/callback?error=oauth_flow_error"
+            # If no redirect URI configured, return generic error
+            error_url = "/auth/callback?error=oauth_flow_error"
         html_content = f"""
         <!DOCTYPE html>
         <html>
@@ -536,9 +530,10 @@ async def google_callback(
         oauth_redirect_uri = os.getenv("GOOGLE_OAUTH_REDIRECT_URI", "")
         if oauth_redirect_uri:
             base_url = oauth_redirect_uri.replace("/api/auth/google/callback", "")
+            error_url = f"{base_url}/auth/callback?error=internal_error"
         else:
-            base_url = "https://99f150da2530.ngrok-free.app"
-        error_url = f"{base_url}/auth/callback?error=internal_error"
+            # If no redirect URI configured, return generic error
+            error_url = "/auth/callback?error=internal_error"
         html_content = f"""
         <!DOCTYPE html>
         <html>

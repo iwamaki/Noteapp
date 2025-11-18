@@ -40,46 +40,7 @@
 8. テストユーザーの追加（テスト段階では必要に応じて追加）
 9. 「保存して次へ」をクリック
 
-### 3. OAuth 2.0 クライアントIDの作成
-
-#### Android用クライアントID
-
-1. 「APIとサービス」→「認証情報」を選択
-2. 「認証情報を作成」→「OAuth クライアントID」をクリック
-3. アプリケーションの種類で「Android」を選択
-4. 以下の情報を入力：
-   - **名前**: NoteApp (Android)
-   - **パッケージ名**: `com.iwash.NoteApp`（app.jsonの`android.package`と一致）
-   - **SHA-1 署名証明書フィンgerprint**: 開発用証明書のSHA-1
-
-##### SHA-1の取得方法（開発用）
-
-```bash
-# Expo開発ビルド用のSHA-1を取得
-# 1. Expo Goを使用する場合
-# → Google OAuth2はExpo Goでは制限があるため、開発ビルドを推奨
-
-# 2. EAS Buildを使用する場合
-eas credentials
-
-# 3. ローカルのキーストアから取得する場合（Androidのみ）
-keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android
-```
-
-5. 「作成」をクリック
-6. **Client ID**をコピーして保存
-
-#### iOS用クライアントID
-
-1. 「認証情報を作成」→「OAuth クライアントID」をクリック
-2. アプリケーションの種類で「iOS」を選択
-3. 以下の情報を入力：
-   - **名前**: NoteApp (iOS)
-   - **バンドルID**: `com.iwash.NoteApp`（app.jsonの`ios.bundleIdentifier`と一致）
-4. 「作成」をクリック
-5. **Client ID**をコピーして保存
-
-#### Web Application用クライアントID（**必須** - Authorization Code Flow用）
+### 3. OAuth 2.0 クライアントIDの作成（Web Application）
 
 1. 「認証情報を作成」→「OAuth クライアントID」をクリック
 2. アプリケーションの種類で「**ウェブアプリケーション**」を選択
@@ -96,23 +57,7 @@ keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -sto
 
 ### 4. 環境変数の設定
 
-#### フロントエンド (.env)
-
-プロジェクトルートに `.env` ファイルを作成し、以下を追加：
-
-```bash
-# Google OAuth2 Client IDs
-EXPO_PUBLIC_GOOGLE_CLIENT_ID_ANDROID=<Android用Client ID>.apps.googleusercontent.com
-EXPO_PUBLIC_GOOGLE_CLIENT_ID_IOS=<iOS用Client ID>.apps.googleusercontent.com
-EXPO_PUBLIC_GOOGLE_CLIENT_ID_EXPO=<Web用Client ID>.apps.googleusercontent.com
-
-# API Base URL
-EXPO_PUBLIC_API_BASE_URL=http://localhost:8000
-```
-
-**注意**: `.env` ファイルは `.gitignore` に追加してGitにコミットしないこと。
-
-#### バックエンド (server/.env)
+#### バックエンド (server/.env または server/.env.development)
 
 `server/.env` ファイルに以下を追加：
 
@@ -131,9 +76,9 @@ GOOGLE_OAUTH_REDIRECT_URI=http://localhost:8000/api/auth/google/callback
 - `.gitignore` に `.env` ファイルが含まれていることを確認
 - 本番環境では環境変数またはSecret Managerを使用
 
-### 5. Deep Link / App Links の設定
+### 5. App Links の設定（Android）
 
-Authorization Code Flowでは、OAuth認証後にアプリに戻るためのDeep LinkまたはApp Linksが必要です。
+Authorization Code Flowでは、OAuth認証後にアプリに戻るためのApp Linksを使用します。
 
 #### app.json の設定確認
 
@@ -146,24 +91,22 @@ Authorization Code Flowでは、OAuth認証後にアプリに戻るためのDeep
         {
           "action": "VIEW",
           "autoVerify": true,
+          "category": ["BROWSABLE", "DEFAULT"],
           "data": [
             {
               "scheme": "https",
-              "host": "your-domain.com",
+              "host": "your-backend-url.com",
               "pathPrefix": "/auth"
-            },
-            {
-              "scheme": "com.googleusercontent.apps.461522030982",
-              "pathPrefix": "/oauth2redirect"
             }
-          ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          ]
         }
       ]
     }
   }
 }
 ```
+
+**重要**: `host`には、バックエンドのドメイン（または開発環境ではTailscale FunnelのURL）を設定してください。
 
 **Deep Link フロー**:
 1. ユーザーが「Googleでログイン」をタップ
