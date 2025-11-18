@@ -4,8 +4,9 @@
  * @responsibility セキュアで一貫性のあるHTTP通信を提供
  */
 
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 import { getAuthHeaders } from '../../../auth/authHeaders';
+import { getRefreshToken, saveTokens, clearTokens } from '../../../auth/tokenService';
 import { logger } from '../../../utils/logger';
 import { ApiRequestConfig, ApiResponse } from '../types';
 import { withRetry } from '../utils/retry';
@@ -41,6 +42,7 @@ export class HttpClient {
   private includeAuth: boolean;
   private errorHandler: ApiErrorHandler;
   private logContext: string;
+  private refreshingPromise: Promise<string> | null = null;
 
   constructor(config: HttpClientConfig) {
     this.timeout = config.timeout || 30000;
@@ -94,7 +96,45 @@ export class HttpClient {
         );
         return response;
       },
-      (error) => {
+      async (error: AxiosError) => {
+        const originalRequest = error.config;
+
+        // 401エラーの場合、トークンリフレッシュを試みる
+        if (
+          error.response?.status === 401 &&
+          this.includeAuth &&
+          originalRequest &&
+          !(originalRequest as any)._isRetry
+        ) {
+          logger.info(this.logContext, '401 Unauthorized - attempting token refresh');
+
+          try {
+            // トークンをリフレッシュ
+            const newAccessToken = await this.handleTokenRefresh();
+
+            // リトライフラグを設定（無限ループ防止）
+            (originalRequest as any)._isRetry = true;
+
+            // 新しいトークンで認証ヘッダーを更新
+            originalRequest.headers = originalRequest.headers || {};
+            originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
+
+            logger.info(this.logContext, 'Retrying original request with new token');
+
+            // 元のリクエストをリトライ
+            return this.axiosInstance.request(originalRequest);
+          } catch (refreshError) {
+            logger.error(
+              this.logContext,
+              'Token refresh failed, cannot retry request',
+              refreshError
+            );
+            // リフレッシュ失敗時は元のエラーを返す
+            return Promise.reject(error);
+          }
+        }
+
+        // 401以外のエラー、またはリトライ済みの場合
         logger.error(
           this.logContext,
           `Response error: ${error.message}`,
@@ -196,6 +236,57 @@ export class HttpClient {
     } catch (error) {
       throw this.errorHandler.handle(error);
     }
+  }
+
+  /**
+   * トークンをリフレッシュ
+   * 同時に複数のリフレッシュリクエストが発生しないように制御
+   * @returns 新しいアクセストークン
+   * @throws リフレッシュ失敗時
+   */
+  private async handleTokenRefresh(): Promise<string> {
+    // 既にリフレッシュ中の場合は、その結果を待つ（重複防止）
+    if (this.refreshingPromise) {
+      logger.debug(this.logContext, 'Token refresh already in progress, waiting...');
+      return this.refreshingPromise;
+    }
+
+    // 新しいリフレッシュプロセスを開始
+    this.refreshingPromise = (async () => {
+      try {
+        logger.info(this.logContext, 'Starting token refresh');
+
+        // リフレッシュトークンを取得
+        const refreshToken = await getRefreshToken();
+        if (!refreshToken) {
+          throw new Error('No refresh token available');
+        }
+
+        // refreshAccessToken を遅延ロード（循環参照回避）
+        const { refreshAccessToken } = await import('../../../auth/authApiClient');
+
+        // 新しいトークンを取得
+        const response = await refreshAccessToken(refreshToken);
+
+        // 新しいトークンを保存
+        await saveTokens(response.access_token, response.refresh_token);
+
+        logger.info(this.logContext, 'Token refresh successful');
+        return response.access_token;
+      } catch (error) {
+        logger.error(this.logContext, 'Token refresh failed', error);
+
+        // リフレッシュ失敗時はトークンをクリア
+        await clearTokens();
+
+        throw new Error('Token refresh failed. Please log in again.');
+      } finally {
+        // リフレッシュ完了後、Promiseをクリア
+        this.refreshingPromise = null;
+      }
+    })();
+
+    return this.refreshingPromise;
   }
 
   /**
