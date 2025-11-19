@@ -26,7 +26,7 @@ import { useTokenBalanceStore, TOKEN_CAPACITY_LIMITS } from '../../settings/sett
 import { convertProvidersToModelInfo, type ModelInfo } from './constants';
 import APIService from '../../features/llmService/api';
 import { CreditAllocationModal } from './components/CreditAllocationModal';
-import { useModelSwitch } from '../../hooks/useModelSwitch';
+import { useModelSwitch } from '../../settings/hooks/useModelSwitch';
 
 type ModelSelectionScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ModelSelection'>;
 

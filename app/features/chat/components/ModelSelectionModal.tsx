@@ -20,7 +20,7 @@ import { useTokenBalanceStore } from '../../../settings/settingsStore';
 import { convertProvidersToModelInfo, type ModelInfo } from '../../../screens/model-selection/constants';
 import APIService from '../../llmService/api';
 import { ModelCard } from './ModelCard';
-import { useModelSwitch } from '../../../hooks/useModelSwitch';
+import { useModelSwitch } from '../../../settings/hooks/useModelSwitch';
 
 interface ModelSelectionModalProps {
   isVisible: boolean;

@@ -12,7 +12,7 @@ import { useTheme } from '../../../design/theme/ThemeContext';
 import { useChat } from '../hooks/useChat';
 import { CHAT_CONFIG } from '../config/chatConfig';
 import { useTokenBalanceStore } from '../../../settings/settingsStore';
-import { useModelSwitch } from '../../../hooks/useModelSwitch';
+import { useModelSwitch } from '../../../settings/hooks/useModelSwitch';
 
 interface MessageInputProps {
   inputText: string;

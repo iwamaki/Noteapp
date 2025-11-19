@@ -11,10 +11,10 @@
  */
 
 import { useCallback } from 'react';
-import { useTokenBalanceStore } from '../settings/settingsStore';
-import APIService from '../features/llmService/api';
-import { providerCache } from '../features/llmService/cache/providerCache';
-import { getProviderNameFromModelId } from '../features/llmService/utils/providerHelper';
+import { useTokenBalanceStore } from '../settingsStore';
+import APIService from '../../features/llmService/api';
+import { providerCache } from '../../features/llmService/cache/providerCache';
+import { getProviderNameFromModelId } from '../../features/llmService/utils/providerHelper';
 
 /**
  * モデル切り替えフックの戻り値
