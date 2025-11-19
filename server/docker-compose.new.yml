@@ -1,0 +1,71 @@
+# Docker Compose for New Architecture Testing (Phase 1)
+# Usage: docker-compose -f docker-compose.new.yml up
+
+version: '3.8'
+
+services:
+  api-new:
+    build:
+      context: .
+      dockerfile: Dockerfile.new
+      args:
+        INSTALL_DEV: "true"
+    ports:
+      - "8001:8000"  # 既存と被らないようポート変更
+    volumes:
+      - .:/app
+    env_file:
+      - .env.new
+    depends_on:
+      - redis
+    environment:
+      # Python 設定
+      - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/app/src
+
+      # アプリケーション設定
+      - APP_NAME=NoteApp Server (New Architecture)
+      - DEBUG=true
+      - ENVIRONMENT=development
+      - LOG_LEVEL=INFO
+      - LOG_FORMAT=json
+
+      # データベース設定
+      - DATABASE_URL=sqlite:///./billing.db
+      - DATABASE_ECHO=false
+
+      # Redis設定
+      - REDIS_URL=redis://redis:6379/0
+      - REDIS_MAX_CONNECTIONS=50
+
+      # GCP設定（.env.developmentから読み込み）
+      - GCP_PROJECT_ID=${GCP_PROJECT_ID}
+      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS}
+
+      # Secret Manager設定
+      - USE_SECRET_MANAGER=true
+      - GEMINI_API_SECRET_ID=${GEMINI_API_SECRET_ID:-GOOGLE_API_KEY}
+      - OPENAI_API_SECRET_ID=${OPENAI_API_SECRET_ID:-OPENAI_API_KEY}
+
+      # CORS設定（.env.newから読み込み）
+      # - CORS_ORIGINS=http://localhost:3000,http://localhost:5173,http://localhost:8081
+
+      # レート制限設定
+      - RATE_LIMIT_ENABLED=true
+      - RATE_LIMIT_PER_MINUTE=60
+
+    restart: unless-stopped
+    # 新しいmain_new.pyを使用
+    command: uvicorn src.main_new:app --host 0.0.0.0 --port 8000 --reload
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"  # 既存と被らないようポート変更
+    volumes:
+      - redis_data_new:/data
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+volumes:
+  redis_data_new:
