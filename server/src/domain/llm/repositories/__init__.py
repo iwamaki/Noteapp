@@ -1,0 +1,11 @@
+"""
+LLM Domain - Repositories Package
+
+LLMÉá¤ónêÝ¸Èê¤ó¿üÕ§ü¹’¨¯¹ÝüÈW~Y
+"""
+
+from src.domain.llm.repositories.conversation_repository import ConversationRepository
+
+__all__ = [
+    "ConversationRepository",
+]

@@ -31,6 +31,12 @@ from src.presentation.routers.billing_router import router as billing_router
 # 新しいAuth Router (Phase 3)
 from src.presentation.routers.auth_router import router as auth_router
 
+# 新しいLLM Router (Phase 4)
+from src.presentation.api.v1.llm.router import router as llm_router
+
+# WebSocket Router (Phase 4)
+from src.presentation.websocket.websocket_router import router as websocket_router
+
 # Settings取得
 settings = get_settings()
 
@@ -127,6 +133,8 @@ register_exception_handlers(app)
 # ルーター登録
 app.include_router(billing_router)
 app.include_router(auth_router)
+app.include_router(llm_router)
+app.include_router(websocket_router)
 
 
 # ==========================================
@@ -139,12 +147,15 @@ async def root():
     return {
         "message": "NoteApp Server - New Architecture",
         "version": "0.1.0",
-        "phase": "Phase 3 - Auth Domain Migration Complete",
+        "phase": "Phase 4 - LLM Domain Migration (In Progress)",
         "endpoints": {
             "health": "/health",
             "config": "/config",
             "billing": "/api/billing",
             "auth": "/api/auth/v2",
+            "llm_chat": "/api/chat",
+            "llm_providers": "/api/llm-providers",
+            "websocket": "/ws",
         }
     }
 
