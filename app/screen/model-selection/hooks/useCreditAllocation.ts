@@ -5,7 +5,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { Alert } from 'react-native';
-import { useSettingsStore, TOKEN_CAPACITY_LIMITS } from '../../../settings/settingsStore';
+import { useTokenBalanceStore, TOKEN_CAPACITY_LIMITS } from '../../../settings/settingsStore';
 import { creditsToTokens, getTokenPrice } from '../../../billing/constants/tokenPricing';
 import APIService from '../../../features/llmService/api';
 import { convertProvidersToModelInfo, type ModelInfo } from '../constants';
@@ -21,13 +21,13 @@ export const useCreditAllocation = ({
   initialModelId,
   onClose,
 }: UseCreditAllocationProps) => {
-  const { settings, refreshTokenBalance, getTotalTokensByCategory } = useSettingsStore();
+  const { balance, refreshTokenBalance, getTotalTokensByCategory } = useTokenBalanceStore();
 
   // State
   const [modelInfo, setModelInfo] = useState<ModelInfo | null>(null);
   const [isLoadingModel, setIsLoadingModel] = useState(true);
   const [creditsToAllocate, setCreditsToAllocate] = useState<number>(
-    Math.min(10, settings.tokenBalance.credits)
+    Math.min(10, balance.credits)
   );
   const [isAllocating, setIsAllocating] = useState(false);
 
@@ -101,19 +101,19 @@ export const useCreditAllocation = ({
       isOverLimit: newTotal > limit,
       usagePercent: Math.min(100, (newTotal / limit) * 100),
     };
-  }, [modelInfo, getTotalTokensByCategory, settings.tokenBalance.allocatedTokens, convertedTokens]);
+  }, [modelInfo, getTotalTokensByCategory, balance.allocatedTokens, convertedTokens]);
 
   // 最大配分可能クレジット
   const maxAllocatableCredits = useMemo(() => {
-    if (!initialModelId) return settings.tokenBalance.credits;
+    if (!initialModelId) return balance.credits;
 
     const pricePerMToken = getTokenPrice(initialModelId);
-    if (!pricePerMToken) return settings.tokenBalance.credits;
+    if (!pricePerMToken) return balance.credits;
 
     const maxTokens = capacityInfo.remaining;
     const maxCredits = Math.floor((maxTokens / 1_000_000) * pricePerMToken);
-    return Math.min(settings.tokenBalance.credits, maxCredits);
-  }, [initialModelId, capacityInfo.remaining, settings.tokenBalance.credits]);
+    return Math.min(balance.credits, maxCredits);
+  }, [initialModelId, capacityInfo.remaining, balance.credits]);
 
   // 配分実行
   const handleAllocate = async () => {
@@ -181,6 +181,6 @@ export const useCreditAllocation = ({
     handleAllocate,
 
     // Store
-    settings,
+    balance,
   };
 };

@@ -41,7 +41,7 @@ export const CreditAllocationModal: React.FC<CreditAllocationModalProps> = ({
     maxAllocatableCredits,
     setCreditsToAllocate,
     handleAllocate,
-    settings,
+    balance,
   } = useCreditAllocation({ isVisible, initialModelId, onClose });
 
   const styles = StyleSheet.create({
@@ -304,7 +304,7 @@ export const CreditAllocationModal: React.FC<CreditAllocationModalProps> = ({
       {/* 現在のクレジット残高 */}
       <View style={styles.balanceContainer}>
         <Text style={styles.balanceLabel}>未配分クレジット:</Text>
-        <Text style={styles.balanceAmount}>{settings.tokenBalance.credits}P</Text>
+        <Text style={styles.balanceAmount}>{balance.credits}P</Text>
       </View>
 
       {/* 配分先モデル情報 */}
@@ -347,7 +347,7 @@ export const CreditAllocationModal: React.FC<CreditAllocationModalProps> = ({
               setCreditsToAllocate(
                 Math.min(
                   Math.max(10, rounded),
-                  settings.tokenBalance.credits
+                  balance.credits
                 )
               );
             }}
@@ -360,16 +360,16 @@ export const CreditAllocationModal: React.FC<CreditAllocationModalProps> = ({
           style={styles.stepButton}
           onPress={() =>
             setCreditsToAllocate(
-              Math.min(settings.tokenBalance.credits, creditsToAllocate + 10)
+              Math.min(balance.credits, creditsToAllocate + 10)
             )
           }
-          disabled={creditsToAllocate >= settings.tokenBalance.credits}
+          disabled={creditsToAllocate >= balance.credits}
         >
           <MaterialCommunityIcons
             name="plus"
             size={24}
             color={
-              creditsToAllocate >= settings.tokenBalance.credits
+              creditsToAllocate >= balance.credits
                 ? colors.textSecondary
                 : colors.primary
             }
@@ -383,15 +383,15 @@ export const CreditAllocationModal: React.FC<CreditAllocationModalProps> = ({
             style={styles.quickButton}
             onPress={() =>
               setCreditsToAllocate(
-                Math.min(amount, settings.tokenBalance.credits)
+                Math.min(amount, balance.credits)
               )
             }
-            disabled={settings.tokenBalance.credits < amount}
+            disabled={balance.credits < amount}
           >
             <Text
               style={[
                 styles.quickButtonText,
-                settings.tokenBalance.credits < amount && styles.quickButtonTextDisabled,
+                balance.credits < amount && styles.quickButtonTextDisabled,
               ]}
             >
               {amount}P
@@ -406,7 +406,7 @@ export const CreditAllocationModal: React.FC<CreditAllocationModalProps> = ({
           <View style={styles.tokenBox}>
             <Text style={styles.tokenLabel}>追加前</Text>
             <Text style={styles.tokenValue}>
-              {(settings.tokenBalance.allocatedTokens[modelInfo.id] || 0).toLocaleString()}
+              {(balance.allocatedTokens[modelInfo.id] || 0).toLocaleString()}
             </Text>
           </View>
           <MaterialCommunityIcons
@@ -418,7 +418,7 @@ export const CreditAllocationModal: React.FC<CreditAllocationModalProps> = ({
           <View style={styles.tokenBox}>
             <Text style={styles.tokenLabel}>追加後</Text>
             <Text style={styles.tokenValueAfter}>
-              {((settings.tokenBalance.allocatedTokens[modelInfo.id] || 0) + convertedTokens).toLocaleString()}
+              {((balance.allocatedTokens[modelInfo.id] || 0) + convertedTokens).toLocaleString()}
             </Text>
           </View>
         </View>

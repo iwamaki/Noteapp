@@ -4,7 +4,7 @@
  * @description 開発モードでのコスト計算とフォーマット機能
  */
 
-import { useSettingsStore } from '../../settings/settingsStore';
+import { useUsageTrackingStore } from '../../settings/settingsStore';
 import { calculateCost, formatCost, getModelPricing } from '../constants/modelPricing';
 
 /**
@@ -23,8 +23,7 @@ export function calculateMonthlyCost(): {
   }>;
   formattedTotalCost: string;
 } {
-  const { settings } = useSettingsStore.getState();
-  const { usage } = settings;
+  const { usage } = useUsageTrackingStore.getState();
 
   let totalCost = 0;
   const costByModel: Array<{

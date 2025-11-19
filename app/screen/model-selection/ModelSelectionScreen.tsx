@@ -22,7 +22,7 @@ import { useTheme } from '../../design/theme/ThemeContext';
 import { CustomHeader } from '../../components/CustomHeader';
 import { MainContainer } from '../../components/MainContainer';
 import { RootStackParamList } from '../../navigation/types';
-import { useSettingsStore, TOKEN_CAPACITY_LIMITS } from '../../settings/settingsStore';
+import { useTokenBalanceStore, TOKEN_CAPACITY_LIMITS } from '../../settings/settingsStore';
 import { convertProvidersToModelInfo, type ModelInfo } from './constants';
 import APIService from '../../features/llmService/api';
 import { CreditAllocationModal } from './components/CreditAllocationModal';
@@ -33,7 +33,7 @@ type ModelSelectionScreenNavigationProp = StackNavigationProp<RootStackParamList
 export const ModelSelectionScreen: React.FC = () => {
   const { colors, spacing, typography } = useTheme();
   const navigation = useNavigation<ModelSelectionScreenNavigationProp>();
-  const { settings, getTotalTokensByCategory } = useSettingsStore();
+  const { balance, loadedModels, getTotalTokensByCategory } = useTokenBalanceStore();
   const { switchModel } = useModelSwitch();
 
   // バックエンドから取得したモデル一覧
@@ -75,8 +75,8 @@ export const ModelSelectionScreen: React.FC = () => {
   }, []);
 
   // 現在選択されているモデル
-  const activeQuickModel = settings.loadedModels.quick || 'gemini-2.5-flash';
-  const activeThinkModel = settings.loadedModels.think || 'gemini-2.5-pro';
+  const activeQuickModel = loadedModels.quick || 'gemini-2.5-flash';
+  const activeThinkModel = loadedModels.think || 'gemini-2.5-pro';
 
   // カテゴリーごとの合計トークン数と容量
   const quickTokens = getTotalTokensByCategory('quick');
@@ -91,7 +91,7 @@ export const ModelSelectionScreen: React.FC = () => {
     const model = availableModels.find(m => m.id === modelId);
     if (!model) return;
 
-    const tokens = settings.tokenBalance.allocatedTokens[modelId] || 0;
+    const tokens = balance.allocatedTokens[modelId] || 0;
     if (tokens <= 0) {
       // トークンがない場合は配分モーダルを開く
       setSelectedModelForAllocation(modelId);
@@ -110,7 +110,7 @@ export const ModelSelectionScreen: React.FC = () => {
 
   // モデルごとのトークン残高を取得
   const getModelTokens = (modelId: string): number => {
-    return settings.tokenBalance.allocatedTokens[modelId] || 0;
+    return balance.allocatedTokens[modelId] || 0;
   };
 
   // カテゴリーごとのモデル内訳（装填中モデルと他モデル）

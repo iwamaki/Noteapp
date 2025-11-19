@@ -7,8 +7,8 @@
 import { useState } from 'react';
 import { Alert } from 'react-native';
 import type { Product, Purchase } from 'react-native-iap';
-import { useSettingsStore } from '../../../settings/settingsStore';
-import type { PurchaseRecord } from '../../../settings/settingsStore';
+import { useTokenBalanceStore } from '../../../settings/settingsStore';
+import type { PurchaseRecord } from '../../../settings/types/tokenBalance.types';
 import { purchaseTokenPackage, isUserCancelledError } from '../../../billing/services/tokenIapService';
 import type { TokenPackage } from '../../../billing/constants/tokenPackages';
 import { logger } from '../../../utils/logger';
@@ -25,7 +25,7 @@ interface UsePurchaseHandlersReturn {
 export const usePurchaseHandlers = ({
   tokenProducts,
 }: UsePurchaseHandlersProps): UsePurchaseHandlersReturn => {
-  const { refreshTokenBalance } = useSettingsStore();
+  const { refreshTokenBalance } = useTokenBalanceStore();
   const [purchasing, setPurchasing] = useState(false);
 
   // トークンパッケージ購入処理
