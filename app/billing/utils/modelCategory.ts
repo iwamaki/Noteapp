@@ -5,8 +5,8 @@
  */
 
 import { useSettingsStore } from '../../settings/settingsStore';
-import { getModelCategoryFromId } from '../../features/chat/llmService/utils/modelCategoryHelper';
-import { providerCache } from '../../features/chat/llmService/cache/providerCache';
+import { getModelCategoryFromId } from '../../features/llmService/utils/modelCategoryHelper';
+import { providerCache } from '../../features/llmService/cache/providerCache';
 
 /**
  * モデルIDがQuick系かどうかを判定

@@ -24,7 +24,7 @@ import { MainContainer } from '../../components/MainContainer';
 import { RootStackParamList } from '../../navigation/types';
 import { useSettingsStore, TOKEN_CAPACITY_LIMITS } from '../../settings/settingsStore';
 import { convertProvidersToModelInfo, type ModelInfo } from './constants';
-import APIService from '../../features/chat/llmService/api';
+import APIService from '../../features/llmService/api';
 import { CreditAllocationModal } from './components/CreditAllocationModal';
 import { useModelSwitch } from '../../hooks/useModelSwitch';
 

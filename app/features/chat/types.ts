@@ -5,7 +5,7 @@
  *                 およびチャットサービスで使用される型を定義します
  */
 
-import { LLMCommand } from './llmService/types/index';
+import { LLMCommand } from '../llmService/types/index';
 
 /**
  * アクティブな画面のコンテキスト情報

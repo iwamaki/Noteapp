@@ -3,7 +3,7 @@
  * @summary モデル選択画面で使用する定数と型定義
  */
 
-import type { LLMProvider } from '../../features/chat/llmService/types/index';
+import type { LLMProvider } from '../../features/llmService/types/index';
 
 export interface ModelInfo {
   id: string;

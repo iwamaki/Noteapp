@@ -6,7 +6,7 @@
 
 import { createHttpClient, HttpClient } from '../../api';
 import { logger } from '../../../utils/logger';
-import { LLMCommand } from '../llmService/types/index';
+import { LLMCommand } from '../../llmService/types/index';
 
 /**
  * ツールのJSON Schema定義

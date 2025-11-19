@@ -11,7 +11,7 @@ import {
   ListRenderItem,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { ChatMessage, TokenUsageInfo } from '../llmService/index';
+import { ChatMessage, TokenUsageInfo } from '../../llmService/index';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { MessageItem } from './MessageItem';
 import { ToggleTabButton } from './ToggleTabButton';

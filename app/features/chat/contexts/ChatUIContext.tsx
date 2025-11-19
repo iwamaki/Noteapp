@@ -6,7 +6,7 @@
 
 import React, { createContext, useContext, ReactNode } from 'react';
 import { Animated, PanResponderInstance } from 'react-native';
-import { ChatMessage, TokenUsageInfo } from '../llmService/types/index';
+import { ChatMessage, TokenUsageInfo } from '../../llmService/types/index';
 
 /**
  * ChatUIContextで提供される値の型定義

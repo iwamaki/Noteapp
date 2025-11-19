@@ -12,9 +12,9 @@
 
 import { useCallback } from 'react';
 import { useSettingsStore } from '../settings/settingsStore';
-import APIService from '../features/chat/llmService/api';
-import { providerCache } from '../features/chat/llmService/cache/providerCache';
-import { getProviderNameFromModelId } from '../features/chat/llmService/utils/providerHelper';
+import APIService from '../features/llmService/api';
+import { providerCache } from '../features/llmService/cache/providerCache';
+import { getProviderNameFromModelId } from '../features/llmService/utils/providerHelper';
 
 /**
  * モデル切り替えフックの戻り値

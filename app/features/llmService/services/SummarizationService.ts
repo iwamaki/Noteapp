@@ -4,8 +4,8 @@
  * @responsibility 会話履歴と文書の要約処理を担当
  */
 
-import { logger } from '../../../../utils/logger';
-import { HttpClient } from '../../../api';
+import { logger } from '../../../utils/logger';
+import { HttpClient } from '../../api';
 import type {
   ChatMessage,
   SummarizeRequest,

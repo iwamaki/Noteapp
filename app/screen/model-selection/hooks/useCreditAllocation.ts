@@ -7,7 +7,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { Alert } from 'react-native';
 import { useSettingsStore, TOKEN_CAPACITY_LIMITS } from '../../../settings/settingsStore';
 import { creditsToTokens, getTokenPrice } from '../../../billing/constants/tokenPricing';
-import APIService from '../../../features/chat/llmService/api';
+import APIService from '../../../features/llmService/api';
 import { convertProvidersToModelInfo, type ModelInfo } from '../constants';
 
 interface UseCreditAllocationProps {

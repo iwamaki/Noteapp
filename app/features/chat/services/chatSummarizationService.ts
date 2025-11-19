@@ -5,8 +5,8 @@
  */
 
 import { logger } from '../../../utils/logger';
-import APIService from '../llmService/api';
-import { ChatMessage, SummarizeResponse } from '../llmService/types/index';
+import APIService from '../../llmService/api';
+import { ChatMessage, SummarizeResponse } from '../../llmService/types/index';
 import { UnifiedErrorHandler } from '../utils/errorHandler';
 
 /**

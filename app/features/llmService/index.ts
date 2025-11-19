@@ -4,8 +4,8 @@
  * @responsibility 各コンポーネントを統合し、LLMサービスの公開APIを提供
  */
 
-import { logger } from '../../../utils/logger';
-import { createHttpClient, HttpClient, ApiErrorHandler } from '../../api';
+import { logger } from '../../utils/logger';
+import { createHttpClient, HttpClient, ApiErrorHandler } from '../api';
 import type {
   ChatContext,
   LLMProvider,
@@ -20,7 +20,7 @@ import { ConversationHistory } from './core/ConversationHistory';
 import { RequestManager } from './core/RequestManager';
 import { ProviderManager } from './core/ProviderManager';
 import { SummarizationService } from './services/SummarizationService';
-import { CHAT_CONFIG } from '../config/chatConfig';
+import { CHAT_CONFIG } from '../chat/config/chatConfig';
 import { providerCache } from './cache/providerCache';
 
 // Re-export types
@@ -78,7 +78,7 @@ export class LLMService {
     try {
       // トークン上限チェック（Flash/Pro別、購入トークン残高も考慮）
       const currentModel = this.providerManager.getCurrentModel();
-      const { checkModelTokenLimit } = await import('../../../billing/utils/tokenBalance');
+      const { checkModelTokenLimit } = await import('../../billing/utils/tokenBalance');
       const tokenLimitCheck = checkModelTokenLimit(currentModel);
 
       if (!tokenLimitCheck.canUse) {

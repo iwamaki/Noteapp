@@ -4,7 +4,7 @@
  * @responsibility トークン使用量の保持、更新、通知、および100%超過時の自動要約トリガーを担当
  */
 
-import { TokenUsageInfo } from '../llmService/types/index';
+import { TokenUsageInfo } from '../../llmService/types/index';
 import { logger } from '../../../utils/logger';
 
 /**

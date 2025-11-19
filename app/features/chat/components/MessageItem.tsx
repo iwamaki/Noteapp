@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, Text } from 'react-native';
-import { ChatMessage, TokenUsageInfo } from '../llmService/index';
+import { ChatMessage, TokenUsageInfo } from '../../llmService/index';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { MarkdownRenderer } from '../../../design/markdown/MarkdownRenderer';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';

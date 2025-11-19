@@ -6,7 +6,7 @@
  */
 
 import { InitializationTask, InitializationStage, TaskPriority } from '../types';
-import APIService from '../../features/chat/llmService/api';
+import APIService from '../../features/llmService/api';
 
 /**
  * LLMプロバイダープリロードタスク

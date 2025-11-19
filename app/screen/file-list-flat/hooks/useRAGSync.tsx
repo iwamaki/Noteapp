@@ -10,7 +10,7 @@ import { useState, useCallback } from 'react';
 import { Alert } from 'react-native';
 import { FileRepository } from '@data/repositories/fileRepository';
 import { logger } from '../../../utils/logger';
-import APIService from '../../../features/chat/llmService/api';
+import APIService from '../../../features/llmService/api';
 import {
   sanitizeCategoryPathForCollection,
   filterFilesByCategory,

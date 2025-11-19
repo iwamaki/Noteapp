@@ -4,7 +4,7 @@
  * @responsibility LLMからのファイル削除コマンドを処理します
  */
 
-import { LLMCommand } from '../llmService/types/index';
+import { LLMCommand } from '../../llmService/types/index';
 import { CommandHandler } from './types';
 import { logger } from '../../../utils/logger';
 import { FileRepository } from '@data/repositories/fileRepository';

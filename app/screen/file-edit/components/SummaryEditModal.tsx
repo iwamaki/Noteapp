@@ -10,7 +10,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { CustomModal } from '../../../components/CustomModal';
-import APIService from '../../../features/chat/llmService/api';
+import APIService from '../../../features/llmService/api';
 
 interface SummaryEditModalProps {
   visible: boolean;

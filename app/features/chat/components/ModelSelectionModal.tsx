@@ -18,7 +18,7 @@ import { useTheme } from '../../../design/theme/ThemeContext';
 import { CustomModal } from '../../../components/CustomModal';
 import { useSettingsStore } from '../../../settings/settingsStore';
 import { convertProvidersToModelInfo, type ModelInfo } from '../../../screen/model-selection/constants';
-import APIService from '../llmService/api';
+import APIService from '../../llmService/api';
 import { ModelCard } from './ModelCard';
 import { useModelSwitch } from '../../../hooks/useModelSwitch';
 

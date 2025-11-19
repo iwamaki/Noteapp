@@ -4,7 +4,7 @@
  * @responsibility コマンドハンドラーの登録、コマンド実行、エラーハンドリングを管理
  */
 
-import { LLMCommand } from '../llmService/types/index';
+import { LLMCommand } from '../../llmService/types/index';
 import { logger } from '../../../utils/logger';
 
 /**

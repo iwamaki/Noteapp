@@ -1,6 +1,6 @@
 import { LLMCommand } from '../types/index';
 import { LLMError } from '../types/LLMError';
-import ToolService from '../../services/ToolService';
+import ToolService from '../../chat/services/ToolService';
 
 /**
  * コマンド検証ユーティリティ
