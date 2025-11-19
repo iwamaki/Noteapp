@@ -32,6 +32,7 @@ export const ChatInputBar: React.FC = () => {
     removeAttachedFile,
     tokenUsage,
     summarizeConversation,
+    onResizeCompleteRef,
   } = useChat();
 
   // ローカルUI状態
@@ -101,6 +102,7 @@ export const ChatInputBar: React.FC = () => {
             messageAreaHeight={chatAreaHeight}
             panHandlers={panResponder.panHandlers}
             tokenUsage={tokenUsage}
+            onResizeCompleteRef={onResizeCompleteRef}
           />
         )}
 

@@ -4,8 +4,8 @@
  * @responsibility ChatServiceと連携し、チャットメッセージの送受信、状態管理（メッセージ履歴、ローディング状態）を担当します。
  */
 
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { Animated, PanResponder } from 'react-native';
+import { useState, useCallback, useRef } from 'react';
+import { PanResponder } from 'react-native';
 import { logger } from '../../../utils/logger';
 import ChatService from '../index';
 import { CHAT_CONFIG } from '../config/chatConfig';
@@ -24,27 +24,19 @@ export const useChat = () => {
   const attachedFiles = useChatStore((state) => state.attachedFiles);
   const tokenUsage = useChatStore((state) => state.tokenUsage);
 
-  // UI状態（リサイズ中かどうか）はローカルステートとして保持
+  // UI状態（リサイズ中かどうか、高さ）はローカルステートとして保持
   const [isResizing, setIsResizing] = useState(false);
+  const [chatAreaHeight, setChatAreaHeight] = useState(CHAT_CONFIG.ui.chatAreaInitialHeight);
 
-  const chatAreaHeight = useRef(new Animated.Value(CHAT_CONFIG.ui.chatAreaInitialHeight)).current;
   const gestureStartHeight = useRef(CHAT_CONFIG.ui.chatAreaInitialHeight);
   const currentHeightValue = useRef(CHAT_CONFIG.ui.chatAreaInitialHeight);
-
-  useEffect(() => {
-    const listenerId = chatAreaHeight.addListener(({ value }) => {
-      currentHeightValue.current = value;
-    });
-    return () => {
-      chatAreaHeight.removeListener(listenerId);
-    };
-  }, [chatAreaHeight]);
+  const onResizeCompleteRef = useRef<(() => void) | null>(null);
 
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onPanResponderGrant: () => {
-        // ドラッグ開始時の高さを記録（現在の実際の値を使用）
+        // ドラッグ開始時の高さを記録（refから最新の値を取得）
         gestureStartHeight.current = currentHeightValue.current;
         setIsResizing(true);
       },
@@ -58,12 +50,16 @@ export const useChat = () => {
           clampedHeight = CHAT_CONFIG.ui.chatAreaMaxHeight;
         }
 
-        // 値を更新
-        chatAreaHeight.setValue(clampedHeight);
+        // 高さを更新（stateとrefの両方を更新）
+        setChatAreaHeight(clampedHeight);
         currentHeightValue.current = clampedHeight;
       },
       onPanResponderRelease: () => {
         setIsResizing(false);
+        // リサイズ完了後のコールバックを実行（スクロール位置調整など）
+        if (onResizeCompleteRef.current) {
+          onResizeCompleteRef.current();
+        }
       },
     })
   ).current;
@@ -106,5 +102,6 @@ export const useChat = () => {
     removeAttachedFile,
     tokenUsage,
     summarizeConversation,
+    onResizeCompleteRef,
   };
 };

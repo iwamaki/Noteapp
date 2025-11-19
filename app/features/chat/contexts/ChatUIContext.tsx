@@ -5,7 +5,7 @@
  */
 
 import React, { createContext, useContext, ReactNode } from 'react';
-import { Animated, PanResponderInstance } from 'react-native';
+import { PanResponderInstance } from 'react-native';
 import { ChatMessage, TokenUsageInfo } from '../../llmService/types/index';
 
 /**
@@ -17,7 +17,7 @@ interface ChatUIContextValue {
   isLoading: boolean;
   attachedFiles: Array<{ filename: string; content: string }>;
   tokenUsage: TokenUsageInfo | null;
-  chatAreaHeight: Animated.AnimatedValue;
+  chatAreaHeight: number;
   panResponder: PanResponderInstance;
   isResizing: boolean;
 

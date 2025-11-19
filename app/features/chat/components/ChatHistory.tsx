@@ -1,11 +1,10 @@
-import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useRef, useEffect, useState, useCallback, useMemo, MutableRefObject } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   FlatList,
   ActivityIndicator,
-  Animated,
   PanResponderInstance,
   ListRenderItem,
 } from 'react-native';
@@ -23,9 +22,10 @@ interface ChatHistoryProps {
   onCollapse: () => void;
   onResetChat: () => void;
   onSummarize: () => void;
-  messageAreaHeight: Animated.AnimatedValue;
+  messageAreaHeight: number;
   panHandlers: PanResponderInstance['panHandlers'];
   tokenUsage: TokenUsageInfo | null;
+  onResizeCompleteRef: MutableRefObject<(() => void) | null>;
 }
 
 const ChatHistoryComponent: React.FC<ChatHistoryProps> = ({
@@ -37,6 +37,7 @@ const ChatHistoryComponent: React.FC<ChatHistoryProps> = ({
   messageAreaHeight,
   panHandlers,
   tokenUsage,
+  onResizeCompleteRef,
 }) => {
   const { colors, typography, iconSizes } = useTheme();
   const flatListRef = useRef<FlatList>(null);
@@ -45,6 +46,16 @@ const ChatHistoryComponent: React.FC<ChatHistoryProps> = ({
   // 要約ボタンを有効にする条件: トークン使用量が75%超
   const canSummarize = tokenUsage ? tokenUsage.usageRatio > 0.75 : false;
 
+  // リサイズ完了時のスクロール処理を設定
+  useEffect(() => {
+    onResizeCompleteRef.current = () => {
+      if (messages.length > 0) {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }
+    };
+  }, [messages, onResizeCompleteRef]);
+
+  // 新しいメッセージが追加されたときのスクロール処理
   useEffect(() => {
     if (messages.length > 0) {
       setTimeout(() => {
@@ -160,7 +171,7 @@ const ChatHistoryComponent: React.FC<ChatHistoryProps> = ({
   );
 
   return (
-    <Animated.View style={[styles.messagesArea, { height: messageAreaHeight }]}>
+    <View style={[styles.messagesArea, { height: messageAreaHeight }]}>
       <View style={styles.messagesHeader} {...panHandlers}>
         {/* 付箋タブ型の折りたたみボタン（ヘッダーの中央上端） */}
         <ToggleTabButton
@@ -244,7 +255,7 @@ const ChatHistoryComponent: React.FC<ChatHistoryProps> = ({
         isVisible={modelSelectionModalVisible}
         onClose={() => setModelSelectionModalVisible(false)}
       />
-    </Animated.View>
+    </View>
   );
 };
 
