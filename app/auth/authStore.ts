@@ -292,6 +292,16 @@ export const useAuthStore = create<AuthState>((set) => ({
         userIdPrefix: authResult.user_id.substring(0, 8),
         isNewUser: authResult.is_new_user,
       });
+
+      // 5. settingsStoreに認証状態変更を通知（トークン残高を新アカウントから取得）
+      try {
+        const { useSettingsStore } = await import('../settings/settingsStore');
+        await useSettingsStore.getState().handleAuthenticationChange(authResult.user_id);
+        logger.info('auth', 'Settings synchronized for new account');
+      } catch (settingsError) {
+        // 設定同期失敗はログインを失敗させない
+        logger.warn('auth', 'Failed to synchronize settings after login', settingsError);
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       logger.error('auth', 'Failed to handle Google auth result', error);
@@ -321,7 +331,17 @@ export const useAuthStore = create<AuthState>((set) => ({
       // 2. Googleユーザー情報をクリア
       await clearGoogleUserInfo();
 
-      // 3. 状態をリセット
+      // 3. settingsStoreに認証状態変更を通知（トークン残高をクリア）
+      try {
+        const { useSettingsStore } = await import('../settings/settingsStore');
+        await useSettingsStore.getState().handleAuthenticationChange(null);
+        logger.info('auth', 'Settings cleared after logout');
+      } catch (settingsError) {
+        // 設定クリア失敗は警告のみ（ログアウト自体は失敗させない）
+        logger.warn('auth', 'Failed to clear settings after logout', settingsError);
+      }
+
+      // 4. 状態をリセット
       set({
         isAuthenticated: false,
         isLoggingOut: false,

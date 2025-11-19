@@ -7,8 +7,8 @@
  */
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getModelCategoryFromId } from '../features/chat/llmService/utils/modelCategoryHelper';
-import { providerCache } from '../features/chat/llmService/cache/providerCache';
+import { getModelCategoryFromId } from '../features/llmService/utils/modelCategoryHelper';
+import { providerCache } from '../features/llmService/cache/providerCache';
 
 const SETTINGS_STORAGE_KEY = '@app_settings';
 
@@ -265,6 +265,9 @@ interface SettingsStore {
   getPurchaseHistory: () => PurchaseRecord[];
   resetTokensAndUsage: () => Promise<void>; // デバッグ用：トークン残高と使用量をリセット
 
+  // 認証状態変更ハンドラ
+  handleAuthenticationChange: (userId: string | null) => Promise<void>;
+
   // UI状態管理
   shouldShowAllocationModal: boolean;
   setShouldShowAllocationModal: (should: boolean) => void;
@@ -462,6 +465,63 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     } catch (error) {
       console.error('[Debug] Failed to reset tokens and usage:', error);
       throw error;
+    }
+  },
+
+  // =========================
+  // 認証状態変更ハンドラ
+  // =========================
+
+  /**
+   * 認証状態が変更された時の処理
+   * authStoreから呼び出され、トークン残高と使用量を適切に管理する
+   *
+   * @param userId ログイン後のユーザーID、またはログアウト時はnull
+   */
+  handleAuthenticationChange: async (userId: string | null) => {
+    const { settings } = get();
+
+    if (userId) {
+      // ========== ログイン時 ==========
+      // 新しいアカウントのトークン残高を取得
+      console.log('[SettingsStore] User logged in, refreshing token balance for new account');
+
+      try {
+        await get().loadTokenBalance();
+        console.log('[SettingsStore] Token balance loaded for user:', userId.substring(0, 8));
+      } catch (error) {
+        // 残高取得失敗はログインを失敗させない（ローカルキャッシュで継続可能）
+        console.warn('[SettingsStore] Failed to load token balance after login:', error);
+      }
+    } else {
+      // ========== ログアウト時 ==========
+      // トークン残高、購入履歴、使用量をクリア
+      console.log('[SettingsStore] User logged out, clearing token balance and usage');
+
+      try {
+        const newSettings = {
+          ...settings,
+          tokenBalance: {
+            credits: 0,
+            allocatedTokens: {},
+          },
+          purchaseHistory: [],
+          usage: {
+            ...settings.usage,
+            monthlyInputTokens: 0,
+            monthlyOutputTokens: 0,
+            monthlyTokensByModel: {},
+            monthlyLLMRequests: 0,
+          },
+        };
+
+        await AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(newSettings));
+        set({ settings: newSettings });
+        console.log('[SettingsStore] Token balance and usage cleared');
+      } catch (error) {
+        // クリア失敗は警告のみ（ログアウト自体は失敗させない）
+        console.error('[SettingsStore] Failed to clear token balance:', error);
+      }
     }
   },
 
