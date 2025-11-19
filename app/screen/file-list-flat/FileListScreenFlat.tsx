@@ -29,7 +29,7 @@ import { RootStackParamList } from '../../navigation/types';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { useKeyboardHeight } from '../../contexts/KeyboardHeightContext';
 import { useFlatListStore } from './stores/useFlatListStore';
-import { useSettingsStore } from '../../settings/settingsStore';
+import { useUISettingsStore, useEditorSettingsStore } from '../../settings/settingsStore';
 
 // ===== Shared Components =====
 import { MainContainer } from '../../components/MainContainer';
@@ -70,7 +70,8 @@ function FileListScreenFlat() {
   const { colors, spacing } = useTheme();
   const { keyboardHeight, chatInputBarHeight } = useKeyboardHeight();
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
-  const { settings } = useSettingsStore();
+  const uiSettings = useUISettingsStore((state) => state.settings);
+  const editorSettings = useEditorSettingsStore((state) => state.settings);
 
   // Zustandストアから状態とアクションを取得
   const {
@@ -152,14 +153,14 @@ function FileListScreenFlat() {
       // ファイル編集画面へ遷移
       logger.info(
         'file',
-        `Navigating to FileEdit for file: ${file.id} with initialViewMode: ${settings.defaultFileViewScreen}`
+        `Navigating to FileEdit for file: ${file.id} with initialViewMode: ${editorSettings.defaultFileViewScreen}`
       );
       navigation.navigate('FileEdit', {
         fileId: file.id,
-        initialViewMode: settings.defaultFileViewScreen,
+        initialViewMode: editorSettings.defaultFileViewScreen,
       });
     },
-    [settings.defaultFileViewScreen, navigation]
+    [editorSettings.defaultFileViewScreen, navigation]
   );
 
   /**
@@ -487,9 +488,9 @@ function FileListScreenFlat() {
    * categoryGroupingService を使用
    */
   const sections = useMemo(() => {
-    console.log(`[FileListScreen] Grouping files with fileSortMethod: ${settings.fileSortMethod}`);
-    return groupFilesByCategoryHierarchical(files, settings.categorySortMethod, settings.fileSortMethod);
-  }, [files, settings.categorySortMethod, settings.fileSortMethod]);
+    console.log(`[FileListScreen] Grouping files with fileSortMethod: ${uiSettings.fileSortMethod}`);
+    return groupFilesByCategoryHierarchical(files, uiSettings.categorySortMethod, uiSettings.fileSortMethod);
+  }, [files, uiSettings.categorySortMethod, uiSettings.fileSortMethod]);
 
   /**
    * カテゴリーの展開/折りたたみ状態管理
@@ -668,11 +669,11 @@ function FileListScreenFlat() {
           isSelectionMode={isMoveMode}
           onPress={handlePress}
           onLongPress={handleLongPress}
-          showSummary={settings.showSummary}
+          showSummary={uiSettings.showSummary}
         />
       );
     },
-    [isMoveMode, moveSourceFileId, handleFilePress, handleLongPressFile, settings.showSummary]
+    [isMoveMode, moveSourceFileId, handleFilePress, handleLongPressFile, uiSettings.showSummary]
   );
 
   // レンダリング時のデバッグログ

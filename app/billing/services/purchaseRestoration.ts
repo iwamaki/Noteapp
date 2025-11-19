@@ -8,7 +8,7 @@ import type { Purchase } from 'react-native-iap';
 import { finishTransaction } from 'react-native-iap';
 import { getBillingApiService } from './billingApiService';
 import { TOKEN_PACKAGES } from '../constants/tokenPackages';
-import type { PurchaseRecord } from '../../settings/settingsStore';
+import type { PurchaseRecord } from '../../settings/types/tokenBalance.types';
 import { logger } from '../../utils/logger';
 
 /**

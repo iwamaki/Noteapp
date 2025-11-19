@@ -8,7 +8,7 @@ import { useEffect, useRef } from 'react';
 import { ActiveScreenContextProvider, ActiveScreenContext } from '../types';
 import ChatService from '../index';
 import { logger } from '../../../utils/logger';
-import { useSettingsStore } from '../../../settings/settingsStore';
+import { useLLMSettingsStore } from '../../../settings/settingsStore';
 import { editFileHandler } from '../handlers/editFileHandler';
 import { editFileLinesHandler } from '../handlers/editFileLinesHandler';
 import { CommandHandlerContext } from '../handlers/types';
@@ -44,7 +44,7 @@ export const useFileEditChatContext = ({
   path,
   setContent,
 }: UseFileEditChatContextParams): void => {
-  const { settings } = useSettingsStore();
+  const { settings } = useLLMSettingsStore();
 
   // contentをuseRefで管理（依存配列から除外するため）
   const contentRef = useRef(content);

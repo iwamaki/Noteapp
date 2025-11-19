@@ -6,7 +6,7 @@
  * サブスクリプション機能削除に伴い、購入トークン残高のみで動作するよう簡素化しました。
  */
 
-import { useSettingsStore } from '../../settings/settingsStore';
+import { useTokenBalanceStore, useUsageTrackingStore } from '../../settings/settingsStore';
 import { isQuickModel, isThinkModel } from './modelCategory';
 import { logger } from '../../utils/logger';
 
@@ -18,7 +18,7 @@ import { logger } from '../../utils/logger';
  * トークン残高を取得するフック
  */
 export function useTokenBalance() {
-  const getTotalTokensByCategory = useSettingsStore((state) => state.getTotalTokensByCategory);
+  const getTotalTokensByCategory = useTokenBalanceStore((state) => state.getTotalTokensByCategory);
 
   return {
     flash: getTotalTokensByCategory('quick'),  // 旧名称との互換性のため
@@ -30,7 +30,7 @@ export function useTokenBalance() {
  * Quick トークン残高を取得（非React環境から呼び出し可能）
  */
 export function getFlashTokenBalance(): number {
-  const { getTotalTokensByCategory } = useSettingsStore.getState();
+  const { getTotalTokensByCategory } = useTokenBalanceStore.getState();
   return getTotalTokensByCategory('quick');
 }
 
@@ -38,7 +38,7 @@ export function getFlashTokenBalance(): number {
  * Think トークン残高を取得（非React環境から呼び出し可能）
  */
 export function getProTokenBalance(): number {
-  const { getTotalTokensByCategory } = useSettingsStore.getState();
+  const { getTotalTokensByCategory } = useTokenBalanceStore.getState();
   return getTotalTokensByCategory('think');
 }
 
@@ -46,7 +46,7 @@ export function getProTokenBalance(): number {
  * Quick トークン残高を取得するフック（シンプル版）
  */
 export function useFlashTokenBalance(): number {
-  const getTotalTokensByCategory = useSettingsStore((state) => state.getTotalTokensByCategory);
+  const getTotalTokensByCategory = useTokenBalanceStore((state) => state.getTotalTokensByCategory);
   return getTotalTokensByCategory('quick');
 }
 
@@ -54,7 +54,7 @@ export function useFlashTokenBalance(): number {
  * Think トークン残高を取得するフック（シンプル版）
  */
 export function useProTokenBalance(): number {
-  const getTotalTokensByCategory = useSettingsStore((state) => state.getTotalTokensByCategory);
+  const getTotalTokensByCategory = useTokenBalanceStore((state) => state.getTotalTokensByCategory);
   return getTotalTokensByCategory('think');
 }
 
@@ -77,7 +77,7 @@ export function checkModelTokenLimit(modelId: string): {
   tier?: string;    // Tier情報（互換性のため undefined）
   reason?: string;
 } {
-  const { getTotalTokensByCategory } = useSettingsStore.getState();
+  const { getTotalTokensByCategory } = useTokenBalanceStore.getState();
 
   if (isQuickModel(modelId)) {
     const balance = getTotalTokensByCategory('quick');
@@ -160,8 +160,8 @@ export async function trackAndDeductTokens(
   outputTokens: number,
   modelId: string
 ): Promise<void> {
-  const { trackTokenUsage, incrementLLMRequestCount, refreshTokenBalance } =
-    useSettingsStore.getState();
+  const { refreshTokenBalance } = useTokenBalanceStore.getState();
+  const { trackTokenUsage, incrementLLMRequestCount } = useUsageTrackingStore.getState();
 
   try {
     // 1. バックエンドでトークン消費（サーバー側で残高チェック）

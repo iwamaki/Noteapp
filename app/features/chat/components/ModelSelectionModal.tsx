@@ -16,7 +16,7 @@ import {
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { CustomModal } from '../../../components/CustomModal';
-import { useSettingsStore } from '../../../settings/settingsStore';
+import { useTokenBalanceStore } from '../../../settings/settingsStore';
 import { convertProvidersToModelInfo, type ModelInfo } from '../../../screen/model-selection/constants';
 import APIService from '../../llmService/api';
 import { ModelCard } from './ModelCard';
@@ -32,7 +32,7 @@ export const ModelSelectionModal: React.FC<ModelSelectionModalProps> = ({
   onClose,
 }) => {
   const { colors, spacing } = useTheme();
-  const { settings } = useSettingsStore();
+  const { balance, loadedModels } = useTokenBalanceStore();
   const { switchModel } = useModelSwitch();
 
   // バックエンドから取得したモデル一覧
@@ -72,12 +72,12 @@ export const ModelSelectionModal: React.FC<ModelSelectionModalProps> = ({
   }, [isVisible]);
 
   // 現在選択されているモデル
-  const activeQuickModel = settings.loadedModels.quick || 'gemini-2.5-flash';
-  const activeThinkModel = settings.loadedModels.think || 'gemini-2.5-pro';
+  const activeQuickModel = loadedModels.quick || 'gemini-2.5-flash';
+  const activeThinkModel = loadedModels.think || 'gemini-2.5-pro';
 
   // モデルごとのトークン残高を取得
   const getModelTokens = (modelId: string): number => {
-    return settings.tokenBalance.allocatedTokens[modelId] || 0;
+    return balance.allocatedTokens[modelId] || 0;
   };
 
   // モデル選択ハンドラー

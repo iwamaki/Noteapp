@@ -20,16 +20,7 @@
  */
 
 // ==========================================
-// メインエクスポート（既存コード互換性用）
-// ==========================================
-export {
-  useSettingsStore,
-  TOKEN_CAPACITY_LIMITS,
-  type AppSettings,
-} from './stores/settingsFacade';
-
-// ==========================================
-// 個別ストアのエクスポート（段階的移行用）
+// 個別ストアのエクスポート
 // ==========================================
 
 // UI設定ストア
@@ -54,6 +45,7 @@ export type { SystemSettings } from './types/systemSettings.types';
 
 // トークン残高ストア
 export { useTokenBalanceStore } from './stores/tokenBalanceStore';
+export { TOKEN_CAPACITY_LIMITS } from './types/tokenBalance.types';
 export type {
   TokenBalance,
   LoadedModels,

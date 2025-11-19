@@ -13,7 +13,7 @@ import { FileRepository } from '@data/repositories/fileRepository';
 import { ChatAttachmentService } from './services/chatAttachmentService';
 import { ChatTokenService } from './services/chatTokenService';
 import { ChatCommandService } from './services/chatCommandService';
-import { useSettingsStore } from '../../settings/settingsStore';
+import { useLLMSettingsStore } from '../../settings/settingsStore';
 import { useChatStore } from './store/chatStore';
 import { UnifiedErrorHandler } from './utils/errorHandler';
 import { checkModelTokenLimit } from '../../billing/utils/tokenBalance';
@@ -409,7 +409,7 @@ class ChatService {
    */
   private async buildChatContext(screenContext: ActiveScreenContext | null): Promise<ChatContext> {
     // 設定を取得
-    const { settings } = useSettingsStore.getState();
+    const { settings } = useLLMSettingsStore.getState();
 
     // sendFileContextToLLMがtrueの場合のみ全ファイル情報を取得
     const allFilesData = settings.sendFileContextToLLM

@@ -11,7 +11,7 @@
  */
 
 import { useCallback } from 'react';
-import { useSettingsStore } from '../settings/settingsStore';
+import { useTokenBalanceStore } from '../settings/settingsStore';
 import APIService from '../features/llmService/api';
 import { providerCache } from '../features/llmService/cache/providerCache';
 import { getProviderNameFromModelId } from '../features/llmService/utils/providerHelper';
@@ -46,7 +46,7 @@ interface UseModelSwitchReturn {
  * ```
  */
 export function useModelSwitch(): UseModelSwitchReturn {
-  const { loadModel } = useSettingsStore();
+  const { loadModel } = useTokenBalanceStore();
 
   const switchModel = useCallback(
     async (category: 'quick' | 'think', modelId: string) => {

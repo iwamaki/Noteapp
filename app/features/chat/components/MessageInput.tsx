@@ -11,7 +11,7 @@ import { CustomInlineInput } from '../../../components/CustomInlineInput';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { useChatUI } from '../contexts/ChatUIContext';
 import { CHAT_CONFIG } from '../config/chatConfig';
-import { useSettingsStore } from '../../../settings/settingsStore';
+import { useTokenBalanceStore } from '../../../settings/settingsStore';
 import { useModelSwitch } from '../../../hooks/useModelSwitch';
 
 interface MessageInputProps {
@@ -25,15 +25,15 @@ interface MessageInputProps {
 export const MessageInput: React.FC<MessageInputProps> = ({ inputText, setInputText }) => {
   const { colors, iconSizes } = useTheme();
   const { sendMessage, isLoading } = useChatUI();
-  const { settings } = useSettingsStore();
+  const { loadedModels, activeModelCategory } = useTokenBalanceStore();
   const { switchModel } = useModelSwitch();
 
   // loadedModels から Quick/Think モデルを取得（フォールバック付き）
-  const quickModel = settings.loadedModels?.quick || 'gemini-2.5-flash';
-  const thinkModel = settings.loadedModels?.think || 'gemini-2.5-pro';
+  const quickModel = loadedModels?.quick || 'gemini-2.5-flash';
+  const thinkModel = loadedModels?.think || 'gemini-2.5-pro';
 
   // 現在のモデルがquickかthinkか判定（settingsから直接取得してReactivityを確保）
-  const isCurrentlyQuick = settings.activeModelCategory === 'quick';
+  const isCurrentlyQuick = activeModelCategory === 'quick';
 
   // モデルを切り替える（装填されているモデル間でトグル）
   const toggleModel = async () => {

@@ -295,8 +295,8 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       // 5. settingsStoreに認証状態変更を通知（トークン残高を新アカウントから取得）
       try {
-        const { useSettingsStore } = await import('../settings/settingsStore');
-        await useSettingsStore.getState().handleAuthenticationChange(authResult.user_id);
+        const { useTokenBalanceStore } = await import('../settings/settingsStore');
+        await useTokenBalanceStore.getState().handleAuthenticationChange(authResult.user_id);
         logger.info('auth', 'Settings synchronized for new account');
       } catch (settingsError) {
         // 設定同期失敗はログインを失敗させない
@@ -333,8 +333,8 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       // 3. settingsStoreに認証状態変更を通知（トークン残高をクリア）
       try {
-        const { useSettingsStore } = await import('../settings/settingsStore');
-        await useSettingsStore.getState().handleAuthenticationChange(null);
+        const { useTokenBalanceStore } = await import('../settings/settingsStore');
+        await useTokenBalanceStore.getState().handleAuthenticationChange(null);
         logger.info('auth', 'Settings cleared after logout');
       } catch (settingsError) {
         // 設定クリア失敗は警告のみ（ログアウト自体は失敗させない）
