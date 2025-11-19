@@ -11,12 +11,11 @@ import {
 } from '@react-navigation/native';
 import { createStackNavigator, CardStyleInterpolators } from '@react-navigation/stack';
 import { RootStackParamList } from './types';
-// import FileListScreen from '../screen/file-list/FileListScreen';
-import FileListScreen from '../screen/file-list-flat/FileListScreenFlat';
-import FileEditScreen from '../screen/file-edit/FileEditScreen';
+import FileListScreen from '../screens/file-list-flat/FileListScreenFlat';
+import FileEditScreen from '../screens/file-edit/FileEditScreen';
 import SettingsScreen from '../settings/SettingsScreen';
-import { TokenPurchaseScreen } from '../screen/token-purchase';
-import { ModelSelectionScreen } from '../screen/model-selection/ModelSelectionScreen';
+import { TokenPurchaseScreen } from '../screens/token-purchase';
+import { ModelSelectionScreen } from '../screens/model-selection/ModelSelectionScreen';
 
 import { useTheme } from '../design/theme/ThemeContext';
 import { KeyboardHeightProvider } from '../contexts/KeyboardHeightContext';
@@ -87,8 +86,11 @@ function RootNavigatorContent() {
             gestureDirection: 'horizontal',
           }}
         >
+          {/* メイン画面 */}
           <Stack.Screen name="FileList" component={FileListScreen} options={{ title: 'Files' }} />
           <Stack.Screen name="FileEdit" component={FileEditScreen} options={{ title: 'Edit File' }} />
+
+          {/* 設定関連画面 */}
           <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
           <Stack.Screen name="TokenPurchase" component={TokenPurchaseScreen} />
           <Stack.Screen name="ModelSelection" component={ModelSelectionScreen} options={{ headerShown: false }} />

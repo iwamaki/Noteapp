@@ -8,7 +8,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../../../design/theme/ThemeContext';
-import type { ModelInfo } from '../../../screen/model-selection/constants';
+import type { ModelInfo } from '../../../screens/model-selection/constants';
 
 interface ModelCardProps {
   model: ModelInfo;
