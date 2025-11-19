@@ -14,32 +14,35 @@ import type {
   LLMConfig,
   SummarizeResponse,
   DocumentSummarizeResponse,
+  ChatMessage,
 } from './types/index';
 import { LLMError } from './types/LLMError';
-import { ConversationHistory } from './core/ConversationHistory';
 import { RequestManager } from './core/RequestManager';
-import { ProviderManager } from './core/ProviderManager';
 import { SummarizationService } from './services/SummarizationService';
 import { CHAT_CONFIG } from '../chat/config/chatConfig';
-import { providerCache } from './cache/providerCache';
+import { useLLMStore } from './stores/useLLMStore';
+import { useConversationStore } from './stores/useConversationStore';
 
 // Re-export types
 export type { ChatMessage, ChatContext, LLMProvider, LLMResponse, LLMHealthStatus, LLMConfig, LLMCommand, TokenUsageInfo, SummarizeRequest, SummarizeResponse, SummaryResult, DocumentSummarizeRequest, DocumentSummarizeResponse } from './types/index';
 export { LLMError } from './types/LLMError';
-export { ConversationHistory } from './core/ConversationHistory';
+
+// Re-export stores
+export { useLLMStore } from './stores/useLLMStore';
+export { useConversationStore } from './stores/useConversationStore';
 
 /**
  * LLMサービスメインクラス
+ *
+ * Zustandストアと連携して動作します：
+ * - useLLMStore: プロバイダー・モデル情報の管理
+ * - useConversationStore: 会話履歴の管理
  */
 export class LLMService {
   private config: LLMConfig;
-  private conversationHistory: ConversationHistory;
   private httpClient: HttpClient;
   private requestManager: RequestManager;
-  private providerManager: ProviderManager;
   private summarizationService: SummarizationService;
-  private cachedProviders: Record<string, LLMProvider> | null = null;
-  private loadingPromise: Promise<Record<string, LLMProvider>> | null = null;
 
   constructor(config?: Partial<LLMConfig>) {
     this.config = {
@@ -49,7 +52,6 @@ export class LLMService {
       ...config,
     };
 
-    this.conversationHistory = new ConversationHistory(this.config.maxHistorySize);
     this.httpClient = createHttpClient({
       baseUrl: this.config.baseUrl,
       timeout: this.config.apiTimeout,
@@ -58,10 +60,6 @@ export class LLMService {
     });
     this.requestManager = new RequestManager({
       minRequestInterval: CHAT_CONFIG.llm.minRequestInterval,
-    });
-    this.providerManager = new ProviderManager({
-      defaultProvider: CHAT_CONFIG.llm.defaultProvider,
-      defaultModel: CHAT_CONFIG.llm.defaultModel,
     });
     this.summarizationService = new SummarizationService(this.httpClient);
   }
@@ -72,12 +70,16 @@ export class LLMService {
     clientId?: string | null,
     attachedFiles?: Array<{ filename: string; content: string }>
   ): Promise<LLMResponse> {
+    // Zustandストアから状態を取得
+    const llmStore = useLLMStore.getState();
+    const conversationStore = useConversationStore.getState();
+
     // リクエストを開始（レート制限を適用）
     const requestId = await this.requestManager.startRequest();
 
     try {
       // トークン上限チェック（Flash/Pro別、購入トークン残高も考慮）
-      const currentModel = this.providerManager.getCurrentModel();
+      const currentModel = llmStore.getCurrentModel();
       const { checkModelTokenLimit } = await import('../../billing/utils/tokenBalance');
       const tokenLimitCheck = checkModelTokenLimit(currentModel);
 
@@ -93,7 +95,7 @@ export class LLMService {
       logger.debug('llm', `Request #${requestId} - Token limit check passed: ${tokenLimitCheck.current}/${tokenLimitCheck.max} (${tokenLimitCheck.percentage.toFixed(1)}%)`);
 
       // 会話履歴をコンテキストに追加
-      const history = this.conversationHistory.getHistory().map(msg => ({
+      const history = conversationStore.getHistory().map(msg => ({
         role: msg.role,
         content: msg.content,
         timestamp: msg.timestamp.toISOString(),
@@ -107,8 +109,8 @@ export class LLMService {
       logger.debug('llm', `Request #${requestId} - About to send request to: ${this.config.baseUrl}/api/chat`);
       logger.debug('llm', `Request #${requestId} - Payload:`, {
         message,
-        provider: this.providerManager.getCurrentProvider(),
-        model: this.providerManager.getCurrentModel(),
+        provider: llmStore.getCurrentProvider(),
+        model: llmStore.getCurrentModel(),
         contextKeys: Object.keys(enrichedContext),
         historyLength: history.length,
         clientId: clientId || 'none',
@@ -117,8 +119,8 @@ export class LLMService {
       // HTTPリクエストを送信（client_idを含める）
       const payload: any = {
         message,
-        provider: this.providerManager.getCurrentProvider(),
-        model: this.providerManager.getCurrentModel(),
+        provider: llmStore.getCurrentProvider(),
+        model: llmStore.getCurrentModel(),
         context: enrichedContext,
       };
 
@@ -141,8 +143,8 @@ export class LLMService {
 
       const data: LLMResponse = response.data;
 
-      // 会話履歴に追加
-      this.conversationHistory.addExchange(
+      // 会話履歴に追加（ストア経由）
+      conversationStore.addExchange(
         message,
         data.message,
         attachedFiles
@@ -182,67 +184,27 @@ export class LLMService {
     }
   }
 
-  async loadProviders(): Promise<Record<string, LLMProvider>> {
-    // 既にキャッシュがあれば返す
-    if (this.cachedProviders) {
-      logger.debug('llm', 'Returning cached LLM providers');
-      return this.cachedProviders;
-    }
-
-    // 既にロード中なら同じPromiseを返す（重複リクエスト防止）
-    if (this.loadingPromise) {
-      logger.debug('llm', 'LLM providers already loading, returning existing promise');
-      return this.loadingPromise;
-    }
-
-    // ロード開始
-    logger.info('llm', 'Loading LLM providers from API');
-    this.loadingPromise = this._fetchLLMProviders();
-
-    try {
-      this.cachedProviders = await this.loadingPromise;
-      // グローバルキャッシュにも保存（循環参照回避のため）
-      providerCache.setCache(this.cachedProviders);
-      return this.cachedProviders;
-    } finally {
-      this.loadingPromise = null;
-    }
-  }
-
   /**
-   * LLMプロバイダーを実際に取得する内部メソッド
+   * プロバイダー情報をロード（ストアに委譲）
    */
-  private async _fetchLLMProviders(): Promise<Record<string, LLMProvider>> {
-    try {
-      const response = await this.httpClient.get('/api/llm-providers');
-      const providers = response.data;
-
-      this.providerManager.setAvailableProviders(providers);
-
-      return providers;
-    } catch (error) {
-      if (error instanceof LLMError) {
-        throw error;
-      }
-      throw new LLMError('プロバイダー読み込みに失敗しました', 'PROVIDER_LOAD_ERROR');
-    }
+  async loadProviders(): Promise<Record<string, LLMProvider>> {
+    const llmStore = useLLMStore.getState();
+    await llmStore.loadProviders();
+    return llmStore.getAvailableProviders();
   }
 
   /**
-   * キャッシュされたLLMプロバイダーを同期的に取得
-   * キャッシュがない場合はnullを返す
+   * キャッシュされたLLMプロバイダーを同期的に取得（ストアから）
    */
   getCachedProviders(): Record<string, LLMProvider> | null {
-    return this.cachedProviders;
+    return useLLMStore.getState().getCachedProviders();
   }
 
   /**
-   * キャッシュをクリアして再読み込みを強制
+   * キャッシュをクリアして再読み込みを強制（ストアに委譲）
    */
   refreshProviders(): void {
-    logger.info('llm', 'Clearing LLM providers cache');
-    this.cachedProviders = null;
-    providerCache.clearCache();
+    useLLMStore.getState().refreshProviders();
   }
 
   async checkHealth(): Promise<LLMHealthStatus> {
@@ -254,48 +216,72 @@ export class LLMService {
     }
   }
 
+  /**
+   * プロバイダーを設定（ストアに委譲）
+   */
   setProvider(provider: string): void {
-    this.providerManager.setProvider(provider);
-  }
-
-  setModel(model: string): void {
-    this.providerManager.setModel(model);
-  }
-
-  getCurrentProvider(): string {
-    return this.providerManager.getCurrentProvider();
-  }
-
-  getCurrentModel(): string {
-    return this.providerManager.getCurrentModel();
-  }
-
-  getAvailableProviders(): Record<string, LLMProvider> {
-    return this.providerManager.getAvailableProviders();
-  }
-
-  getConversationHistory(): ConversationHistory {
-    return this.conversationHistory;
-  }
-
-  clearHistory(): void {
-    this.conversationHistory.clear();
+    useLLMStore.getState().setProvider(provider);
   }
 
   /**
-   * 会話履歴を要約する
+   * モデルを設定（ストアに委譲）
+   */
+  setModel(model: string): void {
+    useLLMStore.getState().setModel(model);
+  }
+
+  /**
+   * 現在のプロバイダーを取得（ストアから）
+   */
+  getCurrentProvider(): string {
+    return useLLMStore.getState().getCurrentProvider();
+  }
+
+  /**
+   * 現在のモデルを取得（ストアから）
+   */
+  getCurrentModel(): string {
+    return useLLMStore.getState().getCurrentModel();
+  }
+
+  /**
+   * 利用可能なプロバイダーを取得（ストアから）
+   */
+  getAvailableProviders(): Record<string, LLMProvider> {
+    return useLLMStore.getState().getAvailableProviders();
+  }
+
+  /**
+   * 会話履歴を取得（ストアから）
+   */
+  getConversationHistory(): ChatMessage[] {
+    return useConversationStore.getState().getHistory();
+  }
+
+  /**
+   * 会話履歴をクリア（ストアに委譲）
+   */
+  clearHistory(): void {
+    useConversationStore.getState().clear();
+  }
+
+  /**
+   * 会話履歴を要約する（ストアと連携）
    * @returns 要約結果と圧縮された会話履歴
    */
   async summarizeConversation(): Promise<SummarizeResponse> {
+    const llmStore = useLLMStore.getState();
+    const conversationStore = useConversationStore.getState();
+
     return this.summarizationService.summarizeConversation(
-      this.conversationHistory,
-      this.providerManager.getCurrentProvider(),
-      this.providerManager.getCurrentModel()
+      conversationStore,
+      llmStore.getCurrentProvider(),
+      llmStore.getCurrentModel()
     );
   }
 
   /**
-   * 文書内容を要約する
+   * 文書内容を要約する（ストアと連携）
    * @param content 文書の内容
    * @param title 文書のタイトル
    * @returns 要約レスポンス（要約テキストとトークン情報）
@@ -304,11 +290,13 @@ export class LLMService {
     content: string,
     title: string
   ): Promise<DocumentSummarizeResponse> {
+    const llmStore = useLLMStore.getState();
+
     return this.summarizationService.summarizeDocument(
       content,
       title,
-      this.providerManager.getCurrentProvider(),
-      this.providerManager.getCurrentModel()
+      llmStore.getCurrentProvider(),
+      llmStore.getCurrentModel()
     );
   }
 

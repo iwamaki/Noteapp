@@ -13,7 +13,7 @@
 import { useCallback } from 'react';
 import { useTokenBalanceStore } from '../settingsStore';
 import APIService from '../../features/llmService/api';
-import { providerCache } from '../../features/llmService/cache/providerCache';
+import { useLLMStore } from '../../features/llmService/stores/useLLMStore';
 import { getProviderNameFromModelId } from '../../features/llmService/utils/providerHelper';
 
 /**
@@ -53,8 +53,8 @@ export function useModelSwitch(): UseModelSwitchReturn {
       // 1. settingsStoreを更新（UI状態とActiveStorageに保存）
       await loadModel(category, modelId);
 
-      // 2. モデルIDからプロバイダー名を特定
-      const providers = providerCache.getCache();
+      // 2. モデルIDからプロバイダー名を特定（Zustandストアから）
+      const providers = useLLMStore.getState().getCachedProviders();
       const providerName = getProviderNameFromModelId(modelId, providers);
 
       if (!providerName) {

@@ -125,16 +125,14 @@ export const useTokenBalanceStore = create<TokenBalanceStore>((set, get) => ({
     const { balance } = get();
     const { allocatedTokens } = balance;
 
-    // グローバルキャッシュから取得（循環参照回避）
+    // Zustandストアから取得
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { providerCache } = require('../../features/llmService/cache/providerCache');
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { getModelCategoryFromId } = require('../../features/llmService/utils/modelCategoryHelper');
-    const providersCache = providerCache.getCache();
+    const { useLLMStore } = require('../../features/llmService/stores/useLLMStore');
+    const llmStore = useLLMStore.getState();
 
     let total = 0;
     for (const [modelId, tokenBalance] of Object.entries(allocatedTokens)) {
-      if (getModelCategoryFromId(modelId, providersCache) === category) {
+      if (llmStore.getModelCategory(modelId) === category) {
         total += tokenBalance;
       }
     }

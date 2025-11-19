@@ -14,7 +14,6 @@ import type {
   DocumentSummarizeResponse,
 } from '../types/index';
 import { LLMError } from '../types/LLMError';
-import { ConversationHistory } from '../core/ConversationHistory';
 
 /**
  * 要約サービスクラス
@@ -28,19 +27,19 @@ export class SummarizationService {
 
   /**
    * 会話履歴を要約する
-   * @param conversationHistory 会話履歴
+   * @param conversationStore Zustandストア（useConversationStore.getState()の結果）
    * @param currentProvider 現在のプロバイダー
    * @param currentModel 現在のモデル
    * @returns 要約レスポンス
    */
   async summarizeConversation(
-    conversationHistory: ConversationHistory,
+    conversationStore: { getHistory: () => ChatMessage[]; clear: () => void; setHistory: (history: ChatMessage[]) => void },
     currentProvider: string,
     currentModel: string
   ): Promise<SummarizeResponse> {
     try {
       // 現在の会話履歴を取得
-      const history = conversationHistory.getHistory().map((msg) => ({
+      const history = conversationStore.getHistory().map((msg) => ({
         role: msg.role,
         content: msg.content,
         timestamp: msg.timestamp.toISOString(),
@@ -71,8 +70,8 @@ export class SummarizationService {
 
       const data: SummarizeResponse = response.data;
 
-      // 会話履歴を要約結果で置き換える
-      conversationHistory.clear();
+      // 会話履歴を要約結果で置き換える（ストア経由）
+      const newHistory: ChatMessage[] = [];
 
       // システムメッセージ（要約）を追加
       const summaryMessage: ChatMessage = {
@@ -80,7 +79,7 @@ export class SummarizationService {
         content: data.summary.content,
         timestamp: data.summary.timestamp ? new Date(data.summary.timestamp) : new Date(),
       };
-      conversationHistory.addMessage(summaryMessage);
+      newHistory.push(summaryMessage);
 
       // 最近のメッセージを復元
       data.recentMessages.forEach((msg) => {
@@ -89,8 +88,11 @@ export class SummarizationService {
           content: msg.content,
           timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date(),
         };
-        conversationHistory.addMessage(message);
+        newHistory.push(message);
       });
+
+      // ストアに新しい履歴を設定
+      conversationStore.setHistory(newHistory);
 
       logger.info(
         'llm',

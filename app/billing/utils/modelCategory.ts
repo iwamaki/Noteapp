@@ -4,29 +4,26 @@
  * @description モデル種別の判定と使用量集計のヘルパー関数
  */
 
-import { getModelCategoryFromId } from '../../features/llmService/utils/modelCategoryHelper';
-import { providerCache } from '../../features/llmService/cache/providerCache';
+import { useLLMStore } from '../../features/llmService/stores/useLLMStore';
 
 /**
  * モデルIDがQuick系かどうかを判定
- * バックエンドから取得したcategory情報を使用
+ * Zustandストアから取得したcategory情報を使用
  * @param modelId チェックするモデルID
  * @returns Quick系の場合 true
  */
 export function isQuickModel(modelId: string): boolean {
-  const providers = providerCache.getCache();
-  return getModelCategoryFromId(modelId, providers) === 'quick';
+  return useLLMStore.getState().getModelCategory(modelId) === 'quick';
 }
 
 /**
  * モデルIDがThink系かどうかを判定
- * バックエンドから取得したcategory情報を使用
+ * Zustandストアから取得したcategory情報を使用
  * @param modelId チェックするモデルID
  * @returns Think系の場合 true
  */
 export function isThinkModel(modelId: string): boolean {
-  const providers = providerCache.getCache();
-  return getModelCategoryFromId(modelId, providers) === 'think';
+  return useLLMStore.getState().getModelCategory(modelId) === 'think';
 }
 
 

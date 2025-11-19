@@ -7,8 +7,7 @@
  */
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getModelCategoryFromId } from '../features/llmService/utils/modelCategoryHelper';
-import { providerCache } from '../features/llmService/cache/providerCache';
+import { useLLMStore } from '../features/llmService/stores/useLLMStore';
 
 const SETTINGS_STORAGE_KEY = '@app_settings';
 
@@ -343,12 +342,12 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
     const { settings } = get();
     const { allocatedTokens } = settings.tokenBalance;
 
-    // グローバルキャッシュから取得（循環参照回避）
-    const providersCache = providerCache.getCache();
+    // Zustandストアから取得
+    const llmStore = useLLMStore.getState();
 
     let total = 0;
     for (const [modelId, balance] of Object.entries(allocatedTokens)) {
-      if (getModelCategoryFromId(modelId, providersCache) === category) {
+      if (llmStore.getModelCategory(modelId) === category) {
         total += balance;
       }
     }

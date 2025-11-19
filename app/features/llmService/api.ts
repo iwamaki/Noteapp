@@ -2,11 +2,13 @@
  * @file api.ts
  * @summary このファイルは、アプリケーションの主要なAPIサービスを定義します。
  * @responsibility LLM（大規模言語モデル）との通信を抽象化し、チャットメッセージの送信やLLMプロバイダーの設定などの機能を提供する責任があります。
+ *
+ * Zustandストアと連携：
+ * - useLLMStore: プロバイダー・モデル情報の管理
+ * - useConversationStore: 会話履歴の管理
  */
 
-import { ChatContext, LLMResponse, LLMService, SummarizeResponse, DocumentSummarizeResponse } from './index';
-import { getModelCategoryFromId } from './utils/modelCategoryHelper';
-import { providerCache } from './cache/providerCache';
+import { ChatContext, LLMResponse, LLMService, SummarizeResponse, DocumentSummarizeResponse, useLLMStore } from './index';
 
 export interface CreateFileRequest {
   title: string;
@@ -91,14 +93,13 @@ export class APIService {
 
   /**
    * モデルIDからカテゴリー（quick/think）を取得
-   * キャッシュされたプロバイダー情報のメタデータを使用
+   * Zustandストアのメタデータを使用
    * @param modelId モデルID
    * @returns カテゴリー（'quick' | 'think'）、メタデータがない場合はフォールバック
    */
   static getModelCategory(modelId: string): 'quick' | 'think' {
-    // グローバルキャッシュから取得（循環参照回避）
-    const providers = providerCache.getCache();
-    return getModelCategoryFromId(modelId, providers);
+    // Zustandストアから取得
+    return useLLMStore.getState().getModelCategory(modelId);
   }
 
   // 会話履歴を要約
