@@ -14,19 +14,19 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 # 新しいインフラストラクチャ
-from infrastructure.config.settings import get_settings
-from infrastructure.logging.logger import init_logging, get_logger
-from infrastructure.database.connection import init_database
-from infrastructure.cache.redis_client import init_redis
+from src.infrastructure.config.settings import get_settings
+from src.infrastructure.logging.logger import get_logger, init_logging
+from src.infrastructure.database.connection import init_database
+from src.infrastructure.cache.redis_client import init_redis
 
 # 新しい共通コンポーネント
-from shared.exceptions.handlers import register_exception_handlers
-from shared.middleware.logging_middleware import LoggingMiddleware
-from shared.middleware.error_middleware import ErrorMiddleware
-from shared.middleware.rate_limit_middleware import RateLimitMiddleware
+from src.shared.exceptions.handlers import register_exception_handlers
+from src.shared.middleware.logging_middleware import LoggingMiddleware
+from src.shared.middleware.error_middleware import ErrorMiddleware
+from src.shared.middleware.rate_limit_middleware import RateLimitMiddleware
 
 # 新しいBilling Router (Phase 2)
-from presentation.routers.billing_router import router as billing_router
+from src.presentation.routers.billing_router import router as billing_router
 
 # Settings取得
 settings = get_settings()
@@ -155,7 +155,8 @@ async def health_check():
 
     # Redis接続チェック
     try:
-        from infrastructure.cache.redis_client import get_redis
+        from src.infrastructure.cache.redis_client import get_redis
+
         redis_client = get_redis()
         if redis_client.ping():
             health_status["redis"] = "connected"
@@ -192,29 +193,28 @@ async def config_info():
 @app.get("/test/exception")
 async def test_exception():
     """例外ハンドラーのテスト"""
-    from shared.exceptions.base import ValidationError
+    from src.shared.exceptions.base import ValidationError
+
     raise ValidationError(
         message="This is a test validation error",
-        details={"field": "test_field", "value": "invalid"}
+        details={"field": "test_field", "value": "invalid"},
     )
 
 
 @app.get("/test/auth-exception")
 async def test_auth_exception():
     """認証例外のテスト"""
-    from shared.exceptions.auth_exceptions import InvalidTokenError
+    from src.shared.exceptions.auth_exceptions import InvalidTokenError
+
     raise InvalidTokenError(message="Test token is invalid")
 
 
 @app.get("/test/billing-exception")
 async def test_billing_exception():
     """課金例外のテスト"""
-    from shared.exceptions.billing_exceptions import InsufficientBalanceError
-    raise InsufficientBalanceError(
-        user_id="test_user",
-        required=100,
-        available=50
-    )
+    from src.shared.exceptions.billing_exceptions import InsufficientBalanceError
+
+    raise InsufficientBalanceError(user_id="test_user", required=100, available=50)
 
 
 if __name__ == "__main__":
