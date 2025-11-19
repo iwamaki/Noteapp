@@ -5,7 +5,11 @@
  */
 
 import { InitializationTask, InitializationStage, TaskPriority } from '../types';
-import { useSettingsStore } from '../../settings/settingsStore';
+import {
+  useUISettingsStore,
+  useTokenBalanceStore,
+  useUsageTrackingStore
+} from '../../settings/settingsStore';
 
 /**
  * アプリケーション準備完了確認タスク
@@ -26,14 +30,19 @@ export const verifyAppReadyTask: InitializationTask = {
   ],
 
   execute: async () => {
-    // 設定が正常に読み込まれているか確認
-    const { settings, isLoading } = useSettingsStore.getState();
+    // 月次使用量のリセットチェック
+    const { checkAndResetMonthlyUsageIfNeeded } = useUsageTrackingStore.getState();
+    await checkAndResetMonthlyUsageIfNeeded();
 
-    if (isLoading) {
+    // 設定が正常に読み込まれているか確認
+    const uiStore = useUISettingsStore.getState();
+    const tokenStore = useTokenBalanceStore.getState();
+
+    if (uiStore.isLoading || tokenStore.isLoading) {
       throw new Error('Settings are still loading');
     }
 
-    if (!settings) {
+    if (!uiStore.settings || !tokenStore.loadedModels) {
       throw new Error('Settings are not available');
     }
 
@@ -41,9 +50,9 @@ export const verifyAppReadyTask: InitializationTask = {
     if (__DEV__) {
       console.log('[verifyAppReady] App is ready to start');
       console.log('[verifyAppReady] Settings loaded:', {
-        theme: settings.theme,
-        fontSize: settings.fontSize,
-        loadedModels: settings.loadedModels,
+        theme: uiStore.settings.theme,
+        fontSize: uiStore.settings.fontSize,
+        loadedModels: tokenStore.loadedModels,
       });
     }
   },

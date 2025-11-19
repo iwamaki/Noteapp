@@ -7,7 +7,7 @@
 
 import { InitializationTask, InitializationStage, TaskPriority } from '../types';
 import { initBillingApiService } from '../../billing/services/billingApiService';
-import { useSettingsStore } from '../../settings/settingsStore';
+import { useTokenBalanceStore } from '../../settings/settingsStore';
 import { logger } from '../../utils/logger';
 
 /**
@@ -42,15 +42,15 @@ export const initializeBillingServiceTask: InitializationTask = {
       logger.info('billing', 'BillingApiService initialized', { backendUrl });
 
       // トークン残高をバックエンドから読み込み
-      await useSettingsStore.getState().loadTokenBalance();
+      await useTokenBalanceStore.getState().loadTokenBalance();
       logger.info('billing', 'Token balance loaded from backend');
 
       // デバッグログ（開発時のみ）
       if (__DEV__) {
-        const { tokenBalance } = useSettingsStore.getState().settings;
+        const { balance } = useTokenBalanceStore.getState();
         logger.debug('billing', 'Current balance', {
-          credits: tokenBalance.credits,
-          models: Object.keys(tokenBalance.allocatedTokens).length,
+          credits: balance.credits,
+          models: Object.keys(balance.allocatedTokens).length,
         });
       }
     } catch (error) {

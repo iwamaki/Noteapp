@@ -190,7 +190,7 @@ function aggregateSettings(): AppSettings {
 /**
  * 旧settingsStoreと互換性のあるファサードストア
  */
-export const useSettingsStore = create<SettingsStore>((set, get) => ({
+export const useSettingsStore = create<SettingsStore>((set) => ({
   settings: aggregateSettings(),
   isLoading: false,
 

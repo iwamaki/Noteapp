@@ -19,7 +19,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { RootStackParamList } from '../../navigation/types';
 import { useMonthlyCost } from '../../billing/utils/costCalculation';
-import { useSettingsStore } from '../settingsStore';
+import { useTokenBalanceStore, useUsageTrackingStore } from '../settingsStore';
 import { ListItem } from '../../components/ListItem';
 
 type SettingsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Settings'>;
@@ -27,7 +27,8 @@ type SettingsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Set
 export const TokenUsageSection: React.FC = () => {
   const { colors, spacing, typography } = useTheme();
   const navigation = useNavigation<SettingsScreenNavigationProp>();
-  const { settings } = useSettingsStore();
+  const { balance } = useTokenBalanceStore();
+  const { usage } = useUsageTrackingStore();
 
   // 月間コスト情報を取得（開発時のみ）
   const costInfo = __DEV__ ? useMonthlyCost() : null;
@@ -159,8 +160,8 @@ export const TokenUsageSection: React.FC = () => {
               />
               <Text><ListItem.Title>クレジット</ListItem.Title></Text>
             </View>
-            {settings.tokenBalance.credits > 0 && (
-              <Text style={styles.valueText}>{settings.tokenBalance.credits}P</Text>
+            {balance.credits > 0 && (
+              <Text style={styles.valueText}>{balance.credits}P</Text>
             )}
           </View>
           <View style={styles.buttonRow}>
@@ -202,11 +203,11 @@ export const TokenUsageSection: React.FC = () => {
       </ListItem.Container>
 
       {/* モデル別詳細（開発時のみ） */}
-      {__DEV__ && Object.keys(settings.usage.monthlyTokensByModel).length > 0 && (
+      {__DEV__ && Object.keys(usage.monthlyTokensByModel).length > 0 && (
         <View style={styles.usageContainer}>
           <Text style={styles.modelBreakdownTitle}>モデル別詳細（開発用）</Text>
-          {Object.entries(settings.usage.monthlyTokensByModel).map(([modelId, usage]) => {
-            const totalTokens = usage.inputTokens + usage.outputTokens;
+          {Object.entries(usage.monthlyTokensByModel).map(([modelId, modelUsage]) => {
+            const totalTokens = modelUsage.inputTokens + modelUsage.outputTokens;
             // 開発時のみコスト情報を取得
             const modelCost = costInfo
               ? costInfo.costByModel.find(m => m.modelId === modelId)
@@ -219,7 +220,7 @@ export const TokenUsageSection: React.FC = () => {
                     合計: {totalTokens.toLocaleString()}
                   </Text>
                   <Text style={styles.modelTokenDetail}>
-                    入力: {usage.inputTokens.toLocaleString()} | 出力: {usage.outputTokens.toLocaleString()}
+                    入力: {modelUsage.inputTokens.toLocaleString()} | 出力: {modelUsage.outputTokens.toLocaleString()}
                   </Text>
                 </View>
                 {modelCost && (

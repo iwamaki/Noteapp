@@ -6,7 +6,7 @@
  */
 import React, { createContext, useContext, useMemo } from 'react';
 import { useColorScheme } from 'react-native';
-import { useSettingsStore } from '../../settings/settingsStore';
+import { useUISettingsStore } from '../../settings/settingsStore';
 
 // ライトテーマのカラーパレット
 const lightColors = {
@@ -158,7 +158,7 @@ type Theme = {
 const ThemeContext = createContext<Theme | null>(null);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const { settings } = useSettingsStore();
+  const { settings } = useUISettingsStore();
   const systemColorScheme = useColorScheme();
 
   const theme = useMemo(() => {

@@ -6,7 +6,14 @@
  */
 
 import { InitializationTask, InitializationStage, TaskPriority } from '../types';
-import { useSettingsStore } from '../../settings/settingsStore';
+import {
+  useUISettingsStore,
+  useEditorSettingsStore,
+  useLLMSettingsStore,
+  useSystemSettingsStore,
+  useTokenBalanceStore,
+  useUsageTrackingStore
+} from '../../settings/settingsStore';
 
 /**
  * 設定読み込みタスク
@@ -23,8 +30,15 @@ export const loadSettingsTask: InitializationTask = {
   dependencies: [],
 
   execute: async () => {
-    const { loadSettings } = useSettingsStore.getState();
-    await loadSettings();
+    // 全ストアを並列で読み込み
+    await Promise.all([
+      useUISettingsStore.getState().loadSettings(),
+      useEditorSettingsStore.getState().loadSettings(),
+      useLLMSettingsStore.getState().loadSettings(),
+      useSystemSettingsStore.getState().loadSettings(),
+      useTokenBalanceStore.getState().loadData(),
+      useUsageTrackingStore.getState().loadUsage(),
+    ]);
   },
 
   fallback: async (error: Error) => {

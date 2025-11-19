@@ -14,7 +14,13 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { useSettingsStore } from './settingsStore';
+import {
+  useUISettingsStore,
+  useEditorSettingsStore,
+  useLLMSettingsStore,
+  useUsageTrackingStore,
+  useTokenBalanceStore
+} from './settingsStore';
 import { useTheme } from '../design/theme/ThemeContext';
 import { useSettingsHeader } from './hooks/useSettingsHeader';
 import { ListItem } from '../components/ListItem';
@@ -25,7 +31,16 @@ import { useAuth } from '../auth/authStore';
 
 function SettingsScreen() {
   const { colors, spacing, typography } = useTheme();
-  const { settings, loadSettings, updateSettings, isLoading, checkAndResetMonthlyUsageIfNeeded } = useSettingsStore();
+
+  // 各設定ストアから個別に取得
+  const uiSettings = useUISettingsStore();
+  const editorSettings = useEditorSettingsStore();
+  const llmSettings = useLLMSettingsStore();
+  const { checkAndResetMonthlyUsageIfNeeded } = useUsageTrackingStore();
+  const tokenBalanceStore = useTokenBalanceStore();
+
+  // ローディング状態は各ストアを統合
+  const isLoading = uiSettings.isLoading || editorSettings.isLoading || llmSettings.isLoading;
 
   // 認証ストアから状態とアクションを取得
   const {
@@ -41,7 +56,10 @@ function SettingsScreen() {
   const { login, result, isLoading: isGoogleAuthLoading, error: googleAuthError } = useGoogleAuthCodeFlow();
 
   useEffect(() => {
-    loadSettings();
+    // 各ストアの設定を読み込み
+    uiSettings.loadSettings();
+    editorSettings.loadSettings();
+    llmSettings.loadSettings();
     // 月次使用量のリセットチェック（月が変わったらリセット）
     checkAndResetMonthlyUsageIfNeeded();
   }, []);
@@ -260,63 +278,63 @@ function SettingsScreen() {
 
         {renderPicker(
           'テーマ',
-          settings.theme,
+          uiSettings.settings.theme,
           [
             { label: 'ライト', value: 'light' },
             { label: 'ダーク', value: 'dark' },
             { label: 'システム', value: 'system' },
           ],
-          (value) => updateSettings({ theme: value as 'light' | 'dark' | 'system' })
+          (value) => uiSettings.updateSettings({ theme: value as 'light' | 'dark' | 'system' })
         )}
 
         {renderPicker(
           'フォントサイズ',
-          settings.fontSize,
+          uiSettings.settings.fontSize,
           [
             { label: '小', value: 'small' },
             { label: '中', value: 'medium' },
             { label: '大', value: 'large' },
             { label: '特大', value: 'xlarge' },
           ],
-          (value) => updateSettings({ fontSize: value as 'small' | 'medium' | 'large' | 'xlarge' })
+          (value) => uiSettings.updateSettings({ fontSize: value as 'small' | 'medium' | 'large' | 'xlarge' })
         )}
 
         {renderPicker(
           'デフォルトファイル表示',
-          settings.defaultFileViewScreen,
+          editorSettings.settings.defaultFileViewScreen,
           [
             { label: '編集画面', value: 'edit' },
             { label: 'プレビュー', value: 'preview' },
           ],
-          (value) => updateSettings({ defaultFileViewScreen: value as 'edit' | 'preview' })
+          (value) => editorSettings.updateSettings({ defaultFileViewScreen: value as 'edit' | 'preview' })
         )}
 
         {renderPicker(
           'カテゴリーソート方法',
-          settings.categorySortMethod,
+          uiSettings.settings.categorySortMethod,
           [
             { label: '名前順', value: 'name' },
             { label: 'ファイル数順', value: 'fileCount' },
           ],
-          (value) => updateSettings({ categorySortMethod: value as 'name' | 'fileCount' })
+          (value) => uiSettings.updateSettings({ categorySortMethod: value as 'name' | 'fileCount' })
         )}
 
         {renderPicker(
           'ファイルソート方法',
-          settings.fileSortMethod,
+          uiSettings.settings.fileSortMethod,
           [
             { label: '名前順', value: 'name' },
             { label: '更新日順', value: 'updatedAt' },
           ],
-          (value) => updateSettings({ fileSortMethod: value as 'updatedAt' | 'name' })
+          (value) => uiSettings.updateSettings({ fileSortMethod: value as 'updatedAt' | 'name' })
         )}
 
         <ListItem.Container>
           {/* eslint-disable-next-line react-native/no-raw-text */}
           <ListItem.Title>ファイルリストに要約を表示</ListItem.Title>
           <Switch
-            value={settings.showSummary}
-            onValueChange={(value: boolean) => updateSettings({ showSummary: value })}
+            value={uiSettings.settings.showSummary}
+            onValueChange={(value: boolean) => uiSettings.updateSettings({ showSummary: value })}
           />
         </ListItem.Container>
 
@@ -326,8 +344,8 @@ function SettingsScreen() {
           {/* eslint-disable-next-line react-native/no-raw-text */}
           <ListItem.Title>LLM機能を有効にする</ListItem.Title>
           <Switch
-            value={settings.llmEnabled}
-            onValueChange={(value: boolean) => updateSettings({ llmEnabled: value })}
+            value={llmSettings.settings.llmEnabled}
+            onValueChange={(value: boolean) => llmSettings.updateSettings({ llmEnabled: value })}
           />
         </ListItem.Container>
 
@@ -347,8 +365,7 @@ function SettingsScreen() {
             <TouchableOpacity
               style={[styles.resetButton, { backgroundColor: colors.primary }]}
               onPress={async () => {
-                const { resetTokensAndUsage } = useSettingsStore.getState();
-                await resetTokensAndUsage();
+                await tokenBalanceStore.resetTokensAndUsage();
                 Alert.alert('完了', 'トークン残高と使用量をリセットしました');
               }}
             >
@@ -360,8 +377,12 @@ function SettingsScreen() {
         <TouchableOpacity
           style={styles.resetButton}
           onPress={async () => {
-            const { resetSettings } = useSettingsStore.getState();
-            await resetSettings();
+            // 全ストアの設定をリセット
+            await Promise.all([
+              uiSettings.resetSettings(),
+              editorSettings.resetSettings(),
+              llmSettings.resetSettings(),
+            ]);
           }}
         >
           <Text style={styles.resetButtonText}>設定をリセット</Text>

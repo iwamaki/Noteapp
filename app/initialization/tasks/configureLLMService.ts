@@ -5,7 +5,7 @@
  */
 
 import { InitializationTask, InitializationStage, TaskPriority } from '../types';
-import { useSettingsStore } from '../../settings/settingsStore';
+import { useTokenBalanceStore } from '../../settings/settingsStore';
 import APIService from '../../features/llmService/api';
 
 /**
@@ -23,10 +23,10 @@ export const configureLLMServiceTask: InitializationTask = {
   dependencies: ['load-settings'], // 設定読み込み後に実行
 
   execute: async () => {
-    const { settings } = useSettingsStore.getState();
+    const { loadedModels } = useTokenBalanceStore.getState();
 
     // loadedModelsから初期モデルを取得（thinkモデルを優先）
-    const initialModelId = settings.loadedModels?.think || settings.loadedModels?.quick || 'gemini-2.5-pro';
+    const initialModelId = loadedModels?.think || loadedModels?.quick || 'gemini-2.5-pro';
 
     // バックエンドから取得したプロバイダー情報を使って、モデルIDに対応するプロバイダーを取得
     try {

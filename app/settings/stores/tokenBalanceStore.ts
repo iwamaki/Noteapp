@@ -11,7 +11,6 @@ import {
   PurchaseRecord,
   defaultTokenBalance,
   defaultLoadedModels,
-  TOKEN_CAPACITY_LIMITS,
 } from '../types/tokenBalance.types';
 import { SettingsPersistenceService } from '../services/settingsPersistenceService';
 
@@ -127,7 +126,9 @@ export const useTokenBalanceStore = create<TokenBalanceStore>((set, get) => ({
     const { allocatedTokens } = balance;
 
     // グローバルキャッシュから取得（循環参照回避）
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { providerCache } = require('../../features/llmService/cache/providerCache');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { getModelCategoryFromId } = require('../../features/llmService/utils/modelCategoryHelper');
     const providersCache = providerCache.getCache();
 
