@@ -370,6 +370,15 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
         return;
       }
 
+      // 認証トークンの確認（認証されていない場合はスキップ）
+      const { getAccessToken } = await import('../auth/tokenService');
+      const accessToken = await getAccessToken();
+
+      if (!accessToken) {
+        console.warn('[SettingsStore] No access token found, skipping balance load');
+        return;
+      }
+
       const billingService = getBillingApiService();
       const balance = await billingService.getBalance();
 

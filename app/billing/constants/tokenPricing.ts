@@ -22,7 +22,7 @@
 export function getTokenPrice(modelId: string): number | undefined {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const APIService = require('../../features/chat/llmService/api').default;
+    const APIService = require('../../features/llmService/api').default;
     const providers = APIService.getCachedLLMProviders();
 
     if (providers) {
