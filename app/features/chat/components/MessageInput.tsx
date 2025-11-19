@@ -9,7 +9,7 @@ import { View, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { CustomInlineInput } from '../../../components/CustomInlineInput';
 import { useTheme } from '../../../design/theme/ThemeContext';
-import { useChatUI } from '../contexts/ChatUIContext';
+import { useChat } from '../hooks/useChat';
 import { CHAT_CONFIG } from '../config/chatConfig';
 import { useTokenBalanceStore } from '../../../settings/settingsStore';
 import { useModelSwitch } from '../../../hooks/useModelSwitch';
@@ -24,7 +24,7 @@ interface MessageInputProps {
  */
 const MessageInputComponent: React.FC<MessageInputProps> = ({ inputText, setInputText }) => {
   const { colors, iconSizes } = useTheme();
-  const { sendMessage, isLoading } = useChatUI();
+  const { sendMessage, isLoading } = useChat();
   const { loadedModels, activeModelCategory } = useTokenBalanceStore();
   const { switchModel } = useModelSwitch();
 

@@ -34,12 +34,6 @@ class ChatService {
   // コマンドサービス
   private commandService: ChatCommandService;
 
-  // チャットメッセージの履歴
-  private messages: ChatMessage[] = [];
-
-  // ローディング状態
-  private isLoading: boolean = false;
-
   // WebSocket管理マネージャー
   private wsManager: ChatWebSocketManager;
 
@@ -182,7 +176,8 @@ class ChatService {
    */
   public async sendMessage(message: string): Promise<void> {
     const trimmedMessage = message.trim();
-    if (!trimmedMessage || this.isLoading) {
+    const isLoading = useChatStore.getState().isLoading;
+    if (!trimmedMessage || isLoading) {
       logger.debug('chatService', 'sendMessage aborted (empty message or loading)');
       return;
     }
@@ -308,11 +303,10 @@ class ChatService {
    */
   public resetChat(): void {
     logger.debug('chatService', 'Resetting chat history');
-    this.messages = [];
+    useChatStore.getState().setMessages([]);
     this.tokenService.resetTokenUsage();
     // LLMServiceの会話履歴もクリア
     APIService.clearHistory();
-    this.notifyListeners();
   }
 
   /**
@@ -320,12 +314,14 @@ class ChatService {
    * 長い会話をシステムメッセージの要約 + 最近のメッセージで圧縮します
    */
   public async summarizeConversation(): Promise<void> {
-    if (this.isLoading) {
+    const { isLoading, messages } = useChatStore.getState();
+
+    if (isLoading) {
       logger.debug('chatService', 'summarizeConversation aborted (already loading)');
       return;
     }
 
-    if (this.messages.length === 0) {
+    if (messages.length === 0) {
       logger.warn('chatService', 'Cannot summarize: no messages in history');
       return;
     }
@@ -334,7 +330,7 @@ class ChatService {
 
     try {
       // 要約サービスを使用して要約を実行
-      const result = await ChatSummarizationService.summarizeConversation(this.messages);
+      const result = await ChatSummarizationService.summarizeConversation(messages);
 
       if (!result.isActuallySummarized) {
         // 要約が効果的でなかった場合
@@ -343,13 +339,10 @@ class ChatService {
       }
 
       // 実際に要約された場合
-      this.messages = result.messages;
+      useChatStore.getState().setMessages(result.messages);
 
       // トークン使用量をリセット（要約後は新しいカウントになる）
       this.tokenService.resetTokenUsage();
-
-      // リスナーに通知
-      this.notifyListeners();
     } catch (error) {
       const errorMessage = UnifiedErrorHandler.handleChatError(
         {
@@ -368,14 +361,14 @@ class ChatService {
    * 現在のメッセージ履歴を取得
    */
   public getMessages(): ChatMessage[] {
-    return [...this.messages];
+    return useChatStore.getState().messages;
   }
 
   /**
    * 現在のローディング状態を取得
    */
   public getIsLoading(): boolean {
-    return this.isLoading;
+    return useChatStore.getState().isLoading;
   }
 
   /**
@@ -392,16 +385,15 @@ class ChatService {
    */
   private addMessage(message: ChatMessage): void {
     logger.debug('chatService', 'Adding message:', message);
-    this.messages = [...this.messages, message];
-    this.notifyListeners();
+    const currentMessages = useChatStore.getState().messages;
+    useChatStore.getState().setMessages([...currentMessages, message]);
   }
 
   /**
    * ローディング状態を設定
    */
   private setLoading(loading: boolean): void {
-    this.isLoading = loading;
-    this.notifyLoadingChange();
+    useChatStore.getState().setIsLoading(loading);
   }
 
   /**
@@ -481,20 +473,6 @@ class ChatService {
       };
       this.addMessage(purchaseGuidanceMessage);
     }
-  }
-
-  /**
-   * メッセージ変更をZustandストアに通知
-   */
-  private notifyListeners(): void {
-    useChatStore.getState().setMessages(this.messages);
-  }
-
-  /**
-   * ローディング状態の変更をZustandストアに通知
-   */
-  private notifyLoadingChange(): void {
-    useChatStore.getState().setIsLoading(this.isLoading);
   }
 
   /**

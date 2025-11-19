@@ -8,7 +8,7 @@ import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../design/theme/ThemeContext';
-import { useChatUI } from '../contexts/ChatUIContext';
+import { useChat } from '../hooks/useChat';
 import { CHAT_CONFIG } from '../config/chatConfig';
 
 /**
@@ -16,7 +16,7 @@ import { CHAT_CONFIG } from '../config/chatConfig';
  */
 const AttachedFilesListComponent: React.FC = () => {
   const { colors } = useTheme();
-  const { attachedFiles, removeAttachedFile } = useChatUI();
+  const { attachedFiles, removeAttachedFile } = useChat();
 
   // 添付ファイルがない場合は何も表示しない
   if (attachedFiles.length === 0) {
