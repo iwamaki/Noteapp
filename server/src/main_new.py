@@ -28,6 +28,9 @@ from src.shared.middleware.rate_limit_middleware import RateLimitMiddleware
 # 新しいBilling Router (Phase 2)
 from src.presentation.routers.billing_router import router as billing_router
 
+# 新しいAuth Router (Phase 3)
+from src.presentation.routers.auth_router import router as auth_router
+
 # Settings取得
 settings = get_settings()
 
@@ -123,6 +126,7 @@ register_exception_handlers(app)
 
 # ルーター登録
 app.include_router(billing_router)
+app.include_router(auth_router)
 
 
 # ==========================================
@@ -135,11 +139,12 @@ async def root():
     return {
         "message": "NoteApp Server - New Architecture",
         "version": "0.1.0",
-        "phase": "Phase 2 - Billing Domain Migration Complete",
+        "phase": "Phase 3 - Auth Domain Migration Complete",
         "endpoints": {
             "health": "/health",
             "config": "/config",
             "billing": "/api/billing",
+            "auth": "/api/auth/v2",
         }
     }
 

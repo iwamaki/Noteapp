@@ -1,6 +1,6 @@
 """
 @file __init__.py
-@summary Billing Module
+@summary Persistence Models
 """
 
 from .billing import (
@@ -11,8 +11,13 @@ from .billing import (
     UserModel,
 )
 
+from .auth import (
+    DeviceModel,
+)
+
 __all__ = [
     "UserModel",
+    "DeviceModel",
     "UserBalanceModel",
     "CreditModel",
     "TransactionModel",
