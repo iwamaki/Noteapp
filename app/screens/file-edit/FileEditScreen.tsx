@@ -9,7 +9,6 @@ import { useFileEditChatContext } from '../../features/chat/hooks/useFileEditCha
 import { CustomModal } from '../../components/CustomModal';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { MainContainer } from '../../components/MainContainer';
-import { useKeyboardHeight } from '../../contexts/KeyboardHeightContext';
 import { useTheme } from '../../design/theme/ThemeContext';
 
 import type { ViewMode } from './types';
@@ -27,7 +26,6 @@ function FileEditScreen() {
   const route = useRoute<FileEditScreenRouteProp>();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { fileId, initialViewMode } = route.params || {};
-  const { keyboardHeight, chatInputBarHeight } = useKeyboardHeight();
   const { settings } = useLLMSettingsStore(); // 設定を取得
 
   const {
@@ -109,9 +107,7 @@ function FileEditScreen() {
     setViewMode(mode as ViewMode);
   };
 
-  const chatBarOffset = chatInputBarHeight + keyboardHeight;
-
-  // スタイルをメモ化（テーマとchatBarOffsetが変わったときのみ再作成）
+  // スタイルをメモ化（テーマが変わったときのみ再作成）
   /* eslint-disable react-native/no-unused-styles */
   const styles = useMemo(
     () => StyleSheet.create({
@@ -122,11 +118,10 @@ function FileEditScreen() {
       contentContainer: {
         paddingHorizontal: 0,
         paddingVertical: 0,
-        paddingBottom: chatBarOffset,
         flexGrow: 1,
       },
     }),
-    [colors.secondary, chatBarOffset]
+    [colors.background]
   );
   /* eslint-enable react-native/no-unused-styles */
 
@@ -155,6 +150,7 @@ function FileEditScreen() {
           onContentChange={setContent}
         />
       </ScrollView>
+
       <SummaryEditModal
         visible={isSummaryModalVisible}
         initialSummary={summary}

@@ -36,7 +36,7 @@ const AppContent = () => {
     <View style={styles.container}>
       <StatusBar
         barStyle={themeMode === 'dark' ? 'light-content' : 'dark-content'}
-        backgroundColor={colors.secondary}
+        backgroundColor={colors.background}
       />
       <RootNavigator />
     </View>

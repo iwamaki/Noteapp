@@ -5,6 +5,7 @@
  */
 
 import React, { useState } from 'react';
+import { KeyboardAvoidingView, Platform } from 'react-native';
 import {
   NavigationContainer,
   useNavigationContainerRef,
@@ -18,7 +19,6 @@ import { TokenPurchaseScreen } from '../screens/token-purchase';
 import { ModelSelectionScreen } from '../screens/model-selection/ModelSelectionScreen';
 
 import { useTheme } from '../design/theme/ThemeContext';
-import { KeyboardHeightProvider } from '../contexts/KeyboardHeightContext';
 import { ChatInputBar } from '../features/chat/components/ChatInputBar';
 import { useLLMSettingsStore } from '../settings/settingsStore';
 
@@ -26,7 +26,6 @@ import { useLLMSettingsStore } from '../settings/settingsStore';
 // スタックナビゲーターの作成
 const Stack = createStackNavigator<RootStackParamList>();
 
-// 内部ナビゲーターコンポーネント（KeyboardHeightProviderの内側で動作）
 function RootNavigatorContent() {
   const navigationRef = useNavigationContainerRef();
   const [currentRouteName, setCurrentRouteName] = useState<string | undefined>(undefined);
@@ -96,20 +95,18 @@ function RootNavigatorContent() {
           <Stack.Screen name="ModelSelection" component={ModelSelectionScreen} options={{ headerShown: false }} />
         </Stack.Navigator>
       </NavigationContainer>
-      {shouldShowChat && <ChatInputBar />}
+
+      {/* ChatInputBar (LLM有効 & 対象画面でのみ表示) */}
+      {shouldShowChat && (
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={0}
+        >
+          <ChatInputBar />
+        </KeyboardAvoidingView>
+      )}
     </>
   );
 }
 
-// RootNavigatorコンポーネント（Providerでラップ）
-function RootNavigator() {
-  return (
-    <KeyboardHeightProvider>
-      <RootNavigatorContent />
-    </KeyboardHeightProvider>
-  );
-}
-
-
-
-export default RootNavigator;
+export default RootNavigatorContent;

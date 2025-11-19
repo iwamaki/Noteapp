@@ -6,7 +6,7 @@
  */
 
 import React, { useState, useMemo } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View } from 'react-native';
 import { useChat } from '../hooks/useChat';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { ChatHistory } from './ChatHistory';
@@ -14,14 +14,12 @@ import { ToggleTabButton } from './ToggleTabButton';
 import { AttachedFilesList } from './AttachedFilesList';
 import { MessageInput } from './MessageInput';
 import { ChatUIProvider } from '../contexts/ChatUIContext';
-import { useKeyboardAwareHeight } from '../hooks/useKeyboardAwareHeight';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useKeyboardHeight } from '../../../contexts/KeyboardHeightContext';
 
 export const ChatInputBar: React.FC = () => {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const { keyboardHeight } = useKeyboardHeight();
+
   const {
     messages,
     isLoading,
@@ -40,10 +38,8 @@ export const ChatInputBar: React.FC = () => {
   const [inputText, setInputText] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // キーボード対応の高さ追跡
-  const { handleLayout } = useKeyboardAwareHeight({ isResizing });
-
   // ChatUIContextの値を準備
+  // panResponderとchatAreaHeightはrefで管理されており、常に同じ参照のため依存配列から除外
   const chatUIContextValue = useMemo(
     () => ({
       messages,
@@ -63,8 +59,6 @@ export const ChatInputBar: React.FC = () => {
       isLoading,
       attachedFiles,
       tokenUsage,
-      chatAreaHeight,
-      panResponder,
       isResizing,
       sendMessage,
       resetChat,
@@ -73,34 +67,20 @@ export const ChatInputBar: React.FC = () => {
     ]
   );
 
-  // 静的スタイルをメモ化
-  const styles = useMemo(
-    () =>
-      StyleSheet.create({
-        // eslint-disable-next-line react-native/no-unused-styles
-        container: {
-          position: 'absolute',
-          left: 0,
-          right: 0,
-          zIndex: 1,
-          backgroundColor: colors.background,
-          borderTopWidth: 1,
-          borderTopColor: colors.tertiary,
-          paddingBottom: insets.bottom,
-        },
-      }),
+  // 動的スタイルをメモ化
+  const containerStyle = useMemo(
+    () => ({
+      backgroundColor: colors.background,
+      borderTopWidth: 1,
+      borderTopColor: colors.tertiary,
+      paddingBottom: insets.bottom,
+    }),
     [colors, insets.bottom]
-  );
-
-  // 動的スタイルを分離
-  const dynamicContainerStyle = useMemo(
-    () => ({ bottom: keyboardHeight }),
-    [keyboardHeight]
   );
 
   return (
     <ChatUIProvider value={chatUIContextValue}>
-      <View style={[styles.container, dynamicContainerStyle]} onLayout={handleLayout}>
+      <View style={containerStyle}>
         {/* 付箋タブ型の展開ボタン */}
         {!isExpanded && (
           <ToggleTabButton

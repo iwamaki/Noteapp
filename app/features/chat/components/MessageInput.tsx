@@ -4,8 +4,8 @@
  * @responsibility ユーザーがメッセージを入力して送信するための入力フィールドと送信ボタンを提供
  */
 
-import React from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { CustomInlineInput } from '../../../components/CustomInlineInput';
 import { useTheme } from '../../../design/theme/ThemeContext';
@@ -22,7 +22,7 @@ interface MessageInputProps {
 /**
  * メッセージ入力コンポーネント
  */
-export const MessageInput: React.FC<MessageInputProps> = ({ inputText, setInputText }) => {
+const MessageInputComponent: React.FC<MessageInputProps> = ({ inputText, setInputText }) => {
   const { colors, iconSizes } = useTheme();
   const { sendMessage, isLoading } = useChatUI();
   const { loadedModels, activeModelCategory } = useTokenBalanceStore();
@@ -54,47 +54,51 @@ export const MessageInput: React.FC<MessageInputProps> = ({ inputText, setInputT
   // 送信可能かどうかの判定
   const canSendMessage = inputText.trim().length > 0 && !isLoading;
 
-  const styles = StyleSheet.create({
-    inputArea: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: CHAT_CONFIG.components.spacing.lg,
-      paddingTop: CHAT_CONFIG.components.spacing.lg,
-      paddingBottom: CHAT_CONFIG.components.spacing.lg,
-      backgroundColor: colors.background,
-    },
-    customInput: {
-      flex: 1,
-      maxHeight: CHAT_CONFIG.components.input.maxHeight,
-      marginRight: CHAT_CONFIG.components.spacing.lg,
-      minHeight: CHAT_CONFIG.components.input.minHeight,
-    },
-    modelToggleButton: {
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: colors.background,
-      borderRadius: CHAT_CONFIG.components.border.radius.pill,
-      width: CHAT_CONFIG.components.input.buttonSize,
-      height: CHAT_CONFIG.components.input.buttonSize,
-      marginRight: CHAT_CONFIG.components.spacing.sm,
-      borderWidth: 1,
-      borderColor: colors.tertiary,
-    },
-    sendButton: {
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: colors.primary,
-      borderRadius: CHAT_CONFIG.components.border.radius.pill,
-      width: CHAT_CONFIG.components.input.buttonSize,
-      height: CHAT_CONFIG.components.input.buttonSize,
-    },
-    disabledButton: {
-      opacity: CHAT_CONFIG.components.opacity.disabled,
-    },
-    disabledButtonText: {
-      opacity: CHAT_CONFIG.components.opacity.muted,
-    },
-  });
+  // 動的スタイルをメモ化
+  const styles = useMemo(
+    () => ({
+      inputArea: {
+        flexDirection: 'row' as const,
+        alignItems: 'center' as const,
+        paddingHorizontal: CHAT_CONFIG.components.spacing.lg,
+        paddingTop: CHAT_CONFIG.components.spacing.lg,
+        paddingBottom: CHAT_CONFIG.components.spacing.lg,
+        backgroundColor: colors.background,
+      },
+      customInput: {
+        flex: 1,
+        maxHeight: CHAT_CONFIG.components.input.maxHeight,
+        marginRight: CHAT_CONFIG.components.spacing.lg,
+        minHeight: CHAT_CONFIG.components.input.minHeight,
+      },
+      modelToggleButton: {
+        justifyContent: 'center' as const,
+        alignItems: 'center' as const,
+        backgroundColor: colors.background,
+        borderRadius: CHAT_CONFIG.components.border.radius.pill,
+        width: CHAT_CONFIG.components.input.buttonSize,
+        height: CHAT_CONFIG.components.input.buttonSize,
+        marginRight: CHAT_CONFIG.components.spacing.sm,
+        borderWidth: 1,
+        borderColor: colors.tertiary,
+      },
+      sendButton: {
+        justifyContent: 'center' as const,
+        alignItems: 'center' as const,
+        backgroundColor: colors.primary,
+        borderRadius: CHAT_CONFIG.components.border.radius.pill,
+        width: CHAT_CONFIG.components.input.buttonSize,
+        height: CHAT_CONFIG.components.input.buttonSize,
+      },
+      disabledButton: {
+        opacity: CHAT_CONFIG.components.opacity.disabled,
+      },
+      disabledButtonText: {
+        opacity: CHAT_CONFIG.components.opacity.muted,
+      },
+    }),
+    [colors]
+  );
 
   return (
     <View style={styles.inputArea}>
@@ -137,3 +141,6 @@ export const MessageInput: React.FC<MessageInputProps> = ({ inputText, setInputT
     </View>
   );
 };
+
+export const MessageInput = React.memo(MessageInputComponent);
+MessageInput.displayName = 'MessageInput';

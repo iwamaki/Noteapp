@@ -1,9 +1,8 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
-  StyleSheet,
   FlatList,
   ActivityIndicator,
   Animated,
@@ -29,7 +28,7 @@ interface ChatHistoryProps {
   tokenUsage: TokenUsageInfo | null;
 }
 
-export const ChatHistory: React.FC<ChatHistoryProps> = ({
+const ChatHistoryComponent: React.FC<ChatHistoryProps> = ({
   messages,
   isLoading,
   onCollapse,
@@ -54,115 +53,111 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
     }
   }, [messages]);
 
-  const renderMessage: ListRenderItem<ChatMessage> = ({ item }) => (
-    <MessageItem
-      message={item}
-      tokenUsage={tokenUsage}
-      isLoading={isLoading}
-    />
+  const renderMessage: ListRenderItem<ChatMessage> = useCallback(
+    ({ item }) => (
+      <MessageItem
+        message={item}
+        tokenUsage={tokenUsage}
+        isLoading={isLoading}
+      />
+    ),
+    [tokenUsage, isLoading]
   );
 
-  const keyExtractor = (item: ChatMessage, index: number) => `message-${index}`;
+  const keyExtractor = useCallback(
+    (item: ChatMessage, index: number) => `message-${index}`,
+    []
+  );
 
   // トークン使用量インジケーターのレンダリング
-  const renderTokenUsageIndicator = () => {
-    // tokenUsageがnullまたはundefinedの場合は常に表示（0%として）
-    const percentage = tokenUsage ? tokenUsage.usageRatio * 100 : 0;
-    const barColor = tokenUsage ? getTokenUsageBarColor(tokenUsage, colors) : colors.border;
+  const tokenUsageBarColor = useMemo(
+    () => (tokenUsage ? getTokenUsageBarColor(tokenUsage, colors) : colors.border),
+    [tokenUsage, colors]
+  );
 
-    return (
-      <View style={styles.tokenUsageContainer}>
-        <View style={styles.tokenUsageBar}>
-          <View
-            style={[
-              styles.tokenUsageProgress,
-              {
-                width: `${Math.min(percentage, 100)}%`,
-                backgroundColor: barColor
-              }
-            ]}
-          />
-        </View>
-      </View>
-    );
-  };
+  const tokenUsagePercentage = useMemo(
+    () => (tokenUsage ? tokenUsage.usageRatio * 100 : 0),
+    [tokenUsage]
+  );
 
-  const styles = StyleSheet.create({
-    resetButton: {
-      paddingHorizontal: 0,
-      paddingVertical: 8,
-      minWidth: 38,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
+  const styles = useMemo(
+    () => ({
+      resetButton: {
+        paddingHorizontal: 0,
+        paddingVertical: 8,
+        minWidth: 38,
+        justifyContent: 'center' as const,
+        alignItems: 'center' as const,
+      },
 
-    loadingContainer: {
-      alignItems: 'center',
-      flexDirection: 'row',
-      justifyContent: 'center',
-      paddingVertical: 12,
-    },
-    loadingText: {
-      color: colors.primary,
-      fontSize: typography.body.fontSize,
-      marginLeft: 8,
-    },
+      loadingContainer: {
+        alignItems: 'center' as const,
+        flexDirection: 'row' as const,
+        justifyContent: 'center' as const,
+        paddingVertical: 12,
+      },
+      loadingText: {
+        color: colors.primary,
+        fontSize: typography.body.fontSize,
+        marginLeft: 8,
+      },
 
-    messagesArea: {
-      backgroundColor: colors.background,
-      borderBottomColor: colors.border,
-      borderBottomWidth: 1,
-    },
-    messagesContent: {
-      paddingHorizontal: 8,
-      paddingVertical: 8,
-    },
-    messagesHeader: {
-      position: 'relative', // 付箋タブボタンのabsolute配置の基準
-      alignItems: 'center',
-      backgroundColor: colors.background,
-      borderBottomColor: colors.border,
-      borderBottomWidth: 1,
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      paddingLeft: 12,
-      paddingRight: 8,
-      paddingVertical: 8,
-    },
-    messagesHeaderTitle: {
-      color: colors.text,
-      fontSize: typography.category.fontSize,
-      fontWeight: '600',
-    },
+      messagesArea: {
+        backgroundColor: colors.background,
+        borderBottomColor: colors.border,
+        borderBottomWidth: 1,
+      },
+      messagesContent: {
+        paddingHorizontal: 8,
+        paddingVertical: 8,
+      },
+      messagesHeader: {
+        position: 'relative' as const,
+        alignItems: 'center' as const,
+        backgroundColor: colors.background,
+        borderBottomColor: colors.border,
+        borderBottomWidth: 1,
+        flexDirection: 'row' as const,
+        justifyContent: 'space-between' as const,
+        paddingLeft: 12,
+        paddingRight: 8,
+        paddingVertical: 8,
+      },
+      messagesHeaderTitle: {
+        color: colors.text,
+        fontSize: typography.category.fontSize,
+        fontWeight: '600' as const,
+      },
 
-    headerButtonContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-    },
+      headerButtonContainer: {
+        flexDirection: 'row' as const,
+        alignItems: 'center' as const,
+        gap: 4,
+      },
 
-    messagesScrollView: {
-      flex: 1,
-    },
+      messagesScrollView: {
+        flex: 1,
+      },
 
-    // トークン使用量インジケーターのスタイル
-    tokenUsageContainer: {
-      paddingHorizontal: 0,
-      paddingTop: 0,
-      paddingBottom: 0,
-    },
-    tokenUsageBar: {
-      height: 4,
-      backgroundColor: colors.border,
-      borderRadius: 2,
-      overflow: 'hidden',
-      marginBottom: 0,
-    },
-    tokenUsageProgress: {
-      height: '100%',
-      borderRadius: 2,
-    },
-  });
+      tokenUsageContainer: {
+        paddingHorizontal: 0,
+        paddingTop: 0,
+        paddingBottom: 0,
+      },
+      tokenUsageBar: {
+        height: 4,
+        backgroundColor: colors.border,
+        borderRadius: 2,
+        overflow: 'hidden' as const,
+        marginBottom: 0,
+      },
+      tokenUsageProgress: {
+        height: '100%' as const,
+        borderRadius: 2,
+      },
+    }),
+    [colors, typography]
+  );
 
   return (
     <Animated.View style={[styles.messagesArea, { height: messageAreaHeight }]}>
@@ -208,7 +203,19 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
       </View>
 
       {/* トークン使用量インジケーター */}
-      {renderTokenUsageIndicator()}
+      <View style={styles.tokenUsageContainer}>
+        <View style={styles.tokenUsageBar}>
+          <View
+            style={[
+              styles.tokenUsageProgress,
+              {
+                width: `${Math.min(tokenUsagePercentage, 100)}%`,
+                backgroundColor: tokenUsageBarColor
+              }
+            ]}
+          />
+        </View>
+      </View>
 
       <FlatList
         ref={flatListRef}
@@ -240,3 +247,6 @@ export const ChatHistory: React.FC<ChatHistoryProps> = ({
     </Animated.View>
   );
 };
+
+export const ChatHistory = React.memo(ChatHistoryComponent);
+ChatHistory.displayName = 'ChatHistory';

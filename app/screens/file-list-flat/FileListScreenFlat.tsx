@@ -27,7 +27,6 @@ import { RootStackParamList } from '../../navigation/types';
 
 // ===== Contexts & Stores =====
 import { useTheme } from '../../design/theme/ThemeContext';
-import { useKeyboardHeight } from '../../contexts/KeyboardHeightContext';
 import { useFlatListStore } from './stores/useFlatListStore';
 import { useUISettingsStore, useEditorSettingsStore } from '../../settings/settingsStore';
 
@@ -68,7 +67,6 @@ import { FILE_LIST_FLAT_CONFIG } from './config';
 
 function FileListScreenFlat() {
   const { colors, spacing } = useTheme();
-  const { keyboardHeight, chatInputBarHeight } = useKeyboardHeight();
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const uiSettings = useUISettingsStore((state) => state.settings);
   const editorSettings = useEditorSettingsStore((state) => state.settings);
@@ -556,18 +554,12 @@ function FileListScreenFlat() {
     [isMoveMode, moveSourceFileId, moveFile, exitMoveMode]
   );
 
-  // キーボード + ChatInputBarの高さを計算してコンテンツが隠れないようにする
-  const chatBarOffset = chatInputBarHeight + keyboardHeight;
-
-  // キーボードオフセット依存スタイル（メモ化）
+  // contentContainerStyleをメモ化
   const contentContainerStyle = useMemo(
-    () => [
-      {
-        paddingBottom: chatBarOffset,
-        padding: spacing.md,
-      },
-    ],
-    [chatBarOffset, spacing.md]
+    () => ({
+      padding: spacing.md,
+    }),
+    [spacing.md]
   );
 
   /**
