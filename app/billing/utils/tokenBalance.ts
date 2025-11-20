@@ -7,7 +7,6 @@
  */
 
 import { useTokenBalanceStore, useUsageTrackingStore } from '../../settings/settingsStore';
-import { isQuickModel, isThinkModel } from './modelCategory';
 import { logger } from '../../utils/logger';
 
 // ======================
@@ -56,61 +55,6 @@ export function useFlashTokenBalance(): number {
 export function useProTokenBalance(): number {
   const getTotalTokensByCategory = useTokenBalanceStore((state) => state.getTotalTokensByCategory);
   return getTotalTokensByCategory('think');
-}
-
-// ======================
-// Model Limit Check
-// ======================
-
-/**
- * 特定のモデルが使用可能かチェック（非React環境から呼び出し可能）
- * 購入トークン残高のみで判定します。
- *
- * @param modelId チェックするモデルID
- * @returns 使用可能かどうか
- */
-export function checkModelTokenLimit(modelId: string): {
-  canUse: boolean;
-  current: number;  // 購入トークン残高
-  max: number;      // 上限（互換性のため -1 = 無制限として返す）
-  percentage: number; // 使用率（互換性のため 0 を返す）
-  tier?: string;    // Tier情報（互換性のため undefined）
-  reason?: string;
-} {
-  const { getTotalTokensByCategory } = useTokenBalanceStore.getState();
-
-  if (isQuickModel(modelId)) {
-    const balance = getTotalTokensByCategory('quick');
-    return {
-      canUse: balance > 0,
-      current: balance,
-      max: -1,  // 無制限（購入トークンに上限なし）
-      percentage: 0,
-      reason: balance > 0
-        ? undefined
-        : 'Quick トークンがありません。トークンを購入してください。',
-    };
-  } else if (isThinkModel(modelId)) {
-    const balance = getTotalTokensByCategory('think');
-    return {
-      canUse: balance > 0,
-      current: balance,
-      max: -1,  // 無制限（購入トークンに上限なし）
-      percentage: 0,
-      reason: balance > 0
-        ? undefined
-        : 'Think トークンがありません。トークンを購入してください。',
-    };
-  }
-
-  // Quick/Think 以外のモデル（エラーケース）
-  return {
-    canUse: false,
-    current: 0,
-    max: -1,
-    percentage: 0,
-    reason: `モデル ${modelId} は未対応です。対応モデルを選択してください。`,
-  };
 }
 
 // ======================

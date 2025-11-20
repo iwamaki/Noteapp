@@ -16,7 +16,6 @@ import { ChatCommandService } from './services/chatCommandService';
 import { useLLMSettingsStore } from '../../settings/settingsStore';
 import { useChatStore } from './store/chatStore';
 import { UnifiedErrorHandler } from './utils/errorHandler';
-import { checkModelTokenLimit } from '../../billing/utils/tokenBalance';
 import { ChatSummarizationService } from './services/chatSummarizationService';
 import { ChatWebSocketManager } from './services/chatWebSocketManager';
 
@@ -195,37 +194,6 @@ class ChatService {
     this.addMessage(userMessage);
     this.setLoading(true);
 
-    // トークン上限チェック（現在使用中のモデルで判定）
-    const currentModel = APIService.getCurrentLLMModel();
-    const tokenLimitCheck = checkModelTokenLimit(currentModel);
-
-    if (!tokenLimitCheck.canUse) {
-      logger.warn('chatService', 'Token limit exceeded', {
-        model: currentModel,
-        current: tokenLimitCheck.current,
-        max: tokenLimitCheck.max,
-        tier: tokenLimitCheck.tier,
-        reason: tokenLimitCheck.reason,
-      });
-
-      // 自然なUXのため5秒待ってからエラーメッセージを返す
-      await new Promise(resolve => setTimeout(resolve, 5000));
-
-      const errorMessage: ChatMessage = {
-        role: 'system',
-        content: `🚫 **トークンがありません**\n\n${tokenLimitCheck.reason}`,
-        timestamp: new Date(),
-      };
-      this.addMessage(errorMessage);
-      this.setLoading(false);
-
-      // 添付ファイルをクリア
-      if (this.attachmentService.getAttachedFiles().length > 0) {
-        this.clearAttachedFiles();
-      }
-      return;
-    }
-
     try {
       // 現在のコンテキストプロバイダーから画面コンテキストを取得
       let screenContext: ActiveScreenContext | null = null;
@@ -247,6 +215,18 @@ class ChatService {
       logger.debug('chatService', 'Sending message to LLM with context:', chatContext);
       const clientId = this.wsManager.getClientId();
       const response = await APIService.sendChatMessage(trimmedMessage, chatContext, clientId, attachedFiles.length > 0 ? attachedFiles : undefined);
+
+      // エラーメッセージの処理（トークン不足など）
+      if (response.error) {
+        const errorMessage: ChatMessage = {
+          role: 'system',
+          content: `❌ ${response.error}`,
+          timestamp: new Date(),
+        };
+        this.addMessage(errorMessage);
+        logger.error('chatService', 'Error from backend:', response.error);
+        return; // エラー時は後続処理をスキップ
+      }
 
       // AIメッセージを追加（トークン使用率を記録）
       const aiMessage: ChatMessage = {

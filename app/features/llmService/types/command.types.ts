@@ -46,5 +46,6 @@ export interface LLMResponse {
   historyCount?: number;
   shouldSuggestNewChat?: boolean;
   warning?: string;
+  error?: string;  // エラーメッセージ（トークン不足など）
   tokenUsage?: TokenUsageInfo;  // トークン使用量情報
 }

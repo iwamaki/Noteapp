@@ -77,22 +77,6 @@ export class LLMService {
     const requestId = await this.requestManager.startRequest();
 
     try {
-      // トークン上限チェック（Flash/Pro別、購入トークン残高も考慮）
-      const currentModel = llmStore.getCurrentModel();
-      const { checkModelTokenLimit } = await import('../../billing/utils/tokenBalance');
-      const tokenLimitCheck = checkModelTokenLimit(currentModel);
-
-      if (!tokenLimitCheck.canUse) {
-        logger.error('llm', `Request #${requestId} - Token limit exceeded: ${tokenLimitCheck.reason}`);
-        throw new LLMError(
-          tokenLimitCheck.reason || 'トークン上限に達しました',
-          'TOKEN_LIMIT_EXCEEDED',
-          429  // HTTP 429 Too Many Requests
-        );
-      }
-
-      logger.debug('llm', `Request #${requestId} - Token limit check passed: ${tokenLimitCheck.current}/${tokenLimitCheck.max} (${tokenLimitCheck.percentage.toFixed(1)}%)`);
-
       // 会話履歴をコンテキストに追加
       const history = conversationStore.getHistory().map(msg => ({
         role: msg.role,
