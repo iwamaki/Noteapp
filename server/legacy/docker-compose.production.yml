@@ -1,0 +1,50 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./billing.db:/app/billing.db
+      - ./.secrets:/app/.secrets:ro
+    environment:
+      # ========================================
+      # Python 設定
+      # ========================================
+      - PYTHONUNBUFFERED=1
+
+      # ========================================
+      # Google Cloud Platform
+      # ========================================
+      - GCP_PROJECT_ID=${GCP_PROJECT_ID}
+      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS}
+
+      # ========================================
+      # Secret Manager シークレット名
+      # ========================================
+      - GEMINI_API_SECRET_ID=${GEMINI_API_SECRET_ID}
+      - OPENAI_API_SECRET_ID=${OPENAI_API_SECRET_ID}
+      - GOOGLE_CSE_API_SECRET_ID=${GOOGLE_CSE_API_SECRET_ID}
+
+      # ========================================
+      # Google Custom Search
+      # ========================================
+      - GOOGLE_CSE_ID=${GOOGLE_CSE_ID}
+
+      # ========================================
+      # アプリケーション設定
+      # ========================================
+      - ANDROID_PACKAGE_NAME=${ANDROID_PACKAGE_NAME}
+      - ENV=${ENV}
+      - LOG_LEVEL=${LOG_LEVEL}
+
+      # ========================================
+      # CORS設定
+      # ========================================
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+
+    env_file:
+      - .env.production  # 本番環境用の.envを読み込む
+    restart: unless-stopped
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000
