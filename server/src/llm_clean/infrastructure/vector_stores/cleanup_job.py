@@ -5,7 +5,8 @@
 import asyncio
 
 from src.core.logger import logger
-from src.llm.rag.collection_manager import CollectionManager
+
+from .collection_manager import CollectionManager
 
 
 class CleanupJob:

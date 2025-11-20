@@ -20,8 +20,8 @@ from ...dependencies import get_db, get_process_chat_use_case, get_summarize_con
 router = APIRouter()
 
 
-@router.post("/api/chat/clean", response_model=ChatResponseDTO)
-async def chat_post_clean(
+@router.post("/api/chat", response_model=ChatResponseDTO)
+async def chat_post(
     request: ChatRequestDTO,
     user_id: str = Depends(verify_token_auth)
 ):
@@ -82,9 +82,9 @@ async def chat_post_clean(
         raise HTTPException(status_code=500, detail=f"内部エラーが発生しました: {str(e)}")
 
 
-@router.post("/api/chat/summarize/clean", response_model=SummarizeResponseDTO)
+@router.post("/api/chat/summarize", response_model=SummarizeResponseDTO)
 @handle_route_errors
-async def summarize_conversation_clean(
+async def summarize_conversation(
     request: SummarizeRequestDTO,
     user_id: str = Depends(verify_token_auth)
 ):

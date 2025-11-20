@@ -9,14 +9,18 @@ from fastapi.responses import JSONResponse
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
-from src.llm.routers import chat_router
-from src.llm.routers import llm_providers_router
-from src.llm.routers import tools_router
-from src.llm.routers import knowledge_base_router
-# Clean Architecture routers
-from src.llm_clean.presentation.routers import chat_router_clean
-from src.llm.rag.collection_manager import CollectionManager
-from src.llm.rag.cleanup_job import start_cleanup_job, stop_cleanup_job
+# Clean Architecture imports
+from src.llm_clean.presentation.routers import (
+    chat_router_clean,
+    provider_router_clean,
+    tools_router_clean,
+    knowledge_base_router_clean,
+)
+from src.llm_clean.infrastructure import (
+    CollectionManager,
+    start_cleanup_job,
+    stop_cleanup_job,
+)
 from typing import Optional
 from src.api.websocket import manager
 from src.billing.presentation.router import router as billing_router
@@ -104,15 +108,13 @@ app.add_middleware(
     allow_headers=["Content-Type", "Authorization", "X-Device-ID"],
 )
 
-# ルーターのインクルード
-app.include_router(chat_router.router)
-app.include_router(llm_providers_router.router)
-app.include_router(tools_router.router)
-app.include_router(knowledge_base_router.router)
+# ルーターのインクルード（Clean Architecture）
+app.include_router(chat_router_clean)
+app.include_router(provider_router_clean)
+app.include_router(tools_router_clean)
+app.include_router(knowledge_base_router_clean)
 app.include_router(billing_router)
 app.include_router(router)
-# Clean Architecture routers
-app.include_router(chat_router_clean)
 
 # ルートエンドポイント
 @app.get("/")
