@@ -4,10 +4,12 @@
 
 import os
 from datetime import datetime, timedelta
-from typing import Optional, Dict, Any
-from jose import JWTError, jwt
-from google.cloud import secretmanager
+from typing import Any
+
 from google.api_core import exceptions
+from google.cloud import secretmanager
+from jose import JWTError, jwt
+
 from src.core.logger import logger
 
 # JWT設定
@@ -22,7 +24,7 @@ REFRESH_TOKEN_EXPIRE_DAYS = 30    # リフレッシュトークン有効期限: 
 MIN_SECRET_KEY_LENGTH = 32  # 最小シークレットキー長（32文字）
 
 
-def _get_secret_from_secret_manager(project_id: str, secret_id: str) -> Optional[str]:
+def _get_secret_from_secret_manager(project_id: str, secret_id: str) -> str | None:
     """
     Secret Managerから最新バージョンのシークレットを取得
 
@@ -211,7 +213,7 @@ def create_refresh_token(user_id: str, device_id: str) -> str:
     return token
 
 
-def verify_token(token: str, expected_type: str = TokenType.ACCESS) -> Optional[Dict[str, Any]]:
+def verify_token(token: str, expected_type: str = TokenType.ACCESS) -> dict[str, Any] | None:
     """
     JWTトークンを検証してペイロードを返す
 
@@ -259,7 +261,7 @@ def verify_token(token: str, expected_type: str = TokenType.ACCESS) -> Optional[
         return None
 
 
-def get_user_id_from_token(token: str, token_type: str = TokenType.ACCESS) -> Optional[str]:
+def get_user_id_from_token(token: str, token_type: str = TokenType.ACCESS) -> str | None:
     """
     トークンからユーザーIDを抽出
 
@@ -276,7 +278,7 @@ def get_user_id_from_token(token: str, token_type: str = TokenType.ACCESS) -> Op
     return None
 
 
-def get_device_id_from_token(token: str, token_type: str = TokenType.ACCESS) -> Optional[str]:
+def get_device_id_from_token(token: str, token_type: str = TokenType.ACCESS) -> str | None:
     """
     トークンからデバイスIDを抽出
 

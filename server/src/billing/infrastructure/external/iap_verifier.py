@@ -77,7 +77,7 @@ def verify_purchase(product_id: str, purchase_token: str) -> dict[str, Any]:
                 "purchase_token": purchase_token[:20] + "..." if purchase_token else "None"
             }
         )
-        raise ValueError(f"Invalid purchase receipt: {str(e)}")
+        raise ValueError(f"Invalid purchase receipt: {str(e)}") from e
 
 
 def acknowledge_purchase(product_id: str, purchase_token: str):

@@ -4,15 +4,16 @@
 @responsibility データベースエンジンの作成、セッションファクトリー、依存注入用のセッション取得
 """
 
-from typing import AsyncGenerator, Generator
+from collections.abc import AsyncGenerator, Generator
 from contextlib import contextmanager
-from sqlalchemy import create_engine, event, Engine
-from sqlalchemy.orm import sessionmaker, Session
+
+from sqlalchemy import Engine, create_engine, event
 from sqlalchemy.ext.asyncio import (
-    create_async_engine,
     AsyncSession,
     async_sessionmaker,
+    create_async_engine,
 )
+from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from .base import Base
@@ -146,7 +147,7 @@ class DatabaseManager:
         else:
             # PostgreSQL用の非同期エンジン（asyncpg）
             async_url = self.config.database_url
-            if not "asyncpg" in async_url:
+            if "asyncpg" not in async_url:
                 async_url = async_url.replace("postgresql://", "postgresql+asyncpg://")
 
             return create_async_engine(

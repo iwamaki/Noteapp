@@ -3,28 +3,29 @@
 # @responsibility トークン管理APIの公開、リクエスト処理、エラーハンドリング
 
 import os
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+
+from src.auth import verify_token_auth
 from src.billing import (
-    get_db,
-    BillingService,
-    TokenBalanceResponse,
+    DEFAULT_USER_ID,
     AddCreditsRequest,
     AllocateCreditsRequest,
+    BillingService,
+    CategoryBalanceResponse,
     ConsumeTokensRequest,
     ConsumeTokensResponse,
-    TransactionResponse,
-    PricingInfoResponse,
-    PricingInfoItem,
-    CategoryBalanceResponse,
     OperationSuccessResponse,
-    verify_purchase,
-    acknowledge_purchase,
+    PricingInfoItem,
+    PricingInfoResponse,
+    TokenBalanceResponse,
     Transaction,
-    DEFAULT_USER_ID,
+    TransactionResponse,
+    acknowledge_purchase,
+    get_db,
+    verify_purchase,
 )
-from src.auth import verify_token_auth
-from typing import List
 from src.core.logger import logger
 
 router = APIRouter(prefix="/api/billing", tags=["billing"])
@@ -58,7 +59,7 @@ async def get_balance(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"残高取得に失敗しました: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/balance/category/{category}", response_model=CategoryBalanceResponse)
@@ -95,7 +96,7 @@ async def get_category_balance(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"カテゴリー別残高取得に失敗しました: {str(e)}"
-        )
+        ) from e
 
 
 # =====================================
@@ -155,7 +156,7 @@ async def add_credits(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Invalid purchase receipt: {str(e)}"
-        )
+        ) from e
 
     # 二重購入防止
     if transaction_id:
@@ -190,13 +191,13 @@ async def add_credits(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
-        )
+        ) from e
     except Exception as e:
         logger.error(f"[billing_router] Error in add_credits: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"クレジット追加に失敗しました: {str(e)}"
-        )
+        ) from e
 
 
 @router.post("/credits/allocate", response_model=OperationSuccessResponse)
@@ -232,13 +233,13 @@ async def allocate_credits(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
-        )
+        ) from e
     except Exception as e:
         logger.error(f"[billing_router] Error in allocate_credits: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"クレジット配分に失敗しました: {str(e)}"
-        )
+        ) from e
 
 
 # =====================================
@@ -281,20 +282,20 @@ async def consume_tokens(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
-        )
+        ) from e
     except Exception as e:
         logger.error(f"[billing_router] Error in consume_tokens: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"トークン消費に失敗しました: {str(e)}"
-        )
+        ) from e
 
 
 # =====================================
 # 取引履歴・価格情報
 # =====================================
 
-@router.get("/transactions", response_model=List[TransactionResponse])
+@router.get("/transactions", response_model=list[TransactionResponse])
 async def get_transactions(
     limit: int = 100,
     user_id: str = Depends(verify_token_auth),
@@ -319,7 +320,7 @@ async def get_transactions(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"取引履歴取得に失敗しました: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/pricing", response_model=PricingInfoResponse)
@@ -354,7 +355,7 @@ async def get_pricing(db: Session = Depends(get_db)):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"価格情報取得に失敗しました: {str(e)}"
-        )
+        ) from e
 
 
 # =====================================
@@ -395,13 +396,13 @@ async def reset_all_data(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
-        )
+        ) from e
     except Exception as e:
         logger.error(f"[billing_router] Error in reset_all_data: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"データリセットに失敗しました: {str(e)}"
-        )
+        ) from e
 
 
 # =====================================

@@ -5,15 +5,14 @@ Application Layer - Provider DTOs
 """
 
 from dataclasses import dataclass
-from typing import List, Optional, Dict, Any
 
 
 @dataclass
 class ModelMetadataDTO:
     """モデルメタデータDTO"""
     category: str  # "quick" or "think"
-    display_name: Optional[str] = None
-    description: Optional[str] = None
+    display_name: str | None = None
+    description: str | None = None
     recommended: bool = False
 
 
@@ -22,6 +21,6 @@ class ProviderDTO:
     """プロバイダーDTO"""
     name: str
     default_model: str
-    models: List[str]
+    models: list[str]
     status: str  # "available" or "unavailable"
-    model_metadata: Optional[Dict[str, ModelMetadataDTO]] = None
+    model_metadata: dict[str, ModelMetadataDTO] | None = None

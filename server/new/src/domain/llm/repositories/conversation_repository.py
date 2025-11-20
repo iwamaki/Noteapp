@@ -10,8 +10,6 @@ LLM Domain - ConversationRepository Interface
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional, List
-from datetime import datetime
 
 from src.domain.llm.entities.conversation import Conversation
 
@@ -41,7 +39,7 @@ class ConversationRepository(ABC):
         pass
 
     @abstractmethod
-    async def find_by_id(self, conversation_id: str) -> Optional[Conversation]:
+    async def find_by_id(self, conversation_id: str) -> Conversation | None:
         """
         IDで会話を検索
 
@@ -62,7 +60,7 @@ class ConversationRepository(ABC):
         user_id: str,
         limit: int = 100,
         offset: int = 0
-    ) -> List[Conversation]:
+    ) -> list[Conversation]:
         """
         ユーザーIDで会話を検索
 
@@ -85,7 +83,7 @@ class ConversationRepository(ABC):
         user_id: str,
         days: int = 7,
         limit: int = 100
-    ) -> List[Conversation]:
+    ) -> list[Conversation]:
         """
         ユーザーIDで最近の会話を検索
 

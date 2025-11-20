@@ -10,12 +10,12 @@ Presentation Layer - Auth Dependencies
 """
 
 from fastapi import Depends, HTTPException
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from src.infrastructure.logging.logger import get_logger
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 # 旧システムの依存（段階的移行のため一時使用）
-from src.auth.jwt_utils import verify_token, TokenType
+from src.auth.jwt_utils import TokenType, verify_token
 from src.auth.token_blacklist_manager import get_blacklist_manager
+from src.infrastructure.logging.logger import get_logger
 
 logger = get_logger("auth_dependencies")
 

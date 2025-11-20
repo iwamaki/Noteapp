@@ -4,15 +4,16 @@
 @responsibility 認証・認可に関する例外を定義
 """
 
-from typing import Any, Dict, Optional
-from .base import AppException
+from typing import Any
+
 from . import codes
+from .base import AppException
 
 
 class InvalidTokenError(AppException):
     """トークンが無効"""
 
-    def __init__(self, message: str = "Invalid token", details: Optional[Dict[str, Any]] = None):
+    def __init__(self, message: str = "Invalid token", details: dict[str, Any] | None = None):
         super().__init__(
             message=message,
             code=codes.AUTH_INVALID_TOKEN,
@@ -24,7 +25,7 @@ class InvalidTokenError(AppException):
 class TokenExpiredError(AppException):
     """トークンの有効期限切れ"""
 
-    def __init__(self, message: str = "Token expired", details: Optional[Dict[str, Any]] = None):
+    def __init__(self, message: str = "Token expired", details: dict[str, Any] | None = None):
         super().__init__(
             message=message,
             code=codes.AUTH_TOKEN_EXPIRED,
@@ -36,7 +37,7 @@ class TokenExpiredError(AppException):
 class InvalidCredentialsError(AppException):
     """認証情報が無効"""
 
-    def __init__(self, message: str = "Invalid credentials", details: Optional[Dict[str, Any]] = None):
+    def __init__(self, message: str = "Invalid credentials", details: dict[str, Any] | None = None):
         super().__init__(
             message=message,
             code=codes.AUTH_INVALID_CREDENTIALS,
@@ -72,7 +73,7 @@ class DeviceNotFoundError(AppException):
 class OAuthError(AppException):
     """OAuth認証エラー"""
 
-    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+    def __init__(self, message: str, details: dict[str, Any] | None = None):
         super().__init__(
             message=message,
             code=codes.AUTH_OAUTH_ERROR,

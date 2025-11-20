@@ -6,8 +6,8 @@ from fastapi import APIRouter, status
 
 # サブルーターをインポート
 from src.auth.device_router import router as device_router
-from src.auth.token_router import router as token_router
 from src.auth.oauth_router import router as oauth_router
+from src.auth.token_router import router as token_router
 
 # メインルーター
 router = APIRouter()

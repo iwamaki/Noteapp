@@ -2,24 +2,25 @@
 # @summary チャットコンテキストの構築を担当するビルダークラスを提供します。
 # @responsibility ChatContextから必要な情報を抽出し、LLMとツールに渡すコンテキストを構築します。
 
-from typing import List, Optional, Dict, Any
 from dataclasses import dataclass
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
+from typing import Any
 
-from src.llm.models import ChatContext, EditScreenContext, FilelistScreenContext
-from src.shared.utils import set_file_context, set_directory_context, set_all_files_context
-from src.domain.llm.providers.config import (
-    CONTEXT_MSG_EDIT_SCREEN,
-    CONTEXT_MSG_ATTACHED_FILE,
-    DEFAULT_ROOT_PATH
-)
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
+
 from src.core.logger import logger
+from src.domain.llm.providers.config import (
+    CONTEXT_MSG_ATTACHED_FILE,
+    CONTEXT_MSG_EDIT_SCREEN,
+    DEFAULT_ROOT_PATH,
+)
+from src.llm.models import ChatContext, EditScreenContext, FilelistScreenContext
+from src.shared.utils import set_all_files_context, set_directory_context, set_file_context
 
 
 @dataclass
 class BuiltContext:
     """構築されたコンテキスト情報を保持するデータクラス"""
-    chat_history: List[BaseMessage]
+    chat_history: list[BaseMessage]
     """LLMに渡す会話履歴（コンテキストメッセージを含む）"""
 
     history_count: int
@@ -45,12 +46,12 @@ class ChatContextBuilder:
 
     def _reset(self) -> None:
         """内部状態をリセット"""
-        self._chat_history: List[BaseMessage] = []
-        self._context_msg: Optional[str] = None
+        self._chat_history: list[BaseMessage] = []
+        self._context_msg: str | None = None
         self._has_file_context: bool = False
         self._history_count: int = 0
 
-    def build(self, context: Optional[ChatContext]) -> BuiltContext:
+    def build(self, context: ChatContext | None) -> BuiltContext:
         """チャットコンテキストを構築する
 
         Args:
@@ -142,7 +143,7 @@ class ChatContextBuilder:
         elif context.attachedFileContent:
             self._setup_attached_files_context(context.attachedFileContent)
 
-    def _setup_current_file_context(self, file_content: Dict[str, Any]) -> None:
+    def _setup_current_file_context(self, file_content: dict[str, Any]) -> None:
         """現在のファイルコンテキストを設定
 
         Args:
@@ -160,7 +161,7 @@ class ChatContextBuilder:
                 content=content
             )
 
-    def _setup_attached_files_context(self, files_content: List[Dict[str, Any]]) -> None:
+    def _setup_attached_files_context(self, files_content: list[dict[str, Any]]) -> None:
         """添付ファイルコンテキストを設定（複数ファイル対応）
 
         Args:

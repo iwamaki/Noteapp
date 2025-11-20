@@ -11,8 +11,8 @@ Note:
 
 from infrastructure.config.secrets import (
     SecretManagerClient,
-    init_secret_manager,
     get_secret_manager,
+    init_secret_manager,
 )
 
 __all__ = [

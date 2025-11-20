@@ -10,38 +10,37 @@ Presentation Layer - Chat Router
 - 認証・認可の適用
 """
 
-from fastapi import APIRouter, HTTPException, Depends
-from src.presentation.api.v1.llm.schemas import (
-    ChatRequest,
-    ChatResponse,
-    ChatContext,
-    LLMCommand as LLMCommandSchema,
-    TokenUsageInfo,
-    SummarizeRequest,
-    SummarizeResponse,
-    DocumentSummarizeRequest,
-    DocumentSummarizeResponse,
-)
+from fastapi import APIRouter, Depends, HTTPException
+
 from src.application.llm.commands import (
     SendChatMessageCommand,
     SummarizeConversationCommand,
     SummarizeDocumentCommand,
 )
 from src.application.llm.dto.chat_dto import (
-    ChatRequestDTO,
     ChatContextDTO,
-    LLMCommandDTO,
-    TokenUsageDTO,
+    ChatRequestDTO,
 )
 from src.domain.llm.providers.config import (
     MAX_CONVERSATION_TOKENS,
-    PRESERVE_RECENT_MESSAGES,
     MIN_DOCUMENT_CONTENT_LENGTH,
+    PRESERVE_RECENT_MESSAGES,
 )
-from src.shared.utils.error_handlers import handle_route_errors
-from src.presentation.dependencies.auth import get_current_user
 from src.infrastructure.config.settings import get_settings
 from src.infrastructure.logging.logger import get_logger
+from src.presentation.api.v1.llm.schemas import (
+    ChatRequest,
+    ChatResponse,
+    DocumentSummarizeRequest,
+    DocumentSummarizeResponse,
+    SummarizeRequest,
+    TokenUsageInfo,
+)
+from src.presentation.api.v1.llm.schemas import (
+    LLMCommand as LLMCommandSchema,
+)
+from src.presentation.dependencies.auth import get_current_user
+from src.shared.utils.error_handlers import handle_route_errors
 
 settings = get_settings()
 logger = get_logger("chat_router")
@@ -92,7 +91,7 @@ async def chat_post(
 
     except Exception as e:
         logger.error(f"Error in chat_post: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/api/chat")
@@ -142,7 +141,7 @@ async def chat_get(
 
     except Exception as e:
         logger.error(f"Error in chat_get: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/api/chat/summarize")

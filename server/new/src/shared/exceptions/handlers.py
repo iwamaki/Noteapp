@@ -5,12 +5,12 @@
 """
 
 from fastapi import Request, status
-from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from .base import AppException
 from . import codes
+from .base import AppException
 
 
 async def app_exception_handler(request: Request, exc: AppException) -> JSONResponse:

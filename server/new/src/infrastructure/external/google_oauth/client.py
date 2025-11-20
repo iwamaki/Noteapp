@@ -4,9 +4,10 @@
 @responsibility Google OAuth2フローの処理を提供
 """
 
-import requests
-from typing import Dict, Any
+from typing import Any
 from urllib.parse import urlencode
+
+import requests
 
 
 class GoogleOAuthError(Exception):
@@ -76,7 +77,7 @@ class GoogleOAuthClient:
 
         return f"{self.AUTH_URI}?{urlencode(params)}"
 
-    def exchange_code_for_tokens(self, code: str) -> Dict[str, Any]:
+    def exchange_code_for_tokens(self, code: str) -> dict[str, Any]:
         """Authorization CodeをTokenに交換
 
         Args:
@@ -114,9 +115,9 @@ class GoogleOAuthClient:
             return response.json()
 
         except requests.exceptions.RequestException as e:
-            raise GoogleOAuthError(f"Token exchange failed: {str(e)}")
+            raise GoogleOAuthError(f"Token exchange failed: {str(e)}") from e
 
-    def get_user_info(self, access_token: str) -> Dict[str, Any]:
+    def get_user_info(self, access_token: str) -> dict[str, Any]:
         """Access Tokenからユーザー情報を取得
 
         Args:
@@ -144,4 +145,4 @@ class GoogleOAuthClient:
             return response.json()
 
         except requests.exceptions.RequestException as e:
-            raise GoogleOAuthError(f"User info fetch failed: {str(e)}")
+            raise GoogleOAuthError(f"User info fetch failed: {str(e)}") from e

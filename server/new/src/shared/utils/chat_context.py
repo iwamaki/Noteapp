@@ -13,16 +13,16 @@ Originally from: src/llm/tools/context_manager.py
 Moved to: src/shared/utils/chat_context.py (new architecture)
 """
 
-from typing import Optional, Dict, List, Any, Union
+from typing import Any
 
 # Request-scoped global variables
-_current_file_context: Optional[Dict[str, Optional[str]]] = None
-_current_directory_context: Optional[Dict[str, Any]] = None
-_all_files_context: Optional[List[Dict[str, str]]] = None
-_current_client_id: Optional[str] = None  # WebSocket client ID
+_current_file_context: dict[str, str | None] | None = None
+_current_directory_context: dict[str, Any] | None = None
+_all_files_context: list[dict[str, str]] | None = None
+_current_client_id: str | None = None  # WebSocket client ID
 
 
-def set_file_context(context: Optional[Union[Dict[str, Optional[str]], Dict[str, str]]]):
+def set_file_context(context: dict[str, str | None] | dict[str, str] | None):
     """Set current file context
 
     Args:
@@ -32,7 +32,7 @@ def set_file_context(context: Optional[Union[Dict[str, Optional[str]], Dict[str,
     _current_file_context = context  # type: ignore[assignment]
 
 
-def get_file_context() -> Optional[Dict[str, Optional[str]]]:
+def get_file_context() -> dict[str, str | None] | None:
     """Get current file context
 
     Returns:
@@ -41,7 +41,7 @@ def get_file_context() -> Optional[Dict[str, Optional[str]]]:
     return _current_file_context
 
 
-def set_directory_context(context: Optional[Dict[str, Any]]):
+def set_directory_context(context: dict[str, Any] | None):
     """Set current directory context
 
     Args:
@@ -51,7 +51,7 @@ def set_directory_context(context: Optional[Dict[str, Any]]):
     _current_directory_context = context
 
 
-def get_directory_context() -> Optional[Dict[str, Any]]:
+def get_directory_context() -> dict[str, Any] | None:
     """Get current directory context
 
     Returns:
@@ -60,7 +60,7 @@ def get_directory_context() -> Optional[Dict[str, Any]]:
     return _current_directory_context
 
 
-def set_all_files_context(all_files: Optional[List[Dict[str, str]]]):
+def set_all_files_context(all_files: list[dict[str, str]] | None):
     """Set all files context
 
     Args:
@@ -70,7 +70,7 @@ def set_all_files_context(all_files: Optional[List[Dict[str, str]]]):
     _all_files_context = all_files
 
 
-def get_all_files_context() -> Optional[List[Dict[str, str]]]:
+def get_all_files_context() -> list[dict[str, str]] | None:
     """Get all files context
 
     Returns:
@@ -79,7 +79,7 @@ def get_all_files_context() -> Optional[List[Dict[str, str]]]:
     return _all_files_context
 
 
-def set_client_id(client_id: Optional[str]):
+def set_client_id(client_id: str | None):
     """Set current WebSocket client ID
 
     Args:
@@ -89,7 +89,7 @@ def set_client_id(client_id: Optional[str]):
     _current_client_id = client_id
 
 
-def get_client_id() -> Optional[str]:
+def get_client_id() -> str | None:
     """Get current WebSocket client ID
 
     Returns:

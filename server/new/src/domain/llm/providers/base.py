@@ -3,21 +3,23 @@
 # @summary LLMプロバイダーの抽象基底クラスを定義します。
 # @responsibility すべてのLLMプロバイダーが実装すべき共通のインターフェース（メソッド、プロパティ）を定義します。
 from abc import ABC, abstractmethod
-from typing import Optional, List, Dict, Any
-from langchain_core.messages import BaseMessage, AIMessage, HumanMessage
-from langchain.agents import create_agent
+from typing import Any
 
-from src.llm.models import ChatResponse, ChatContext, LLMCommand, TokenUsageInfo
-from src.features.tools import AVAILABLE_TOOLS
+from langchain.agents import create_agent
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
+
+from src.core.logger import log_llm_raw, logger
+from src.domain.llm.providers.command_extractor import AgentCommandExtractor
 from src.domain.llm.providers.config import (
     AGENT_VERBOSE,
     DEFAULT_SYSTEM_PROMPT,
-    MAX_CONVERSATION_TOKENS
+    MAX_CONVERSATION_TOKENS,
 )
 from src.domain.llm.providers.context_builder import ChatContextBuilder
-from src.domain.llm.providers.command_extractor import AgentCommandExtractor
+from src.features.tools import AVAILABLE_TOOLS
+from src.llm.models import ChatContext, ChatResponse, LLMCommand, TokenUsageInfo
 from src.llm.utils.token_counter import count_message_tokens
-from src.core.logger import logger, log_llm_raw
+
 
 class BaseLLMProvider(ABC):
     """LLMプロバイダーの抽象基底クラス"""
@@ -28,7 +30,7 @@ class BaseLLMProvider(ABC):
         pass
 
     @abstractmethod
-    async def chat(self, message: str, context: Optional[ChatContext] = None) -> ChatResponse:
+    async def chat(self, message: str, context: ChatContext | None = None) -> ChatResponse:
         """チャットメッセージを処理し、応答を返す"""
         pass
 
@@ -112,7 +114,7 @@ class BaseAgentLLMProvider(BaseLLMProvider):
         # Note: max_iterations, handle_parsing_errors, return_intermediate_stepsは
         # LangChain 1.0では異なる方法で制御されるため、ここでは省略
 
-    async def chat(self, message: str, context: Optional[ChatContext] = None) -> ChatResponse:
+    async def chat(self, message: str, context: ChatContext | None = None) -> ChatResponse:
         """チャットメッセージを処理し、応答を返す（Agent Executor使用）
 
         このメソッドは全体の処理フローをオーケストレートします：
@@ -199,8 +201,8 @@ class BaseAgentLLMProvider(BaseLLMProvider):
     async def _execute_agent(
         self,
         message: str,
-        chat_history: List[BaseMessage]
-    ) -> Dict[str, Any]:
+        chat_history: list[BaseMessage]
+    ) -> dict[str, Any]:
         """エージェントを実行する
 
         Args:
@@ -212,17 +214,17 @@ class BaseAgentLLMProvider(BaseLLMProvider):
         """
         # LangChain 1.0: messagesリストにchat_historyと新しいmessageを統合
         messages = chat_history + [HumanMessage(content=message)]
-        result: Dict[str, Any] = await self.agent.ainvoke({  # type: ignore[misc]
+        result: dict[str, Any] = await self.agent.ainvoke({  # type: ignore[misc]
             "messages": messages
         })
         return result
 
     def _build_response(
         self,
-        agent_result: Dict[str, Any],
+        agent_result: dict[str, Any],
         provider_name: str,
         history_count: int,
-        conversation_history: List[Dict[str, Any]] = []
+        conversation_history: list[dict[str, Any]] = None
     ) -> ChatResponse:
         """エージェント実行結果からChatResponseを構築する
 
@@ -236,6 +238,8 @@ class BaseAgentLLMProvider(BaseLLMProvider):
             ChatResponse
         """
         # LangChain 1.0: messagesリストから最後のAIメッセージを取得
+        if conversation_history is None:
+            conversation_history = []
         messages = agent_result.get("messages", [])
 
         # 最後のメッセージを取得（通常は最後のAIMessage）
@@ -367,7 +371,7 @@ class BaseAgentLLMProvider(BaseLLMProvider):
     def _log_agent_commands(
         self,
         provider_name: str,
-        commands: List[LLMCommand]
+        commands: list[LLMCommand]
     ) -> None:
         """抽出されたコマンドをログ記録
 
@@ -388,10 +392,10 @@ class BaseAgentLLMProvider(BaseLLMProvider):
 
     def _calculate_token_usage(
         self,
-        conversation_history: List[Dict[str, Any]],
+        conversation_history: list[dict[str, Any]],
         provider_name: str,
-        messages: Optional[List[BaseMessage]] = None
-    ) -> Optional[TokenUsageInfo]:
+        messages: list[BaseMessage] | None = None
+    ) -> TokenUsageInfo | None:
         """会話履歴のトークン使用情報を計算する
 
         Args:

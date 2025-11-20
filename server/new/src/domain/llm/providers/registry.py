@@ -11,7 +11,7 @@ Single Source of Truth (SSOT) 原則に基づき、プロバイダーに関す�
 - モデルメタデータの一元管理
 """
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Type, Literal, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 # 循環インポートを回避するため、TYPE_CHECKING 時のみインポート
 if TYPE_CHECKING:
@@ -44,7 +44,7 @@ class ProviderConfig:
         default_model: デフォルトで使用するモデルID
         models: 利用可能なモデルとそのメタデータ
     """
-    provider_class: Type['BaseLLMProvider']  # 文字列型ヒント（循環依存回避）
+    provider_class: type['BaseLLMProvider']  # 文字列型ヒント（循環依存回避）
     display_name: str
     default_model: str
     models: dict[str, ModelMetadata]

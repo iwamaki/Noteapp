@@ -5,12 +5,13 @@
 import secrets
 import string
 from datetime import datetime
-from typing import Optional, Tuple, List
-from sqlalchemy.orm import Session
+
 from jose import jwt
-from src.billing import User, DeviceAuth, Credit
-from src.core.logger import logger
+from sqlalchemy.orm import Session
+
 from src.auth.token_blacklist_manager import get_blacklist_manager
+from src.billing import Credit, DeviceAuth, User
+from src.core.logger import logger
 
 
 class AuthenticationError(Exception):
@@ -34,7 +35,7 @@ class AuthService:
     def __init__(self, db: Session):
         self.db = db
 
-    def register_device(self, device_id: str) -> Tuple[str, bool]:
+    def register_device(self, device_id: str) -> tuple[str, bool]:
         """
         デバイスIDを登録し、ユーザーアカウントを作成または取得
 
@@ -79,10 +80,10 @@ class AuthService:
         except Exception as e:
             self.db.rollback()
             logger.error(f"Failed to register device: {e}")
-            raise AuthenticationError(f"Device registration failed: {e}")
+            raise AuthenticationError(f"Device registration failed: {e}") from e
 
 
-    def get_user_id_by_device(self, device_id: str) -> Optional[str]:
+    def get_user_id_by_device(self, device_id: str) -> str | None:
         """
         デバイスIDからユーザーIDを取得
 
@@ -100,7 +101,7 @@ class AuthService:
             return device.user_id
         return None
 
-    def verify_device_user(self, device_id: str, client_user_id: str) -> Tuple[bool, str, str]:
+    def verify_device_user(self, device_id: str, client_user_id: str) -> tuple[bool, str, str]:
         """
         デバイスIDとユーザーIDの対応関係を検証
 
@@ -195,7 +196,7 @@ class AuthService:
 
         except Exception as e:
             logger.error(f"Failed to logout: {e}")
-            raise AuthenticationError(f"Logout failed: {e}")
+            raise AuthenticationError(f"Logout failed: {e}") from e
 
     def _generate_unique_user_id(self) -> str:
         """
@@ -215,7 +216,7 @@ class AuthService:
             if not existing:
                 return user_id
 
-    def get_user_devices(self, user_id: str) -> List[DeviceAuth]:
+    def get_user_devices(self, user_id: str) -> list[DeviceAuth]:
         """
         ユーザーの全デバイスを取得
 
@@ -234,7 +235,7 @@ class AuthService:
             return devices
         except Exception as e:
             logger.error(f"Failed to get user devices: {e}")
-            raise AuthenticationError(f"Failed to get user devices: {e}")
+            raise AuthenticationError(f"Failed to get user devices: {e}") from e
 
     def delete_device(self, user_id: str, device_id: str) -> None:
         """
@@ -276,13 +277,13 @@ class AuthService:
         except Exception as e:
             self.db.rollback()
             logger.error(f"Failed to delete device: {e}")
-            raise AuthenticationError(f"Failed to delete device: {e}")
+            raise AuthenticationError(f"Failed to delete device: {e}") from e
 
     def update_device_info(
         self,
         device_id: str,
-        device_name: Optional[str] = None,
-        device_type: Optional[str] = None
+        device_name: str | None = None,
+        device_type: str | None = None
     ) -> None:
         """
         デバイス情報を更新
@@ -320,5 +321,5 @@ class AuthService:
         except Exception as e:
             self.db.rollback()
             logger.error(f"Failed to update device info: {e}")
-            raise AuthenticationError(f"Failed to update device info: {e}")
+            raise AuthenticationError(f"Failed to update device info: {e}") from e
 

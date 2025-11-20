@@ -3,9 +3,11 @@
 # @summary アプリケーション設定管理
 # @responsibility 環境変数、Secret Manager、LLMモデル設定を一元管理
 import os
-from google.cloud import secretmanager
-from google.api_core import exceptions
+
 from dotenv import load_dotenv
+from google.api_core import exceptions
+from google.cloud import secretmanager
+
 from .logger import logger
 
 # 環境変数の読み込み
@@ -126,11 +128,12 @@ class Settings:
             return
 
         # 遅延インポート（循環依存回避）
-        from .pricing_config import MODEL_PRICING
         from src.llm_clean.infrastructure.llm_providers.provider_registry import _get_registry
 
+        from .pricing_config import MODEL_PRICING
+
         # すべてのプロバイダーのモデルをループ
-        for provider_name, provider_config in _get_registry().items():
+        for _provider_name, provider_config in _get_registry().items():
             for model_id, model_meta in provider_config.models.items():
                 # registry から基本メタデータを取得
                 metadata = {

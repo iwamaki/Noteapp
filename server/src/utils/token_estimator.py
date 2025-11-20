@@ -3,9 +3,9 @@
 LLM実行前にトークン使用量を推定し、残高チェックを行うためのユーティリティ。
 プロバイダー非依存の汎用的な推定ロジックを提供します。
 """
-from typing import Dict, Any, List, Optional
-from src.core.logger import logger
+from typing import Any
 
+from src.core.logger import logger
 
 # トークン推定の定数
 CHARS_PER_TOKEN = 4  # 1トークン ≈ 4文字（英語基準、日本語は約2文字）
@@ -32,7 +32,7 @@ def estimate_text_tokens(text: str) -> int:
     return max(1, char_count // CHARS_PER_TOKEN)
 
 
-def estimate_message_tokens(messages: List[Dict[str, Any]]) -> int:
+def estimate_message_tokens(messages: list[dict[str, Any]]) -> int:
     """メッセージリストの総トークン数を推定する
 
     Args:
@@ -58,9 +58,9 @@ def estimate_message_tokens(messages: List[Dict[str, Any]]) -> int:
 
 def estimate_chat_request_tokens(
     message: str,
-    conversation_history: Optional[List[Dict[str, Any]]] = None,
-    file_context: Optional[str] = None
-) -> Dict[str, int]:
+    conversation_history: list[dict[str, Any]] | None = None,
+    file_context: str | None = None
+) -> dict[str, int]:
     """チャットリクエストの推定トークン数を計算する
 
     Args:

@@ -11,16 +11,15 @@ ChatServiceとSummarizationServiceの両方で使用される。
 これにより、プロバイダー追加時の変更箇所を最小化し、
 ロジックの重複を防ぐ。
 """
-from typing import Optional
-from pydantic import SecretStr
-
-from src.core.config import settings
-from src.domain.llm.providers.base import BaseLLMProvider
-from src.domain.llm.providers.registry import get_provider_config, _get_registry
 
 # LangChain imports
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
+from pydantic import SecretStr
+
+from src.core.config import settings
+from src.domain.llm.providers.base import BaseLLMProvider
+from src.domain.llm.providers.registry import _get_registry, get_provider_config
 
 
 class LLMClientFactory:
@@ -31,7 +30,7 @@ class LLMClientFactory:
         cls,
         provider_name: str,
         model: str
-    ) -> Optional[BaseLLMProvider]:
+    ) -> BaseLLMProvider | None:
         """BaseLLMProviderインスタンスを生成（ChatService用）
 
         Args:
@@ -56,7 +55,7 @@ class LLMClientFactory:
     def create_llm_client(
         cls,
         provider_name: str,
-        model: Optional[str] = None,
+        model: str | None = None,
         temperature: float = 0.3
     ):
         """LangChainクライアントを直接生成（SummarizationService用）
@@ -106,7 +105,7 @@ class LLMClientFactory:
             raise ValueError(f"Unsupported provider: {provider_name}")
 
     @classmethod
-    def _get_api_key(cls, provider_name: str) -> Optional[str]:
+    def _get_api_key(cls, provider_name: str) -> str | None:
         """プロバイダーのAPI keyを取得
 
         Args:

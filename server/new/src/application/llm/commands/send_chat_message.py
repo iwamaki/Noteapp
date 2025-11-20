@@ -11,17 +11,16 @@ CQRSパターンにおけるCommandの実装です。
 - エラーハンドリングとロギング
 """
 
-from typing import Optional
 from src.application.llm.dto.chat_dto import (
+    ChatContextDTO,
     ChatRequestDTO,
     ChatResponseDTO,
-    ChatContextDTO,
     LLMCommandDTO,
-    TokenUsageDTO
+    TokenUsageDTO,
 )
+from src.core.logger import logger
 from src.domain.llm.providers.factory import LLMClientFactory
 from src.llm.models import ChatContext  # Legacy Pydanticモデル（段階的移行のため一時使用）
-from src.core.logger import logger
 
 
 class SendChatMessageCommand:

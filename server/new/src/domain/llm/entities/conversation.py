@@ -13,10 +13,10 @@ LLM Domain - Conversation Entity
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import List, Optional, Dict, Any
+from typing import Any
 from uuid import uuid4
 
-from src.domain.llm.entities.message import Message, MessageRole
+from src.domain.llm.entities.message import Message
 
 
 @dataclass
@@ -36,11 +36,11 @@ class Conversation:
         metadata: 追加のメタデータ
     """
     id: str = field(default_factory=lambda: str(uuid4()))
-    messages: List[Message] = field(default_factory=list)
+    messages: list[Message] = field(default_factory=list)
     created_at: datetime = field(default_factory=datetime.utcnow)
     updated_at: datetime = field(default_factory=datetime.utcnow)
-    user_id: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    user_id: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def add_message(self, message: Message) -> None:
         """
@@ -58,7 +58,7 @@ class Conversation:
         self.messages.append(message)
         self.updated_at = datetime.utcnow()
 
-    def add_user_message(self, content: str, metadata: Optional[Dict[str, Any]] = None) -> Message:
+    def add_user_message(self, content: str, metadata: dict[str, Any] | None = None) -> Message:
         """
         ユーザーメッセージを追加
 
@@ -73,7 +73,7 @@ class Conversation:
         self.add_message(message)
         return message
 
-    def add_ai_message(self, content: str, metadata: Optional[Dict[str, Any]] = None) -> Message:
+    def add_ai_message(self, content: str, metadata: dict[str, Any] | None = None) -> Message:
         """
         AI応答メッセージを追加
 
@@ -88,7 +88,7 @@ class Conversation:
         self.add_message(message)
         return message
 
-    def add_system_message(self, content: str, metadata: Optional[Dict[str, Any]] = None) -> Message:
+    def add_system_message(self, content: str, metadata: dict[str, Any] | None = None) -> Message:
         """
         システムメッセージを追加
 
@@ -107,19 +107,19 @@ class Conversation:
         """メッセージ数を取得"""
         return len(self.messages)
 
-    def get_user_messages(self) -> List[Message]:
+    def get_user_messages(self) -> list[Message]:
         """ユーザーメッセージのみを取得"""
         return [msg for msg in self.messages if msg.is_user_message()]
 
-    def get_ai_messages(self) -> List[Message]:
+    def get_ai_messages(self) -> list[Message]:
         """AI応答メッセージのみを取得"""
         return [msg for msg in self.messages if msg.is_ai_message()]
 
-    def get_system_messages(self) -> List[Message]:
+    def get_system_messages(self) -> list[Message]:
         """システムメッセージのみを取得"""
         return [msg for msg in self.messages if msg.is_system_message()]
 
-    def get_recent_messages(self, count: int) -> List[Message]:
+    def get_recent_messages(self, count: int) -> list[Message]:
         """
         最新のN件のメッセージを取得
 
@@ -133,7 +133,7 @@ class Conversation:
             return []
         return self.messages[-count:]
 
-    def get_messages_after(self, timestamp: datetime) -> List[Message]:
+    def get_messages_after(self, timestamp: datetime) -> list[Message]:
         """
         指定日時以降のメッセージを取得
 
@@ -176,27 +176,27 @@ class Conversation:
         """全メッセージの合計文字数を取得"""
         return sum(msg.get_character_count() for msg in self.messages)
 
-    def get_last_message(self) -> Optional[Message]:
+    def get_last_message(self) -> Message | None:
         """最後のメッセージを取得"""
         if self.is_empty():
             return None
         return self.messages[-1]
 
-    def get_last_user_message(self) -> Optional[Message]:
+    def get_last_user_message(self) -> Message | None:
         """最後のユーザーメッセージを取得"""
         user_messages = self.get_user_messages()
         if not user_messages:
             return None
         return user_messages[-1]
 
-    def get_last_ai_message(self) -> Optional[Message]:
+    def get_last_ai_message(self) -> Message | None:
         """最後のAI応答メッセージを取得"""
         ai_messages = self.get_ai_messages()
         if not ai_messages:
             return None
         return ai_messages[-1]
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """辞書形式に変換（シリアライゼーション用）"""
         return {
             "id": self.id,
@@ -208,7 +208,7 @@ class Conversation:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "Conversation":
+    def from_dict(cls, data: dict[str, Any]) -> "Conversation":
         """辞書から復元（デシリアライゼーション用）"""
         messages = [Message.from_dict(msg_data) for msg_data in data.get("messages", [])]
         return cls(

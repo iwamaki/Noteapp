@@ -3,30 +3,32 @@
 # @responsibility FastAPIアプリケーションのインスタンス化、CORSミドルウェアの設定、および各ルーターのインクルードを行います。
 import os
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
+
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from slowapi import Limiter
-from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
-# Clean Architecture imports
-from src.llm_clean.presentation.routers import (
-    chat_router_clean,
-    provider_router_clean,
-    tools_router_clean,
-    knowledge_base_router_clean,
-)
+from slowapi.util import get_remote_address
+
+from src.api.websocket import manager
+from src.auth import TokenType, router, validate_jwt_secret, verify_token
+from src.billing import init_db
+from src.billing.presentation.router import router as billing_router
+from src.core.logger import logger
 from src.llm_clean.infrastructure import (
     CollectionManager,
     start_cleanup_job,
     stop_cleanup_job,
 )
-from typing import Optional
-from src.api.websocket import manager
-from src.billing.presentation.router import router as billing_router
-from src.auth import router, verify_token, TokenType, validate_jwt_secret
-from src.billing import init_db
-from src.core.logger import logger
+
+# Clean Architecture imports
+from src.llm_clean.presentation.routers import (
+    chat_router_clean,
+    knowledge_base_router_clean,
+    provider_router_clean,
+    tools_router_clean,
+)
 
 
 @asynccontextmanager
@@ -180,7 +182,7 @@ async def websocket_endpoint(websocket: WebSocket):
         websocket: WebSocketインスタンス
     """
     await websocket.accept()
-    user_id: Optional[str] = None
+    user_id: str | None = None
 
     try:
         # 初回メッセージで認証

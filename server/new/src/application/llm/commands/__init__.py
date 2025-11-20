@@ -8,7 +8,7 @@ CQRSパターンにおけるCommand側の実装です。
 from src.application.llm.commands.send_chat_message import SendChatMessageCommand
 from src.application.llm.commands.summarize_conversation import (
     SummarizeConversationCommand,
-    SummarizeDocumentCommand
+    SummarizeDocumentCommand,
 )
 
 __all__ = [

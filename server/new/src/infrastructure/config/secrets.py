@@ -4,9 +4,9 @@
 @responsibility GCP Secret Managerからシークレットを取得する機能を提供
 """
 
-from typing import Optional
-from google.cloud import secretmanager
+
 from google.api_core import exceptions
+from google.cloud import secretmanager
 
 
 class SecretManagerClient:
@@ -21,7 +21,7 @@ class SecretManagerClient:
             project_id: GCPプロジェクトID
         """
         self.project_id = project_id
-        self._client: Optional[secretmanager.SecretManagerServiceClient] = None
+        self._client: secretmanager.SecretManagerServiceClient | None = None
 
     @property
     def client(self) -> secretmanager.SecretManagerServiceClient:
@@ -30,7 +30,7 @@ class SecretManagerClient:
             self._client = secretmanager.SecretManagerServiceClient()
         return self._client
 
-    def get_secret(self, secret_id: str, version: str = "latest") -> Optional[str]:
+    def get_secret(self, secret_id: str, version: str = "latest") -> str | None:
         """Secret Managerからシークレットを取得
 
         Args:
@@ -85,7 +85,7 @@ class SecretManagerClient:
 # ==========================================
 # グローバルSecret Managerクライアント（後で初期化）
 # ==========================================
-_secret_manager_client: Optional[SecretManagerClient] = None
+_secret_manager_client: SecretManagerClient | None = None
 
 
 def init_secret_manager(project_id: str) -> SecretManagerClient:

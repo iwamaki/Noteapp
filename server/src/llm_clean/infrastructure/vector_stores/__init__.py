@@ -8,14 +8,14 @@ from typing import Optional
 
 from src.core.logger import logger
 
+from ..document_processing.document_processor import DocumentProcessor
 from .cleanup_job import start_cleanup_job, stop_cleanup_job
 from .collection_manager import CollectionManager
 from .faiss_vector_store import VectorStoreManager
-from ..document_processing.document_processor import DocumentProcessor
 
 # Singleton instances
-_collection_manager: Optional[CollectionManager] = None
-_document_processor: Optional[DocumentProcessor] = None
+_collection_manager: CollectionManager | None = None
+_document_processor: DocumentProcessor | None = None
 
 
 def get_collection_manager() -> CollectionManager:

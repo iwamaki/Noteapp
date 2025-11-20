@@ -3,26 +3,33 @@
 # @responsibility デバイスID認証、デバイス管理のHTTPエンドポイント
 
 from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from sqlalchemy.orm import Session
 from slowapi import Limiter
 from slowapi.util import get_remote_address
-from src.billing import get_db
-from src.auth.service import AuthService, AuthenticationError, DeviceNotFoundError, DeviceAccessDeniedError
+from sqlalchemy.orm import Session
 from src.auth.dependencies import verify_token_auth
-from src.auth.schemas import (
-    DeviceRegisterRequest,
-    DeviceRegisterResponse,
-    VerifyDeviceRequest,
-    VerifyDeviceResponse,
-    DeviceInfo,
-    DeviceListResponse,
-    DeleteDeviceResponse,
-)
 from src.auth.jwt_utils import (
     create_access_token,
     create_refresh_token,
 )
+from src.auth.schemas import (
+    DeleteDeviceResponse,
+    DeviceInfo,
+    DeviceListResponse,
+    DeviceRegisterRequest,
+    DeviceRegisterResponse,
+    VerifyDeviceRequest,
+    VerifyDeviceResponse,
+)
+from src.auth.service import (
+    AuthenticationError,
+    AuthService,
+    DeviceAccessDeniedError,
+    DeviceNotFoundError,
+)
+
+from src.billing import get_db
 from src.core.logger import logger
 
 router = APIRouter(prefix="/api/auth", tags=["device"])
@@ -85,13 +92,13 @@ async def register_device(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
-        )
+        ) from e
     except Exception as e:
         logger.error(f"Unexpected error in device registration: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error"
-        )
+        ) from e
 
 
 @router.post(
@@ -144,13 +151,13 @@ async def verify_device(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e)
-        )
+        ) from e
     except Exception as e:
         logger.error(f"Unexpected error in device verification: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error"
-        )
+        ) from e
 
 
 @router.get(
@@ -215,13 +222,13 @@ async def get_devices(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
-        )
+        ) from e
     except Exception as e:
         logger.error(f"Unexpected error in get devices: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error"
-        )
+        ) from e
 
 
 @router.delete(
@@ -280,22 +287,22 @@ async def delete_device(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e)
-        )
+        ) from e
     except DeviceAccessDeniedError as e:
         logger.warning(f"Device deletion denied: {e}")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=str(e)
-        )
+        ) from e
     except AuthenticationError as e:
         logger.error(f"Failed to delete device: {e}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
-        )
+        ) from e
     except Exception as e:
         logger.error(f"Unexpected error in delete device: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error"
-        )
+        ) from e

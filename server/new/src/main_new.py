@@ -9,33 +9,34 @@ Note:
 """
 
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request
+
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+
+from src.infrastructure.cache.redis_client import init_redis
 
 # 新しいインフラストラクチャ
 from src.infrastructure.config.settings import get_settings
-from src.infrastructure.logging.logger import get_logger, init_logging
 from src.infrastructure.database.connection import init_database
-from src.infrastructure.cache.redis_client import init_redis
-
-# 新しい共通コンポーネント
-from src.shared.exceptions.handlers import register_exception_handlers
-from src.shared.middleware.logging_middleware import LoggingMiddleware
-from src.shared.middleware.error_middleware import ErrorMiddleware
-from src.shared.middleware.rate_limit_middleware import RateLimitMiddleware
-
-# 新しいBilling Router (Phase 2)
-from src.presentation.routers.billing_router import router as billing_router
-
-# 新しいAuth Router (Phase 3)
-from src.presentation.routers.auth_router import router as auth_router
+from src.infrastructure.logging.logger import get_logger, init_logging
 
 # 新しいLLM Router (Phase 4)
 from src.presentation.api.v1.llm.router import router as llm_router
 
+# 新しいAuth Router (Phase 3)
+from src.presentation.routers.auth_router import router as auth_router
+
+# 新しいBilling Router (Phase 2)
+from src.presentation.routers.billing_router import router as billing_router
+
 # WebSocket Router (Phase 4)
 from src.presentation.websocket.websocket_router import router as websocket_router
+
+# 新しい共通コンポーネント
+from src.shared.exceptions.handlers import register_exception_handlers
+from src.shared.middleware.error_middleware import ErrorMiddleware
+from src.shared.middleware.logging_middleware import LoggingMiddleware
+from src.shared.middleware.rate_limit_middleware import RateLimitMiddleware
 
 # Settings取得
 settings = get_settings()
@@ -60,7 +61,7 @@ async def lifespan(app: FastAPI):
 
     # データベース初期化
     try:
-        db_manager = init_database(
+        init_database(
             database_url=settings.database_url,
             echo=settings.database_echo,
             pool_size=settings.database_pool_size,

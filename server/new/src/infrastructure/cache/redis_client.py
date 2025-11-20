@@ -5,7 +5,8 @@
 """
 
 import json
-from typing import Any, Optional
+from typing import Any
+
 import redis
 from redis.connection import ConnectionPool
 
@@ -44,7 +45,7 @@ class RedisClient:
         )
 
         # Redisクライアント
-        self._client: Optional[redis.Redis] = None
+        self._client: redis.Redis | None = None
 
     @property
     def client(self) -> redis.Redis:
@@ -64,7 +65,7 @@ class RedisClient:
         except redis.ConnectionError:
             return False
 
-    def get(self, key: str) -> Optional[str]:
+    def get(self, key: str) -> str | None:
         """キーから値を取得
 
         Args:
@@ -82,7 +83,7 @@ class RedisClient:
         self,
         key: str,
         value: Any,
-        ex: Optional[int] = None,
+        ex: int | None = None,
         nx: bool = False,
     ) -> bool:
         """キーに値を設定
@@ -101,7 +102,7 @@ class RedisClient:
         except redis.RedisError:
             return False
 
-    def get_json(self, key: str) -> Optional[Any]:
+    def get_json(self, key: str) -> Any | None:
         """JSONとしてデシリアライズして取得
 
         Args:
@@ -123,7 +124,7 @@ class RedisClient:
         self,
         key: str,
         value: Any,
-        ex: Optional[int] = None,
+        ex: int | None = None,
         nx: bool = False,
     ) -> bool:
         """JSON形式でシリアライズして設定
@@ -200,7 +201,7 @@ class RedisClient:
         except redis.RedisError:
             return -2
 
-    def incr(self, key: str, amount: int = 1) -> Optional[int]:
+    def incr(self, key: str, amount: int = 1) -> int | None:
         """キーの値をインクリメント（整数）
 
         Args:
@@ -215,7 +216,7 @@ class RedisClient:
         except redis.RedisError:
             return None
 
-    def decr(self, key: str, amount: int = 1) -> Optional[int]:
+    def decr(self, key: str, amount: int = 1) -> int | None:
         """キーの値をデクリメント（整数）
 
         Args:
@@ -300,7 +301,7 @@ class RedisClient:
 # ==========================================
 # グローバルRedisクライアント（後で初期化）
 # ==========================================
-_redis_client: Optional[RedisClient] = None
+_redis_client: RedisClient | None = None
 
 
 def init_redis(

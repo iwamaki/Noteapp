@@ -2,9 +2,9 @@
 # @summary 認証APIのPydanticスキーマ
 # @responsibility リクエスト/レスポンスのバリデーションとシリアライゼーション
 
-from pydantic import BaseModel, Field
-from typing import Optional, List
 from datetime import datetime
+
+from pydantic import BaseModel, Field
 
 
 class DeviceRegisterRequest(BaseModel):
@@ -50,7 +50,7 @@ class RefreshTokenResponse(BaseModel):
 class ErrorResponse(BaseModel):
     """エラーレスポンス"""
     error: str = Field(..., description="エラーメッセージ")
-    detail: Optional[str] = Field(None, description="詳細情報")
+    detail: str | None = Field(None, description="詳細情報")
 
 
 class GoogleAuthStartRequest(BaseModel):
@@ -79,8 +79,8 @@ class LogoutResponse(BaseModel):
 class DeviceInfo(BaseModel):
     """デバイス情報"""
     device_id: str = Field(..., description="デバイスID")
-    device_name: Optional[str] = Field(None, description="デバイス名（例: iPhone 14 Pro）")
-    device_type: Optional[str] = Field(None, description="デバイスタイプ（ios, android）")
+    device_name: str | None = Field(None, description="デバイス名（例: iPhone 14 Pro）")
+    device_type: str | None = Field(None, description="デバイスタイプ（ios, android）")
     is_active: bool = Field(..., description="アクティブフラグ")
     created_at: datetime = Field(..., description="作成日時")
     last_login_at: datetime = Field(..., description="最終ログイン日時")
@@ -91,7 +91,7 @@ class DeviceInfo(BaseModel):
 
 class DeviceListResponse(BaseModel):
     """デバイス一覧レスポンス"""
-    devices: List[DeviceInfo] = Field(..., description="デバイス一覧")
+    devices: list[DeviceInfo] = Field(..., description="デバイス一覧")
     total_count: int = Field(..., description="デバイス総数")
 
 

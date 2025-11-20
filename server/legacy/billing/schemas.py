@@ -2,9 +2,8 @@
 # @summary Pydanticスキーマ定義 - API リクエスト/レスポンスの型定義
 # @responsibility APIのインプット/アウトプットのバリデーションとシリアライゼーション
 
-from pydantic import BaseModel, Field
-from typing import Dict, List, Optional
 
+from pydantic import BaseModel, Field
 
 # =====================================
 # レスポンススキーマ
@@ -13,7 +12,7 @@ from typing import Dict, List, Optional
 class TokenBalanceResponse(BaseModel):
     """トークン残高レスポンス"""
     credits: int = Field(..., description="未配分クレジット（円）")
-    allocated_tokens: Dict[str, int] = Field(
+    allocated_tokens: dict[str, int] = Field(
         ...,
         description="モデル別の配分済みトークン数",
         examples=[{"gemini-2.5-flash": 100000, "gemini-2.5-pro": 50000}]
@@ -31,7 +30,7 @@ class TransactionResponse(BaseModel):
     id: int = Field(..., description="取引ID")
     type: str = Field(..., description="取引タイプ（purchase/allocation/consumption）")
     amount: int = Field(..., description="取引額（クレジットまたはトークン数）")
-    model_id: Optional[str] = Field(None, description="対象モデルID")
+    model_id: str | None = Field(None, description="対象モデルID")
     created_at: str = Field(..., description="取引日時（ISO 8601形式）")
 
 
@@ -43,7 +42,7 @@ class PricingInfoItem(BaseModel):
 
 class PricingInfoResponse(BaseModel):
     """価格情報レスポンス（全モデル）"""
-    pricing: Dict[str, PricingInfoItem] = Field(
+    pricing: dict[str, PricingInfoItem] = Field(
         ...,
         description="モデルID -> 価格情報のマッピング",
         examples=[{
@@ -62,8 +61,8 @@ class CategoryBalanceResponse(BaseModel):
 class OperationSuccessResponse(BaseModel):
     """汎用成功レスポンス"""
     success: bool = Field(True, description="操作成功フラグ")
-    message: Optional[str] = Field(None, description="メッセージ")
-    new_balance: Optional[int] = Field(None, description="新しい残高")
+    message: str | None = Field(None, description="メッセージ")
+    new_balance: int | None = Field(None, description="新しい残高")
 
 
 # =====================================
@@ -94,7 +93,7 @@ class AllocationItem(BaseModel):
 
 class AllocateCreditsRequest(BaseModel):
     """クレジット配分リクエスト"""
-    allocations: List[AllocationItem] = Field(
+    allocations: list[AllocationItem] = Field(
         ...,
         min_length=1,
         description="配分情報のリスト",

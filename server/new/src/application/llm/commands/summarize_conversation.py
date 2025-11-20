@@ -10,10 +10,11 @@ CQRSパターンにおけるCommandの実装です。
 - 重要な情報の保持と古いメッセージの要約
 """
 
-from typing import List, Dict, Any, Optional
+from typing import Any
+
+from src.core.logger import logger
 from src.llm.models import SummarizeResponse  # Legacy Pydanticモデル
 from src.llm.services.summarization_service import SummarizationService  # Legacy Service
-from src.core.logger import logger
 
 
 class SummarizeConversationCommand:
@@ -42,11 +43,11 @@ class SummarizeConversationCommand:
 
     async def execute(
         self,
-        conversation_history: List[Dict[str, Any]],
+        conversation_history: list[dict[str, Any]],
         max_tokens: int = 4000,
         preserve_recent: int = 10,
-        provider: Optional[str] = None,
-        model: Optional[str] = None
+        provider: str | None = None,
+        model: str | None = None
     ) -> SummarizeResponse:
         """会話履歴を要約する
 
@@ -124,9 +125,9 @@ class SummarizeDocumentCommand:
         self,
         content: str,
         title: str,
-        provider: Optional[str] = None,
-        model: Optional[str] = None
-    ) -> Dict[str, Any]:
+        provider: str | None = None,
+        model: str | None = None
+    ) -> dict[str, Any]:
         """文書を要約する
 
         Args:

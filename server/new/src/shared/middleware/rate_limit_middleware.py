@@ -8,13 +8,13 @@ Note:
     フェーズ1では基本構造のみ作成します。
 """
 
-from typing import Callable
-from fastapi import Request, Response
-from starlette.middleware.base import BaseHTTPMiddleware
+from collections.abc import Callable
 
+from fastapi import Request, Response
 from infrastructure.cache.redis_client import get_redis
-from shared.exceptions.base import AppException
 from shared.exceptions import codes
+from shared.exceptions.base import AppException
+from starlette.middleware.base import BaseHTTPMiddleware
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):

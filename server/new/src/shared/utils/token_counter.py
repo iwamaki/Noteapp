@@ -9,8 +9,10 @@ Shared Utilities - Token Counter
 - LangChain ChatGoogleGenerativeAIのget_num_tokens()メソッドを使用
 """
 
-from typing import List, Dict, Any, Optional
+from typing import Any
+
 from langchain_google_genai import ChatGoogleGenerativeAI
+
 from src.infrastructure.config.settings import get_settings
 from src.infrastructure.logging.logger import get_logger
 
@@ -50,9 +52,9 @@ def count_tokens(text: str) -> int:
 
 
 def count_message_tokens(
-    messages: List[Dict[str, Any]],
-    provider: Optional[str] = None,
-    model: Optional[str] = None
+    messages: list[dict[str, Any]],
+    provider: str | None = None,
+    model: str | None = None
 ) -> int:
     """メッセージリストの総トークン数をカウントする（Gemini専用）
 
@@ -109,10 +111,10 @@ def count_message_tokens(
 
 
 def estimate_compression_needed(
-    messages: List[Dict[str, Any]],
+    messages: list[dict[str, Any]],
     max_tokens: int = 4000,
-    provider: Optional[str] = None,
-    model: Optional[str] = None
+    provider: str | None = None,
+    model: str | None = None
 ) -> tuple[bool, int, float]:
     """会話履歴の圧縮が必要かどうかを判断する（Gemini専用）
 

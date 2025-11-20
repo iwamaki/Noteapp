@@ -6,11 +6,11 @@
 
 import time
 import uuid
-from typing import Callable
-from fastapi import Request, Response
-from starlette.middleware.base import BaseHTTPMiddleware
+from collections.abc import Callable
 
+from fastapi import Request, Response
 from infrastructure.logging.logger import get_logger
+from starlette.middleware.base import BaseHTTPMiddleware
 
 logger = get_logger("middleware.logging")
 

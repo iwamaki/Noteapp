@@ -4,7 +4,7 @@
 @responsibility 日時操作の共通関数を提供
 """
 
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
 
 
 def utcnow() -> datetime:
@@ -13,7 +13,7 @@ def utcnow() -> datetime:
     Returns:
         UTC時刻（timezone-aware）
     """
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def to_utc(dt: datetime) -> datetime:
@@ -27,8 +27,8 @@ def to_utc(dt: datetime) -> datetime:
     """
     if dt.tzinfo is None:
         # naive datetimeの場合はUTCとして扱う
-        return dt.replace(tzinfo=timezone.utc)
-    return dt.astimezone(timezone.utc)
+        return dt.replace(tzinfo=UTC)
+    return dt.astimezone(UTC)
 
 
 def from_timestamp(timestamp: int | float) -> datetime:
@@ -40,7 +40,7 @@ def from_timestamp(timestamp: int | float) -> datetime:
     Returns:
         datetime（UTC）
     """
-    return datetime.fromtimestamp(timestamp, tz=timezone.utc)
+    return datetime.fromtimestamp(timestamp, tz=UTC)
 
 
 def to_timestamp(dt: datetime) -> int:

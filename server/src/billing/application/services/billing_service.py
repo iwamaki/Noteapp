@@ -405,4 +405,4 @@ class BillingService:
         except Exception as e:
             self.db.rollback()
             logger.error(f"[BillingService] Failed to reset data: {e}")
-            raise ValueError(f"データリセットに失敗しました: {str(e)}")
+            raise ValueError(f"データリセットに失敗しました: {str(e)}") from e

@@ -3,16 +3,15 @@
 @summary Persistence Models
 """
 
+from .auth import (
+    DeviceModel,
+)
 from .billing import (
     CreditModel,
     PricingModel,
     TransactionModel,
     UserBalanceModel,
     UserModel,
-)
-
-from .auth import (
-    DeviceModel,
 )
 
 __all__ = [

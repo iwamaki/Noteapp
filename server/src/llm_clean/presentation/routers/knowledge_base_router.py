@@ -10,11 +10,17 @@ from fastapi import APIRouter, File, HTTPException, Query, UploadFile
 from fastapi.responses import JSONResponse
 
 from src.core.logger import logger
+from src.llm_clean.infrastructure.vector_stores import (
+    get_collection_manager,
+    get_document_processor,
+)
 from src.llm_clean.infrastructure.vector_stores.collection_manager import CollectionType
-from src.llm_clean.infrastructure.vector_stores import get_collection_manager, get_document_processor
 from src.llm_clean.infrastructure.vector_stores.faiss_vector_store import VectorStoreManager
 from src.llm_clean.presentation.middleware.error_handler import handle_route_errors
-from src.llm_clean.presentation.schemas.api_schemas import CreateCollectionRequest, UploadTextRequest
+from src.llm_clean.presentation.schemas.api_schemas import (
+    CreateCollectionRequest,
+    UploadTextRequest,
+)
 
 router = APIRouter()
 

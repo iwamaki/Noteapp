@@ -12,8 +12,8 @@ LLM Domain - Message Entity
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional, Literal, Any, Dict, List
 from enum import Enum
+from typing import Any
 
 
 class MessageRole(str, Enum):
@@ -41,7 +41,7 @@ class Message:
     role: MessageRole
     content: str
     timestamp: datetime = field(default_factory=datetime.utcnow)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self):
         """初期化後のバリデーション"""
@@ -60,8 +60,8 @@ class Message:
     def create_user_message(
         cls,
         content: str,
-        timestamp: Optional[datetime] = None,
-        metadata: Optional[Dict[str, Any]] = None
+        timestamp: datetime | None = None,
+        metadata: dict[str, Any] | None = None
     ) -> "Message":
         """ユーザーメッセージを作成するファクトリーメソッド"""
         return cls(
@@ -75,8 +75,8 @@ class Message:
     def create_ai_message(
         cls,
         content: str,
-        timestamp: Optional[datetime] = None,
-        metadata: Optional[Dict[str, Any]] = None
+        timestamp: datetime | None = None,
+        metadata: dict[str, Any] | None = None
     ) -> "Message":
         """AI応答メッセージを作成するファクトリーメソッド"""
         return cls(
@@ -90,8 +90,8 @@ class Message:
     def create_system_message(
         cls,
         content: str,
-        timestamp: Optional[datetime] = None,
-        metadata: Optional[Dict[str, Any]] = None
+        timestamp: datetime | None = None,
+        metadata: dict[str, Any] | None = None
     ) -> "Message":
         """システムメッセージを作成するファクトリーメソッド"""
         return cls(
@@ -106,8 +106,8 @@ class Message:
         cls,
         content: str,
         tool_name: str,
-        timestamp: Optional[datetime] = None,
-        metadata: Optional[Dict[str, Any]] = None
+        timestamp: datetime | None = None,
+        metadata: dict[str, Any] | None = None
     ) -> "Message":
         """ツール実行結果メッセージを作成するファクトリーメソッド"""
         meta = metadata or {}
@@ -139,7 +139,7 @@ class Message:
         """文字数を取得"""
         return len(self.content)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """辞書形式に変換（シリアライゼーション用）"""
         return {
             "role": self.role.value,
@@ -149,7 +149,7 @@ class Message:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "Message":
+    def from_dict(cls, data: dict[str, Any]) -> "Message":
         """辞書から復元（デシリアライゼーション用）"""
         return cls(
             role=MessageRole(data["role"]),
@@ -177,13 +177,13 @@ class LLMCommand:
         end_line: 終了行（行ベース編集用、1-based）
     """
     action: str
-    title: Optional[str] = None
-    new_title: Optional[str] = None
-    content: Optional[str] = None
-    category: Optional[str] = None
-    tags: Optional[List[str]] = None
-    start_line: Optional[int] = None
-    end_line: Optional[int] = None
+    title: str | None = None
+    new_title: str | None = None
+    content: str | None = None
+    category: str | None = None
+    tags: list[str] | None = None
+    start_line: int | None = None
+    end_line: int | None = None
 
     def __post_init__(self):
         """初期化後のバリデーション"""
@@ -215,7 +215,7 @@ class LLMCommand:
         """ファイルリネームコマンドかどうか"""
         return self.action == "rename_file"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """辞書形式に変換"""
         result = {"action": self.action}
         if self.title is not None:

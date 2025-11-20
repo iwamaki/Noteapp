@@ -11,7 +11,7 @@ LLMの使用トークン数と関連情報を表現する不変オブジェク�
 """
 
 from dataclasses import dataclass
-from typing import Optional, Dict, Any
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -31,9 +31,9 @@ class TokenUsage:
     """
     current_tokens: int
     max_tokens: int
-    input_tokens: Optional[int] = None
-    output_tokens: Optional[int] = None
-    total_tokens: Optional[int] = None
+    input_tokens: int | None = None
+    output_tokens: int | None = None
+    total_tokens: int | None = None
 
     def __post_init__(self):
         """初期化後のバリデーション"""
@@ -146,7 +146,7 @@ class TokenUsage:
         output_millions = (self.output_tokens or 0) / 1_000_000
         return (input_millions, output_millions)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """辞書形式に変換（シリアライゼーション用）"""
         return {
             "currentTokens": self.current_tokens,
@@ -159,7 +159,7 @@ class TokenUsage:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "TokenUsage":
+    def from_dict(cls, data: dict[str, Any]) -> "TokenUsage":
         """辞書から復元（デシリアライゼーション用）"""
         return cls(
             current_tokens=data["currentTokens"],
@@ -184,7 +184,7 @@ class TokenUsage:
         max_tokens: int,
         input_tokens: int,
         output_tokens: int,
-        total_tokens: Optional[int] = None
+        total_tokens: int | None = None
     ) -> "TokenUsage":
         """実際の使用量情報付きで作成"""
         return cls(

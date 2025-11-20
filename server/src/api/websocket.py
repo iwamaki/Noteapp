@@ -2,11 +2,12 @@
 # @summary WebSocket接続とファイル内容取得リクエストを管理します
 # @responsibility WebSocket接続の管理、フロントエンドへのファイル内容リクエスト、レスポンスの待機処理
 
-from fastapi import WebSocket
-from typing import Dict, Optional
 import asyncio
-import uuid
 import time
+import uuid
+
+from fastapi import WebSocket
+
 from src.core.logger import logger
 
 
@@ -24,19 +25,19 @@ class ConnectionManager:
 
     def __init__(self):
         # アクティブなWebSocket接続（client_id -> WebSocket）
-        self.active_connections: Dict[str, WebSocket] = {}
+        self.active_connections: dict[str, WebSocket] = {}
 
         # 保留中のリクエスト（request_id -> Future）
-        self.pending_requests: Dict[str, asyncio.Future] = {}
+        self.pending_requests: dict[str, asyncio.Future] = {}
 
         # クライアントIDとリクエストのマッピング（デバッグ用）
-        self.client_requests: Dict[str, set] = {}
+        self.client_requests: dict[str, set] = {}
 
         # ハートビート関連（client_id -> 最後のping受信時刻）
-        self.last_ping: Dict[str, float] = {}
+        self.last_ping: dict[str, float] = {}
 
         # stale接続チェックのバックグラウンドタスク
-        self.check_task: Optional[asyncio.Task] = None
+        self.check_task: asyncio.Task | None = None
 
     async def connect(self, websocket: WebSocket, client_id: str):
         """
@@ -106,7 +107,7 @@ class ConnectionManager:
         client_id: str,
         title: str,
         timeout: int = 30
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         フロントエンドにファイル内容をリクエストする
 
@@ -152,9 +153,9 @@ class ConnectionManager:
             logger.info(f"File content received: title={title}, length={len(content) if content else 0}")
             return content
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             logger.error(f"Timeout waiting for file content: title={title}, request_id={request_id}")
-            raise Exception(f"ファイル '{title}' の取得がタイムアウトしました（{timeout}秒）")
+            raise Exception(f"ファイル '{title}' の取得がタイムアウトしました（{timeout}秒）") from None
 
         finally:
             # クリーンアップ
@@ -217,9 +218,9 @@ class ConnectionManager:
             logger.info(f"Search results received: query={query}, results_count={len(results) if results else 0}")
             return results if results else []
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             logger.error(f"Timeout waiting for search results: query={query}, request_id={request_id}")
-            raise Exception(f"検索 '{query}' がタイムアウトしました（{timeout}秒）")
+            raise Exception(f"検索 '{query}' がタイムアウトしました（{timeout}秒）") from None
 
         finally:
             # クリーンアップ
@@ -228,7 +229,7 @@ class ConnectionManager:
             if client_id in self.client_requests:
                 self.client_requests[client_id].discard(request_id)
 
-    def resolve_request(self, request_id: str, content: Optional[str], error: Optional[str] = None):
+    def resolve_request(self, request_id: str, content: str | None, error: str | None = None):
         """
         フロントエンドからのレスポンスを処理する
 

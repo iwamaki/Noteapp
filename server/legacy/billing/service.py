@@ -2,13 +2,15 @@
 # @summary ビジネスロジック層 - トークン管理の中核
 # @responsibility トークン残高管理、クレジット配分、消費処理、取引履歴管理
 
-from sqlalchemy.orm import Session
-from .models import TokenBalance, Credit, Transaction, TokenPricing
-from .config import TOKEN_CAPACITY_LIMITS
-from typing import Dict, List
 import json
 from datetime import datetime
+
+from sqlalchemy.orm import Session
+
 from src.core.logger import logger
+
+from .config import TOKEN_CAPACITY_LIMITS
+from .models import Credit, TokenBalance, TokenPricing, Transaction
 
 
 class BillingService:
@@ -32,7 +34,7 @@ class BillingService:
     # トークン残高管理
     # =====================================
 
-    def get_balance(self) -> Dict:
+    def get_balance(self) -> dict:
         """トークン残高取得
 
         未配分クレジットと、各モデルに配分済みのトークン数を取得。
@@ -76,7 +78,7 @@ class BillingService:
     # クレジット管理
     # =====================================
 
-    def add_credits(self, credits: int, purchase_record: dict) -> Dict:
+    def add_credits(self, credits: int, purchase_record: dict) -> dict:
         """クレジット追加（購入時）
 
         アプリ内課金完了後に呼び出される。
@@ -121,7 +123,7 @@ class BillingService:
             logger.error(f"[BillingService] Failed to add credits: {e}")
             raise
 
-    def allocate_credits(self, allocations: List[Dict]) -> Dict:
+    def allocate_credits(self, allocations: list[dict]) -> dict:
         """クレジット配分
 
         未配分クレジットを各モデルにトークンとして配分。
@@ -229,7 +231,7 @@ class BillingService:
     # トークン消費
     # =====================================
 
-    def consume_tokens(self, model_id: str, input_tokens: int, output_tokens: int) -> Dict:
+    def consume_tokens(self, model_id: str, input_tokens: int, output_tokens: int) -> dict:
         """トークン消費
 
         LLM使用時に呼び出される。
@@ -294,7 +296,7 @@ class BillingService:
     # 取引履歴・価格情報
     # =====================================
 
-    def get_transactions(self, limit: int = 100) -> List[Dict]:
+    def get_transactions(self, limit: int = 100) -> list[dict]:
         """取引履歴取得
 
         最新の取引履歴を取得（デフォルト100件）。
@@ -320,7 +322,7 @@ class BillingService:
             for t in transactions
         ]
 
-    def get_pricing(self) -> Dict[str, Dict]:
+    def get_pricing(self) -> dict[str, dict]:
         """価格情報取得
 
         全モデルの価格情報を取得。
@@ -372,7 +374,7 @@ class BillingService:
     # デバッグ・リセット機能
     # =====================================
 
-    def reset_all_data(self) -> Dict:
+    def reset_all_data(self) -> dict:
         """全データリセット（デバッグ用）
 
         クレジット残高、トークン残高、取引履歴をすべてリセット。
@@ -403,4 +405,4 @@ class BillingService:
         except Exception as e:
             self.db.rollback()
             logger.error(f"[BillingService] Failed to reset data: {e}")
-            raise ValueError(f"データリセットに失敗しました: {str(e)}")
+            raise ValueError(f"データリセットに失敗しました: {str(e)}") from e

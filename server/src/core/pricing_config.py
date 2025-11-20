@@ -7,7 +7,7 @@ USD建て原価からポイント換算価格を自動計算する。
 ポイント（P）は内部的に円と同等の価値で計算されるが、ユーザーには通貨ではなくポイントとして表示される。
 """
 
-from typing import Dict, Optional
+
 from pydantic import BaseModel
 
 
@@ -79,7 +79,7 @@ def calculate_selling_price(
 # Gemini モデルの原価（USD/1M tokens）
 # 参照: https://ai.google.dev/pricing
 # 最終更新: 2025-01
-GEMINI_COST_INFO: Dict[str, CostInfo] = {
+GEMINI_COST_INFO: dict[str, CostInfo] = {
     "gemini-2.5-pro": CostInfo(
         input_price_per_1m=1.25,
         output_price_per_1m=10.0,
@@ -101,7 +101,7 @@ GEMINI_COST_INFO: Dict[str, CostInfo] = {
 # OpenAI モデルの原価（USD/1M tokens）
 # 参照: OpenAI公式情報
 # 最終更新: 2025-08
-OPENAI_COST_INFO: Dict[str, CostInfo] = {
+OPENAI_COST_INFO: dict[str, CostInfo] = {
     "gpt-5-mini": CostInfo(
         input_price_per_1m=0.25,
         output_price_per_1m=2.00,
@@ -109,7 +109,7 @@ OPENAI_COST_INFO: Dict[str, CostInfo] = {
 }
 
 # 全モデルの価格情報（自動計算）
-MODEL_PRICING: Dict[str, ModelPricing] = {}
+MODEL_PRICING: dict[str, ModelPricing] = {}
 
 def _initialize_pricing():
     """価格テーブルを初期化（自動計算）"""
@@ -157,7 +157,7 @@ _initialize_pricing()
 # ヘルパー関数
 # ========================================
 
-def get_model_pricing(model_id: str) -> Optional[ModelPricing]:
+def get_model_pricing(model_id: str) -> ModelPricing | None:
     """
     モデルIDから価格情報を取得
 

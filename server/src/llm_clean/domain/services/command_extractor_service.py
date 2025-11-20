@@ -66,7 +66,7 @@ class CommandExtractorService:
         # Fallback: Support legacy intermediate_steps format
         intermediate_steps = agent_result.get("intermediate_steps", []) or []
         if intermediate_steps:
-            for action, observation in intermediate_steps:
+            for action, _observation in intermediate_steps:
                 command = self._process_action(action)
                 if command:
                     commands.append(command)

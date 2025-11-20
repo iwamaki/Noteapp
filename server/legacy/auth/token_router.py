@@ -3,24 +3,25 @@
 # @responsibility トークンリフレッシュ、ログアウトのHTTPエンドポイント
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from sqlalchemy.orm import Session
 from slowapi import Limiter
 from slowapi.util import get_remote_address
-from src.billing import get_db
-from src.auth.service import AuthService, AuthenticationError
-from src.auth.schemas import (
-    RefreshTokenRequest,
-    RefreshTokenResponse,
-    LogoutRequest,
-    LogoutResponse,
-)
+from sqlalchemy.orm import Session
 from src.auth.jwt_utils import (
+    TokenType,
     create_access_token,
     create_refresh_token,
-    TokenType,
-    get_user_id_from_token,
     get_device_id_from_token,
+    get_user_id_from_token,
 )
+from src.auth.schemas import (
+    LogoutRequest,
+    LogoutResponse,
+    RefreshTokenRequest,
+    RefreshTokenResponse,
+)
+from src.auth.service import AuthenticationError, AuthService
+
+from src.billing import get_db
 from src.core.logger import logger
 
 router = APIRouter(prefix="/api/auth", tags=["token"])
@@ -94,7 +95,7 @@ async def refresh_token(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error"
-        )
+        ) from e
 
 
 @router.post(
@@ -144,10 +145,10 @@ async def logout(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
-        )
+        ) from e
     except Exception as e:
         logger.error(f"Unexpected error in logout: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error"
-        )
+        ) from e

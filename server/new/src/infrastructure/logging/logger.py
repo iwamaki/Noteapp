@@ -4,12 +4,12 @@
 @responsibility アプリケーション全体で使用する構造化ログの設定を提供
 """
 
+import json
 import logging
 import sys
-import json
 from datetime import datetime
-from typing import Any, Optional, Dict
 from functools import lru_cache
+from typing import Any
 
 
 class JsonFormatter(logging.Formatter):
@@ -245,7 +245,7 @@ def log_llm_interaction(
     provider: str,
     direction: str,
     content: Any,
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: dict[str, Any] | None = None
 ) -> None:
     """LLMとのやり取りをログ記録
 
@@ -273,7 +273,7 @@ def log_llm_interaction(
     logger.info(log_data)
 
 
-@lru_cache()
+@lru_cache
 def get_logger(name: str) -> logging.Logger:
     """名前付きロガーを取得
 
@@ -289,7 +289,7 @@ def get_logger(name: str) -> logging.Logger:
 # ==========================================
 # グローバルロガー（後で初期化）
 # ==========================================
-_global_logger: Optional[logging.Logger] = None
+_global_logger: logging.Logger | None = None
 
 
 def init_logging(

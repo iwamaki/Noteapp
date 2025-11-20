@@ -9,9 +9,9 @@ CQRSパターンにおけるQueryの実装です。
 - モデルメタデータをDTOに変換
 """
 
-from typing import Dict, Optional
+
 from src.application.llm.dto.provider_dto import ModelMetadataDTO
-from src.domain.llm.providers.registry import get_provider_config, _get_registry
+from src.domain.llm.providers.registry import _get_registry, get_provider_config
 from src.infrastructure.logging.logger import get_logger
 
 logger = get_logger("get_models_query")
@@ -30,8 +30,8 @@ class GetModelsQuery:
 
     async def execute(
         self,
-        provider_name: Optional[str] = None
-    ) -> Dict[str, ModelMetadataDTO]:
+        provider_name: str | None = None
+    ) -> dict[str, ModelMetadataDTO]:
         """モデル一覧を取得
 
         Args:
@@ -59,7 +59,7 @@ class GetModelsQuery:
     async def _get_provider_models(
         self,
         provider_name: str
-    ) -> Dict[str, ModelMetadataDTO]:
+    ) -> dict[str, ModelMetadataDTO]:
         """特定プロバイダーのモデル一覧を取得
 
         Args:
@@ -91,7 +91,7 @@ class GetModelsQuery:
 
         return models
 
-    async def _get_all_models(self) -> Dict[str, ModelMetadataDTO]:
+    async def _get_all_models(self) -> dict[str, ModelMetadataDTO]:
         """全プロバイダーのモデル一覧を取得
 
         Returns:
@@ -100,7 +100,7 @@ class GetModelsQuery:
         all_models = {}
 
         # すべてのプロバイダーをループ
-        for provider_name, provider_config in _get_registry().items():
+        for _provider_name, provider_config in _get_registry().items():
             for model_id, metadata in provider_config.models.items():
                 all_models[model_id] = ModelMetadataDTO(
                     category=metadata.category,

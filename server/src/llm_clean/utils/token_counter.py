@@ -10,7 +10,6 @@ from src.core.logger import logger
 
 from ..infrastructure.token_counting.gemini_token_counter import GeminiTokenCounter
 
-
 # Cache token counter instances
 _token_counter_cache: dict[str, GeminiTokenCounter] = {}
 

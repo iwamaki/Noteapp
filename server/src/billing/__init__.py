@@ -15,35 +15,34 @@ infrastructure -> domain
 """
 
 # Domain layer
-from .domain import (
-    Base,
-    User,
-    TokenBalance,
-    Credit,
-    Transaction,
-    TokenPricing,
-    DeviceAuth,
-)
-
 # Application layer
 from .application import (
     BillingService,
     TokenBalanceValidator,
 )
+from .domain import (
+    Base,
+    Credit,
+    DeviceAuth,
+    TokenBalance,
+    TokenPricing,
+    Transaction,
+    User,
+)
 
 # Infrastructure layer
 from .infrastructure import (
-    init_db,
-    get_db,
-    SessionLocal,
-    verify_purchase,
-    acknowledge_purchase,
-    TOKEN_CAPACITY_LIMITS,
     DEFAULT_USER_ID,
-    MODEL_CATEGORIES,
     INITIAL_PRICING_DATA,
+    MODEL_CATEGORIES,
+    TOKEN_CAPACITY_LIMITS,
     TOKEN_ESTIMATION,
+    SessionLocal,
+    acknowledge_purchase,
     estimate_output_tokens,
+    get_db,
+    init_db,
+    verify_purchase,
 )
 
 # Presentation layer
@@ -52,18 +51,17 @@ from .infrastructure import (
 from .presentation import (
     # Request schemas
     AddCreditsRequest,
-    AllocationItem,
     AllocateCreditsRequest,
+    AllocationItem,
+    CategoryBalanceResponse,
     ConsumeTokensRequest,
-
-    # Response schemas
-    TokenBalanceResponse,
     ConsumeTokensResponse,
-    TransactionResponse,
+    OperationSuccessResponse,
     PricingInfoItem,
     PricingInfoResponse,
-    CategoryBalanceResponse,
-    OperationSuccessResponse,
+    # Response schemas
+    TokenBalanceResponse,
+    TransactionResponse,
 )
 
 __all__ = [

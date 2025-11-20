@@ -10,11 +10,11 @@ Note:
     グローバルシングルトンを避け、DI可能な設計としています。
 """
 
-from fastapi import WebSocket
-from typing import Dict, Optional
 import asyncio
-import uuid
 import time
+import uuid
+
+from fastapi import WebSocket
 
 from src.infrastructure.logging.logger import get_logger
 
@@ -35,19 +35,19 @@ class WebSocketConnectionManager:
 
     def __init__(self):
         # アクティブなWebSocket接続（client_id -> WebSocket）
-        self.active_connections: Dict[str, WebSocket] = {}
+        self.active_connections: dict[str, WebSocket] = {}
 
         # 保留中のリクエスト（request_id -> Future）
-        self.pending_requests: Dict[str, asyncio.Future] = {}
+        self.pending_requests: dict[str, asyncio.Future] = {}
 
         # クライアントIDとリクエストのマッピング（デバッグ用）
-        self.client_requests: Dict[str, set] = {}
+        self.client_requests: dict[str, set] = {}
 
         # ハートビート関連（client_id -> 最後のping受信時刻）
-        self.last_ping: Dict[str, float] = {}
+        self.last_ping: dict[str, float] = {}
 
         # stale接続チェックのバックグラウンドタスク
-        self.check_task: Optional[asyncio.Task] = None
+        self.check_task: asyncio.Task | None = None
 
     async def connect(self, websocket: WebSocket, client_id: str):
         """
@@ -121,7 +121,7 @@ class WebSocketConnectionManager:
         client_id: str,
         title: str,
         timeout: int = 30
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         フロントエンドにファイル内容をリクエストする
 
@@ -176,14 +176,14 @@ class WebSocketConnectionManager:
             })
             return content
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             logger.error({
                 "event": "file_content_timeout",
                 "title": title,
                 "request_id": request_id,
                 "timeout": timeout
             })
-            raise Exception(f"ファイル '{title}' の取得がタイムアウトしました（{timeout}秒）")
+            raise Exception(f"ファイル '{title}' の取得がタイムアウトしました（{timeout}秒）") from None
 
         finally:
             # クリーンアップ
@@ -256,14 +256,14 @@ class WebSocketConnectionManager:
             })
             return results if results else []
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             logger.error({
                 "event": "search_timeout",
                 "query": query,
                 "request_id": request_id,
                 "timeout": timeout
             })
-            raise Exception(f"検索 '{query}' がタイムアウトしました（{timeout}秒）")
+            raise Exception(f"検索 '{query}' がタイムアウトしました（{timeout}秒）") from None
 
         finally:
             # クリーンアップ
@@ -272,7 +272,7 @@ class WebSocketConnectionManager:
             if client_id in self.client_requests:
                 self.client_requests[client_id].discard(request_id)
 
-    def resolve_request(self, request_id: str, content: Optional[str], error: Optional[str] = None):
+    def resolve_request(self, request_id: str, content: str | None, error: str | None = None):
         """
         フロントエンドからのレスポンスを処理する
 
@@ -369,7 +369,7 @@ class WebSocketConnectionManager:
 
 # グローバルシングルトンインスタンス（後方互換性のため）
 # 新しいコードではDIを使用してください
-_global_manager: Optional[WebSocketConnectionManager] = None
+_global_manager: WebSocketConnectionManager | None = None
 
 
 def get_websocket_manager() -> WebSocketConnectionManager:

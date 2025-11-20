@@ -7,7 +7,8 @@
 import functools
 import hashlib
 import json
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any
 
 from .redis_client import get_redis
 
@@ -43,8 +44,8 @@ def cache_key_builder(*args, **kwargs) -> str:
 
 def cached(
     ttl: int = 300,
-    prefix: Optional[str] = None,
-    key_builder: Optional[Callable] = None,
+    prefix: str | None = None,
+    key_builder: Callable | None = None,
 ) -> Callable:
     """関数の結果をキャッシュするデコレーター
 
@@ -100,8 +101,8 @@ def cached(
 
 def cached_async(
     ttl: int = 300,
-    prefix: Optional[str] = None,
-    key_builder: Optional[Callable] = None,
+    prefix: str | None = None,
+    key_builder: Callable | None = None,
 ) -> Callable:
     """非同期関数の結果をキャッシュするデコレーター
 
@@ -158,7 +159,7 @@ def cached_async(
 def cache_invalidate(
     prefix: str,
     *args,
-    key_builder: Optional[Callable] = None,
+    key_builder: Callable | None = None,
     **kwargs
 ) -> bool:
     """特定のキャッシュを削除

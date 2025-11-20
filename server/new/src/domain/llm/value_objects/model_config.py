@@ -11,7 +11,7 @@ LLMプロバイダーとモデルの設定を表現する不変オブジェク�
 """
 
 from dataclasses import dataclass
-from typing import Optional, Dict, Any, Literal
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -33,9 +33,9 @@ class ModelConfig:
     provider: str
     model: str
     temperature: float = 0.7
-    max_tokens: Optional[int] = None
+    max_tokens: int | None = None
     top_p: float = 1.0
-    metadata: Dict[str, Any] = None
+    metadata: dict[str, Any] = None
 
     def __post_init__(self):
         """初期化後のバリデーション"""
@@ -140,7 +140,7 @@ class ModelConfig:
         }
         return provider_names.get(self.provider.lower(), self.provider)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """辞書形式に変換"""
         return {
             "provider": self.provider,
@@ -152,7 +152,7 @@ class ModelConfig:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "ModelConfig":
+    def from_dict(cls, data: dict[str, Any]) -> "ModelConfig":
         """辞書から復元"""
         return cls(
             provider=data["provider"],

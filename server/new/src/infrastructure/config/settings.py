@@ -4,17 +4,16 @@
 @responsibility 環境変数ベースの設定を Pydantic Settings で型安全に管理
 """
 
-import os
-from typing import Optional
 from functools import lru_cache
-from pydantic_settings import BaseSettings, SettingsConfigDict
+
 from pydantic import Field, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from .constants import (
-    JWT_ALGORITHM,
     ACCESS_TOKEN_EXPIRE_MINUTES,
-    REFRESH_TOKEN_EXPIRE_DAYS,
     DEFAULT_LLM_PROVIDER,
+    JWT_ALGORITHM,
+    REFRESH_TOKEN_EXPIRE_DAYS,
 )
 
 
@@ -55,15 +54,15 @@ class Settings(BaseSettings):
     # ==========================================
     # Redis設定
     # ==========================================
-    redis_url: Optional[str] = Field(default=None, description="Redis接続URL")
+    redis_url: str | None = Field(default=None, description="Redis接続URL")
     redis_max_connections: int = Field(default=50, description="Redisコネクションプールサイズ")
     redis_socket_connect_timeout: int = Field(default=5, description="Redis接続タイムアウト（秒）")
 
     # ==========================================
     # GCP設定
     # ==========================================
-    gcp_project_id: Optional[str] = Field(default=None, description="GCPプロジェクトID")
-    google_application_credentials: Optional[str] = Field(
+    gcp_project_id: str | None = Field(default=None, description="GCPプロジェクトID")
+    google_application_credentials: str | None = Field(
         default=None,
         description="GCPサービスアカウントキーのパス"
     )
@@ -95,14 +94,14 @@ class Settings(BaseSettings):
     # ==========================================
     # 直接指定のAPIキー（Secret Manager不使用の場合）
     # ==========================================
-    gemini_api_key: Optional[str] = Field(default=None, description="Gemini APIキー")
-    openai_api_key: Optional[str] = Field(default=None, description="OpenAI APIキー")
-    google_cse_api_key: Optional[str] = Field(default=None, description="Google CSE APIキー")
+    gemini_api_key: str | None = Field(default=None, description="Gemini APIキー")
+    openai_api_key: str | None = Field(default=None, description="OpenAI APIキー")
+    google_cse_api_key: str | None = Field(default=None, description="Google CSE APIキー")
 
     # ==========================================
     # JWT認証設定
     # ==========================================
-    jwt_secret_key: Optional[str] = Field(default=None, description="JWTシークレットキー")
+    jwt_secret_key: str | None = Field(default=None, description="JWTシークレットキー")
     jwt_algorithm: str = Field(default=JWT_ALGORITHM, description="JWTアルゴリズム")
     jwt_access_token_expire_minutes: int = Field(
         default=ACCESS_TOKEN_EXPIRE_MINUTES,
@@ -116,9 +115,9 @@ class Settings(BaseSettings):
     # ==========================================
     # Google OAuth設定
     # ==========================================
-    google_client_id: Optional[str] = Field(default=None, description="Google OAuth Client ID")
-    google_client_secret: Optional[str] = Field(default=None, description="Google OAuth Client Secret")
-    google_redirect_uri: Optional[str] = Field(
+    google_client_id: str | None = Field(default=None, description="Google OAuth Client ID")
+    google_client_secret: str | None = Field(default=None, description="Google OAuth Client Secret")
+    google_redirect_uri: str | None = Field(
         default="http://localhost:8000/auth/google/callback",
         description="Google OAuth Redirect URI"
     )
@@ -134,7 +133,7 @@ class Settings(BaseSettings):
     # ==========================================
     # Google Play IAP設定
     # ==========================================
-    google_play_package_name: Optional[str] = Field(
+    google_play_package_name: str | None = Field(
         default=None,
         description="Google Play アプリパッケージ名"
     )
@@ -209,7 +208,7 @@ class Settings(BaseSettings):
         return url
 
 
-@lru_cache()
+@lru_cache
 def get_settings() -> Settings:
     """設定シングルトンを取得
 

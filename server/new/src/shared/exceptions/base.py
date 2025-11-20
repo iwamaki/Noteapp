@@ -4,7 +4,7 @@
 @responsibility アプリケーション全体で使用する例外の基底クラスを定義
 """
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 
 class AppException(Exception):
@@ -18,7 +18,7 @@ class AppException(Exception):
         message: str,
         code: str,
         status_code: int = 500,
-        details: Optional[Dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ):
         """
         Args:
@@ -33,7 +33,7 @@ class AppException(Exception):
         self.details = details or {}
         super().__init__(self.message)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """例外情報を辞書形式で返す
 
         Returns:
@@ -51,7 +51,7 @@ class AppException(Exception):
 class ValidationError(AppException):
     """バリデーションエラー"""
 
-    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+    def __init__(self, message: str, details: dict[str, Any] | None = None):
         from .codes import VALIDATION_ERROR
         super().__init__(
             message=message,
@@ -64,7 +64,7 @@ class ValidationError(AppException):
 class NotFoundError(AppException):
     """リソースが見つからない"""
 
-    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+    def __init__(self, message: str, details: dict[str, Any] | None = None):
         from .codes import NOT_FOUND
         super().__init__(
             message=message,
@@ -77,7 +77,7 @@ class NotFoundError(AppException):
 class ForbiddenError(AppException):
     """アクセス権限なし"""
 
-    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+    def __init__(self, message: str, details: dict[str, Any] | None = None):
         from .codes import FORBIDDEN
         super().__init__(
             message=message,
@@ -90,7 +90,7 @@ class ForbiddenError(AppException):
 class UnauthorizedError(AppException):
     """認証エラー"""
 
-    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+    def __init__(self, message: str, details: dict[str, Any] | None = None):
         from .codes import UNAUTHORIZED
         super().__init__(
             message=message,
@@ -103,7 +103,7 @@ class UnauthorizedError(AppException):
 class ConflictError(AppException):
     """リソースの競合"""
 
-    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+    def __init__(self, message: str, details: dict[str, Any] | None = None):
         from .codes import CONFLICT
         super().__init__(
             message=message,
@@ -116,7 +116,7 @@ class ConflictError(AppException):
 class ExternalServiceError(AppException):
     """外部サービスエラー"""
 
-    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+    def __init__(self, message: str, details: dict[str, Any] | None = None):
         from .codes import EXTERNAL_SERVICE_ERROR
         super().__init__(
             message=message,

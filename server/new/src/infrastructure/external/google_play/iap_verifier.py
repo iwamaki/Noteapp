@@ -4,7 +4,8 @@
 @responsibility Google Play Developer APIを使用したIAP検証
 """
 
-from typing import Dict, Any
+from typing import Any
+
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 
@@ -51,7 +52,7 @@ class GooglePlayIAPVerifier:
         self,
         product_id: str,
         purchase_token: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """プロダクト購入を検証
 
         Args:
@@ -88,7 +89,7 @@ class GooglePlayIAPVerifier:
             return result
 
         except Exception as e:
-            raise GooglePlayIAPError(f"Purchase verification failed: {str(e)}")
+            raise GooglePlayIAPError(f"Purchase verification failed: {str(e)}") from e
 
     def acknowledge_purchase(
         self,
@@ -112,13 +113,13 @@ class GooglePlayIAPVerifier:
             ).execute()
 
         except Exception as e:
-            raise GooglePlayIAPError(f"Purchase acknowledgment failed: {str(e)}")
+            raise GooglePlayIAPError(f"Purchase acknowledgment failed: {str(e)}") from e
 
     def verify_subscription_purchase(
         self,
         subscription_id: str,
         purchase_token: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """サブスクリプション購入を検証
 
         Args:
@@ -141,4 +142,4 @@ class GooglePlayIAPVerifier:
             return result
 
         except Exception as e:
-            raise GooglePlayIAPError(f"Subscription verification failed: {str(e)}")
+            raise GooglePlayIAPError(f"Subscription verification failed: {str(e)}") from e

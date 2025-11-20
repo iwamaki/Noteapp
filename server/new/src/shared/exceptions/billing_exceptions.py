@@ -4,9 +4,10 @@
 @responsibility 課金・トークン管理に関する例外を定義
 """
 
-from typing import Any, Dict, Optional
-from .base import AppException
+from typing import Any
+
 from . import codes
+from .base import AppException
 
 
 class InsufficientBalanceError(AppException):
@@ -40,7 +41,7 @@ class InvalidProductIdError(AppException):
 class InvalidPurchaseError(AppException):
     """無効な購入"""
 
-    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+    def __init__(self, message: str, details: dict[str, Any] | None = None):
         super().__init__(
             message=message,
             code=codes.BILLING_INVALID_PURCHASE,

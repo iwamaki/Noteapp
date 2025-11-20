@@ -176,7 +176,7 @@ class DocumentProcessor:
                     return loader.load()
                 except UnicodeDecodeError:
                     continue
-            raise ValueError(f"Failed to decode file {file_path} with any known encoding")
+            raise ValueError(f"Failed to decode file {file_path} with any known encoding") from None
 
     def _load_pdf(self, file_path: str) -> list[Document]:
         """PDFファイルを読み込み

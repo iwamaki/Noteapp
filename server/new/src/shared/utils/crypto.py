@@ -6,7 +6,6 @@
 
 import hashlib
 import secrets
-from typing import Optional
 
 
 def generate_random_token(length: int = 32) -> str:
@@ -33,7 +32,7 @@ def generate_random_string(length: int = 16) -> str:
     return secrets.token_urlsafe(length)
 
 
-def hash_sha256(data: str, salt: Optional[str] = None) -> str:
+def hash_sha256(data: str, salt: str | None = None) -> str:
     """SHA-256ハッシュを生成
 
     Args:
@@ -49,7 +48,7 @@ def hash_sha256(data: str, salt: Optional[str] = None) -> str:
     return hashlib.sha256(data.encode()).hexdigest()
 
 
-def verify_hash(data: str, hash_value: str, salt: Optional[str] = None) -> bool:
+def verify_hash(data: str, hash_value: str, salt: str | None = None) -> bool:
     """ハッシュ値を検証
 
     Args:

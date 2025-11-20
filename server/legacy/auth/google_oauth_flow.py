@@ -3,9 +3,11 @@
 # @responsibility Google OAuth2 の認証フロー処理（トークン交換、ユーザー情報取得）
 
 import os
-import requests
-from typing import Dict, Any
+from typing import Any
 from urllib.parse import urlencode
+
+import requests
+
 from src.core.logger import logger
 
 
@@ -14,7 +16,7 @@ class GoogleOAuthFlowError(Exception):
     pass
 
 
-def get_google_oauth_config() -> Dict[str, str]:
+def get_google_oauth_config() -> dict[str, str]:
     """Google OAuth2 設定を取得"""
     return {
         "client_id": os.getenv("GOOGLE_WEB_CLIENT_ID", ""),
@@ -64,7 +66,7 @@ def generate_auth_url(state: str) -> str:
     return auth_url
 
 
-def exchange_code_for_tokens(code: str) -> Dict[str, Any]:
+def exchange_code_for_tokens(code: str) -> dict[str, Any]:
     """
     Authorization Code をトークンに交換
 
@@ -113,10 +115,10 @@ def exchange_code_for_tokens(code: str) -> Dict[str, Any]:
 
     except requests.exceptions.RequestException as e:
         logger.error(f"Failed to exchange authorization code: {e}")
-        raise GoogleOAuthFlowError(f"Token exchange failed: {str(e)}")
+        raise GoogleOAuthFlowError(f"Token exchange failed: {str(e)}") from e
 
 
-def get_user_info_from_access_token(access_token: str) -> Dict[str, Any]:
+def get_user_info_from_access_token(access_token: str) -> dict[str, Any]:
     """
     Access Token からユーザー情報を取得
 
@@ -157,4 +159,4 @@ def get_user_info_from_access_token(access_token: str) -> Dict[str, Any]:
 
     except requests.exceptions.RequestException as e:
         logger.error(f"Failed to fetch user info: {e}")
-        raise GoogleOAuthFlowError(f"User info fetch failed: {str(e)}")
+        raise GoogleOAuthFlowError(f"User info fetch failed: {str(e)}") from e

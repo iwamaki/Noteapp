@@ -8,10 +8,13 @@ FastAPI router用の共通エラーハンドリングヘルパー
 - 一貫したエラーレスポンスを提供
 """
 
-from fastapi import HTTPException
-from src.infrastructure.logging.logger import get_logger
-from typing import Any, Callable, TypeVar, Coroutine
+from collections.abc import Callable, Coroutine
 from functools import wraps
+from typing import Any, TypeVar
+
+from fastapi import HTTPException
+
+from src.infrastructure.logging.logger import get_logger
 
 T = TypeVar('T')
 logger = get_logger("error_handlers")
@@ -46,7 +49,7 @@ def handle_route_errors(
                 "function": func.__name__,
                 "error": error_msg,
             })
-            raise HTTPException(status_code=400, detail=error_msg)
+            raise HTTPException(status_code=400, detail=error_msg) from e
         except Exception as e:
             error_msg = str(e)
             logger.error({
@@ -54,6 +57,6 @@ def handle_route_errors(
                 "function": func.__name__,
                 "error": error_msg,
             })
-            raise HTTPException(status_code=500, detail=error_msg)
+            raise HTTPException(status_code=500, detail=error_msg) from e
 
     return wrapper

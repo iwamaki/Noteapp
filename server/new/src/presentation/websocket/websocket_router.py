@@ -8,11 +8,11 @@ Note:
     新しいアーキテクチャに移行したものです。
 """
 
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
-from typing import Optional
 
-from src.infrastructure.websocket.manager import get_websocket_manager
+from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
+
 from src.infrastructure.logging.logger import get_logger
+from src.infrastructure.websocket.manager import get_websocket_manager
 
 logger = get_logger("websocket_router")
 router = APIRouter()
@@ -21,7 +21,7 @@ router = APIRouter()
 @router.websocket("/ws")
 async def websocket_endpoint(
     websocket: WebSocket,
-    client_id: Optional[str] = Query(None)
+    client_id: str | None = Query(None)
 ):
     """
     WebSocketエンドポイント

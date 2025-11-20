@@ -3,15 +3,17 @@
 # @responsibility APIエンドポイントのデバイスID認証・トークン認証
 
 import re
-from fastapi import Depends, HTTPException, Header
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+
+from fastapi import Depends, Header, HTTPException
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
-from typing import Optional
+from src.auth.jwt_utils import TokenType, verify_token
+from src.auth.service import AuthService
+
+from src.auth.token_blacklist_manager import get_blacklist_manager
+
 # クリーンアーキテクチャ版のget_dbを使用
 from src.billing.infrastructure import get_db
-from src.auth.service import AuthService
-from src.auth.jwt_utils import verify_token, TokenType
-from src.auth.token_blacklist_manager import get_blacklist_manager
 from src.core.logger import logger
 
 # HTTPベアラー認証のスキーマ
@@ -73,7 +75,7 @@ async def verify_token_auth(
 
 
 async def verify_user(
-    device_id: Optional[str] = Header(None, alias="X-Device-ID"),
+    device_id: str | None = Header(None, alias="X-Device-ID"),
     db: Session = Depends(get_db)
 ) -> str:
     """

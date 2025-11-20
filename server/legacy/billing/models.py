@@ -2,9 +2,10 @@
 # @summary SQLAlchemyモデル定義 - トークン管理用のデータベーステーブル
 # @responsibility データベーススキーマの定義、トークン残高・クレジット・取引履歴・価格情報のモデル化
 
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime, Boolean
-from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
+
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
 

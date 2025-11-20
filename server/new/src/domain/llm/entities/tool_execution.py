@@ -12,8 +12,8 @@ LLMエージェントによるツール（関数）の実行情報を管理す�
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, Optional
 from enum import Enum
+from typing import Any
 from uuid import uuid4
 
 
@@ -46,15 +46,15 @@ class ToolExecution:
         metadata: 追加のメタデータ
     """
     tool_name: str
-    arguments: Dict[str, Any]
+    arguments: dict[str, Any]
     id: str = field(default_factory=lambda: str(uuid4()))
     status: ToolExecutionStatus = ToolExecutionStatus.PENDING
-    result: Optional[Any] = None
-    error: Optional[str] = None
+    result: Any | None = None
+    error: str | None = None
     started_at: datetime = field(default_factory=datetime.utcnow)
-    completed_at: Optional[datetime] = None
-    duration_ms: Optional[int] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    completed_at: datetime | None = None
+    duration_ms: int | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self):
         """初期化後のバリデーション"""
@@ -139,7 +139,7 @@ class ToolExecution:
         """
         return self.arguments.get(key, default)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """辞書形式に変換（シリアライゼーション用）"""
         return {
             "id": self.id,
@@ -155,7 +155,7 @@ class ToolExecution:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "ToolExecution":
+    def from_dict(cls, data: dict[str, Any]) -> "ToolExecution":
         """辞書から復元（デシリアライゼーション用）"""
         return cls(
             id=data["id"],

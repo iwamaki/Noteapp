@@ -3,26 +3,27 @@
 # @responsibility Google OAuth認証フローのHTTPエンドポイント
 
 import os
-from typing import Optional
+
 from fastapi import APIRouter, HTTPException, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from slowapi import Limiter
 from slowapi.util import get_remote_address
-from src.auth.schemas import (
-    GoogleAuthStartRequest,
-    GoogleAuthStartResponse,
-)
 from src.auth.google_oauth_flow import (
-    generate_auth_url,
-    exchange_code_for_tokens,
-    get_user_info_from_access_token,
     GoogleOAuthFlowError,
+    exchange_code_for_tokens,
+    generate_auth_url,
+    get_user_info_from_access_token,
 )
-from src.auth.oauth_state_manager import get_state_manager
 from src.auth.jwt_utils import (
     create_access_token,
     create_refresh_token,
 )
+from src.auth.schemas import (
+    GoogleAuthStartRequest,
+    GoogleAuthStartResponse,
+)
+
+from src.auth.oauth_state_manager import get_state_manager
 from src.core.logger import logger
 
 router = APIRouter(prefix="/api/auth", tags=["oauth"])
@@ -79,13 +80,13 @@ async def google_auth_start(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
-        )
+        ) from e
     except Exception as e:
         logger.error(f"Unexpected error in Google OAuth start: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error"
-        )
+        ) from e
 
 
 @router.get(
@@ -95,9 +96,9 @@ async def google_auth_start(
     description="Google からのリダイレクトを処理し、トークンを交換してアプリにリダイレクトします。"
 )
 async def google_callback(
-    code: Optional[str] = None,
-    state: Optional[str] = None,
-    error: Optional[str] = None
+    code: str | None = None,
+    state: str | None = None,
+    error: str | None = None
 ):
     """
     Google OAuth2 コールバックエンドポイント
@@ -106,9 +107,10 @@ async def google_callback(
     Authorization Code を受け取り、トークンに交換して、
     Deep Link でアプリにリダイレクトします。
     """
-    from src.billing import User, DeviceAuth, Credit, get_db
-    from datetime import datetime
     import uuid
+    from datetime import datetime
+
+    from src.billing import Credit, DeviceAuth, User, get_db
 
     try:
         # Get base URL for App Links

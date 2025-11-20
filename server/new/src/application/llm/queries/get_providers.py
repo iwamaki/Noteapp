@@ -10,8 +10,8 @@ CQRSパターンにおけるQueryの実装です。
 - プロバイダー情報をDTOに変換
 """
 
-from typing import Dict
-from src.application.llm.dto.provider_dto import ProviderDTO, ModelMetadataDTO
+
+from src.application.llm.dto.provider_dto import ModelMetadataDTO, ProviderDTO
 from src.domain.llm.providers.registry import _get_registry
 from src.infrastructure.config.settings import get_settings
 from src.infrastructure.logging.logger import get_logger
@@ -37,7 +37,7 @@ class GetProvidersQuery:
         """コンストラクタ"""
         pass
 
-    async def execute(self) -> Dict[str, ProviderDTO]:
+    async def execute(self) -> dict[str, ProviderDTO]:
         """利用可能なLLMプロバイダーを取得
 
         Returns:

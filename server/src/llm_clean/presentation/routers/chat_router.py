@@ -72,14 +72,14 @@ async def chat_post(
     except ValueError as e:
         # Token validation error or other value errors
         logger.warning(f"[ChatRouterClean] Validation error: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
     except Exception as e:
         # Unexpected errors
         logger.error(f"[ChatRouterClean] Unexpected error: {str(e)}")
         import traceback
         logger.error(traceback.format_exc())
-        raise HTTPException(status_code=500, detail=f"内部エラーが発生しました: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"内部エラーが発生しました: {str(e)}") from e
 
 
 @router.post("/api/chat/summarize", response_model=SummarizeResponseDTO)
@@ -129,11 +129,11 @@ async def summarize_conversation(
     except ValueError as e:
         # Token validation error
         logger.warning(f"[ChatRouterClean] Validation error: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
     except Exception as e:
         # Unexpected errors
         logger.error(f"[ChatRouterClean] Unexpected error: {str(e)}")
         import traceback
         logger.error(traceback.format_exc())
-        raise HTTPException(status_code=500, detail=f"内部エラーが発生しました: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"内部エラーが発生しました: {str(e)}") from e

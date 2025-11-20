@@ -1,10 +1,12 @@
 # @file openai.py
 # @summary OpenAIのLLMプロバイダーを実装します。
 # @responsibility BaseAgentLLMProviderを継承し、OpenAIのAPIと通信してチャット応答を生成します。
-from pydantic import SecretStr
 from langchain_openai import ChatOpenAI
-from .base import BaseAgentLLMProvider
+from pydantic import SecretStr
+
 from src.core.config import settings
+
+from .base import BaseAgentLLMProvider
 
 
 class OpenAIProvider(BaseAgentLLMProvider):
