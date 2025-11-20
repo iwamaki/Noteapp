@@ -106,7 +106,7 @@ async def google_callback(
     Authorization Code を受け取り、トークンに交換して、
     Deep Link でアプリにリダイレクトします。
     """
-    from src.billing.models import User, DeviceAuth, Credit
+    from src.billing import User, DeviceAuth, Credit, get_db
     from datetime import datetime
     import uuid
 
@@ -164,7 +164,6 @@ async def google_callback(
             return RedirectResponse(error_url)
 
         # DB セッションを取得（依存性注入なしで直接取得）
-        from src.billing.database import get_db
         db = next(get_db())
 
         try:

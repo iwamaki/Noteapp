@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import Optional, Tuple, List
 from sqlalchemy.orm import Session
 from jose import jwt
-from src.billing.models import User, DeviceAuth, Credit
+from src.billing import User, DeviceAuth, Credit
 from src.core.logger import logger
 from src.auth.token_blacklist_manager import get_blacklist_manager
 

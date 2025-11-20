@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 from slowapi import Limiter
 from slowapi.util import get_remote_address
-from src.billing.database import get_db
+from src.billing import get_db
 from src.auth.service import AuthService, AuthenticationError, DeviceNotFoundError, DeviceAccessDeniedError
 from src.auth.dependencies import verify_token_auth
 from src.auth.schemas import (

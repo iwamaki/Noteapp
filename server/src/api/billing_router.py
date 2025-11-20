@@ -5,10 +5,9 @@
 import os
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from src.billing.database import get_db
-from src.billing.service import BillingService
-from src.auth.dependencies import verify_token_auth
-from src.billing.schemas import (
+from src.billing import (
+    get_db,
+    BillingService,
     TokenBalanceResponse,
     AddCreditsRequest,
     AllocateCreditsRequest,
@@ -19,11 +18,14 @@ from src.billing.schemas import (
     PricingInfoItem,
     CategoryBalanceResponse,
     OperationSuccessResponse,
+    verify_purchase,
+    acknowledge_purchase,
+    Transaction,
+    DEFAULT_USER_ID,
 )
+from src.auth.dependencies import verify_token_auth
 from typing import List
 from src.core.logger import logger
-from src.billing.iap_verification import verify_purchase, acknowledge_purchase
-from src.billing.models import Transaction
 
 router = APIRouter(prefix="/api/billing", tags=["billing"])
 
@@ -337,7 +339,6 @@ async def get_pricing(db: Session = Depends(get_db)):
     """
     try:
         # 価格情報は公開情報なので、DEFAULT_USER_IDを使用
-        from src.billing.config import DEFAULT_USER_ID
         service = BillingService(db, DEFAULT_USER_ID)
         pricing_data = service.get_pricing()
 
