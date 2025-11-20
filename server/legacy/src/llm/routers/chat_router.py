@@ -31,7 +31,8 @@ async def chat_post(
             provider=request.provider,
             model=request.model,
             context=request.context,
-            client_id=request.client_id
+            client_id=request.client_id,
+            user_id=user_id  # user_idを渡す
         )
         return response
     except Exception as e:

@@ -24,7 +24,8 @@ class ChatService:
         provider: str,
         model: str,
         context: Optional[ChatContext] = None,
-        client_id: Optional[str] = None
+        client_id: Optional[str] = None,
+        user_id: Optional[str] = None
     ) -> ChatResponse:
         """チャットメッセージを処理"""
         # WebSocket接続のクライアントIDを設定（read_fileツールで使用）
@@ -42,7 +43,7 @@ class ChatService:
             )
 
         try:
-            return await llm_provider.chat(message, context)
+            return await llm_provider.chat(message, context, user_id, model)
         except Exception as e:
             import traceback
             logger.error(f"Error in process_chat: {str(e)}")

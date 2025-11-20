@@ -91,6 +91,8 @@ class ChatResponse(BaseModel):
     model: Optional[str] = None
     historyCount: Optional[int] = None
     tokenUsage: Optional[TokenUsageInfo] = None  # トークン使用量情報
+    warning: Optional[str] = None  # 警告メッセージ（トークン不足など）
+    error: Optional[str] = None  # エラーメッセージ
 
 
 class CostInfo(BaseModel):

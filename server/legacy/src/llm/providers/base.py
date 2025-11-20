@@ -28,7 +28,7 @@ class BaseLLMProvider(ABC):
         pass
 
     @abstractmethod
-    async def chat(self, message: str, context: Optional[ChatContext] = None) -> ChatResponse:
+    async def chat(self, message: str, context: Optional[ChatContext] = None, user_id: Optional[str] = None, model_id: Optional[str] = None) -> ChatResponse:
         """チャットメッセージを処理し、応答を返す"""
         pass
 
@@ -112,7 +112,7 @@ class BaseAgentLLMProvider(BaseLLMProvider):
         # Note: max_iterations, handle_parsing_errors, return_intermediate_stepsは
         # LangChain 1.0では異なる方法で制御されるため、ここでは省略
 
-    async def chat(self, message: str, context: Optional[ChatContext] = None) -> ChatResponse:
+    async def chat(self, message: str, context: Optional[ChatContext] = None, user_id: Optional[str] = None, model_id: Optional[str] = None) -> ChatResponse:
         """チャットメッセージを処理し、応答を返す（Agent Executor使用）
 
         このメソッドは全体の処理フローをオーケストレートします：
@@ -143,7 +143,7 @@ class BaseAgentLLMProvider(BaseLLMProvider):
 
         # 2. エージェント実行
         try:
-            result = await self._execute_agent(message, built_context.chat_history)
+            result = await self._execute_agent(message, built_context.chat_history, user_id, model_id)
 
             # 3. レスポンス構築
             # 会話履歴を取得（トークン計算用）
@@ -199,22 +199,86 @@ class BaseAgentLLMProvider(BaseLLMProvider):
     async def _execute_agent(
         self,
         message: str,
-        chat_history: List[BaseMessage]
+        chat_history: List[BaseMessage],
+        user_id: Optional[str] = None,
+        model_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """エージェントを実行する
 
         Args:
             message: ユーザーメッセージ
             chat_history: 会話履歴
+            user_id: ユーザーID（トークン残高チェック用）
+            model_id: モデルID（トークン残高チェック用）
 
         Returns:
             エージェント実行結果（messagesキーを含む辞書）
         """
+        # DEBUG: パラメータ値を確認
+        logger.info(f"[DEBUG] _execute_agent called with user_id={user_id}, model_id={model_id}")
+
         # LangChain 1.0: messagesリストにchat_historyと新しいmessageを統合
         messages = chat_history + [HumanMessage(content=message)]
+
+        # ===== トークン残高チェック =====
+        if user_id and model_id:
+            from src.billing.database import SessionLocal
+            from src.billing.service import BillingService
+            from src.llm.utils.token_counter import count_message_tokens
+
+            # 1. メッセージをトークンカウント用の辞書形式に変換
+            message_dicts = []
+            for msg in messages:
+                role = "user" if isinstance(msg, HumanMessage) else "ai"
+                content = msg.content if isinstance(msg.content, str) else str(msg.content)
+                message_dicts.append({"role": role, "content": content})
+
+            # 2. 実際に送信するメッセージのトークン数を計算
+            input_tokens = count_message_tokens(message_dicts, provider=self._get_provider_name(), model=self.model)
+
+            # 出力トークンは推定（入力の50%、最小500、最大4000）
+            estimated_output = max(500, min(int(input_tokens * 0.5), 4000))
+            total_estimated = input_tokens + estimated_output
+
+            logger.info(
+                f"[TokenCheck] Estimated tokens before LLM call: "
+                f"input={input_tokens}, output_est={estimated_output}, total={total_estimated}"
+            )
+
+            # 3. トークン残高を取得してチェック
+            db = SessionLocal()
+            try:
+                billing_service = BillingService(db, user_id)
+                balance = billing_service.get_balance()
+                available_tokens = balance["allocated_tokens"].get(model_id, 0)
+
+                logger.info(f"[TokenCheck] Available balance for {model_id}: {available_tokens} tokens")
+
+                # 残高が不足している場合はエラー
+                if available_tokens < total_estimated:
+                    shortage = total_estimated - available_tokens
+                    error_msg = (
+                        f"トークン残高が不足しています。\n"
+                        f"必要: 約{total_estimated:,}トークン\n"
+                        f"残高: {available_tokens:,}トークン\n"
+                        f"不足: 約{shortage:,}トークン\n\n"
+                        f"トークンを購入してください。"
+                    )
+                    logger.warning(f"[TokenCheck] Insufficient balance: {error_msg}")
+                    raise ValueError(error_msg)
+
+                logger.info("[TokenCheck] Balance check passed")
+            finally:
+                db.close()
+
+        # ===== LLM実行 =====
         result: Dict[str, Any] = await self.agent.ainvoke({  # type: ignore[misc]
             "messages": messages
         })
+
+        # NOTE: トークン減算はフロントエンドから /api/billing/tokens/consume API経由で行われる
+        # バックエンドでの自動減算は2重減算を引き起こすため実装しない
+
         return result
 
     def _build_response(
@@ -316,8 +380,20 @@ class BaseAgentLLMProvider(BaseLLMProvider):
         Returns:
             エラーを含むChatResponse
         """
+        # トークン不足エラーの場合は、errorフィールドに詳細を設定
+        if "トークン残高が不足" in error_message:
+            return ChatResponse(
+                message="トークン残高が不足しているため、リクエストを処理できませんでした。",
+                error=error_message,
+                provider=provider_name,
+                model=self.model,
+                historyCount=history_count
+            )
+
+        # その他のエラー
         return ChatResponse(
             message=f"エラーが発生しました: {error_message}",
+            error=error_message,
             provider=provider_name,
             model=self.model,
             historyCount=history_count
