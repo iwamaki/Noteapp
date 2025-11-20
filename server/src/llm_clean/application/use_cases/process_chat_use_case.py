@@ -146,21 +146,21 @@ class ProcessChatUseCase:
         commands = []
         legacy_commands = llm_response.get("commands")
         if legacy_commands:
-            # Commands are already in legacy format, convert to DTO
-            from src.llm.models import LLMCommand as LegacyLLMCommand
+            # Commands are already in format, convert to DTO
+            from ..dtos import LLMCommandDTO
             try:
                 for legacy_cmd in legacy_commands:
-                    # Convert legacy LLMCommand to DTO
-                    from ..dtos import LLMCommandDTO
+                    # Convert command dict/object to DTO
+                    cmd_dict = legacy_cmd if isinstance(legacy_cmd, dict) else legacy_cmd.dict()
                     commands.append(LLMCommandDTO(
-                        action=legacy_cmd.action,
-                        title=legacy_cmd.title,
-                        new_title=legacy_cmd.new_title,
-                        content=legacy_cmd.content,
-                        category=legacy_cmd.category,
-                        tags=legacy_cmd.tags,
-                        start_line=legacy_cmd.start_line,
-                        end_line=legacy_cmd.end_line
+                        action=cmd_dict.get("action"),
+                        title=cmd_dict.get("title"),
+                        new_title=cmd_dict.get("new_title"),
+                        content=cmd_dict.get("content"),
+                        category=cmd_dict.get("category"),
+                        tags=cmd_dict.get("tags"),
+                        start_line=cmd_dict.get("start_line"),
+                        end_line=cmd_dict.get("end_line")
                     ))
                 logger.info(
                     f"[ProcessChatUseCase] Extracted {len(commands)} commands"

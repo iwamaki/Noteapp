@@ -8,13 +8,13 @@ from typing import Any
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 
 from src.core.logger import logger
-from src.llm.models import ChatContext, EditScreenContext, FilelistScreenContext
-from src.llm.providers.config import (
+from src.llm_clean.domain.value_objects.chat_context import ChatContext, EditScreenContext, FilelistScreenContext
+from src.llm_clean.infrastructure.llm_providers.config import (
     CONTEXT_MSG_ATTACHED_FILE,
     CONTEXT_MSG_EDIT_SCREEN,
     DEFAULT_ROOT_PATH,
 )
-from src.llm.tools.context_manager import (
+from src.llm_clean.utils.tools.context_manager import (
     set_all_files_context,
     set_directory_context,
     set_file_context,

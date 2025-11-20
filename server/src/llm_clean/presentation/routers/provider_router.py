@@ -4,9 +4,9 @@
 from fastapi import APIRouter
 
 from src.core.config import settings
-from src.llm.models import CostInfo, LLMProvider, ModelMetadata, PricingInfo
-from src.llm.providers.registry import _get_registry
-from src.llm.routers.error_handlers import handle_route_errors
+from src.llm_clean.application.dtos.provider_dtos import CostInfoDTO as CostInfo, LLMProviderDTO as LLMProvider, ModelMetadataDTO as ModelMetadata, PricingInfoDTO as PricingInfo
+from src.llm_clean.infrastructure.llm_providers.provider_registry import _get_registry
+from src.llm_clean.presentation.middleware.error_handler import handle_route_errors
 
 router = APIRouter()
 

@@ -4,7 +4,7 @@ from langchain.tools import tool
 
 from src.api.websocket import manager
 from src.core.logger import logger
-from src.llm.tools.context_manager import get_client_id
+from src.llm_clean.utils.tools.context_manager import get_client_id
 
 
 @tool

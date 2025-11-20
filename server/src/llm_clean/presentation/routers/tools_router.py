@@ -4,7 +4,7 @@
 from fastapi import APIRouter
 
 from src.core.logger import logger
-from src.llm.routers.error_handlers import handle_route_errors
+from src.llm_clean.presentation.middleware.error_handler import handle_route_errors
 
 from ...utils.tools import AVAILABLE_TOOLS
 

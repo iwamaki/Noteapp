@@ -1,7 +1,7 @@
 from langchain.tools import tool
 
 from src.core.logger import logger
-from src.llm.rag.instances import get_collection_manager
+from src.llm_clean.infrastructure.vector_stores import get_collection_manager
 
 
 @tool

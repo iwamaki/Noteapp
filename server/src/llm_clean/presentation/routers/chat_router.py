@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from src.auth import verify_token_auth
 from src.core.logger import logger
-from src.llm.routers.error_handlers import handle_route_errors
+from src.llm_clean.presentation.middleware.error_handler import handle_route_errors
 
 from ...application.dtos import (
     ChatRequestDTO,

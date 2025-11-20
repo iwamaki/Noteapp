@@ -1,6 +1,6 @@
 from langchain.tools import BaseTool
 
-from src.llm.providers.config import TOOLS_ENABLED
+from src.llm_clean.infrastructure.llm_providers.config import TOOLS_ENABLED
 
 from .create_file import create_file
 from .delete_file import delete_file

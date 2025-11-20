@@ -12,11 +12,15 @@ from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 
 from src.core.logger import log_llm_raw, logger
 
-# Legacy imports (段階的移行のため一時的に使用)
-from src.llm.models import ChatContext, ChatResponse, TokenUsageInfo
-from src.llm.models import LLMCommand as LegacyLLMCommand
-from src.llm.tools import AVAILABLE_TOOLS
-from src.llm.utils.token_counter import count_message_tokens
+# Clean Architecture DTOs (for compatibility with existing code)
+from src.llm_clean.application.dtos.chat_dtos import (
+    ChatContextDTO as ChatContext,
+    ChatResponseDTO as ChatResponse,
+    TokenUsageInfoDTO as TokenUsageInfo,
+    LLMCommandDTO as LegacyLLMCommand
+)
+from src.llm_clean.utils.tools import AVAILABLE_TOOLS
+from src.llm_clean.utils.token_counter import count_message_tokens, estimate_output_tokens
 
 # Clean Architecture imports
 from ...domain.entities.llm_command import LLMCommand

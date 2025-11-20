@@ -6,6 +6,7 @@
 # Deploy logs
 deploy.log
 deploy-fixed.log
+docker_output.log
 
 # Python cache
 __pycache__/
@@ -13,9 +14,20 @@ __pycache__/
 *.pyo
 *.pyd
 
+# Python virtual environment
+venv/
+env/
+.venv/
+
 # Database
 *.db
 billing.db
 
 # Secrets
 .secrets/
+
+# Data directory
+src/data/
+
+# Temporary scripts
+fix_imports.py

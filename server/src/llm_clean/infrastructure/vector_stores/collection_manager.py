@@ -11,7 +11,7 @@ from typing import Literal
 from pydantic import BaseModel
 
 from src.core.logger import logger
-from src.llm.rag.vector_store import VectorStoreManager
+from src.llm_clean.infrastructure.vector_stores.faiss_vector_store import VectorStoreManager
 
 CollectionType = Literal["temp", "persistent"]
 
