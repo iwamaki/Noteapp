@@ -51,7 +51,6 @@ export const useFileEditor = (fileId?: string, initialViewMode?: 'edit' | 'previ
     file: store.file,
     content: store.content,
     title: store.title,
-    summary: store.summary,
     category: store.file?.category || '',
     isDirty: store.isDirty,
     isLoading: store.isLoading,
@@ -62,7 +61,6 @@ export const useFileEditor = (fileId?: string, initialViewMode?: 'edit' | 'previ
     // アクション
     setContent: store.setContent,
     setTitle: store.setTitle,
-    setSummary: store.setSummary,
     save: store.save,
     undo: store.undo,
     redo: store.redo,

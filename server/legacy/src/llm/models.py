@@ -161,26 +161,3 @@ class SummarizeResponse(BaseModel):
     compressionRatio: float  # 圧縮率（0.0-1.0）
     originalTokens: int  # 元のトークン数
     compressedTokens: int  # 圧縮後のトークン数
-
-
-class DocumentSummarizeRequest(BaseModel):
-    """文書要約リクエスト
-
-    文書の内容をLLMで要約するためのリクエストモデル。
-    """
-    content: str  # 文書の内容
-    title: str  # 文書のタイトル（コンテキスト用）
-    provider: Optional[str] = Field(default_factory=lambda: settings.get_default_provider())  # 要約に使用するLLMプロバイダー
-    model: Optional[str] = None  # 要約に使用するモデル（Noneの場合はデフォルト）
-
-
-class DocumentSummarizeResponse(BaseModel):
-    """文書要約レスポンス
-
-    生成された要約テキストと、実際に使用したトークン数を含む。
-    """
-    summary: str  # 生成された要約
-    model: Optional[str] = None  # 使用したモデルID
-    inputTokens: Optional[int] = None  # 入力トークン数
-    outputTokens: Optional[int] = None  # 出力トークン数
-    totalTokens: Optional[int] = None  # 合計トークン数

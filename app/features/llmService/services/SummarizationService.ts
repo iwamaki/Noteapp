@@ -10,8 +10,6 @@ import type {
   ChatMessage,
   SummarizeRequest,
   SummarizeResponse,
-  DocumentSummarizeRequest,
-  DocumentSummarizeResponse,
 } from '../types/index';
 import { LLMError } from '../types/LLMError';
 
@@ -108,58 +106,4 @@ export class SummarizationService {
     }
   }
 
-  /**
-   * 文書内容を要約する
-   * @param content 文書の内容
-   * @param title 文書のタイトル
-   * @param currentProvider 現在のプロバイダー
-   * @param currentModel 現在のモデル
-   * @returns 要約レスポンス（要約テキストとトークン情報）
-   */
-  async summarizeDocument(
-    content: string,
-    title: string,
-    currentProvider: string,
-    currentModel: string
-  ): Promise<DocumentSummarizeResponse> {
-    try {
-      logger.info(
-        'llm',
-        `Summarizing document: title="${title}", content_length=${content.length}, provider=${currentProvider}, model=${currentModel}`
-      );
-
-      // 要約リクエストを送信
-      const request: DocumentSummarizeRequest = {
-        content,
-        title,
-        provider: currentProvider,
-        model: currentModel,
-      };
-
-      const response = await this.httpClient.post('/api/document/summarize', request);
-
-      if (response.status < 200 || response.status >= 300) {
-        throw new LLMError(
-          `HTTP error! status: ${response.status}`,
-          'HTTP_ERROR',
-          response.status
-        );
-      }
-
-      const data: DocumentSummarizeResponse = response.data;
-
-      logger.info(
-        'llm',
-        `Document summarization complete: ${data.summary.substring(0, 100)}... (tokens: input=${data.inputTokens}, output=${data.outputTokens})`
-      );
-
-      return data;
-    } catch (error) {
-      if (error instanceof LLMError) {
-        throw error;
-      }
-      logger.error('llm', 'Failed to summarize document:', error);
-      throw new LLMError('文書要約の作成に失敗しました', 'DOCUMENT_SUMMARIZATION_ERROR');
-    }
-  }
 }

@@ -15,8 +15,6 @@ import type { ViewMode } from './types';
 import { ToastMessage } from './components/ToastMessage'; // ToastMessageをインポート
 import { useToastMessage } from './hooks/useToastMessage'; // useToastMessageをインポート
 import { FeatureBar } from './components/FeatureBar'; // FeatureBarをインポート
-import { SummaryEditModal } from './components/SummaryEditModal'; // SummaryEditModalをインポート
-import { useLLMSettingsStore } from '../../settings/settingsStore'; // 設定ストアをインポート
 
 type FileEditScreenRouteProp = RouteProp<RootStackParamList, 'FileEdit'>;
 
@@ -26,15 +24,12 @@ function FileEditScreen() {
   const route = useRoute<FileEditScreenRouteProp>();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { fileId, initialViewMode } = route.params || {};
-  const { settings } = useLLMSettingsStore(); // 設定を取得
 
   const {
     title,
     category,
     content,
-    summary,
     setContent,
-    setSummary,
     isLoading,
     isSaving,
     save: handleSave,
@@ -50,7 +45,6 @@ function FileEditScreen() {
 
   const [isConfirmModalVisible, setConfirmModalVisible] = useState(false);
   const [nextAction, setNextAction] = useState<any>(null);
-  const [isSummaryModalVisible, setIsSummaryModalVisible] = useState(false);
   const { showToast, toastProps } = useToastMessage();
 
   const prevIsSavingRef = useRef(isSaving);
@@ -132,8 +126,6 @@ function FileEditScreen() {
         title={title}
         category={category}
         onTitleChange={handleTitleChange}
-        onSummaryPress={() => setIsSummaryModalVisible(true)}
-        showSummaryButton={settings.llmEnabled}
       />
       <ScrollView
         style={styles.scrollView}
@@ -151,14 +143,6 @@ function FileEditScreen() {
         />
       </ScrollView>
 
-      <SummaryEditModal
-        visible={isSummaryModalVisible}
-        initialSummary={summary}
-        fileContent={content}
-        fileTitle={title}
-        onClose={() => setIsSummaryModalVisible(false)}
-        onSave={setSummary}
-      />
       <CustomModal
         isVisible={isConfirmModalVisible}
         title="未保存の変更があります。"

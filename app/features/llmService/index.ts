@@ -13,7 +13,6 @@ import type {
   LLMHealthStatus,
   LLMConfig,
   SummarizeResponse,
-  DocumentSummarizeResponse,
   ChatMessage,
 } from './types/index';
 import { LLMError } from './types/LLMError';
@@ -24,7 +23,7 @@ import { useLLMStore } from './stores/useLLMStore';
 import { useConversationStore } from './stores/useConversationStore';
 
 // Re-export types
-export type { ChatMessage, ChatContext, LLMProvider, LLMResponse, LLMHealthStatus, LLMConfig, LLMCommand, TokenUsageInfo, SummarizeRequest, SummarizeResponse, SummaryResult, DocumentSummarizeRequest, DocumentSummarizeResponse } from './types/index';
+export type { ChatMessage, ChatContext, LLMProvider, LLMResponse, LLMHealthStatus, LLMConfig, LLMCommand, TokenUsageInfo, SummarizeRequest, SummarizeResponse, SummaryResult } from './types/index';
 export { LLMError } from './types/LLMError';
 
 // Re-export stores
@@ -280,25 +279,6 @@ export class LLMService {
     );
   }
 
-  /**
-   * 文書内容を要約する（ストアと連携）
-   * @param content 文書の内容
-   * @param title 文書のタイトル
-   * @returns 要約レスポンス（要約テキストとトークン情報）
-   */
-  async summarizeDocument(
-    content: string,
-    title: string
-  ): Promise<DocumentSummarizeResponse> {
-    const llmStore = useLLMStore.getState();
-
-    return this.summarizationService.summarizeDocument(
-      content,
-      title,
-      llmStore.getCurrentProvider(),
-      llmStore.getCurrentModel()
-    );
-  }
 
   /**
    * テキストを知識ベースにアップロード

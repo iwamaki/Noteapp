@@ -3,38 +3,32 @@
  * @summary エディタ画面の機能バーコンポーネント
  * @description
  * ヘッダー直下に配置される機能ボタンバー。
- * タイトル・カテゴリ表示と、要約編集など高機能なボタンを配置。
+ * タイトル・カテゴリ表示を行います。
  */
 
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
-  TouchableOpacity,
   Text,
   TextInput,
   StyleSheet,
   NativeSyntheticEvent,
   TextInputKeyPressEventData,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../design/theme/ThemeContext';
 
 interface FeatureBarProps {
   title: string;
   category: string;
   onTitleChange: (title: string) => void;
-  onSummaryPress: () => void;
-  showSummaryButton?: boolean;
 }
 
 export const FeatureBar: React.FC<FeatureBarProps> = ({
   title,
   category,
   onTitleChange,
-  onSummaryPress,
-  showSummaryButton = true,
 }) => {
-  const { colors, spacing, typography, iconSizes } = useTheme();
+  const { colors, spacing, typography } = useTheme();
   const [localTitle, setLocalTitle] = useState(title);
   const isComposingRef = useRef(false);
 
@@ -108,20 +102,6 @@ export const FeatureBar: React.FC<FeatureBarProps> = ({
       padding: 0,
       margin: 0,
     },
-    button: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: colors.primary,
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.sm,
-      borderRadius: spacing.xs,
-    },
-    buttonText: {
-      ...typography.body,
-      color: colors.white,
-      fontWeight: '600',
-      marginLeft: spacing.xs,
-    },
   });
 
   return (
@@ -151,16 +131,6 @@ export const FeatureBar: React.FC<FeatureBarProps> = ({
           numberOfLines={1}
         />
       </View>
-      {showSummaryButton && (
-        <TouchableOpacity
-          style={styles.button}
-          onPress={onSummaryPress}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="document-text-outline" size={iconSizes.small} color={colors.white} />
-          <Text style={styles.buttonText}>要約</Text>
-        </TouchableOpacity>
-      )}
     </View>
   );
 };
