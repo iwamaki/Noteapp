@@ -147,7 +147,7 @@ class ConnectionManager:
             })
 
             # レスポンスを待つ（タイムアウト付き）
-            content = await asyncio.wait_for(future, timeout=timeout)
+            content: str | None = await asyncio.wait_for(future, timeout=timeout)
 
             logger.info(f"File content received: title={title}, length={len(content) if content else 0}")
             return content

@@ -23,7 +23,7 @@ from src.billing import (
     Transaction,
     DEFAULT_USER_ID,
 )
-from src.auth.dependencies import verify_token_auth
+from src.auth import verify_token_auth
 from typing import List
 from src.core.logger import logger
 

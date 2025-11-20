@@ -202,7 +202,7 @@ class SummarizeConversationUseCase:
         self,
         messages: list[dict[str, Any]],
         provider: str,
-        model: str
+        model: str | None
     ) -> int:
         """Count tokens in messages
 

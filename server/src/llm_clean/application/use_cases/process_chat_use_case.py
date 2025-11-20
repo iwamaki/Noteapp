@@ -152,8 +152,12 @@ class ProcessChatUseCase:
                 for legacy_cmd in legacy_commands:
                     # Convert command dict/object to DTO
                     cmd_dict = legacy_cmd if isinstance(legacy_cmd, dict) else legacy_cmd.dict()
+                    action = cmd_dict.get("action")
+                    if not action:
+                        logger.warning("[ProcessChatUseCase] Skipping command without action")
+                        continue
                     commands.append(LLMCommandDTO(
-                        action=cmd_dict.get("action"),
+                        action=action,
                         title=cmd_dict.get("title"),
                         new_title=cmd_dict.get("new_title"),
                         content=cmd_dict.get("content"),

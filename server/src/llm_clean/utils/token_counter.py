@@ -12,10 +12,10 @@ from ..infrastructure.token_counting.gemini_token_counter import GeminiTokenCoun
 
 
 # Cache token counter instances
-_token_counter_cache: dict[str, Any] = {}
+_token_counter_cache: dict[str, GeminiTokenCounter] = {}
 
 
-def _get_token_counter(provider: str = "gemini", model: str | None = None) -> Any:
+def _get_token_counter(provider: str = "gemini", model: str | None = None) -> GeminiTokenCounter | None:
     """Get or create a token counter instance
 
     Args:

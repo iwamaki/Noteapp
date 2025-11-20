@@ -109,7 +109,8 @@ class Settings:
         secret_name = f"projects/{project_id}/secrets/{secret_id}/versions/latest"
         try:
             response = client.access_secret_version(request={"name": secret_name})
-            return response.payload.data.decode("UTF-8").strip()
+            secret_value: str = response.payload.data.decode("UTF-8").strip()
+            return secret_value
         except exceptions.NotFound:
             logger.warning(f"Secret '{secret_id}' not found in project '{project_id}'.")
         except Exception as e:

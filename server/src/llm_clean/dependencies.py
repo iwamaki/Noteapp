@@ -99,7 +99,7 @@ class BillingPortImpl(BillingPort):
         return self.validator.verify_balance_exists(model_id)
 
 
-def get_billing_port(db: Session = Depends(get_db), user_id: str = None) -> BillingPort:
+def get_billing_port(db: Session = Depends(get_db), user_id: str | None = None) -> BillingPort:
     """Get billing port instance
 
     Args:
@@ -131,8 +131,8 @@ class LLMProviderPortImpl(LLMProviderPort):
         self,
         message: str,
         context: Any = None,
-        user_id: str = None,
-        model: str = None
+        user_id: str | None = None,
+        model: str | None = None
     ) -> dict[str, Any]:
         """Process chat"""
         if not self._provider:

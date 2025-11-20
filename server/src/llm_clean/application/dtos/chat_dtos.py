@@ -121,7 +121,7 @@ def chat_context_dto_to_domain(dto: ChatContextDTO | None):
     from ...domain import ChatContext, EditScreenContext, FilelistScreenContext
 
     # Convert activeScreen DTO to domain model
-    active_screen_domain = None
+    active_screen_domain: FilelistScreenContext | EditScreenContext | None = None
     if dto.activeScreen:
         if isinstance(dto.activeScreen, FilelistScreenContextDTO):
             active_screen_domain = FilelistScreenContext(name="filelist")

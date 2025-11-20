@@ -1,6 +1,8 @@
 # @file tools_router.py
 # @summary ツール定義を提供するAPIエンドポイントを定義します。
 # @responsibility /api/toolsへのGETリクエストを処理し、利用可能なLLMツールの定義を返します。
+from typing import Any
+
 from fastapi import APIRouter
 
 from src.core.logger import logger
@@ -27,7 +29,7 @@ async def get_tools() -> list[dict]:
 
     for tool in AVAILABLE_TOOLS:
         # 基本情報を取得
-        tool_info = {
+        tool_info: dict[str, Any] = {
             "name": tool.name,
             "description": tool.description or "",
         }

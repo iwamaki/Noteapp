@@ -17,10 +17,11 @@ from src.llm_clean.application.dtos.chat_dtos import (
     ChatContextDTO as ChatContext,
     ChatResponseDTO as ChatResponse,
     TokenUsageInfoDTO as TokenUsageInfo,
-    LLMCommandDTO as LegacyLLMCommand
+    LLMCommandDTO as LegacyLLMCommand,
+    chat_context_dto_to_domain
 )
 from src.llm_clean.utils.tools import AVAILABLE_TOOLS
-from src.llm_clean.utils.token_counter import count_message_tokens, estimate_output_tokens
+from src.llm_clean.utils.token_counter import count_message_tokens, count_tokens, estimate_output_tokens
 
 # Clean Architecture imports
 from ...domain.entities.llm_command import LLMCommand
@@ -153,7 +154,9 @@ class BaseAgentLLMProvider(BaseLLMProvider):
         provider_name = self._get_provider_name()
 
         # 1. コンテキスト構築
-        built_context = self._context_builder.build(context)
+        # Convert DTO to domain model
+        context_domain = chat_context_dto_to_domain(context)
+        built_context = self._context_builder.build(context_domain)
 
         # リクエストログ記録
         self._log_agent_request(
@@ -169,7 +172,7 @@ class BaseAgentLLMProvider(BaseLLMProvider):
 
             # 3. レスポンス構築
             # 会話履歴を取得（トークン計算用）
-            conversation_history = context.conversation_history if context and context.conversation_history else []
+            conversation_history = context.conversationHistory if context and context.conversationHistory else []
 
             # AI応答を取得
             messages = result.get("messages", [])
@@ -252,19 +255,47 @@ class BaseAgentLLMProvider(BaseLLMProvider):
                 content = msg.content if isinstance(msg.content, str) else str(msg.content)
                 message_dicts.append({"role": role, "content": content})
 
-            # 2. 実際に送信するメッセージのトークン数を計算
-            input_tokens = count_message_tokens(message_dicts, provider=self._get_provider_name(), model=self.model)
+            # 2. メッセージのトークン数を計算
+            message_tokens = count_message_tokens(message_dicts, provider=self._get_provider_name(), model=self.model)
 
-            # 出力トークンは推定
+            # 3. システムプロンプトのトークン数を計算
+            system_prompt = self._get_system_prompt()
+            system_prompt_tokens = count_tokens(system_prompt) if system_prompt else 0
+
+            # 4. ツール定義のトークン数を計算
+            # LangChainがツールをLLMに送る際の形式に近い文字列を生成
+            tools_text_parts = []
+            for tool in AVAILABLE_TOOLS:
+                # ツール名、説明、引数情報を含める
+                tool_info = f"Tool: {tool.name}\nDescription: {tool.description}"
+                if hasattr(tool, 'args_schema') and tool.args_schema:
+                    # 引数スキーマも含める
+                    try:
+                        # Check if args_schema has schema method (BaseModel)
+                        if hasattr(tool.args_schema, 'schema'):
+                            schema = tool.args_schema.schema()  # type: ignore
+                            tool_info += f"\nArguments: {schema.get('properties', {})}"
+                    except Exception:
+                        pass
+                tools_text_parts.append(tool_info)
+
+            tools_text = "\n\n".join(tools_text_parts)
+            tools_tokens = count_tokens(tools_text) if tools_text else 0
+
+            # 5. 総入力トークン数を計算
+            input_tokens = message_tokens + system_prompt_tokens + tools_tokens
+
+            # 6. 出力トークンは推定
             estimated_output = estimate_output_tokens(input_tokens)
             total_estimated = input_tokens + estimated_output
 
             logger.info(
                 f"[TokenCheck] Estimated tokens before LLM call: "
-                f"input={input_tokens}, output_est={estimated_output}, total={total_estimated}"
+                f"messages={message_tokens}, system={system_prompt_tokens}, tools={tools_tokens}, "
+                f"input_total={input_tokens}, output_est={estimated_output}, total={total_estimated}"
             )
 
-            # 3. トークン残高を検証
+            # 7. トークン残高を検証
             db = SessionLocal()
             try:
                 validator = TokenBalanceValidator(db, user_id)
