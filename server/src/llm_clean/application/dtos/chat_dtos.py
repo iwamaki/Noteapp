@@ -118,7 +118,19 @@ def chat_context_dto_to_domain(dto: ChatContextDTO | None):
     if not dto:
         return None
 
-    from ...domain import ChatContext
+    from ...domain import ChatContext, EditScreenContext, FilelistScreenContext
+
+    # Convert activeScreen DTO to domain model
+    active_screen_domain = None
+    if dto.activeScreen:
+        if isinstance(dto.activeScreen, FilelistScreenContextDTO):
+            active_screen_domain = FilelistScreenContext(name="filelist")
+        elif isinstance(dto.activeScreen, EditScreenContextDTO):
+            active_screen_domain = EditScreenContext(
+                name="edit",
+                filePath=dto.activeScreen.filePath,
+                fileContent=dto.activeScreen.fileContent
+            )
 
     return ChatContext(
         currentPath=dto.currentPath,
@@ -127,7 +139,7 @@ def chat_context_dto_to_domain(dto: ChatContextDTO | None):
         currentFileContent=dto.currentFileContent,
         attachedFileContent=dto.attachedFileContent,
         conversationHistory=dto.conversationHistory,
-        activeScreen=dto.activeScreen,
+        activeScreen=active_screen_domain,
         allFiles=dto.allFiles,
         sendFileContextToLLM=dto.sendFileContextToLLM
     )

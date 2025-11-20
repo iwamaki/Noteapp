@@ -53,7 +53,7 @@ class CommandExtractorService:
         commands: list[LLMCommand] = []
 
         # LangChain 1.0: Extract tool calls from messages
-        messages = agent_result.get("messages", [])
+        messages = agent_result.get("messages", []) or []
         for message in messages:
             # Check if message has tool_calls attribute
             if hasattr(message, 'tool_calls'):
@@ -64,7 +64,7 @@ class CommandExtractorService:
                         commands.append(command)
 
         # Fallback: Support legacy intermediate_steps format
-        intermediate_steps = agent_result.get("intermediate_steps", [])
+        intermediate_steps = agent_result.get("intermediate_steps", []) or []
         if intermediate_steps:
             for action, observation in intermediate_steps:
                 command = self._process_action(action)

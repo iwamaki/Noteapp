@@ -92,10 +92,10 @@ class ChatContextBuilder:
         Args:
             context: チャットコンテキスト
         """
-        if not context.activeScreen:
+        if not context.active_screen:
             return
 
-        active_screen = context.activeScreen
+        active_screen = context.active_screen
 
         if isinstance(active_screen, EditScreenContext):
             self._setup_edit_screen_context(active_screen)
@@ -110,8 +110,8 @@ class ChatContextBuilder:
         Args:
             screen: 編集画面のコンテキスト
         """
-        file_path = screen.filePath
-        file_content = screen.fileContent
+        file_path = screen.file_path
+        file_content = screen.file_content
 
         # ツール用のファイルコンテキスト設定（ツールは常にコンテキストを必要とする）
         set_file_context({'filename': file_path, 'content': file_content})
@@ -142,10 +142,10 @@ class ChatContextBuilder:
         if self._has_file_context:
             return
 
-        if context.currentFileContent:
-            self._setup_current_file_context(context.currentFileContent)
-        elif context.attachedFileContent:
-            self._setup_attached_files_context(context.attachedFileContent)
+        if context.current_file_content:
+            self._setup_current_file_context(context.current_file_content)
+        elif context.attached_file_content:
+            self._setup_attached_files_context(context.attached_file_content)
 
     def _setup_current_file_context(self, file_content: dict[str, Any]) -> None:
         """現在のファイルコンテキストを設定
@@ -202,13 +202,13 @@ class ChatContextBuilder:
             context: チャットコンテキスト
         """
         # sendFileContextToLLMがFalseの場合はスキップ
-        if context.sendFileContextToLLM is False:
-            logger.info("All files context skipped: sendFileContextToLLM is False")
+        if context.send_file_context_to_llm is False:
+            logger.info("All files context skipped: send_file_context_to_llm is False")
             return
 
-        if context.allFiles:
-            set_all_files_context(context.allFiles)
-            logger.info(f"All files context set: {len(context.allFiles)} files")
+        if context.all_files:
+            set_all_files_context(context.all_files)
+            logger.info(f"All files context set: {len(context.all_files)} files")
 
     def _append_context_message(self) -> None:
         """コンテキストメッセージを履歴に追加
@@ -225,12 +225,12 @@ class ChatContextBuilder:
         Args:
             context: チャットコンテキスト
         """
-        if not context.conversationHistory:
+        if not context.conversation_history:
             return
 
-        self._history_count = len(context.conversationHistory)
+        self._history_count = len(context.conversation_history)
 
-        for msg in context.conversationHistory:
+        for msg in context.conversation_history:
             role = msg.get('role')
             content = msg.get('content', '')
 

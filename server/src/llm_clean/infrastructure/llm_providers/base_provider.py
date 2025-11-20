@@ -169,7 +169,7 @@ class BaseAgentLLMProvider(BaseLLMProvider):
 
             # 3. レスポンス構築
             # 会話履歴を取得（トークン計算用）
-            conversation_history = context.conversationHistory if context and context.conversationHistory else []
+            conversation_history = context.conversation_history if context and context.conversation_history else []
 
             # AI応答を取得
             messages = result.get("messages", [])
@@ -334,7 +334,7 @@ class BaseAgentLLMProvider(BaseLLMProvider):
 
         # ツール呼び出しの数をカウント
         tool_call_count = sum(
-            len(getattr(msg, 'tool_calls', []))
+            len(getattr(msg, 'tool_calls', None) or [])
             for msg in messages
             if isinstance(msg, AIMessage)
         )
@@ -351,7 +351,7 @@ class BaseAgentLLMProvider(BaseLLMProvider):
 
         # Legacy形式に変換（段階的移行のため）
         legacy_commands = [
-            self._convert_domain_command_to_legacy(cmd) for cmd in domain_commands
+            self._convert_domain_command_to_legacy(cmd) for cmd in (domain_commands or [])
         ]
 
         # コマンドログ記録
