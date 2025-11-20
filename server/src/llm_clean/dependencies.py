@@ -141,9 +141,11 @@ class LLMProviderPortImpl(LLMProviderPort):
         response = await self._provider.chat(message, context, user_id, model or self.model)
 
         # Convert ChatResponse to dict
+        # Note: Legacy ChatResponse stores commands directly, not in agent_result
         return {
             "message": response.message,
-            "agent_result": getattr(response, 'agent_result', None),
+            "agent_result": None,  # Legacy provider doesn't use agent_result
+            "commands": response.commands,  # Pass commands directly from legacy response
             "input_tokens": response.tokenUsage.inputTokens if response.tokenUsage else None,
             "output_tokens": response.tokenUsage.outputTokens if response.tokenUsage else None,
             "token_usage": response.tokenUsage,

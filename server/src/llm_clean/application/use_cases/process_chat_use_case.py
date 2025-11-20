@@ -141,15 +141,27 @@ class ProcessChatUseCase:
                     f"[ProcessChatUseCase] Failed to record token consumption: {str(e)}"
                 )
 
-        # Step 5: Extract commands (if agent result present)
+        # Step 5: Extract commands
+        # Note: Legacy provider returns commands directly (not via agent_result)
         commands = []
-        agent_result = llm_response.get("agent_result")
-        if agent_result:
+        legacy_commands = llm_response.get("commands")
+        if legacy_commands:
+            # Commands are already in legacy format, convert to DTO
+            from src.llm.models import LLMCommand as LegacyLLMCommand
             try:
-                domain_commands = self.command_extractor.extract_commands(agent_result)
-                commands = [
-                    llm_command_domain_to_dto(cmd) for cmd in domain_commands
-                ]
+                for legacy_cmd in legacy_commands:
+                    # Convert legacy LLMCommand to DTO
+                    from ..dtos import LLMCommandDTO
+                    commands.append(LLMCommandDTO(
+                        action=legacy_cmd.action,
+                        title=legacy_cmd.title,
+                        new_title=legacy_cmd.new_title,
+                        content=legacy_cmd.content,
+                        category=legacy_cmd.category,
+                        tags=legacy_cmd.tags,
+                        start_line=legacy_cmd.start_line,
+                        end_line=legacy_cmd.end_line
+                    ))
                 logger.info(
                     f"[ProcessChatUseCase] Extracted {len(commands)} commands"
                 )
