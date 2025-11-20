@@ -148,7 +148,7 @@ async def chat_get(
 @handle_route_errors
 async def summarize_conversation(
     request: SummarizeRequest,
-    user_id: str = Depends(verify_token_auth)
+    user_id: str = Depends(get_current_user)
 ):
     """会話履歴を要約する
 
@@ -199,7 +199,7 @@ async def summarize_conversation(
 @handle_route_errors
 async def summarize_document(
     request: DocumentSummarizeRequest,
-    user_id: str = Depends(verify_token_auth)
+    user_id: str = Depends(get_current_user)
 ) -> DocumentSummarizeResponse:
     """文書内容を要約する
 
