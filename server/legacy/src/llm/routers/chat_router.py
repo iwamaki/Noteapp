@@ -91,19 +91,58 @@ async def summarize_conversation(
             - originalTokens: 元のトークン数
             - compressedTokens: 圧縮後のトークン数
     """
+    # プロバイダーとモデルを決定
+    provider = request.provider or settings.get_default_provider()
+    model = request.model or settings.get_default_model(provider)
+
     logger.info(
         f"Received summarization request: "
         f"{len(request.conversationHistory)} messages, "
         f"max_tokens={request.max_tokens}, "
-        f"preserve_recent={request.preserve_recent}"
+        f"preserve_recent={request.preserve_recent}, "
+        f"provider={provider}, model={model}"
     )
 
+    # トークン残高チェック
+    from src.billing.database import SessionLocal
+    from src.billing.validators import TokenBalanceValidator
+    from src.billing.config import estimate_output_tokens
+    from src.llm.utils.token_counter import count_message_tokens
+
+    # 入力トークン数を計算（要約対象の会話履歴）
+    input_tokens = count_message_tokens(
+        request.conversationHistory,
+        provider=provider,
+        model=model
+    )
+
+    # 出力トークン数を推定（要約は通常短いが、安全のため標準推定を使用）
+    estimated_output = estimate_output_tokens(input_tokens)
+    total_estimated = input_tokens + estimated_output
+
+    logger.info(
+        f"[TokenCheck] Summarization estimated tokens: "
+        f"input={input_tokens}, output_est={estimated_output}, total={total_estimated}"
+    )
+
+    # 残高チェック
+    db = SessionLocal()
+    try:
+        validator = TokenBalanceValidator(db, user_id)
+        validator.validate_and_raise(model, total_estimated)
+    except ValueError as e:
+        # TokenBalanceValidatorからのエラーをHTTPExceptionに変換
+        raise HTTPException(status_code=400, detail=str(e))
+    finally:
+        db.close()
+
+    # 要約実行
     response = await summarization_service.summarize(
         conversation_history=request.conversationHistory,
         max_tokens=request.max_tokens or MAX_CONVERSATION_TOKENS,
         preserve_recent=request.preserve_recent or PRESERVE_RECENT_MESSAGES,
-        provider=request.provider or settings.get_default_provider(),
-        model=request.model
+        provider=provider,
+        model=model
     )
 
     logger.info(

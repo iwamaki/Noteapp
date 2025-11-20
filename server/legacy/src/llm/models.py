@@ -161,3 +161,5 @@ class SummarizeResponse(BaseModel):
     compressionRatio: float  # 圧縮率（0.0-1.0）
     originalTokens: int  # 元のトークン数
     compressedTokens: int  # 圧縮後のトークン数
+    tokenUsage: Optional[TokenUsageInfo] = None  # 実際のトークン使用量（課金用）
+    model: Optional[str] = None  # 使用したモデル名

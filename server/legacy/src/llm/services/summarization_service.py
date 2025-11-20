@@ -3,7 +3,7 @@
 長い会話履歴を圧縮して、重要な情報を保持したまま
 トークン数を削減するためのサービス。
 """
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any, Optional
 from datetime import datetime
 from langchain_core.messages import HumanMessage
 
@@ -50,7 +50,7 @@ class SummarizationService:
         preserve_recent: int = 10,
         provider: Optional[str] = None,
         model: Optional[str] = None
-    ) -> SummarizeResponse:
+    ) -> 'SummarizeResponse':
         """会話履歴を要約する
 
         Args:
@@ -95,7 +95,9 @@ class SummarizationService:
                 recentMessages=conversation_history,
                 compressionRatio=1.0,
                 originalTokens=original_tokens,
-                compressedTokens=original_tokens
+                compressedTokens=original_tokens,
+                tokenUsage=None,
+                model=model
             )
 
         old_messages = conversation_history[:-preserve_recent]
@@ -108,13 +110,23 @@ class SummarizationService:
         # 古いメッセージを要約
         try:
             llm = self._get_llm_instance(provider, model)
-            summary_text = await self._create_summary(llm, old_messages)
+            summary_text, llm_response = await self._create_summary(llm, old_messages)
 
             # 要約メッセージを作成
             summary_result = SummaryResult(
                 content=summary_text,
                 timestamp=datetime.now().isoformat()
             )
+
+            # トークン使用量を取得
+            input_tokens = None
+            output_tokens = None
+            total_tokens = None
+            if hasattr(llm_response, 'usage_metadata') and llm_response.usage_metadata:
+                usage = llm_response.usage_metadata
+                input_tokens = usage.get('input_tokens')
+                output_tokens = usage.get('output_tokens')
+                total_tokens = usage.get('total_tokens')
 
             # 圧縮後のトークン数を計算
             # 要約 + 最新メッセージ
@@ -150,12 +162,26 @@ class SummarizationService:
 
             logger.info(f"Generated summary: {summary_text[:200]}..." if len(summary_text) > 200 else f"Generated summary: {summary_text}")
 
+            # トークン使用量情報を作成
+            from src.llm.models import TokenUsageInfo
+            token_usage = TokenUsageInfo(
+                currentTokens=compressed_tokens,
+                maxTokens=max_tokens,
+                usageRatio=compression_ratio,
+                needsSummary=False,  # 要約後なのでFalse
+                inputTokens=input_tokens,
+                outputTokens=output_tokens,
+                totalTokens=total_tokens
+            ) if input_tokens and output_tokens else None
+
             return SummarizeResponse(
                 summary=summary_result,
                 recentMessages=recent_messages,
                 compressionRatio=compression_ratio,
                 originalTokens=original_tokens,
-                compressedTokens=compressed_tokens
+                compressedTokens=compressed_tokens,
+                tokenUsage=token_usage,
+                model=model
             )
 
         except Exception as e:
@@ -166,7 +192,7 @@ class SummarizationService:
         self,
         llm,
         messages: List[Dict[str, Any]]
-    ) -> str:
+    ) -> tuple[str, Any]:
         """LLMを使用して会話履歴の要約を生成する
 
         Args:
@@ -174,7 +200,7 @@ class SummarizationService:
             messages: 要約対象のメッセージリスト
 
         Returns:
-            要約テキスト
+            (要約テキスト, LLMレスポンス)のタプル
         """
         # 会話履歴をテキストに変換
         conversation_text = self._format_messages_for_summary(messages)
@@ -191,7 +217,7 @@ class SummarizationService:
         else:
             summary_text = str(response)
 
-        return summary_text.strip()
+        return summary_text.strip(), response
 
     def _format_messages_for_summary(self, messages: List[Dict[str, Any]]) -> str:
         """メッセージリストを要約用のテキストに整形する

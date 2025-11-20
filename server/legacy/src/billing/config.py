@@ -55,3 +55,26 @@ def _generate_initial_pricing_data():
 # 初期価格データ（データベース初期化時に使用）
 # pricing_config.py の計算ロジックから自動生成
 INITIAL_PRICING_DATA = _generate_initial_pricing_data()
+
+# トークン推定設定
+# LLM実行前に出力トークン数を推定するための定数
+TOKEN_ESTIMATION = {
+    "output_ratio": 0.5,       # 出力トークン数は入力の50%と推定
+    "min_output": 500,         # 最小出力トークン数
+    "max_output": 4000,        # 最大出力トークン数（安全マージン）
+}
+
+def estimate_output_tokens(input_tokens: int) -> int:
+    """入力トークン数から出力トークン数を推定する
+
+    Args:
+        input_tokens: 入力トークン数
+
+    Returns:
+        推定される出力トークン数
+    """
+    estimated = int(input_tokens * TOKEN_ESTIMATION["output_ratio"])
+    return int(max(
+        TOKEN_ESTIMATION["min_output"],
+        min(estimated, TOKEN_ESTIMATION["max_output"])
+    ))

@@ -73,6 +73,25 @@ export class ChatSummarizationService {
         `Conversation summarized: ${result.originalTokens} -> ${result.compressedTokens} tokens (${(result.compressionRatio * 100).toFixed(1)}% reduction)`
       );
 
+      // トークン消費を記録（要約にもLLMを使用するため）
+      if (result.tokenUsage?.inputTokens && result.tokenUsage?.outputTokens && result.model) {
+        try {
+          const { trackAndDeductTokens } = await import('../../../billing/utils/tokenBalance');
+          await trackAndDeductTokens(
+            result.tokenUsage.inputTokens,
+            result.tokenUsage.outputTokens,
+            result.model
+          );
+          logger.info(
+            'chatService',
+            `Tokens consumed for summarization: input=${result.tokenUsage.inputTokens}, output=${result.tokenUsage.outputTokens}, model=${result.model}`
+          );
+        } catch (error) {
+          logger.error('chatService', 'Failed to track tokens for summarization:', error);
+          // トークン消費の失敗はエラーとしない（要約自体は成功している）
+        }
+      }
+
       return {
         isActuallySummarized: true,
         messages,

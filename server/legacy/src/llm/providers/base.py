@@ -223,7 +223,8 @@ class BaseAgentLLMProvider(BaseLLMProvider):
         # ===== トークン残高チェック =====
         if user_id and model_id:
             from src.billing.database import SessionLocal
-            from src.billing.service import BillingService
+            from src.billing.validators import TokenBalanceValidator
+            from src.billing.config import estimate_output_tokens
             from src.llm.utils.token_counter import count_message_tokens
 
             # 1. メッセージをトークンカウント用の辞書形式に変換
@@ -236,8 +237,8 @@ class BaseAgentLLMProvider(BaseLLMProvider):
             # 2. 実際に送信するメッセージのトークン数を計算
             input_tokens = count_message_tokens(message_dicts, provider=self._get_provider_name(), model=self.model)
 
-            # 出力トークンは推定（入力の50%、最小500、最大4000）
-            estimated_output = max(500, min(int(input_tokens * 0.5), 4000))
+            # 出力トークンは推定
+            estimated_output = estimate_output_tokens(input_tokens)
             total_estimated = input_tokens + estimated_output
 
             logger.info(
@@ -245,29 +246,11 @@ class BaseAgentLLMProvider(BaseLLMProvider):
                 f"input={input_tokens}, output_est={estimated_output}, total={total_estimated}"
             )
 
-            # 3. トークン残高を取得してチェック
+            # 3. トークン残高を検証
             db = SessionLocal()
             try:
-                billing_service = BillingService(db, user_id)
-                balance = billing_service.get_balance()
-                available_tokens = balance["allocated_tokens"].get(model_id, 0)
-
-                logger.info(f"[TokenCheck] Available balance for {model_id}: {available_tokens} tokens")
-
-                # 残高が不足している場合はエラー
-                if available_tokens < total_estimated:
-                    shortage = total_estimated - available_tokens
-                    error_msg = (
-                        f"トークン残高が不足しています。\n"
-                        f"必要: 約{total_estimated:,}トークン\n"
-                        f"残高: {available_tokens:,}トークン\n"
-                        f"不足: 約{shortage:,}トークン\n\n"
-                        f"トークンを購入してください。"
-                    )
-                    logger.warning(f"[TokenCheck] Insufficient balance: {error_msg}")
-                    raise ValueError(error_msg)
-
-                logger.info("[TokenCheck] Balance check passed")
+                validator = TokenBalanceValidator(db, user_id)
+                validator.validate_and_raise(model_id, total_estimated)
             finally:
                 db.close()
 

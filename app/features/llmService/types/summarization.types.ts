@@ -26,10 +26,14 @@ export interface SummaryResult {
 /**
  * 要約レスポンス
  */
+import { TokenUsageInfo } from './config.types';
+
 export interface SummarizeResponse {
   summary: SummaryResult;
   recentMessages: Array<{role: string; content: string; timestamp?: string}>;
   compressionRatio: number;
   originalTokens: number;
   compressedTokens: number;
+  tokenUsage?: TokenUsageInfo; // 実際のトークン使用量（課金用）
+  model?: string; // 使用したモデル名
 }
