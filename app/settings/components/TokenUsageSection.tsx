@@ -12,6 +12,7 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -21,6 +22,7 @@ import { RootStackParamList } from '../../navigation/types';
 import { useMonthlyCost } from '../../billing/utils/costCalculation';
 import { useTokenBalanceStore, useUsageTrackingStore } from '../settingsStore';
 import { ListItem } from '../../components/ListItem';
+import { useAuth } from '../../auth/authStore';
 
 type SettingsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Settings'>;
 
@@ -29,9 +31,30 @@ export const TokenUsageSection: React.FC = () => {
   const navigation = useNavigation<SettingsScreenNavigationProp>();
   const { balance } = useTokenBalanceStore();
   const { usage } = useUsageTrackingStore();
+  const { isAuthenticated } = useAuth();
 
   // 月間コスト情報を取得（開発時のみ）
   const costInfo = __DEV__ ? useMonthlyCost() : null;
+
+  // 購入ボタンのハンドラー
+  const handlePurchasePress = () => {
+    if (!isAuthenticated) {
+      // 未ログイン時: ログイン促進ダイアログを表示
+      Alert.alert(
+        'ログインが必要です',
+        'クレジットを購入するにはログインしてください。\n\n画面上部の「アカウント」セクションから「Googleでログイン」ボタンを押してください。',
+        [
+          {
+            text: 'OK',
+            style: 'default',
+          },
+        ]
+      );
+    } else {
+      // ログイン済み: 購入画面に遷移
+      navigation.navigate('TokenPurchase' as any);
+    }
+  };
 
   const styles = StyleSheet.create({
     valueText: {
@@ -167,7 +190,7 @@ export const TokenUsageSection: React.FC = () => {
           <View style={styles.buttonRow}>
             <TouchableOpacity
               style={styles.purchaseButton}
-              onPress={() => navigation.navigate('TokenPurchase' as any)}
+              onPress={handlePurchasePress}
             >
               <Ionicons name="card" size={20} color="#FFFFFF" style={styles.purchaseButtonIcon} />
               <Text style={styles.purchaseButtonText}>購入</Text>
