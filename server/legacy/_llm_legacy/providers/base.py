@@ -1,34 +1,20 @@
-"""
-Base LLM Provider
 
-LLMプロバイダーの抽象基底クラスと実装基底クラスを定義します。
-Clean Architecture版: Infrastructure層に配置
-"""
+# @file base.py
+# @summary LLMプロバイダーの抽象基底クラスを定義します。
+# @responsibility すべてのLLMプロバイダーが実装すべき共通のインターフェース（メソッド、プロパティ）を定義します。
 from abc import ABC, abstractmethod
 from typing import Any
 
 from langchain.agents import create_agent
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
+from src.llm.models import ChatContext, ChatResponse, LLMCommand, TokenUsageInfo
+from src.llm.providers.command_extractor import AgentCommandExtractor
+from src.llm.providers.config import AGENT_VERBOSE, DEFAULT_SYSTEM_PROMPT, MAX_CONVERSATION_TOKENS
+from src.llm.providers.context_builder import ChatContextBuilder
+from src.llm.tools import AVAILABLE_TOOLS
+from src.llm.utils.token_counter import count_message_tokens
 
 from src.core.logger import log_llm_raw, logger
-
-# Clean Architecture DTOs (for compatibility with existing code)
-from src.llm_clean.application.dtos.chat_dtos import ChatContextDTO as ChatContext
-from src.llm_clean.application.dtos.chat_dtos import ChatResponseDTO as ChatResponse
-from src.llm_clean.application.dtos.chat_dtos import LLMCommandDTO as LegacyLLMCommand
-from src.llm_clean.application.dtos.chat_dtos import TokenUsageInfoDTO as TokenUsageInfo
-from src.llm_clean.application.dtos.chat_dtos import chat_context_dto_to_domain
-from src.llm_clean.utils.token_counter import (
-    count_message_tokens,
-    count_tokens,
-)
-from src.llm_clean.utils.tools import AVAILABLE_TOOLS
-
-# Clean Architecture imports
-from ...domain.entities.llm_command import LLMCommand
-from ...domain.services.command_extractor_service import CommandExtractorService
-from .config import AGENT_VERBOSE, DEFAULT_SYSTEM_PROMPT, MAX_CONVERSATION_TOKENS
-from .context_builder import ChatContextBuilder
 
 
 class BaseLLMProvider(ABC):
@@ -40,13 +26,7 @@ class BaseLLMProvider(ABC):
         pass
 
     @abstractmethod
-    async def chat(
-        self,
-        message: str,
-        context: ChatContext | None = None,
-        user_id: str | None = None,
-        model_id: str | None = None
-    ) -> ChatResponse:
+    async def chat(self, message: str, context: ChatContext | None = None, user_id: str | None = None, model_id: str | None = None) -> ChatResponse:
         """チャットメッセージを処理し、応答を返す"""
         pass
 
@@ -73,7 +53,7 @@ class BaseAgentLLMProvider(BaseLLMProvider):
         self.model = model
         self.llm = self._create_llm_client(api_key, model)
         self._context_builder = ChatContextBuilder()
-        self._command_extractor = CommandExtractorService()
+        self._command_extractor = AgentCommandExtractor()
         self._setup_agent()
 
     @abstractmethod
@@ -127,27 +107,21 @@ class BaseAgentLLMProvider(BaseLLMProvider):
             system_prompt=self._get_system_prompt(),
             debug=AGENT_VERBOSE
         )
+        # Note: max_iterations, handle_parsing_errors, return_intermediate_stepsは
+        # LangChain 1.0では異なる方法で制御されるため、ここでは省略
 
-    async def chat(
-        self,
-        message: str,
-        context: ChatContext | None = None,
-        user_id: str | None = None,
-        model_id: str | None = None
-    ) -> ChatResponse:
+    async def chat(self, message: str, context: ChatContext | None = None, user_id: str | None = None, model_id: str | None = None) -> ChatResponse:
         """チャットメッセージを処理し、応答を返す（Agent Executor使用）
 
         このメソッドは全体の処理フローをオーケストレートします：
         1. コンテキストの構築（ChatContextBuilderに委譲）
         2. エージェントの実行
-        3. コマンドの抽出（CommandExtractorServiceに委譲）
+        3. コマンドの抽出（AgentCommandExtractorに委譲）
         4. レスポンスの構築
 
         Args:
             message: ユーザーメッセージ
             context: チャットコンテキスト（ファイル情報、会話履歴など）
-            user_id: ユーザーID（トークン残高チェック用）
-            model_id: モデルID（トークン残高チェック用）
 
         Returns:
             ChatResponse: AI応答とコマンド
@@ -155,9 +129,7 @@ class BaseAgentLLMProvider(BaseLLMProvider):
         provider_name = self._get_provider_name()
 
         # 1. コンテキスト構築
-        # Convert DTO to domain model
-        context_domain = chat_context_dto_to_domain(context)
-        built_context = self._context_builder.build(context_domain)
+        built_context = self._context_builder.build(context)
 
         # リクエストログ記録
         self._log_agent_request(
@@ -173,6 +145,7 @@ class BaseAgentLLMProvider(BaseLLMProvider):
 
             # 3. レスポンス構築
             # 会話履歴を取得（トークン計算用）
+            # 注: 最新のユーザーメッセージとAI応答を含めた履歴でトークンを計算する必要がある
             conversation_history = context.conversationHistory if context and context.conversationHistory else []
 
             # AI応答を取得
@@ -247,6 +220,8 @@ class BaseAgentLLMProvider(BaseLLMProvider):
 
         # ===== トークン残高チェック =====
         if user_id and model_id:
+            from src.llm.utils.token_counter import count_message_tokens
+
             from src.billing import SessionLocal, TokenBalanceValidator, estimate_output_tokens
 
             # 1. メッセージをトークンカウント用の辞書形式に変換
@@ -256,47 +231,19 @@ class BaseAgentLLMProvider(BaseLLMProvider):
                 content = msg.content if isinstance(msg.content, str) else str(msg.content)
                 message_dicts.append({"role": role, "content": content})
 
-            # 2. メッセージのトークン数を計算
-            message_tokens = count_message_tokens(message_dicts, provider=self._get_provider_name(), model=self.model)
+            # 2. 実際に送信するメッセージのトークン数を計算
+            input_tokens = count_message_tokens(message_dicts, provider=self._get_provider_name(), model=self.model)
 
-            # 3. システムプロンプトのトークン数を計算
-            system_prompt = self._get_system_prompt()
-            system_prompt_tokens = count_tokens(system_prompt) if system_prompt else 0
-
-            # 4. ツール定義のトークン数を計算
-            # LangChainがツールをLLMに送る際の形式に近い文字列を生成
-            tools_text_parts = []
-            for tool in AVAILABLE_TOOLS:
-                # ツール名、説明、引数情報を含める
-                tool_info = f"Tool: {tool.name}\nDescription: {tool.description}"
-                if hasattr(tool, 'args_schema') and tool.args_schema:
-                    # 引数スキーマも含める
-                    try:
-                        # Check if args_schema has schema method (BaseModel)
-                        if hasattr(tool.args_schema, 'schema'):
-                            schema = tool.args_schema.schema()  # type: ignore
-                            tool_info += f"\nArguments: {schema.get('properties', {})}"
-                    except Exception:
-                        pass
-                tools_text_parts.append(tool_info)
-
-            tools_text = "\n\n".join(tools_text_parts)
-            tools_tokens = count_tokens(tools_text) if tools_text else 0
-
-            # 5. 総入力トークン数を計算
-            input_tokens = message_tokens + system_prompt_tokens + tools_tokens
-
-            # 6. 出力トークンは推定
+            # 出力トークンは推定
             estimated_output = estimate_output_tokens(input_tokens)
             total_estimated = input_tokens + estimated_output
 
             logger.info(
                 f"[TokenCheck] Estimated tokens before LLM call: "
-                f"messages={message_tokens}, system={system_prompt_tokens}, tools={tools_tokens}, "
-                f"input_total={input_tokens}, output_est={estimated_output}, total={total_estimated}"
+                f"input={input_tokens}, output_est={estimated_output}, total={total_estimated}"
             )
 
-            # 7. トークン残高を検証
+            # 3. トークン残高を検証
             db = SessionLocal()
             try:
                 validator = TokenBalanceValidator(db, user_id)
@@ -313,13 +260,6 @@ class BaseAgentLLMProvider(BaseLLMProvider):
         # バックエンドでの自動減算は2重減算を引き起こすため実装しない
 
         return result
-
-    def _convert_domain_command_to_legacy(self, domain_cmd: LLMCommand) -> LegacyLLMCommand:
-        """Convert Domain LLMCommand to Legacy LLMCommand
-
-        Temporary converter during migration from legacy to clean architecture.
-        """
-        return LegacyLLMCommand(**domain_cmd.model_dump())
 
     def _build_response(
         self,
@@ -350,10 +290,12 @@ class BaseAgentLLMProvider(BaseLLMProvider):
         if messages:
             last_message = messages[-1]
             if isinstance(last_message, AIMessage):
+                # contentはstr | list[str | dict]の可能性がある
                 content = last_message.content
                 if isinstance(content, str):
                     agent_output = content
                 elif isinstance(content, list):
+                    # リスト形式の場合は各要素からテキストを抽出
                     text_parts = []
                     for item in content:
                         if isinstance(item, str):
@@ -364,12 +306,13 @@ class BaseAgentLLMProvider(BaseLLMProvider):
                 else:
                     agent_output = ""
             else:
+                # フォールバック: どんなメッセージでもcontentを取得
                 content = getattr(last_message, 'content', '')
                 agent_output = str(content) if content else ""
 
-        # ツール呼び出しの数をカウント
+        # ツール呼び出しの数をカウント（intermediate_stepsの代替）
         tool_call_count = sum(
-            len(getattr(msg, 'tool_calls', None) or [])
+            len(getattr(msg, 'tool_calls', []))
             for msg in messages
             if isinstance(msg, AIMessage)
         )
@@ -381,28 +324,23 @@ class BaseAgentLLMProvider(BaseLLMProvider):
             tool_call_count
         )
 
-        # コマンド抽出（Domain Serviceを使用）
-        domain_commands = self._command_extractor.extract_commands(agent_result)
-
-        # Legacy形式に変換（段階的移行のため）
-        legacy_commands = [
-            self._convert_domain_command_to_legacy(cmd) for cmd in (domain_commands or [])
-        ]
+        # コマンド抽出
+        commands = self._command_extractor.extract_commands(agent_result)
 
         # コマンドログ記録
-        if domain_commands:
-            self._log_agent_commands(provider_name, domain_commands)
+        if commands:
+            self._log_agent_commands(provider_name, commands)
 
         # トークン使用情報を計算
         token_usage = self._calculate_token_usage(
             conversation_history,
             provider_name,
-            messages
+            messages  # AIMessageを渡して実際のトークン使用量を取得
         )
 
         return ChatResponse(
             message=agent_output,
-            commands=legacy_commands,
+            commands=commands,
             provider=provider_name,
             model=self.model,
             historyCount=history_count,
@@ -451,7 +389,14 @@ class BaseAgentLLMProvider(BaseLLMProvider):
         history_count: int,
         has_file_context: bool
     ) -> None:
-        """エージェントリクエストをログ記録"""
+        """エージェントリクエストをログ記録
+
+        Args:
+            provider_name: プロバイダー名
+            message: ユーザーメッセージ
+            history_count: 会話履歴の件数
+            has_file_context: ファイルコンテキストの有無
+        """
         log_llm_raw(provider_name, "agent_request", {
             "message": message,
             "model": self.model,
@@ -465,7 +410,13 @@ class BaseAgentLLMProvider(BaseLLMProvider):
         output: str,
         intermediate_steps_count: int
     ) -> None:
-        """エージェントレスポンスをログ記録"""
+        """エージェントレスポンスをログ記録
+
+        Args:
+            provider_name: プロバイダー名
+            output: エージェント出力
+            intermediate_steps_count: 中間ステップの件数
+        """
         log_llm_raw(provider_name, "agent_response", {
             "output": output,
             "intermediate_steps": intermediate_steps_count,
@@ -477,7 +428,13 @@ class BaseAgentLLMProvider(BaseLLMProvider):
         provider_name: str,
         commands: list[LLMCommand]
     ) -> None:
-        """抽出されたコマンドをログ記録"""
+        """抽出されたコマンドをログ記録
+
+        Args:
+            provider_name: プロバイダー名
+            commands: 抽出されたコマンドリスト
+        """
+        # フラット構造ではtitleを使用、旧階層構造ではpathを使用
         actions = []
         for cmd in commands:
             target = getattr(cmd, 'title', getattr(cmd, 'path', 'N/A'))
@@ -494,16 +451,27 @@ class BaseAgentLLMProvider(BaseLLMProvider):
         provider_name: str,
         messages: list[BaseMessage] | None = None
     ) -> TokenUsageInfo | None:
-        """会話履歴のトークン使用情報を計算する"""
+        """会話履歴のトークン使用情報を計算する
+
+        Args:
+            conversation_history: 会話履歴
+            provider_name: プロバイダー名
+            messages: エージェントの実行結果メッセージ（実際のトークン使用量取得用）
+
+        Returns:
+            TokenUsageInfo or None
+        """
         try:
+            # 推奨最大トークン数
             max_tokens = MAX_CONVERSATION_TOKENS
 
-            # 実際に使用したトークン数を取得
+            # 実際に使用したトークン数を取得（LangChainのAIMessageから）
             input_tokens = None
             output_tokens = None
             total_tokens = None
 
             if messages:
+                # 最後のAIMessageからusage_metadataを取得
                 for msg in reversed(messages):
                     if isinstance(msg, AIMessage) and hasattr(msg, 'usage_metadata'):
                         usage_metadata = msg.usage_metadata

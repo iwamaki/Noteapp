@@ -6,9 +6,9 @@ from collections.abc import Callable
 from typing import Any
 
 from langchain_core.messages import AIMessage
+from src.llm.models import LLMCommand
 
 from src.core.logger import logger
-from src.llm.models import LLMCommand
 
 
 class AgentCommandExtractor:
