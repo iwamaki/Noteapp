@@ -126,7 +126,7 @@ class Settings:
 
         # 遅延インポート（循環依存回避）
         from .pricing_config import MODEL_PRICING
-        from src.llm.providers.registry import _get_registry
+        from src.llm_clean.infrastructure.llm_providers.provider_registry import _get_registry
 
         # すべてのプロバイダーのモデルをループ
         for provider_name, provider_config in _get_registry().items():
@@ -167,7 +167,7 @@ class Settings:
         Returns:
             モデル名
         """
-        from src.llm.providers.registry import get_provider_config
+        from src.llm_clean.infrastructure.llm_providers.provider_registry import get_provider_config
 
         if provider is None:
             provider = self.default_llm_provider

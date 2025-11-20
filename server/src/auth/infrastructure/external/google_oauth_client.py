@@ -9,6 +9,7 @@ from urllib.parse import urlencode
 import requests
 
 from src.auth.infrastructure.config.constants import AUTH_URI, TOKEN_URI, USERINFO_URI
+from src.auth.infrastructure.external.secret_manager_client import get_secret
 from src.core.logger import logger
 
 
@@ -21,8 +22,10 @@ class GoogleOAuthClient:
     """Google OAuth API クライアント"""
 
     def __init__(self):
-        self.client_id = os.getenv("GOOGLE_WEB_CLIENT_ID", "")
-        self.client_secret = os.getenv("GOOGLE_WEB_CLIENT_SECRET", "")
+        # Secret Managerから取得（環境変数フォールバック付き）
+        self.client_id = get_secret("GOOGLE_WEB_CLIENT_ID", "GOOGLE_WEB_CLIENT_ID") or ""
+        self.client_secret = get_secret("GOOGLE_WEB_CLIENT_SECRET", "GOOGLE_WEB_CLIENT_SECRET") or ""
+        # リダイレクトURIは秘密情報ではないので環境変数から直接読み込む
         self.redirect_uri = os.getenv("GOOGLE_OAUTH_REDIRECT_URI", "")
 
     def generate_auth_url(self, state: str) -> str:

@@ -30,7 +30,7 @@ def _get_secret_from_secret_manager(project_id: str, secret_id: str) -> str | No
         secret_name = f"projects/{project_id}/secrets/{secret_id}/versions/latest"
         response = client.access_secret_version(request={"name": secret_name})
         secret_value = response.payload.data.decode("UTF-8").strip()
-        logger.info(f"Successfully loaded JWT_SECRET_KEY from Secret Manager: {secret_id}")
+        logger.info(f"Successfully loaded {secret_id} from Secret Manager")
         return secret_value
     except exceptions.NotFound:
         logger.warning(f"Secret '{secret_id}' not found in Secret Manager project '{project_id}'")
@@ -144,3 +144,32 @@ def get_jwt_secret() -> str:
     if _SECRET_KEY:
         return _SECRET_KEY
     return load_jwt_secret()
+
+
+def get_secret(secret_id: str, fallback_env_var: str | None = None) -> str | None:
+    """
+    Secret Managerからシークレットを取得（環境変数フォールバック付き）
+
+    Args:
+        secret_id: Secret ManagerのシークレットID
+        fallback_env_var: フォールバック用の環境変数名（オプション）
+
+    Returns:
+        シークレット値（取得失敗時はNone）
+    """
+    # 1. Secret Managerから取得を試みる
+    gcp_project_id = os.getenv("GCP_PROJECT_ID")
+
+    if gcp_project_id and os.getenv("GOOGLE_APPLICATION_CREDENTIALS"):
+        secret_value = _get_secret_from_secret_manager(gcp_project_id, secret_id)
+        if secret_value:
+            return secret_value
+
+    # 2. 環境変数からフォールバック（開発環境用）
+    if fallback_env_var:
+        env_value = os.getenv(fallback_env_var)
+        if env_value:
+            logger.info(f"Using {fallback_env_var} from environment variable (development mode)")
+            return env_value
+
+    return None
