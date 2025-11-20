@@ -329,15 +329,6 @@ function SettingsScreen() {
           (value) => uiSettings.updateSettings({ fileSortMethod: value as 'updatedAt' | 'name' })
         )}
 
-        <ListItem.Container>
-          {/* eslint-disable-next-line react-native/no-raw-text */}
-          <ListItem.Title>ファイルリストに要約を表示</ListItem.Title>
-          <Switch
-            value={uiSettings.settings.showSummary}
-            onValueChange={(value: boolean) => uiSettings.updateSettings({ showSummary: value })}
-          />
-        </ListItem.Container>
-
         {renderSection('LLM/AI機能')}
 
         <ListItem.Container>

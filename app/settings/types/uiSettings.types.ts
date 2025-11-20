@@ -22,7 +22,6 @@ export interface UISettings {
   // ファイルリスト表示設定
   categorySortMethod: 'name' | 'fileCount';
   fileSortMethod: 'updatedAt' | 'name';
-  showSummary: boolean;
 }
 
 export const defaultUISettings: UISettings = {
@@ -37,5 +36,4 @@ export const defaultUISettings: UISettings = {
   screenReaderOptimization: false,
   categorySortMethod: 'fileCount',
   fileSortMethod: 'updatedAt',
-  showSummary: true,
 };

@@ -661,11 +661,10 @@ function FileListScreenFlat() {
           isSelectionMode={isMoveMode}
           onPress={handlePress}
           onLongPress={handleLongPress}
-          showSummary={uiSettings.showSummary}
         />
       );
     },
-    [isMoveMode, moveSourceFileId, handleFilePress, handleLongPressFile, uiSettings.showSummary]
+    [isMoveMode, moveSourceFileId, handleFilePress, handleLongPressFile]
   );
 
   // レンダリング時のデバッグログ

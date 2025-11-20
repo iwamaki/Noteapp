@@ -21,7 +21,6 @@ interface FlatListItemProps {
   isSelectionMode: boolean;
   onPress: () => void;
   onLongPress: () => void;
-  showSummary?: boolean;  // 要約表示フラグを外部から受け取る
 }
 
 /**
@@ -39,7 +38,6 @@ const FlatListItemComponent: React.FC<FlatListItemProps> = ({
   isSelectionMode,
   onPress,
   onLongPress,
-  showSummary,
 }) => {
   const { colors, spacing, iconSizes, typography } = useTheme();
 
@@ -51,13 +49,11 @@ const FlatListItemComponent: React.FC<FlatListItemProps> = ({
 
   // メモ化されたスタイル
   const containerStyle = useMemo(() => ({ paddingLeft: itemPaddingLeft }), [itemPaddingLeft]);
-  const summaryContainerStyle = useMemo(() => ({ marginTop: spacing.xs }), [spacing.xs]);
   const contentContainerStyle = useMemo(() => ({ marginTop: spacing.xs, paddingLeft: spacing.md }), [spacing.xs, spacing.md]);
   const badgeStyle = useMemo(() => ({
     backgroundColor: colors.primary + FILE_LIST_FLAT_CONFIG.appearance.transparency.badgeAlpha,
     marginRight: spacing.xs,
   }), [colors.primary, spacing.xs]);
-  const summaryTextStyle = useMemo(() => [typography.caption, { color: colors.textSecondary }, styles.summaryText], [typography.caption, colors.textSecondary]);
   const contentTextStyle = useMemo(() => [typography.caption, { color: colors.textSecondary }], [typography.caption, colors.textSecondary]);
 
   // 左側要素：ファイルアイコン
@@ -79,16 +75,6 @@ const FlatListItemComponent: React.FC<FlatListItemProps> = ({
         leftElement={leftElement}
       >
       <ListItem.Title>{file.title}</ListItem.Title>
-
-      {/* 要約コンテナ */}
-      {showSummary && file.summary && (
-        <View style={summaryContainerStyle}>
-          <Text style={summaryTextStyle}>
-            <Text style={styles.label}>要約：</Text>
-            {file.summary}
-          </Text>
-        </View>
-      )}
 
       {/* 本文コンテナ */}
       {file.content && (
