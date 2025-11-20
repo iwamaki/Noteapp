@@ -5,7 +5,7 @@
 import os
 import time
 from abc import ABC, abstractmethod
-from typing import Dict, Optional
+
 from src.core.logger import logger
 
 
@@ -47,7 +47,7 @@ class InMemoryTokenBlacklist(TokenBlacklistManager):
 
     def __init__(self):
         # {token: expiry_timestamp}
-        self._blacklist: Dict[str, float] = {}
+        self._blacklist: dict[str, float] = {}
         logger.warning(
             "Using InMemoryTokenBlacklist. "
             "NOT suitable for production. Use RedisTokenBlacklist instead."
@@ -144,7 +144,7 @@ class RedisTokenBlacklist(TokenBlacklistManager):
 
 
 # グローバルインスタンス
-_blacklist_manager: Optional[TokenBlacklistManager] = None
+_blacklist_manager: TokenBlacklistManager | None = None
 
 
 def get_blacklist_manager() -> TokenBlacklistManager:

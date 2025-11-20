@@ -7,7 +7,7 @@ import os
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from src.auth.dependencies import verify_token_auth
+from src.auth import verify_token_auth
 from src.billing.application import BillingService
 from src.billing.domain.entities import Transaction
 from src.billing.infrastructure import acknowledge_purchase, get_db, verify_purchase

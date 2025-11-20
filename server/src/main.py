@@ -18,8 +18,7 @@ from src.llm.rag.cleanup_job import start_cleanup_job, stop_cleanup_job
 from typing import Optional
 from src.api.websocket import manager
 from src.billing.presentation.router import router as billing_router
-from src.auth import router as auth_router
-from src.auth.jwt_utils import verify_token, TokenType, validate_jwt_secret
+from src.auth import router, verify_token, TokenType, validate_jwt_secret
 from src.billing import init_db
 from src.core.logger import logger
 
@@ -109,7 +108,7 @@ app.include_router(llm_providers_router.router)
 app.include_router(tools_router.router)
 app.include_router(knowledge_base_router.router)
 app.include_router(billing_router)
-app.include_router(auth_router.router)
+app.include_router(router)
 
 # ルートエンドポイント
 @app.get("/")

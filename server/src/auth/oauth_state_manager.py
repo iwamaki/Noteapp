@@ -2,11 +2,12 @@
 # @summary OAuth2 state 管理ユーティリティ
 # @responsibility OAuth2 フローの state パラメータを安全に管理
 
+import json
 import os
 import secrets
 import time
-import json
-from typing import Optional, Dict, Any, Protocol
+from typing import Any, Protocol
+
 from src.core.logger import logger
 
 
@@ -17,11 +18,11 @@ class StateManagerProtocol(Protocol):
         """新しい state を生成して保存"""
         ...
 
-    def verify_state(self, state: str) -> Optional[str]:
+    def verify_state(self, state: str) -> str | None:
         """state を検証して device_id を返す"""
         ...
 
-    def get_stats(self) -> Dict[str, int]:
+    def get_stats(self) -> dict[str, int]:
         """統計情報を取得"""
         ...
 
@@ -38,7 +39,7 @@ class OAuthStateManager:
         Args:
             ttl_seconds: state の有効期限（秒）デフォルトは5分
         """
-        self._states: Dict[str, Dict[str, Any]] = {}
+        self._states: dict[str, dict[str, Any]] = {}
         self._ttl = ttl_seconds
 
     def generate_state(self, device_id: str) -> str:
@@ -70,7 +71,7 @@ class OAuthStateManager:
 
         return state
 
-    def verify_state(self, state: str) -> Optional[str]:
+    def verify_state(self, state: str) -> str | None:
         """
         state を検証して device_id を返す
 
@@ -117,7 +118,7 @@ class OAuthStateManager:
         if expired_states:
             logger.debug(f"Cleaned up {len(expired_states)} expired OAuth states")
 
-    def get_stats(self) -> Dict[str, int]:
+    def get_stats(self) -> dict[str, int]:
         """統計情報を取得（デバッグ用）"""
         self._cleanup_expired()
         return {
@@ -133,7 +134,7 @@ class RedisStateManager:
     本番環境推奨。マルチインスタンス環境で動作可能。
     """
 
-    def __init__(self, ttl_seconds: int = 300, redis_url: Optional[str] = None):
+    def __init__(self, ttl_seconds: int = 300, redis_url: str | None = None):
         """
         Args:
             ttl_seconds: state の有効期限（秒）デフォルトは5分
@@ -141,11 +142,11 @@ class RedisStateManager:
         """
         try:
             import redis
-        except ImportError:
+        except ImportError as e:
             raise ImportError(
                 "redis package is required for RedisStateManager. "
                 "Install it with: pip install redis"
-            )
+            ) from e
 
         self._ttl = ttl_seconds
         self._redis_url = redis_url or os.getenv("REDIS_URL", "redis://localhost:6379/0")
@@ -202,7 +203,7 @@ class RedisStateManager:
 
         return state
 
-    def verify_state(self, state: str) -> Optional[str]:
+    def verify_state(self, state: str) -> str | None:
         """
         state を検証して device_id を返す
 
@@ -245,7 +246,7 @@ class RedisStateManager:
             logger.error(f"Failed to verify state in Redis: {e}")
             return None
 
-    def get_stats(self) -> Dict[str, int]:
+    def get_stats(self) -> dict[str, int]:
         """統計情報を取得（デバッグ用）"""
         try:
             # oauth_state:* パターンのキー数をカウント
@@ -263,7 +264,7 @@ class RedisStateManager:
 
 
 # グローバルインスタンス（開発用/本番環境対応）
-_state_manager: Optional[StateManagerProtocol] = None
+_state_manager: StateManagerProtocol | None = None
 
 
 def get_state_manager() -> StateManagerProtocol:

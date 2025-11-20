@@ -9,7 +9,7 @@ from src.llm.providers.config import MAX_CONVERSATION_TOKENS, PRESERVE_RECENT_ME
 from src.llm.routers.error_handlers import handle_route_errors
 from src.core.config import settings
 from src.core.logger import logger
-from src.auth.dependencies import verify_token_auth
+from src.auth import verify_token_auth
 
 router = APIRouter()
 chat_service = ChatService()
