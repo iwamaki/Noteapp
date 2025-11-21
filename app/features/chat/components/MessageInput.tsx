@@ -5,7 +5,7 @@
  */
 
 import React, { useMemo } from 'react';
-import { View, TouchableOpacity } from 'react-native';
+import { View, TouchableOpacity, Alert } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { CustomInlineInput } from '../../../components/CustomInlineInput';
 import { useTheme } from '../../../design/theme/ThemeContext';
@@ -13,6 +13,7 @@ import { useChat } from '../hooks/useChat';
 import { CHAT_CONFIG } from '../config/chatConfig';
 import { useTokenBalanceStore } from '../../../settings/settingsStore';
 import { useModelSwitch } from '../../../settings/hooks/useModelSwitch';
+import { useAuth } from '../../../auth/authStore';
 
 interface MessageInputProps {
   inputText: string;
@@ -27,6 +28,7 @@ const MessageInputComponent: React.FC<MessageInputProps> = ({ inputText, setInpu
   const { sendMessage, isLoading } = useChat();
   const { loadedModels, activeModelCategory } = useTokenBalanceStore();
   const { switchModel } = useModelSwitch();
+  const { isAuthenticated } = useAuth();
 
   // loadedModels から Quick/Think モデルを取得（フォールバック付き）
   const quickModel = loadedModels?.quick || 'gemini-2.5-flash';
@@ -46,6 +48,21 @@ const MessageInputComponent: React.FC<MessageInputProps> = ({ inputText, setInpu
   const handleSendMessage = async () => {
     const trimmedInput = inputText.trim();
     if (trimmedInput.length > 0 && !isLoading) {
+      // ログインチェック
+      if (!isAuthenticated) {
+        Alert.alert(
+          'ログインが必要です',
+          'チャットを利用するにはログインしてください。\n\n設定画面の「アカウント」セクションから「Googleでログイン」ボタンを押してください。',
+          [
+            {
+              text: 'OK',
+              style: 'default',
+            },
+          ]
+        );
+        return;
+      }
+
       await sendMessage(trimmedInput);
       setInputText('');
     }
