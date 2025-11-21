@@ -13,7 +13,7 @@ import { ChatMessage, TokenUsageInfo } from '../../llmService/index';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { MessageItem } from './MessageItem';
 import { ToggleTabButton } from './ToggleTabButton';
-import { getTokenUsageBarColor } from '../utils/tokenUsageHelpers';
+import { getTokenUsageBarColor } from '../../llmService/utils/tokenUsageHelpers';
 import { ModelSelectionModal } from './ModelSelectionModal';
 
 interface ChatHistoryProps {

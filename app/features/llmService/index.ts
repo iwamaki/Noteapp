@@ -12,7 +12,6 @@ import type {
   LLMResponse,
   LLMHealthStatus,
   LLMConfig,
-  SummarizeResponse,
   ChatMessage,
 } from './types/index';
 import { LLMError } from './types/LLMError';
@@ -25,10 +24,18 @@ import { useConversationStore } from './stores/useConversationStore';
 // Re-export types
 export type { ChatMessage, ChatContext, LLMProvider, LLMResponse, LLMHealthStatus, LLMConfig, LLMCommand, TokenUsageInfo, SummarizeRequest, SummarizeResponse, SummaryResult } from './types/index';
 export { LLMError } from './types/LLMError';
+export type { SummarizationResult } from './services/SummarizationService';
 
 // Re-export stores
 export { useLLMStore } from './stores/useLLMStore';
 export { useConversationStore } from './stores/useConversationStore';
+
+// Re-export services
+export { CommandService } from './services/CommandService';
+
+// Re-export core components
+export { WebSocketManager } from './core/WebSocketManager';
+export type { WebSocketManagerConfig, MessageHandler, WebSocketManagerCallbacks } from './core/WebSocketManager';
 
 /**
  * LLMサービスメインクラス
@@ -250,14 +257,16 @@ export class LLMService {
 
   /**
    * 会話履歴を要約する（ストアと連携）
+   * @param currentMessages 現在のメッセージ履歴（UI用）
    * @returns 要約結果と圧縮された会話履歴
    */
-  async summarizeConversation(): Promise<SummarizeResponse> {
+  async summarizeConversation(currentMessages: ChatMessage[]): Promise<import('./services/SummarizationService').SummarizationResult> {
     const llmStore = useLLMStore.getState();
     const conversationStore = useConversationStore.getState();
 
     return this.summarizationService.summarizeConversation(
       conversationStore,
+      currentMessages,
       llmStore.getCurrentProvider(),
       llmStore.getCurrentModel()
     );

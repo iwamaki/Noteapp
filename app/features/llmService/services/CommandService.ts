@@ -1,16 +1,16 @@
 /**
- * @file chatCommandService.ts
- * @summary LLMからのコマンドのディスパッチとハンドラー管理を担当するサービス
+ * @file CommandService.ts
+ * @summary LLMコマンドのディスパッチとハンドラー管理を担当するサービス
  * @responsibility コマンドハンドラーの登録、コマンド実行、エラーハンドリングを管理
  */
 
-import { LLMCommand } from '../../llmService/types/index';
+import { LLMCommand } from '../types/index';
 import { logger } from '../../../utils/logger';
 
 /**
- * LLMからのコマンドのディスパッチとハンドラー管理を担当するサービスクラス
+ * LLMコマンドのディスパッチとハンドラー管理を担当するサービスクラス
  */
-export class ChatCommandService {
+export class CommandService {
   // グローバルハンドラのマップ（画面に依存しない、起動時に一度だけ登録）
   private globalHandlers: Record<string, (command: LLMCommand) => void | Promise<void>> = {};
 
@@ -23,7 +23,7 @@ export class ChatCommandService {
    * @param handlers コマンド名をキーとしたハンドラのマップ
    */
   public registerGlobalHandlers(handlers: Record<string, (command: LLMCommand) => void | Promise<void>>): void {
-    logger.debug('chatService', 'Registering global command handlers:', Object.keys(handlers));
+    logger.debug('llm', 'Registering global command handlers:', Object.keys(handlers));
     this.globalHandlers = { ...this.globalHandlers, ...handlers };
   }
 
@@ -32,7 +32,7 @@ export class ChatCommandService {
    * @param handlers コマンド名をキーとしたハンドラのマップ
    */
   public registerCommandHandlers(handlers: Record<string, (command: LLMCommand) => void | Promise<void>>): void {
-    logger.debug('chatService', 'Registering context command handlers:', Object.keys(handlers));
+    logger.debug('llm', 'Registering context command handlers:', Object.keys(handlers));
     this.contextHandlers = { ...this.contextHandlers, ...handlers };
   }
 
@@ -57,12 +57,12 @@ export class ChatCommandService {
       if (handler) {
         try {
           await handler(command);
-          logger.debug('chatService', `Command ${command.action} executed successfully`);
+          logger.debug('llm', `Command ${command.action} executed successfully`);
         } catch (error) {
-          logger.error('chatService', `Error executing command ${command.action}:`, error);
+          logger.error('llm', `Error executing command ${command.action}:`, error);
         }
       } else {
-        logger.warn('chatService', `No handler found for command: ${command.action}`);
+        logger.warn('llm', `No handler found for command: ${command.action}`);
       }
     }
   }
