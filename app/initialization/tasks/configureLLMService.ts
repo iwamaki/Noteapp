@@ -23,10 +23,10 @@ export const configureLLMServiceTask: InitializationTask = {
   dependencies: ['load-settings'], // 設定読み込み後に実行
 
   execute: async () => {
-    const { loadedModels } = useTokenBalanceStore.getState();
+    const { loadedModels, activeModelCategory } = useTokenBalanceStore.getState();
 
-    // loadedModelsから初期モデルを取得（thinkモデルを優先）
-    const initialModelId = loadedModels?.think || loadedModels?.quick || 'gemini-2.5-pro';
+    // loadedModelsから初期モデルを取得（activeModelCategoryに応じて選択）
+    const initialModelId = loadedModels?.[activeModelCategory] || 'gemini-2.5-flash';
 
     // バックエンドから取得したプロバイダー情報を使って、モデルIDに対応するプロバイダーを取得
     try {
@@ -50,6 +50,7 @@ export const configureLLMServiceTask: InitializationTask = {
           console.log('[configureLLMService] LLM configured:', {
             provider: providerName,
             model: initialModelId,
+            category: activeModelCategory,
           });
         }
       } else {
