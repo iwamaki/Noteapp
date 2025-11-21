@@ -183,6 +183,7 @@ async def websocket_endpoint(websocket: WebSocket):
     """
     await websocket.accept()
     user_id: str | None = None
+    client_id: str | None = None
 
     try:
         # 初回メッセージで認証
@@ -212,12 +213,15 @@ async def websocket_endpoint(websocket: WebSocket):
             await websocket.close(code=1008, reason="Invalid token payload")
             return
 
+        # client_idを取得（フロントエンドから送られる、またはuser_idをフォールバック）
+        client_id = auth_message.get("client_id", user_id)
+
         # 認証成功 - 接続を確立
-        await manager.connect(websocket, user_id)
-        logger.info(f"WebSocket authenticated and connected: user_id={user_id}")
+        await manager.connect(websocket, client_id)
+        logger.info(f"WebSocket authenticated and connected: user_id={user_id}, client_id={client_id}")
 
         # 認証成功メッセージを送信
-        await manager.send_message(user_id, {"type": "auth_success", "user_id": user_id})
+        await manager.send_message(client_id, {"type": "auth_success", "user_id": user_id, "client_id": client_id})
 
         # メッセージ処理ループ
         while True:
@@ -249,21 +253,21 @@ async def websocket_endpoint(websocket: WebSocket):
 
             elif data.get("type") == "ping":
                 # ピングメッセージ（ハートビート用）
-                manager.handle_ping(user_id)
-                await manager.send_message(user_id, {"type": "pong"})
+                manager.handle_ping(client_id)
+                await manager.send_message(client_id, {"type": "pong"})
 
             elif data.get("type") == "auth":
                 # 再認証メッセージ（トークンリフレッシュ後）
                 access_token = data.get("access_token")
                 if not access_token:
-                    logger.warning(f"Re-auth message missing access_token from user_id={user_id}")
+                    logger.warning(f"Re-auth message missing access_token from client_id={client_id}")
                     continue
 
                 # トークン検証
                 payload = verify_token(access_token, TokenType.ACCESS)
                 if not payload:
-                    logger.warning(f"Re-auth failed: Invalid or expired token from user_id={user_id}")
-                    await manager.send_message(user_id, {
+                    logger.warning(f"Re-auth failed: Invalid or expired token from client_id={client_id}")
+                    await manager.send_message(client_id, {
                         "type": "auth_error",
                         "message": "Invalid or expired token"
                     })
@@ -273,27 +277,27 @@ async def websocket_endpoint(websocket: WebSocket):
                 token_user_id = payload.get("sub")
                 if token_user_id != user_id:
                     logger.warning(f"Re-auth failed: User ID mismatch (current={user_id}, token={token_user_id})")
-                    await manager.send_message(user_id, {
+                    await manager.send_message(client_id, {
                         "type": "auth_error",
                         "message": "User ID mismatch"
                     })
                     continue
 
                 # 再認証成功
-                logger.info(f"Re-authentication successful: user_id={user_id}")
-                await manager.send_message(user_id, {"type": "auth_success", "user_id": user_id})
+                logger.info(f"Re-authentication successful: user_id={user_id}, client_id={client_id}")
+                await manager.send_message(client_id, {"type": "auth_success", "user_id": user_id, "client_id": client_id})
 
             else:
                 logger.warning(f"Unknown message type: {data.get('type')}")
 
     except WebSocketDisconnect:
-        logger.info(f"WebSocket disconnected: user_id={user_id}")
-        if user_id:
-            manager.disconnect(user_id)
+        logger.info(f"WebSocket disconnected: user_id={user_id}, client_id={client_id}")
+        if client_id:
+            manager.disconnect(client_id)
     except Exception as e:
-        logger.error(f"WebSocket error: user_id={user_id if user_id else 'unknown'}, {e}")
-        if user_id:
-            manager.disconnect(user_id)
+        logger.error(f"WebSocket error: user_id={user_id if user_id else 'unknown'}, client_id={client_id if client_id else 'unknown'}, {e}")
+        if client_id:
+            manager.disconnect(client_id)
 
 if __name__ == "__main__":
     import uvicorn

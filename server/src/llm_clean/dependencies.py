@@ -132,11 +132,18 @@ class LLMProviderPortImpl(LLMProviderPort):
         message: str,
         context: Any = None,
         user_id: str | None = None,
-        model: str | None = None
+        model: str | None = None,
+        client_id: str | None = None
     ) -> dict[str, Any]:
         """Process chat"""
         if not self._provider:
             raise ValueError(f"Provider {self.provider_name} is not available")
+
+        # Set client_id in context manager for WebSocket tool operations
+        if client_id:
+            from src.llm_clean.utils.tools.context_manager import set_client_id
+            set_client_id(client_id)
+            logger.debug(f"[LLMProviderPortImpl] Set client_id: {client_id}")
 
         response = await self._provider.chat(message, context, user_id, model or self.model)
 
