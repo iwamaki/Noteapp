@@ -23,38 +23,40 @@ export interface ProviderMetadata {
 /**
  * モデルIDからカテゴリーを判定する純粋関数
  *
- * プロバイダーキャッシュがある場合はメタデータを使用し、
- * ない場合はモデル名から推測します。
+ * プロバイダーキャッシュのメタデータからカテゴリーを取得します。
+ * カテゴリーが見つからない場合はエラーをスローします。
  *
  * @param modelId モデルID（例: "gemini-2.5-flash", "gemini-2.5-pro"）
- * @param providersCache プロバイダーキャッシュ（オプション）
+ * @param providersCache プロバイダーキャッシュ（必須）
  * @returns カテゴリー（'quick' | 'think'）
+ * @throws {Error} プロバイダーキャッシュがないか、モデルが見つからない場合
  *
  * @example
  * ```typescript
  * // プロバイダーキャッシュを使用
  * const category = getModelCategoryFromId('gemini-2.5-flash', providers);
- *
- * // フォールバック判定（キャッシュなし）
- * const category = getModelCategoryFromId('gemini-2.5-flash');
  * ```
  */
 export function getModelCategoryFromId(
   modelId: string,
   providersCache?: Record<string, ProviderMetadata> | null
 ): 'quick' | 'think' {
-  // プロバイダーキャッシュがある場合はメタデータを使用
-  if (providersCache) {
-    for (const provider of Object.values(providersCache)) {
-      if (provider?.modelMetadata?.[modelId]) {
-        return provider.modelMetadata[modelId].category;
-      }
+  // プロバイダーキャッシュの確認
+  if (!providersCache) {
+    throw new Error(
+      `Cannot determine category for model "${modelId}": Provider cache not loaded`
+    );
+  }
+
+  // プロバイダーキャッシュからメタデータを検索
+  for (const provider of Object.values(providersCache)) {
+    if (provider?.modelMetadata?.[modelId]) {
+      return provider.modelMetadata[modelId].category;
     }
   }
 
-  // フォールバック: モデル名から判定
-  const modelIdLower = modelId.toLowerCase();
-  return modelIdLower.includes('flash') || modelIdLower.includes('mini')
-    ? 'quick'
-    : 'think';
+  // モデルが見つからない場合はエラー
+  throw new Error(
+    `Cannot determine category for model "${modelId}": Model not found in provider metadata`
+  );
 }

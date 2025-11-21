@@ -73,22 +73,23 @@ export class ChatSummarizationService {
         `Conversation summarized: ${result.originalTokens} -> ${result.compressedTokens} tokens (${(result.compressionRatio * 100).toFixed(1)}% reduction)`
       );
 
-      // トークン消費を記録（要約にもLLMを使用するため）
+      // ローカル統計を更新（トークン消費はバックエンドで既に実行済み）
+      // 要約APIもバックエンドでトークンを消費するため、ここではローカルキャッシュと統計の更新のみ
       if (result.tokenUsage?.inputTokens && result.tokenUsage?.outputTokens && result.model) {
         try {
-          const { trackAndDeductTokens } = await import('../../../billing/utils/tokenBalance');
-          await trackAndDeductTokens(
+          const { updateLocalTokenStats } = await import('../../../billing/utils/tokenBalance');
+          await updateLocalTokenStats(
             result.tokenUsage.inputTokens,
             result.tokenUsage.outputTokens,
             result.model
           );
           logger.info(
             'chatService',
-            `Tokens consumed for summarization: input=${result.tokenUsage.inputTokens}, output=${result.tokenUsage.outputTokens}, model=${result.model}`
+            `Local stats updated for summarization: input=${result.tokenUsage.inputTokens}, output=${result.tokenUsage.outputTokens}, model=${result.model}`
           );
         } catch (error) {
-          logger.error('chatService', 'Failed to track tokens for summarization:', error);
-          // トークン消費の失敗はエラーとしない（要約自体は成功している）
+          logger.error('chatService', 'Failed to update local stats for summarization:', error);
+          // ローカル統計更新の失敗はエラーとしない（要約自体は成功している）
         }
       }
 

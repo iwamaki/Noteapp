@@ -135,3 +135,56 @@ export async function trackAndDeductTokens(
     throw error;
   }
 }
+
+/**
+ * ローカル統計のみを更新（トークン消費はバックエンドで既に実行済み）
+ *
+ * `/api/chat` エンドポイントがバックエンド側でトークンを消費するため、
+ * フロントエンドではローカルキャッシュと統計の更新のみを行います。
+ *
+ * 以下の処理を実行します：
+ * 1. ローカルキャッシュを更新（バックエンドの残高を取得）
+ * 2. 月次使用量を記録（統計表示用）
+ * 3. LLMリクエスト回数をインクリメント
+ *
+ * @param inputTokens 入力トークン数
+ * @param outputTokens 出力トークン数
+ * @param modelId モデルID
+ *
+ * @example
+ * ```typescript
+ * // /api/chat レスポンス受信後（バックエンドで既にトークン消費済み）
+ * await updateLocalTokenStats(
+ *   response.tokenUsage.inputTokens,
+ *   response.tokenUsage.outputTokens,
+ *   response.model
+ * );
+ * ```
+ */
+export async function updateLocalTokenStats(
+  inputTokens: number,
+  outputTokens: number,
+  modelId: string
+): Promise<void> {
+  const { refreshTokenBalance } = useTokenBalanceStore.getState();
+  const { trackTokenUsage, incrementLLMRequestCount } = useUsageTrackingStore.getState();
+
+  try {
+    // 1. ローカルキャッシュを更新（バックエンドから最新残高を取得）
+    await refreshTokenBalance();
+    logger.debug('system', 'Token balance cache refreshed after backend consumption');
+
+    // 2. 月次使用量を記録（統計表示用）
+    await trackTokenUsage(inputTokens, outputTokens, modelId);
+    logger.debug(
+      'system',
+      `Tracked usage for ${modelId}: input=${inputTokens}, output=${outputTokens}`
+    );
+
+    // 3. LLMリクエスト回数をインクリメント
+    await incrementLLMRequestCount();
+  } catch (error) {
+    logger.error('system', 'Failed to update local token stats:', error);
+    throw error;
+  }
+}

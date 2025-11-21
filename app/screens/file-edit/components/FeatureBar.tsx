@@ -28,7 +28,7 @@ export const FeatureBar: React.FC<FeatureBarProps> = ({
   category,
   onTitleChange,
 }) => {
-  const { colors, spacing, typography } = useTheme();
+  const { colors, spacing } = useTheme();
   const [localTitle, setLocalTitle] = useState(title);
   const isComposingRef = useRef(false);
 

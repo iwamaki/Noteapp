@@ -241,10 +241,11 @@ class ChatService {
       if (response.tokenUsage) {
         this.tokenService.updateTokenUsage(response.tokenUsage);
 
-        // 実際に使用したトークン数を記録（課金対象・モデル別）
+        // ローカル統計を更新（トークン消費はバックエンドで既に実行済み）
+        // /api/chat がバックエンドでトークンを消費するため、ここではローカルキャッシュと統計の更新のみ
         if (response.tokenUsage.inputTokens && response.tokenUsage.outputTokens && response.model) {
-          const { trackAndDeductTokens } = await import('../../billing/utils/tokenBalance');
-          await trackAndDeductTokens(
+          const { updateLocalTokenStats } = await import('../../billing/utils/tokenBalance');
+          await updateLocalTokenStats(
             response.tokenUsage.inputTokens,
             response.tokenUsage.outputTokens,
             response.model

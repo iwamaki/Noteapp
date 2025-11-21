@@ -118,12 +118,6 @@ FlatListItemComponent.displayName = 'FlatListItem';
 export const FlatListItem = React.memo(FlatListItemComponent);
 
 const styles = StyleSheet.create({
-  label: {
-    fontWeight: '600',
-  },
-  summaryText: {
-    fontStyle: 'italic',
-  },
   metadataContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
