@@ -18,11 +18,6 @@ const AttachedFilesListComponent: React.FC = () => {
   const { colors } = useTheme();
   const { attachedFiles, removeAttachedFile } = useChat();
 
-  // 添付ファイルがない場合は何も表示しない
-  if (attachedFiles.length === 0) {
-    return null;
-  }
-
   const styles = useMemo(
     () => ({
       attachedFileWrapper: {
@@ -57,6 +52,11 @@ const AttachedFilesListComponent: React.FC = () => {
     }),
     [colors]
   );
+
+  // 添付ファイルがない場合は何も表示しない
+  if (attachedFiles.length === 0) {
+    return null;
+  }
 
   return (
     <View style={styles.attachedFileWrapper}>
