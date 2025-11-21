@@ -139,7 +139,7 @@ def chat_context_dto_to_domain(dto: ChatContextDTO | None):
         currentFileContent=dto.currentFileContent,
         attachedFileContent=dto.attachedFileContent,
         conversationHistory=dto.conversationHistory,
-        activeScreen=active_screen_domain,
+        active_screen=active_screen_domain,
         allFiles=dto.allFiles,
         sendFileContextToLLM=dto.sendFileContextToLLM
     )

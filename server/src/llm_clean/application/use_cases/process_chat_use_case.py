@@ -105,9 +105,11 @@ class ProcessChatUseCase:
             )
 
         except Exception as e:
+            import traceback
             logger.error(
                 f"[ProcessChatUseCase] LLM provider error: {str(e)}"
             )
+            logger.error(f"[ProcessChatUseCase] Traceback: {traceback.format_exc()}")
             return ChatResponseDTO(
                 message="",
                 error=f"LLMエラーが発生しました: {str(e)}",
