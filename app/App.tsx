@@ -16,6 +16,7 @@ import { blockingInitializationTasks, backgroundInitializationTasks } from './in
 import { useInitializationStore } from './initialization/InitializationStore';
 import { SplashScreen } from './components/SplashScreen';
 import { logger } from './utils/logger';
+import * as NavigationBar from 'expo-navigation-bar';
 
 /**
  * @function AppContent
@@ -25,6 +26,11 @@ import { logger } from './utils/logger';
  */
 const AppContent = () => {
   const { themeMode, colors } = useTheme();
+
+  // ナビゲーションバーの色をテーマに合わせて設定
+  useEffect(() => {
+    NavigationBar.setBackgroundColorAsync(colors.background);
+  }, [colors.background]);
 
   const styles = StyleSheet.create({
     container: {
