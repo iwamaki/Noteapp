@@ -368,6 +368,7 @@ async def google_callback(
                 "email": result["email"],
                 "display_name": result.get("display_name", ""),
                 "profile_picture_url": result.get("profile_picture_url", ""),
+                "state": state,  # CSRF protection: include state in callback
             }
         )
 

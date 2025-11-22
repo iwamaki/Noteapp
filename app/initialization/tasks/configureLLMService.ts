@@ -7,6 +7,7 @@
 import { InitializationTask, InitializationStage, TaskPriority } from '../types';
 import { useTokenBalanceStore } from '../../settings/settingsStore';
 import APIService from '../../features/llmService/api';
+import { logger } from '../../utils/logger';
 
 /**
  * LLMサービス設定タスク
@@ -47,23 +48,23 @@ export const configureLLMServiceTask: InitializationTask = {
 
         // デバッグログ（開発時のみ）
         if (__DEV__) {
-          console.log('[configureLLMService] LLM configured:', {
+          logger.debug('init', 'LLM configured', {
             provider: providerName,
             model: initialModelId,
             category: activeModelCategory,
           });
         }
       } else {
-        console.warn('[configureLLMService] Provider not found for model:', initialModelId);
+        logger.warn('init', 'Provider not found for model', { modelId: initialModelId });
       }
     } catch (error) {
-      console.error('[configureLLMService] Failed to load providers:', error);
+      logger.error('init', 'Failed to load providers', error);
       throw error;
     }
   },
 
   fallback: async (error: Error) => {
-    console.warn('[configureLLMService] Failed to configure LLM service, using defaults:', error);
+    logger.warn('init', 'Failed to configure LLM service, using defaults', error);
     // デフォルト設定はLLMServiceのコンストラクタで既に設定されているため、
     // フォールバックは特に必要ありません
   },

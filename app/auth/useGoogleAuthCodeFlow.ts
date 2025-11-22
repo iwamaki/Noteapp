@@ -10,6 +10,7 @@ import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
 import * as SecureStore from 'expo-secure-store';
 import { getOrCreateDeviceId } from './deviceIdService';
+import { logger } from '../utils/logger';
 
 // WebBrowser セッションの自動終了を有効化（iOS で推奨）
 WebBrowser.maybeCompleteAuthSession();
@@ -103,7 +104,7 @@ export function useGoogleAuthCodeFlow(): UseGoogleAuthCodeFlowResult {
    * Deep Link を処理（Custom URI Scheme & App Links 両対応）
    */
   const handleDeepLink = useCallback((url: string) => {
-    console.log('[GoogleAuth] Deep link received:', url);
+    logger.debug('auth', 'Deep link received', { url });
 
     // Custom URI Scheme (noteapp://auth?...) または
     // App Links (https://99f150da2530.ngrok-free.app/auth/callback?...) の形式かチェック
@@ -153,11 +154,36 @@ export function useGoogleAuthCodeFlow(): UseGoogleAuthCodeFlowResult {
     // トークンを SecureStore に保存
     (async () => {
       try {
+        // CSRF保護: state パラメータを検証
+        const receivedState = params.get('state');
+        const storedState = await SecureStore.getItemAsync('oauth_state');
+
+        if (!receivedState || !storedState) {
+          logger.error('auth', 'Missing state parameter - possible CSRF attack');
+          setError('Authentication failed: Invalid state parameter');
+          setIsLoading(false);
+          return;
+        }
+
+        if (receivedState !== storedState) {
+          logger.error('auth', 'State parameter mismatch - possible CSRF attack', {
+            receivedStatePrefix: receivedState.substring(0, 10),
+            storedStatePrefix: storedState.substring(0, 10),
+          });
+          setError('Authentication failed: State validation failed');
+          setIsLoading(false);
+          return;
+        }
+
+        // State検証成功 - one-time useのため削除
+        await SecureStore.deleteItemAsync('oauth_state');
+        logger.info('auth', 'State parameter validated successfully');
+
         await SecureStore.setItemAsync('access_token', accessToken);
         await SecureStore.setItemAsync('refresh_token', refreshToken);
         await SecureStore.setItemAsync('user_id', userId);
 
-        console.log('[GoogleAuth] Tokens saved successfully');
+        logger.info('auth', 'Tokens saved successfully');
 
         // 認証結果を設定
         setResult({
@@ -173,7 +199,7 @@ export function useGoogleAuthCodeFlow(): UseGoogleAuthCodeFlowResult {
         setIsLoading(false);
         setError(null);
       } catch (err) {
-        console.error('[GoogleAuth] Failed to save tokens:', err);
+        logger.error('auth', 'Failed to save tokens', { error: err });
         setError('Failed to save authentication tokens');
         setIsLoading(false);
       }
@@ -208,9 +234,17 @@ export function useGoogleAuthCodeFlow(): UseGoogleAuthCodeFlowResult {
       }
 
       const data = await response.json();
-      const { auth_url } = data;
+      const { auth_url, state } = data;
 
-      console.log('[GoogleAuth] Opening browser for authentication...');
+      if (!state) {
+        throw new Error('Server did not return state parameter');
+      }
+
+      // CSRF保護: stateパラメータをSecureStoreに保存（one-time use）
+      await SecureStore.setItemAsync('oauth_state', state);
+      logger.info('auth', 'State parameter stored for CSRF protection');
+
+      logger.debug('auth', 'Opening browser for authentication');
 
       // WebBrowser で認証画面を開く
       // App Links (HTTPS) を使用（Custom URI Schemeはフォールバック）
@@ -220,9 +254,11 @@ export function useGoogleAuthCodeFlow(): UseGoogleAuthCodeFlowResult {
         redirectUrl
       );
 
-      console.log('[GoogleAuth] Browser result:', browserResult.type);
+      logger.debug('auth', 'Browser result', { type: browserResult.type });
 
       if (browserResult.type === 'cancel') {
+        // ユーザーがキャンセルした場合、保存したstateを削除
+        await SecureStore.deleteItemAsync('oauth_state');
         setError('Authentication cancelled');
         setIsLoading(false);
       }
@@ -231,7 +267,13 @@ export function useGoogleAuthCodeFlow(): UseGoogleAuthCodeFlowResult {
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
-      console.error('[GoogleAuth] Login error:', errorMessage);
+      logger.error('auth', 'Login error', { error: errorMessage });
+      // エラー時も保存したstateを削除
+      try {
+        await SecureStore.deleteItemAsync('oauth_state');
+      } catch (deleteErr) {
+        logger.error('auth', 'Failed to delete state on error', { error: deleteErr });
+      }
       setError(errorMessage);
       setIsLoading(false);
     }

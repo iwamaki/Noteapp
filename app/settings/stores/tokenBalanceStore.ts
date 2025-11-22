@@ -13,6 +13,7 @@ import {
   defaultLoadedModels,
 } from '../types/tokenBalance.types';
 import { SettingsPersistenceService } from '../services/settingsPersistenceService';
+import { logger } from '../../utils/logger';
 
 const STORAGE_KEY_BALANCE = 'token_balance';
 const STORAGE_KEY_MODELS = 'loaded_models';
@@ -70,7 +71,7 @@ export const useTokenBalanceStore = create<TokenBalanceStore>((set, get) => ({
 
       set({ balance, loadedModels, purchaseHistory });
     } catch (error) {
-      console.error('[TokenBalanceStore] Failed to load data:', error);
+      logger.error('billing', 'Failed to load data', error);
     } finally {
       set({ isLoading: false });
     }
@@ -85,7 +86,7 @@ export const useTokenBalanceStore = create<TokenBalanceStore>((set, get) => ({
 
       // 初期化されていない場合はスキップ
       if (!isBillingApiServiceInitialized()) {
-        console.warn('[TokenBalanceStore] BillingApiService not initialized, skipping balance load');
+        logger.warn('billing', 'BillingApiService not initialized, skipping balance load');
         return;
       }
 
@@ -94,7 +95,7 @@ export const useTokenBalanceStore = create<TokenBalanceStore>((set, get) => ({
       const accessToken = await getAccessToken();
 
       if (!accessToken) {
-        console.warn('[TokenBalanceStore] No access token found, skipping balance load');
+        logger.warn('billing', 'No access token found, skipping balance load');
         return;
       }
 
@@ -108,12 +109,12 @@ export const useTokenBalanceStore = create<TokenBalanceStore>((set, get) => ({
 
       await SettingsPersistenceService.save(STORAGE_KEY_BALANCE, balance);
       set({ balance });
-      console.log('[TokenBalanceStore] Token balance loaded from API:', {
+      logger.info('billing', 'Token balance loaded from API', {
         credits: balance.credits,
         models: Object.keys(balance.allocatedTokens).length,
       });
     } catch (error) {
-      console.error('[TokenBalanceStore] Failed to load token balance:', error);
+      logger.error('billing', 'Failed to load token balance', error);
     }
   },
 
@@ -151,7 +152,7 @@ export const useTokenBalanceStore = create<TokenBalanceStore>((set, get) => ({
       loadedModels: newLoadedModels,
       activeModelCategory: category,
     });
-    console.log(`[TokenBalanceStore] Loaded ${modelId} into ${category} slot, set active category to ${category}`);
+    logger.info('billing', `Loaded ${modelId} into ${category} slot, set active category to ${category}`);
   },
 
   setActiveModelCategory: (category: 'quick' | 'think') => {
@@ -187,9 +188,9 @@ export const useTokenBalanceStore = create<TokenBalanceStore>((set, get) => ({
         purchaseHistory: resetPurchases,
       });
 
-      console.log('[TokenBalanceStore] Token balance and purchases reset');
+      logger.info('billing', 'Token balance and purchases reset');
     } catch (error) {
-      console.error('[TokenBalanceStore] Failed to reset tokens:', error);
+      logger.error('billing', 'Failed to reset tokens', error);
       throw error;
     }
   },
@@ -197,16 +198,16 @@ export const useTokenBalanceStore = create<TokenBalanceStore>((set, get) => ({
   handleAuthenticationChange: async (userId: string | null) => {
     if (userId) {
       // ログイン時: 新しいアカウントのトークン残高を取得
-      console.log('[TokenBalanceStore] User logged in, refreshing token balance');
+      logger.info('billing', 'User logged in, refreshing token balance');
       try {
         await get().loadTokenBalance();
-        console.log('[TokenBalanceStore] Token balance loaded for user:', userId.substring(0, 8));
+        logger.info('billing', 'Token balance loaded for user', { userId: userId.substring(0, 8) });
       } catch (error) {
-        console.warn('[TokenBalanceStore] Failed to load token balance after login:', error);
+        logger.warn('billing', 'Failed to load token balance after login', error);
       }
     } else {
       // ログアウト時: トークン残高、購入履歴をクリア
-      console.log('[TokenBalanceStore] User logged out, clearing token balance');
+      logger.info('billing', 'User logged out, clearing token balance');
       try {
         const resetBalance = defaultTokenBalance;
         const resetPurchases: PurchaseRecord[] = [];
@@ -221,9 +222,9 @@ export const useTokenBalanceStore = create<TokenBalanceStore>((set, get) => ({
           purchaseHistory: resetPurchases,
         });
 
-        console.log('[TokenBalanceStore] Token balance and purchases cleared');
+        logger.info('billing', 'Token balance and purchases cleared');
       } catch (error) {
-        console.error('[TokenBalanceStore] Failed to clear token balance:', error);
+        logger.error('billing', 'Failed to clear token balance', error);
       }
     }
   },

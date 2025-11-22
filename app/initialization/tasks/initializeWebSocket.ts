@@ -7,6 +7,7 @@
 
 import { InitializationTask, InitializationStage, TaskPriority } from '../types';
 import ChatService from '../../features/chat';
+import { logger } from '../../utils/logger';
 
 /**
  * WebSocket初期化タスク
@@ -30,7 +31,7 @@ export const initializeWebSocketTask: InitializationTask = {
     const backendUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
 
     if (!backendUrl) {
-      console.warn('[initializeWebSocket] Backend URL not configured. Skipping WebSocket initialization.');
+      logger.warn('init', 'Backend URL not configured. Skipping WebSocket initialization.');
       return;
     }
 
@@ -40,7 +41,7 @@ export const initializeWebSocketTask: InitializationTask = {
 
       // デバッグログ（開発時のみ）
       if (__DEV__) {
-        console.log('[initializeWebSocket] WebSocket initialized:', {
+        logger.debug('init', 'WebSocket initialized', {
           backendUrl,
           clientId: ChatService.getClientId(),
         });
@@ -48,16 +49,16 @@ export const initializeWebSocketTask: InitializationTask = {
     } catch (error) {
       // WebSocket初期化の失敗は致命的ではない
       // read_fileツールが使用できなくなるだけで、他の機能は動作する
-      console.warn('[initializeWebSocket] WebSocket initialization failed:', error);
+      logger.warn('init', 'WebSocket initialization failed', error);
       throw error; // フォールバックで処理
     }
   },
 
   fallback: async (error: Error) => {
-    console.warn('[initializeWebSocket] Using fallback - WebSocket not available:', error);
+    logger.warn('init', 'Using fallback - WebSocket not available', error);
     // フォールバック: WebSocketなしで続行
     // read_fileツールは「開いているファイルのみ」の動作になる
-    console.warn('[initializeWebSocket] File content fetching will be limited to currently open files only.');
+    logger.warn('init', 'File content fetching will be limited to currently open files only.');
   },
 
   retry: {
