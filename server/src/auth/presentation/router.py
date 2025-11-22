@@ -525,6 +525,9 @@ async def google_callback(
                 )
                 db.add(new_user)
 
+                # Userをデータベースに書き込む（外部キー制約のため）
+                db.flush()
+
                 # クレジットレコードを作成
                 credit = Credit(user_id=user_id, credits=0)
                 db.add(credit)

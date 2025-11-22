@@ -65,6 +65,9 @@ class AuthService:
             new_user = User(user_id=user_id)
             self.db.add(new_user)
 
+            # Userをデータベースに書き込む（外部キー制約のため）
+            self.db.flush()
+
             # クレジットレコード作成
             new_credit = Credit(user_id=user_id, credits=0)
             self.db.add(new_credit)
