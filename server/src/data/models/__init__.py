@@ -1,7 +1,7 @@
 """データモデルのエクスポート"""
 from .base import Base
-from .user import User, DeviceAuth
 from .billing import Credit, TokenBalance, TokenPricing, Transaction
+from .user import DeviceAuth, User
 
 __all__ = [
     'Base',

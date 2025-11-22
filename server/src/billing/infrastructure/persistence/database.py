@@ -3,8 +3,8 @@
 # @responsibility データベースの初期化、初期データ投入
 
 from src.core.logger import logger
-from src.data import SessionLocal, engine
-from src.data.models import Base, Credit, TokenPricing, User
+from src.data import SessionLocal
+from src.data.models import Credit, TokenPricing, User
 
 from ..config.constants import DEFAULT_USER_ID, INITIAL_PRICING_DATA
 

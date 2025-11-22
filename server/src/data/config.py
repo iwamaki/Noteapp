@@ -1,6 +1,7 @@
 """データベース設定"""
-from pydantic_settings import BaseSettings
 from functools import lru_cache
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class DatabaseSettings(BaseSettings):
@@ -12,12 +13,13 @@ class DatabaseSettings(BaseSettings):
     database_pool_timeout: int = 30
     database_pool_recycle: int = 3600
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = False
-        extra = "ignore"  # .envの他のフィールドを無視
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        case_sensitive=False,
+        extra="ignore",  # .envの他のフィールドを無視
+    )
 
 
-@lru_cache()
+@lru_cache
 def get_database_settings() -> DatabaseSettings:
-    return DatabaseSettings()
+    return DatabaseSettings()  # type: ignore[call-arg]

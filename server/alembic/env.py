@@ -7,14 +7,14 @@ import os
 import sys
 from logging.config import fileConfig
 
-from alembic import context
 from sqlalchemy import engine_from_config, pool
+
+from alembic import context
 
 # プロジェクトルートをPythonパスに追加
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from src.data import Base
-from src.data.models import user, billing  # モデルを明示的にインポート
 
 # Alembicの設定オブジェクト
 config = context.config
@@ -24,7 +24,8 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 # アプリケーション設定からデータベースURLを取得
-from src.data.config import get_database_settings
+from src.data.config import get_database_settings  # noqa: E402
+
 settings = get_database_settings()
 
 # alembic.iniのsqlalchemy.urlを上書き
