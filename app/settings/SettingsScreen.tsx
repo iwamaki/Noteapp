@@ -95,9 +95,7 @@ function SettingsScreen() {
 
       Alert.alert(
         t('common.ok'),
-        authResult.is_new_user
-          ? t('settings.account.loginError')
-          : t('settings.account.loginError')
+        t('settings.account.loginSuccess')
       );
     } catch (error) {
       Alert.alert(t('common.error'), t('settings.account.loginProcessError'));

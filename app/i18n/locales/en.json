@@ -12,6 +12,7 @@
       "logout": "Sign Out",
       "logoutConfirm": "Are you sure you want to sign out from your Google account?",
       "logoutSuccess": "Signed out successfully",
+      "loginSuccess": "Signed in successfully",
       "loginError": "Google sign-in failed",
       "loginProcessError": "Failed to process Google sign-in"
     },

@@ -447,12 +447,12 @@ async def google_callback(
         # エラーチェック
         if error:
             logger.warning(f"Google OAuth error: {error}")
-            error_url = f"{base_url}/auth/callback?error={error}"
+            error_url = f"{base_url}/api/auth/callback?error={error}"
             return RedirectResponse(error_url)
 
         if not code or not state:
             logger.warning("Missing code or state in callback")
-            error_url = f"{base_url}/auth/callback?error=missing_parameters"
+            error_url = f"{base_url}/api/auth/callback?error=missing_parameters"
             return RedirectResponse(error_url)
 
         # state を検証して device_id を取得
@@ -461,7 +461,7 @@ async def google_callback(
 
         if not device_id:
             logger.warning(f"Invalid or expired state: {state[:10]}...")
-            error_url = f"{base_url}/auth/callback?error=invalid_state"
+            error_url = f"{base_url}/api/auth/callback?error=invalid_state"
             return RedirectResponse(error_url)
 
         # OAuth サービスでトークン交換とユーザー情報取得
@@ -472,7 +472,7 @@ async def google_callback(
 
         if not access_token or not id_token:
             logger.error("Missing tokens in Google response")
-            error_url = f"{base_url}/auth/callback?error=token_exchange_failed"
+            error_url = f"{base_url}/api/auth/callback?error=token_exchange_failed"
             return RedirectResponse(error_url)
 
         # ユーザー情報を取得
@@ -572,7 +572,7 @@ async def google_callback(
             })
 
             # Construct App Links URL (Android Intent Filter will intercept this)
-            app_links_url = f"{base_url}/auth/callback?{params}"
+            app_links_url = f"{base_url}/api/auth/callback?{params}"
 
             logger.debug(f"Redirecting to App Links URL: {app_links_url[:100]}...")
 
@@ -587,9 +587,9 @@ async def google_callback(
         oauth_redirect_uri = os.getenv("GOOGLE_OAUTH_REDIRECT_URI", "")
         if oauth_redirect_uri:
             base_url = oauth_redirect_uri.replace("/api/auth/google/callback", "")
-            error_url = f"{base_url}/auth/callback?error=oauth_flow_error"
+            error_url = f"{base_url}/api/auth/callback?error=oauth_flow_error"
         else:
-            error_url = "/auth/callback?error=oauth_flow_error"
+            error_url = "/api/auth/callback?error=oauth_flow_error"
         html_content = _generate_error_html("認証エラー", "認証中にエラーが発生しました。", error_url)
         return HTMLResponse(content=html_content, status_code=200)
     except Exception as e:
@@ -597,9 +597,9 @@ async def google_callback(
         oauth_redirect_uri = os.getenv("GOOGLE_OAUTH_REDIRECT_URI", "")
         if oauth_redirect_uri:
             base_url = oauth_redirect_uri.replace("/api/auth/google/callback", "")
-            error_url = f"{base_url}/auth/callback?error=internal_error"
+            error_url = f"{base_url}/api/auth/callback?error=internal_error"
         else:
-            error_url = "/auth/callback?error=internal_error"
+            error_url = "/api/auth/callback?error=internal_error"
         html_content = _generate_error_html("エラー", "予期しないエラーが発生しました。", error_url)
         return HTMLResponse(content=html_content, status_code=200)
 

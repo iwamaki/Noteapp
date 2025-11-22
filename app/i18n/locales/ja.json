@@ -12,6 +12,7 @@
       "logout": "ログアウト",
       "logoutConfirm": "Googleアカウントからログアウトしますか？",
       "logoutSuccess": "ログアウトしました",
+      "loginSuccess": "ログインしました",
       "loginError": "Googleログインに失敗しました",
       "loginProcessError": "Googleログイン処理に失敗しました"
     },
