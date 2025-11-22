@@ -12,9 +12,10 @@ import RootNavigator from './navigation/RootNavigator';
 import { ThemeProvider, useTheme } from './design/theme/ThemeContext';
 import { View, StyleSheet } from 'react-native';
 import { AppInitializer } from './initialization/AppInitializer';
-import { allInitializationTasks } from './initialization/tasks';
+import { blockingInitializationTasks, backgroundInitializationTasks } from './initialization/tasks';
 import { useInitializationStore } from './initialization/InitializationStore';
 import { SplashScreen } from './components/SplashScreen';
+import { logger } from './utils/logger';
 
 /**
  * @function AppContent
@@ -58,19 +59,47 @@ export default function App() {
     // 初期化マネージャーのセットアップと実行
     const initializeApp = async () => {
       try {
-        const initializer = AppInitializer.getInstance({
+        // ===== Phase 1: ブロッキングタスク（起動時必須） =====
+        logger.info('init', 'Starting blocking initialization tasks...');
+        const blockingInitializer = AppInitializer.getInstance({
           enableDebugLogs: __DEV__,
           minSplashDuration: 500, // 最低0.5秒表示
         });
 
-        // タスクを登録
-        initializer.registerTasks(allInitializationTasks);
+        // 必須タスクのみ登録
+        blockingInitializer.registerTasks(blockingInitializationTasks);
 
-        // 初期化を実行
-        await initializer.initialize();
+        // ブロッキング初期化を実行（これが完了するまでスプラッシュ画面を表示）
+        await blockingInitializer.initialize();
+
+        logger.info('init', 'Blocking initialization completed. Starting background tasks...');
+
+        // ===== Phase 2: バックグラウンドタスク（非同期実行） =====
+        // スプラッシュ画面を閉じた後、バックグラウンドで実行
+        initializeBackgroundTasks();
       } catch (error) {
-        console.error('[App] Initialization failed:', error);
+        logger.error('init', 'Initialization failed', error);
         setInitError(error instanceof Error ? error : new Error(String(error)));
+      }
+    };
+
+    // バックグラウンドタスクを非同期で実行
+    const initializeBackgroundTasks = async () => {
+      try {
+        // 新しいinitializerインスタンスを作成（独立して実行）
+        AppInitializer.resetInstance();
+        const backgroundInitializer = AppInitializer.getInstance({
+          enableDebugLogs: __DEV__,
+          minSplashDuration: 0, // バックグラウンドなので待機不要
+        });
+
+        backgroundInitializer.registerTasks(backgroundInitializationTasks);
+        await backgroundInitializer.initialize();
+
+        logger.info('init', 'Background initialization completed');
+      } catch (error) {
+        // バックグラウンドタスクの失敗はアプリ起動に影響しない
+        logger.warn('init', 'Background initialization failed (non-critical)', error);
       }
     };
 

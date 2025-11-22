@@ -13,6 +13,7 @@ import {
   InitializationError,
   InitializerConfig,
 } from './types';
+import { logger } from '../utils/logger';
 
 /**
  * デフォルト設定
@@ -62,10 +63,10 @@ export class AppInitializer {
    */
   public registerTask(task: InitializationTask): void {
     if (this.tasks.has(task.id)) {
-      this.log(`⚠️ Task ${task.id} is already registered. Overwriting.`);
+      logger.warn('init', `Task ${task.id} is already registered. Overwriting.`);
     }
     this.tasks.set(task.id, task);
-    this.log(`✅ Registered task: ${task.id} (${task.stage})`);
+    logger.debug('init', `Registered task: ${task.id} (${task.stage})`);
   }
 
   /**
@@ -83,7 +84,7 @@ export class AppInitializer {
     const store = useInitializationStore.getState();
 
     try {
-      this.log('🚀 Starting application initialization...');
+      logger.info('init', 'Starting application initialization...');
       store.startInitialization();
 
       // ステージ順に実行
@@ -99,7 +100,7 @@ export class AppInitializer {
 
         // クリティカルエラーがあればここで中断
         if (this.config.stopOnCriticalError && this.hasCriticalErrors(stage)) {
-          this.log(`❌ Critical error in stage ${stage}. Stopping initialization.`);
+          logger.error('init', `Critical error in stage ${stage}. Stopping initialization.`);
           store.failInitialization();
           throw new Error(`Critical initialization failure at stage: ${stage}`);
         }
@@ -110,9 +111,12 @@ export class AppInitializer {
 
       store.completeInitialization();
       const duration = Date.now() - this.startTime;
-      this.log(`✅ Initialization completed in ${duration}ms`);
+      logger.info('init', `Initialization completed in ${duration}ms`);
+
+      // 詳細なタイミングレポートを出力
+      this.printTimingReport();
     } catch (error) {
-      this.log(`❌ Initialization failed:`, error);
+      logger.error('init', 'Initialization failed', error);
       store.failInitialization();
       throw error;
     }
@@ -126,11 +130,11 @@ export class AppInitializer {
     const stageTasks = this.getTasksForStage(stage);
 
     if (stageTasks.length === 0) {
-      this.log(`⚠️ No tasks registered for stage: ${stage}`);
+      logger.warn('init', `No tasks registered for stage: ${stage}`);
       return;
     }
 
-    this.log(`🔄 Starting stage: ${stage} (${stageTasks.length} tasks)`);
+    logger.info('init', `Starting stage: ${stage} (${stageTasks.length} tasks)`);
     store.startStage(stage);
 
     // タスクを登録
@@ -145,7 +149,7 @@ export class AppInitializer {
     await this.executeTasks(executionOrder);
 
     store.completeStage(stage);
-    this.log(`✅ Completed stage: ${stage}`);
+    logger.info('init', `Completed stage: ${stage}`);
   }
 
   /**
@@ -168,7 +172,7 @@ export class AppInitializer {
     const timeout = task.timeout || this.config.globalTimeout;
     const maxAttempts = task.retry?.maxAttempts || 1;
 
-    this.log(`▶️ Executing task: ${task.id} (${task.name})`);
+    logger.debug('init', `Executing task: ${task.id} (${task.name})`);
     store.startTask(task.id, task.name);
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -178,10 +182,12 @@ export class AppInitializer {
 
         // 成功
         store.completeTask(task.id);
-        this.log(`✅ Task completed: ${task.id}`);
+        const taskState = store.stages[store.currentStage!]?.tasks[task.id];
+        const duration = taskState?.duration || 0;
+        logger.debug('init', `Task completed: ${task.id} (${duration}ms)`);
         return;
       } catch (error) {
-        this.log(`❌ Task failed (attempt ${attempt}/${maxAttempts}): ${task.id}`, error);
+        logger.warn('init', `Task failed (attempt ${attempt}/${maxAttempts}): ${task.id}`, error);
 
         // 最後の試行なら、エラーを処理
         if (attempt === maxAttempts) {
@@ -192,7 +198,7 @@ export class AppInitializer {
         // リトライ待機
         if (task.retry) {
           const delay = this.calculateRetryDelay(task.retry.delayMs, attempt, task.retry.exponentialBackoff);
-          this.log(`⏳ Retrying task ${task.id} in ${delay}ms...`);
+          logger.debug('init', `Retrying task ${task.id} in ${delay}ms...`);
           await this.sleep(delay);
         }
       }
@@ -222,13 +228,13 @@ export class AppInitializer {
     // フォールバック関数があれば実行
     if (task.fallback) {
       try {
-        this.log(`🔄 Running fallback for task: ${task.id}`);
+        logger.info('init', `Running fallback for task: ${task.id}`);
         await task.fallback(error instanceof Error ? error : new Error(String(error)));
         store.completeTask(task.id);
-        this.log(`✅ Fallback succeeded for task: ${task.id}`);
+        logger.info('init', `Fallback succeeded for task: ${task.id}`);
         return;
       } catch (fallbackError) {
-        this.log(`❌ Fallback failed for task: ${task.id}`, fallbackError);
+        logger.error('init', `Fallback failed for task: ${task.id}`, fallbackError);
       }
     }
 
@@ -262,7 +268,7 @@ export class AppInitializer {
         task.dependencies.forEach((depId) => {
           // 全タスク（this.tasks）から依存関係を検証
           if (!this.tasks.has(depId)) {
-            this.log(`⚠️ Warning: Task ${task.id} depends on non-existent task ${depId}`);
+            logger.warn('init', `Task ${task.id} depends on non-existent task ${depId}`);
             return;
           }
           // 依存タスクが現在のステージに含まれている場合のみグラフに追加
@@ -303,7 +309,7 @@ export class AppInitializer {
 
     // 循環依存のチェック
     if (result.length !== tasks.length) {
-      this.log('❌ Circular dependency detected in tasks!');
+      logger.error('init', 'Circular dependency detected in tasks!');
       throw new Error('Circular dependency detected in initialization tasks');
     }
 
@@ -364,7 +370,7 @@ export class AppInitializer {
     const remaining = this.config.minSplashDuration - elapsed;
 
     if (remaining > 0) {
-      this.log(`⏳ Waiting ${remaining}ms to ensure minimum splash duration...`);
+      logger.debug('init', `Waiting ${remaining}ms to ensure minimum splash duration...`);
       await this.sleep(remaining);
     }
   }
@@ -374,15 +380,6 @@ export class AppInitializer {
    */
   private sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
-  }
-
-  /**
-   * ログ出力
-   */
-  private log(message: string, ...args: any[]): void {
-    if (this.config.enableDebugLogs) {
-      console.log(`[AppInitializer] ${message}`, ...args);
-    }
   }
 
   /**
@@ -397,5 +394,91 @@ export class AppInitializer {
    */
   public getConfig(): Required<InitializerConfig> {
     return { ...this.config };
+  }
+
+  /**
+   * タイミングレポートを出力
+   */
+  private printTimingReport(): void {
+    if (!this.config.enableDebugLogs) return;
+
+    const store = useInitializationStore.getState();
+    const { stages } = store;
+
+    logger.info('init', '\n' + '='.repeat(60));
+    logger.info('init', '📊 Initialization Timing Report');
+    logger.info('init', '='.repeat(60));
+
+    const allTasks: Array<{
+      stage: string;
+      taskId: string;
+      taskName: string;
+      duration: number;
+      status: string;
+    }> = [];
+
+    // 各ステージのタスクを集計
+    Object.values(InitializationStage).forEach((stage) => {
+      const stageState = stages[stage];
+      const stageDuration = stageState.startTime && stageState.endTime
+        ? stageState.endTime.getTime() - stageState.startTime.getTime()
+        : 0;
+
+      logger.info('init', `\n[${stage.toUpperCase()}] Total: ${stageDuration}ms`);
+      logger.info('init', '-'.repeat(60));
+
+      Object.values(stageState.tasks).forEach((taskState) => {
+        const task = this.tasks.get(taskState.taskId);
+        const duration = taskState.duration || 0;
+        const status = taskState.status;
+        const taskName = task?.name || taskState.taskId;
+
+        logger.info('init', `  ${this.getStatusIcon(status)} ${taskName.padEnd(35)} ${duration.toString().padStart(6)}ms`);
+
+        allTasks.push({
+          stage,
+          taskId: taskState.taskId,
+          taskName,
+          duration,
+          status,
+        });
+      });
+    });
+
+    // 合計時間とトップ5を表示
+    const totalTaskTime = allTasks.reduce((sum, t) => sum + t.duration, 0);
+    const sortedTasks = [...allTasks].sort((a, b) => b.duration - a.duration);
+
+    logger.info('init', '\n' + '='.repeat(60));
+    logger.info('init', `⏱️  Total Task Time: ${totalTaskTime}ms`);
+    logger.info('init', `🕐 Total Elapsed Time: ${Date.now() - this.startTime}ms`);
+    logger.info('init', '='.repeat(60));
+
+    logger.info('init', '\n🐢 Top 5 Slowest Tasks:');
+    logger.info('init', '-'.repeat(60));
+    sortedTasks.slice(0, 5).forEach((task, index) => {
+      const percentage = totalTaskTime > 0 ? ((task.duration / totalTaskTime) * 100).toFixed(1) : '0.0';
+      logger.info('init', `  ${index + 1}. ${task.taskName.padEnd(35)} ${task.duration.toString().padStart(6)}ms (${percentage}%)`);
+    });
+
+    logger.info('init', '\n' + '='.repeat(60) + '\n');
+  }
+
+  /**
+   * タスクステータスに応じたアイコンを返す
+   */
+  private getStatusIcon(status: string): string {
+    switch (status) {
+      case 'completed':
+        return '✅';
+      case 'failed':
+        return '❌';
+      case 'skipped':
+        return '⏭️';
+      case 'in_progress':
+        return '🔄';
+      default:
+        return '⏸️';
+    }
   }
 }
