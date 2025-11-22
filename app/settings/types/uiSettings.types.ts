@@ -19,6 +19,9 @@ export interface UISettings {
   showMarkdownSymbols: boolean;
   screenReaderOptimization: boolean;
 
+  // 言語設定
+  language: 'ja' | 'en';
+
   // ファイルリスト表示設定
   categorySortMethod: 'name' | 'fileCount';
   fileSortMethod: 'updatedAt' | 'name';
@@ -34,6 +37,7 @@ export const defaultUISettings: UISettings = {
   syntaxHighlight: true,
   showMarkdownSymbols: true,
   screenReaderOptimization: false,
+  language: 'ja',
   categorySortMethod: 'fileCount',
   fileSortMethod: 'updatedAt',
 };

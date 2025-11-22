@@ -8,6 +8,7 @@
 import { verifyAsyncStorageTask } from './verifyAsyncStorage';
 import { initializeFileSystemTask } from './initializeFileSystem';
 import { loadSettingsTask } from './loadSettings';
+import { initializeI18nTask } from './initializeI18n';
 import { configureLLMServiceTask } from './configureLLMService';
 import { preloadLLMProvidersTask } from './preloadLLMProviders';
 import { configureChatServiceTask } from './configureChatService';
@@ -31,6 +32,7 @@ export const allInitializationTasks: InitializationTask[] = [
   verifyAsyncStorageTask,
   initializeFileSystemTask,  // FileSystemディレクトリ構造の初期化
   loadSettingsTask,
+  initializeI18nTask,  // i18nの初期化（loadSettings後）
   authenticateDevice,  // デバイスID認証
 
   // Stage 2: CORE - コアサービス
@@ -59,6 +61,7 @@ export const blockingInitializationTasks: InitializationTask[] = [
   verifyAsyncStorageTask,
   initializeFileSystemTask,
   loadSettingsTask,
+  initializeI18nTask,  // i18nの初期化（loadSettings後）
   authenticateDevice,
 
   // Stage 2: CORE - コアサービス（UI表示に必須）
@@ -88,6 +91,7 @@ export {
   verifyAsyncStorageTask,
   initializeFileSystemTask,
   loadSettingsTask,
+  initializeI18nTask,
   authenticateDevice,
   restorePendingPurchasesTask,
   configureLLMServiceTask,

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { StyleSheet, ScrollView } from 'react-native';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { RootStackParamList } from '../../navigation/types';
 import { FileEditor, ViewMode as FileEditorViewMode } from './components/FileEditor';
 import { useFileEditor } from './hooks/useFileEditor';
@@ -20,6 +21,7 @@ type FileEditScreenRouteProp = RouteProp<RootStackParamList, 'FileEdit'>;
 
 // ファイル編集画面コンポーネント
 function FileEditScreen() {
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const route = useRoute<FileEditScreenRouteProp>();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
@@ -51,10 +53,10 @@ function FileEditScreen() {
 
   useEffect(() => {
     if (prevIsSavingRef.current === true && isSaving === false) {
-      showToast('保存しました！', 2000);
+      showToast(t('fileEdit.saved'), 2000);
     }
     prevIsSavingRef.current = isSaving;
-  }, [isSaving, showToast]);
+  }, [isSaving, showToast, t]);
 
   useEffect(() => {
     const beforeRemoveListener = (e: any) => {
@@ -145,11 +147,11 @@ function FileEditScreen() {
 
       <CustomModal
         isVisible={isConfirmModalVisible}
-        title="未保存の変更があります。"
-        message="保存しますか？"
+        title={t('fileEdit.unsavedChanges.title')}
+        message={t('fileEdit.unsavedChanges.message')}
         buttons={[
           {
-            text: '保存する',
+            text: t('fileEdit.button.save'),
             style: 'default',
             onPress: async () => {
               setConfirmModalVisible(false);
@@ -160,7 +162,7 @@ function FileEditScreen() {
             },
           },
           {
-            text: '保存しない',
+            text: t('fileEdit.button.dontSave'),
             style: 'destructive',
             onPress: () => {
               setConfirmModalVisible(false);
@@ -170,7 +172,7 @@ function FileEditScreen() {
             },
           },
           {
-            text: 'キャンセル',
+            text: t('common.button.cancel'),
             style: 'cancel',
             onPress: () => setConfirmModalVisible(false),
           },

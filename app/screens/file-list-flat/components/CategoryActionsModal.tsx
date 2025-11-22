@@ -8,6 +8,7 @@
  */
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActionsListModal, ActionItem } from '../../../components/ActionsListModal';
 import { FILE_LIST_FLAT_CONFIG } from '../config';
 import { CategoryActionsModalProps } from '../types';
@@ -23,6 +24,8 @@ export const CategoryActionsModal: React.FC<CategoryActionsModalProps> = ({
   onExport,
   onCreateQA,
 }) => {
+  const { t } = useTranslation();
+
   if (!categoryPath || !categoryName) return null;
 
   // 機能フラグに基づいてアクションリストを構築
@@ -32,7 +35,7 @@ export const CategoryActionsModal: React.FC<CategoryActionsModalProps> = ({
   if (FILE_LIST_FLAT_CONFIG.features.ragEnabled) {
     actions.push({
       icon: 'bulb-outline',
-      label: 'Q&Aを作成',
+      label: t('modals.categoryActions.createQA'),
       onPress: () => {
         onCreateQA(categoryPath, categoryName);
         onClose();
@@ -44,7 +47,7 @@ export const CategoryActionsModal: React.FC<CategoryActionsModalProps> = ({
   actions.push(
     {
       icon: 'share-outline',
-      label: 'エクスポート',
+      label: t('modals.categoryActions.export'),
       onPress: () => {
         onExport(categoryPath);
         onClose();
@@ -52,7 +55,7 @@ export const CategoryActionsModal: React.FC<CategoryActionsModalProps> = ({
     },
     {
       icon: 'create-outline',
-      label: '名前を変更',
+      label: t('modals.categoryActions.rename'),
       onPress: () => {
         onRename(categoryPath);
         onClose();
@@ -60,7 +63,7 @@ export const CategoryActionsModal: React.FC<CategoryActionsModalProps> = ({
     },
     {
       icon: 'trash-outline',
-      label: '削除',
+      label: t('modals.categoryActions.delete'),
       onPress: () => {
         onDelete(categoryPath);
         onClose();
@@ -72,11 +75,11 @@ export const CategoryActionsModal: React.FC<CategoryActionsModalProps> = ({
   return (
     <ActionsListModal
       visible={visible}
-      title="カテゴリー操作"
+      title={t('modals.categoryActions.title')}
       itemInfo={{
         icon: 'folder',
         name: categoryName,
-        metadata: `${fileCount}個のファイル`,
+        metadata: t('modals.categoryActions.fileCount', { count: fileCount }),
       }}
       actions={actions}
       onClose={onClose}

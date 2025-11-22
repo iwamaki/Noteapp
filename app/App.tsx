@@ -17,6 +17,7 @@ import { useInitializationStore } from './initialization/InitializationStore';
 import { SplashScreen } from './components/SplashScreen';
 import { logger } from './utils/logger';
 import * as NavigationBar from 'expo-navigation-bar';
+import './i18n'; // i18nを初期化
 
 /**
  * @function AppContent

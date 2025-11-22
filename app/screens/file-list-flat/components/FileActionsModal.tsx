@@ -8,6 +8,7 @@
  */
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActionsListModal, ActionItem } from '../../../components/ActionsListModal';
 import { getMetadataText } from '../utils';
 import { FileActionsModalProps } from '../types';
@@ -25,12 +26,14 @@ export const FileActionsModal: React.FC<FileActionsModalProps> = ({
   onAttachToChat,
   onExport,
 }) => {
+  const { t } = useTranslation();
+
   if (!file) return null;
 
   const actions: ActionItem[] = [
     {
       icon: 'chatbubble-outline',
-      label: 'チャットに添付',
+      label: t('modals.fileActions.attachToChat'),
       onPress: () => {
         onAttachToChat(file);
         onClose();
@@ -38,7 +41,7 @@ export const FileActionsModal: React.FC<FileActionsModalProps> = ({
     },
     {
       icon: 'share-outline',
-      label: 'エクスポート',
+      label: t('modals.fileActions.export'),
       onPress: () => {
         onExport(file);
         onClose();
@@ -46,7 +49,7 @@ export const FileActionsModal: React.FC<FileActionsModalProps> = ({
     },
     {
       icon: 'create-outline',
-      label: '名前を変更',
+      label: t('modals.fileActions.rename'),
       onPress: () => {
         onRename(file);
         onClose();
@@ -54,7 +57,7 @@ export const FileActionsModal: React.FC<FileActionsModalProps> = ({
     },
     {
       icon: 'folder-outline',
-      label: 'カテゴリーを編集',
+      label: t('modals.fileActions.editCategory'),
       onPress: () => {
         onEditCategories(file);
         onClose();
@@ -62,7 +65,7 @@ export const FileActionsModal: React.FC<FileActionsModalProps> = ({
     },
     {
       icon: 'pricetag-outline',
-      label: 'タグを編集',
+      label: t('modals.fileActions.editTags'),
       onPress: () => {
         onEditTags(file);
         onClose();
@@ -70,7 +73,7 @@ export const FileActionsModal: React.FC<FileActionsModalProps> = ({
     },
     {
       icon: 'move-outline',
-      label: '移動',
+      label: t('modals.fileActions.move'),
       onPress: () => {
         onMove(file);
         onClose();
@@ -78,7 +81,7 @@ export const FileActionsModal: React.FC<FileActionsModalProps> = ({
     },
     {
       icon: 'copy-outline',
-      label: 'コピーを作成',
+      label: t('modals.fileActions.copy'),
       onPress: () => {
         onCopy(file);
         onClose();
@@ -86,7 +89,7 @@ export const FileActionsModal: React.FC<FileActionsModalProps> = ({
     },
     {
       icon: 'trash-outline',
-      label: '削除',
+      label: t('modals.fileActions.delete'),
       onPress: () => {
         onDelete(file);
         onClose();
@@ -98,7 +101,7 @@ export const FileActionsModal: React.FC<FileActionsModalProps> = ({
   return (
     <ActionsListModal
       visible={visible}
-      title="ファイル操作"
+      title={t('modals.fileActions.title')}
       itemInfo={{
         icon: 'document-text',
         name: file.title,

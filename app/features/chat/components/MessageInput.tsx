@@ -7,6 +7,7 @@
 import React, { useMemo } from 'react';
 import { View, TouchableOpacity, Alert } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { CustomInlineInput } from '../../../components/CustomInlineInput';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { useChat } from '../hooks/useChat';
@@ -24,6 +25,7 @@ interface MessageInputProps {
  * メッセージ入力コンポーネント
  */
 const MessageInputComponent: React.FC<MessageInputProps> = ({ inputText, setInputText }) => {
+  const { t } = useTranslation();
   const { colors, iconSizes } = useTheme();
   const { sendMessage, isLoading } = useChat();
   const { loadedModels, activeModelCategory } = useTokenBalanceStore();
@@ -51,11 +53,11 @@ const MessageInputComponent: React.FC<MessageInputProps> = ({ inputText, setInpu
       // ログインチェック
       if (!isAuthenticated) {
         Alert.alert(
-          'ログインが必要です',
-          'チャットを利用するにはログインしてください。\n\n設定画面の「アカウント」セクションから「Googleでログイン」ボタンを押してください。',
+          t('chat.loginRequired.title'),
+          t('chat.loginRequired.message'),
           [
             {
-              text: 'OK',
+              text: t('common.ok'),
               style: 'default',
             },
           ]
@@ -121,7 +123,7 @@ const MessageInputComponent: React.FC<MessageInputProps> = ({ inputText, setInpu
     <View style={styles.inputArea}>
       <CustomInlineInput
         style={styles.customInput}
-        placeholder="メッセージを入力..."
+        placeholder={t('chat.input.placeholder')}
         value={inputText}
         onChangeText={setInputText}
         multiline

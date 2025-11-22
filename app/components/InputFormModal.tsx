@@ -7,6 +7,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { CustomInlineInput } from './CustomInlineInput';
 import { CustomModal } from './CustomModal';
 
@@ -41,11 +42,16 @@ export const InputFormModal: React.FC<InputFormModalProps> = ({
   onSubmit,
   children,
   multiline = false,
-  submitButtonText = '保存',
-  cancelButtonText = 'キャンセル',
+  submitButtonText,
+  cancelButtonText,
   validateInput,
 }) => {
+  const { t } = useTranslation();
   const [inputValue, setInputValue] = useState(initialValue);
+
+  // デフォルトのボタンテキストを翻訳キーから取得
+  const defaultSubmitText = submitButtonText || t('common.button.save');
+  const defaultCancelText = cancelButtonText || t('common.button.cancel');
 
   // モーダルが表示されるたびに初期値をリセット
   useEffect(() => {
@@ -78,12 +84,12 @@ export const InputFormModal: React.FC<InputFormModalProps> = ({
       onClose={onClose}
       buttons={[
         {
-          text: cancelButtonText,
+          text: defaultCancelText,
           style: 'cancel',
           onPress: onClose,
         },
         {
-          text: submitButtonText,
+          text: defaultSubmitText,
           style: 'default',
           onPress: handleSubmit,
         },

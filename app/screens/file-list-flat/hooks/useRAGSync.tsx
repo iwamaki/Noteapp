@@ -8,6 +8,7 @@
 
 import { useState, useCallback } from 'react';
 import { Alert } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { FileRepository } from '@data/repositories/fileRepository';
 import { logger } from '../../../utils/logger';
 import APIService from '../../../features/llmService/api';
@@ -21,6 +22,7 @@ import { UseRAGSyncReturn } from '../types';
  * RAG同期機能を提供するフック
  */
 export const useRAGSync = (): UseRAGSyncReturn => {
+  const { t } = useTranslation();
   const [isSyncing, setIsSyncing] = useState(false);
 
   /**
@@ -40,7 +42,7 @@ export const useRAGSync = (): UseRAGSyncReturn => {
       const categoryFiles = filterFilesByCategory(allFiles, categoryPath);
 
       if (categoryFiles.length === 0) {
-        Alert.alert('Q&A作成', 'このカテゴリーにファイルがありません');
+        Alert.alert(t('rag.createQA.title'), t('rag.createQA.noFiles'));
         logger.warn('rag', `No files found in category: ${categoryPath}`);
         return;
       }
@@ -52,7 +54,7 @@ export const useRAGSync = (): UseRAGSyncReturn => {
         .map(file => {
           // ファイルごとに区切り線とメタデータを追加
           const separator = '='.repeat(60);
-          const header = `${separator}\nタイトル: ${file.title}\nカテゴリー: ${file.category || '未分類'}\n${separator}\n\n`;
+          const header = `${separator}\n${t('rag.metadata.title')} ${file.title}\n${t('rag.metadata.category')} ${file.category || t('rag.metadata.uncategorized')}\n${separator}\n\n`;
           return header + file.content;
         })
         .join('\n\n');
@@ -67,8 +69,8 @@ export const useRAGSync = (): UseRAGSyncReturn => {
       const result = await APIService.uploadTextToKnowledgeBase(
         combinedText,
         collectionName, // カテゴリー専用コレクション
-        `カテゴリー: ${categoryName}`, // メタデータのタイトル
-        `${categoryFiles.length}個のファイルを含むカテゴリー` // メタデータの説明
+        t('rag.metadata.categoryPrefix', { name: categoryName }), // メタデータのタイトル
+        t('rag.metadata.categoryDescription', { count: categoryFiles.length }) // メタデータの説明
       );
 
       if (result.success) {
@@ -81,13 +83,15 @@ export const useRAGSync = (): UseRAGSyncReturn => {
         );
 
         Alert.alert(
-          'Q&A作成完了',
-          `カテゴリー「${categoryName}」のファイル（${categoryFiles.length}件）を知識ベースに追加しました。\n\n` +
-          `チャットで「${categoryName}について教えて」のように質問すると、このカテゴリーの内容に基づいた回答が得られます。\n\n` +
-          `コレクション名: ${collectionName}\n` +
-          `作成されたチャンク数: ${result.document?.chunks_created}\n` +
-          `総文字数: ${result.document?.total_characters}`,
-          [{ text: 'OK' }]
+          t('rag.createQA.completed'),
+          t('rag.createQA.completedMessage', {
+            categoryName,
+            count: categoryFiles.length,
+            collectionName,
+            chunks: result.document?.chunks_created,
+            characters: result.document?.total_characters
+          }),
+          [{ text: t('common.ok') }]
         );
       } else {
         throw new Error('RAG sync failed: ' + result.message);
@@ -95,13 +99,13 @@ export const useRAGSync = (): UseRAGSyncReturn => {
     } catch (error: any) {
       logger.error('rag', `RAG sync failed: ${error.message}`, error);
       Alert.alert(
-        'エラー',
-        `Q&A作成に失敗しました。\n\n${error.message || 'ネットワークエラーが発生しました。'}`
+        t('common.error'),
+        `${t('rag.createQA.failed')}\n\n${error.message || 'ネットワークエラーが発生しました。'}`
       );
     } finally {
       setIsSyncing(false);
     }
-  }, []);
+  }, [t]);
 
   return {
     isSyncing,

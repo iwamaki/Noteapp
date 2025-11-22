@@ -15,6 +15,7 @@ import {
   NativeSyntheticEvent,
   TextInputKeyPressEventData,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../../design/theme/ThemeContext';
 
 interface FeatureBarProps {
@@ -28,6 +29,7 @@ export const FeatureBar: React.FC<FeatureBarProps> = ({
   category,
   onTitleChange,
 }) => {
+  const { t } = useTranslation();
   const { colors, spacing } = useTheme();
   const [localTitle, setLocalTitle] = useState(title);
   const isComposingRef = useRef(false);
@@ -120,7 +122,7 @@ export const FeatureBar: React.FC<FeatureBarProps> = ({
           value={localTitle}
           onChangeText={handleChangeText}
           style={styles.titleInput}
-          placeholder="ファイルのタイトル"
+          placeholder={t('fileEdit.featureBar.placeholder')}
           placeholderTextColor={colors.textSecondary}
           onKeyPress={handleKeyPress}
           onBlur={handleBlur}

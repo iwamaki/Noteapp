@@ -23,10 +23,12 @@ import { useMonthlyCredits } from '../../billing/utils/costCalculation';
 import { useTokenBalanceStore, useUsageTrackingStore } from '../settingsStore';
 import { ListItem } from '../../components/ListItem';
 import { useAuth } from '../../auth/authStore';
+import { useTranslation } from 'react-i18next';
 
 type SettingsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Settings'>;
 
 export const TokenUsageSection: React.FC = () => {
+  const { t } = useTranslation();
   const { colors, spacing, typography } = useTheme();
   const navigation = useNavigation<SettingsScreenNavigationProp>();
   const { balance } = useTokenBalanceStore();
@@ -41,11 +43,11 @@ export const TokenUsageSection: React.FC = () => {
     if (!isAuthenticated) {
       // 未ログイン時: ログイン促進ダイアログを表示
       Alert.alert(
-        'ログインが必要です',
-        'クレジットを購入するにはログインしてください。\n\n画面上部の「アカウント」セクションから「Googleでログイン」ボタンを押してください。',
+        t('tokenUsage.loginRequired'),
+        t('tokenUsage.loginPrompt'),
         [
           {
-            text: 'OK',
+            text: t('common.ok'),
             style: 'default',
           },
         ]
@@ -86,13 +88,6 @@ export const TokenUsageSection: React.FC = () => {
       marginHorizontal: spacing.md,
       marginBottom: spacing.md,
     },
-    modelBreakdownTitle: {
-      ...typography.caption,
-      color: colors.textSecondary,
-      marginTop: spacing.md,
-      marginBottom: spacing.sm,
-      fontWeight: '600',
-    },
     modelBreakdownItem: {
       flexDirection: 'row',
       justifyContent: 'space-between',
@@ -112,12 +107,6 @@ export const TokenUsageSection: React.FC = () => {
       ...typography.caption,
       color: colors.textSecondary,
       fontWeight: '600',
-    },
-    modelTokenDetail: {
-      ...typography.caption,
-      color: colors.textSecondary,
-      fontSize: 11,
-      marginTop: 2,
     },
     modelCost: {
       ...typography.caption,
@@ -174,7 +163,7 @@ export const TokenUsageSection: React.FC = () => {
                 color={colors.primary}
                 style={styles.iconContainer}
               />
-              <Text><ListItem.Title>クレジット</ListItem.Title></Text>
+              <Text><ListItem.Title>{t('tokenUsage.credits')}</ListItem.Title></Text>
             </View>
             {balance.credits > 0 && (
               <Text style={styles.valueText}>{balance.credits}P</Text>
@@ -186,7 +175,7 @@ export const TokenUsageSection: React.FC = () => {
               onPress={handlePurchasePress}
             >
               <Ionicons name="card" size={20} color="#FFFFFF" style={styles.purchaseButtonIcon} />
-              <Text style={styles.purchaseButtonText}>購入</Text>
+              <Text style={styles.purchaseButtonText}>{t('tokenUsage.purchase')}</Text>
               <Ionicons name="chevron-forward" size={20} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
@@ -203,7 +192,7 @@ export const TokenUsageSection: React.FC = () => {
               color={colors.primary}
               style={styles.iconContainer}
             />
-            <Text><ListItem.Title>AIモデル設定</ListItem.Title></Text>
+            <Text><ListItem.Title>{t('tokenUsage.aiModelSettings')}</ListItem.Title></Text>
           </View>
           <View style={styles.buttonRow}>
             <TouchableOpacity
@@ -211,7 +200,7 @@ export const TokenUsageSection: React.FC = () => {
               onPress={() => navigation.navigate('ModelSelection' as any)}
             >
               <MaterialCommunityIcons name="brain" size={20} color="#FFFFFF" style={styles.purchaseButtonIcon} />
-              <Text style={styles.purchaseButtonText}>詳細</Text>
+              <Text style={styles.purchaseButtonText}>{t('tokenUsage.details')}</Text>
               <Ionicons name="chevron-forward" size={20} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
@@ -229,7 +218,7 @@ export const TokenUsageSection: React.FC = () => {
                 color={colors.primary}
                 style={styles.iconContainer}
               />
-              <Text><ListItem.Title>今月の使用量</ListItem.Title></Text>
+              <Text><ListItem.Title>{t('tokenUsage.monthlyUsage')}</ListItem.Title></Text>
             </View>
           </ListItem.Container>
 
@@ -242,7 +231,7 @@ export const TokenUsageSection: React.FC = () => {
                   <View style={styles.modelInfoLeft}>
                     <Text style={styles.modelName}>{modelCredits.displayName}</Text>
                     <Text style={styles.modelUsage}>
-                      {totalTokens.toLocaleString()}トークン
+                      {totalTokens.toLocaleString()}{t('tokenUsage.tokens')}
                     </Text>
                   </View>
                   <Text style={styles.modelCost}>{modelCredits.formattedCredits}</Text>
@@ -252,7 +241,7 @@ export const TokenUsageSection: React.FC = () => {
             {/* 総クレジット消費を表示 */}
             {creditsInfo.totalCredits > 0 && (
               <View style={styles.totalCostContainer}>
-                <Text style={styles.totalCostLabel}>今月の消費</Text>
+                <Text style={styles.totalCostLabel}>{t('tokenUsage.monthlyConsumption')}</Text>
                 <Text style={styles.totalCostValue}>{creditsInfo.formattedTotalCredits}</Text>
               </View>
             )}
