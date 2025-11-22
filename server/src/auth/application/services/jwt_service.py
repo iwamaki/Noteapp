@@ -18,6 +18,7 @@ from src.core.logger import logger
 
 class TokenType:
     """トークンタイプの定数"""
+
     ACCESS = "access"
     REFRESH = "refresh"
 
@@ -37,11 +38,11 @@ def create_access_token(user_id: str, device_id: str) -> str:
     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
 
     payload = {
-        "sub": user_id,           # subject: ユーザーID
-        "device_id": device_id,   # デバイスID
-        "type": TokenType.ACCESS, # トークンタイプ
-        "exp": expire,            # 有効期限
-        "iat": datetime.utcnow()  # 発行時刻
+        "sub": user_id,  # subject: ユーザーID
+        "device_id": device_id,  # デバイスID
+        "type": TokenType.ACCESS,  # トークンタイプ
+        "exp": expire,  # 有効期限
+        "iat": datetime.utcnow(),  # 発行時刻
     }
 
     token = jwt.encode(payload, secret_key, algorithm=ALGORITHM)
@@ -51,8 +52,8 @@ def create_access_token(user_id: str, device_id: str) -> str:
         extra={
             "user_id": user_id,
             "device_id": device_id[:20] + "...",
-            "expires_at": expire.isoformat()
-        }
+            "expires_at": expire.isoformat(),
+        },
     )
 
     return token
@@ -73,11 +74,11 @@ def create_refresh_token(user_id: str, device_id: str) -> str:
     expire = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
 
     payload = {
-        "sub": user_id,            # subject: ユーザーID
-        "device_id": device_id,    # デバイスID
-        "type": TokenType.REFRESH, # トークンタイプ
-        "exp": expire,             # 有効期限
-        "iat": datetime.utcnow()   # 発行時刻
+        "sub": user_id,  # subject: ユーザーID
+        "device_id": device_id,  # デバイスID
+        "type": TokenType.REFRESH,  # トークンタイプ
+        "exp": expire,  # 有効期限
+        "iat": datetime.utcnow(),  # 発行時刻
     }
 
     token = jwt.encode(payload, secret_key, algorithm=ALGORITHM)
@@ -87,8 +88,8 @@ def create_refresh_token(user_id: str, device_id: str) -> str:
         extra={
             "user_id": user_id,
             "device_id": device_id[:20] + "...",
-            "expires_at": expire.isoformat()
-        }
+            "expires_at": expire.isoformat(),
+        },
     )
 
     return token
@@ -112,8 +113,17 @@ def verify_token(token: str, expected_type: str = TokenType.ACCESS) -> dict[str,
         # トークンタイプの検証
         token_type = payload.get("type")
         if token_type != expected_type:
+            # セキュリティイベントログ: トークンタイプ不一致
             logger.warning(
-                f"Token type mismatch: expected={expected_type}, got={token_type}"
+                "security",
+                "Token type mismatch detected",
+                extra={
+                    "event": "token_type_mismatch",
+                    "expected_type": expected_type,
+                    "actual_type": token_type,
+                    "user_id": payload.get("sub"),
+                    "device_id": payload.get("device_id", "")[:8] + "...",
+                },
             )
             return None
 
@@ -122,21 +132,37 @@ def verify_token(token: str, expected_type: str = TokenType.ACCESS) -> dict[str,
         if exp:
             exp_datetime = datetime.fromtimestamp(exp)
             if exp_datetime < datetime.utcnow():
-                logger.warning("Token expired", extra={"expired_at": exp_datetime.isoformat()})
+                # セキュリティイベントログ: トークン期限切れ
+                logger.warning(
+                    "security",
+                    "Expired token detected",
+                    extra={
+                        "event": "token_expired",
+                        "expired_at": exp_datetime.isoformat(),
+                        "user_id": payload.get("sub"),
+                        "device_id": payload.get("device_id", "")[:8] + "...",
+                    },
+                )
                 return None
 
         logger.debug(
             "Token verified successfully",
-            extra={
-                "user_id": payload.get("sub"),
-                "token_type": token_type
-            }
+            extra={"user_id": payload.get("sub"), "token_type": token_type},
         )
 
         return payload
 
     except JWTError as e:
-        logger.warning(f"JWT verification failed: {str(e)}")
+        # セキュリティイベントログ: JWT検証失敗
+        logger.warning(
+            "security",
+            "Invalid JWT token detected",
+            extra={
+                "event": "invalid_token",
+                "error": str(e),
+                "token_prefix": token[:20] + "..." if len(token) > 20 else token,
+            },
+        )
         return None
     except Exception as e:
         logger.error(f"Unexpected error during token verification: {str(e)}")
