@@ -6,6 +6,8 @@
  * すべての価格情報はバックエンドが唯一の情報源（Single Source of Truth）。
  */
 
+import { logger } from '../../utils/logger';
+
 /**
  * モデルIDから販売価格を取得（バックエンドキャッシュ経由）
  *
@@ -39,11 +41,11 @@ export function getTokenPrice(modelId: string): number | undefined {
       }
     }
   } catch (error) {
-    console.error('[Pricing] Failed to get price from backend cache', error);
+    logger.error('billing', 'Failed to get price from backend cache', { error });
   }
 
   // 価格情報が見つからない場合はundefinedを返す
-  console.warn(`[Pricing] No pricing information found for model: ${modelId}`);
+  logger.warn('billing', 'No pricing information found for model', { modelId });
   return undefined;
 }
 

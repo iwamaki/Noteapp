@@ -14,6 +14,7 @@ import {
   useTokenBalanceStore,
   useUsageTrackingStore
 } from '../../settings/settingsStore';
+import { logger } from '../../utils/logger';
 
 /**
  * 設定読み込みタスク
@@ -42,7 +43,7 @@ export const loadSettingsTask: InitializationTask = {
   },
 
   fallback: async (error: Error) => {
-    console.warn('[loadSettingsTask] Failed to load settings, using defaults:', error);
+    logger.warn('init', 'Failed to load settings, using defaults', { error });
     // SettingsStoreは既にデフォルト値で初期化されているため、
     // フォールバック処理は特に必要ありません
   },

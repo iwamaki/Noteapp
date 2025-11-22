@@ -7,6 +7,7 @@
  */
 
 import { FileFlat, FileCategorySectionHierarchical } from '../core/typesFlat';
+import { logger } from '../../utils/logger';
 
 /**
  * カテゴリーノード（内部使用）
@@ -126,9 +127,12 @@ export function groupFilesByCategoryHierarchical(
       .filter(Boolean)
       .sort((a, b) => {
         // デバッグログ
-        console.log(`[FileSort] Category: ${fullPath}, Method: ${fileSortMethod}`);
+        logger.debug('file', 'FileSort', { category: fullPath, method: fileSortMethod });
         if (fullPath === Array.from(categoryNodes.keys())[0] && node.directFileIds.size > 0) {
-          console.log(`[FileSort] Sample files: "${a.title}" (${a.updatedAt.toISOString()}) vs "${b.title}" (${b.updatedAt.toISOString()})`);
+          logger.debug('file', 'FileSort sample files', {
+            file1: { title: a.title, updatedAt: a.updatedAt.toISOString() },
+            file2: { title: b.title, updatedAt: b.updatedAt.toISOString() }
+          });
         }
 
         if (fileSortMethod === 'name') {
@@ -138,7 +142,7 @@ export function groupFilesByCategoryHierarchical(
         } else {
           // 更新日時順（新しい順）
           const result = b.updatedAt.getTime() - a.updatedAt.getTime();
-          console.log(`[FileSort] updatedAt comparison result: ${result}`);
+          logger.debug('file', 'FileSort updatedAt comparison', { result });
           return result;
         }
       });

@@ -7,6 +7,7 @@
 import { create } from 'zustand';
 import { EditorSettings, defaultEditorSettings } from '../types/editorSettings.types';
 import { SettingsPersistenceService } from '../services/settingsPersistenceService';
+import { logger } from '../../utils/logger';
 
 const STORAGE_KEY = 'editor';
 
@@ -32,7 +33,7 @@ export const useEditorSettingsStore = create<EditorSettingsStore>((set, get) => 
       );
       set({ settings });
     } catch (error) {
-      console.error('[EditorSettingsStore] Failed to load settings:', error);
+      logger.error('system', 'Failed to load editor settings', { error });
       set({ settings: defaultEditorSettings });
     } finally {
       set({ isLoading: false });
@@ -45,9 +46,9 @@ export const useEditorSettingsStore = create<EditorSettingsStore>((set, get) => 
     try {
       await SettingsPersistenceService.save(STORAGE_KEY, newSettings);
       set({ settings: newSettings });
-      console.log('[EditorSettingsStore] Settings updated:', updates);
+      logger.info('system', 'Editor settings updated', { updates });
     } catch (error) {
-      console.error('[EditorSettingsStore] Failed to update settings:', error);
+      logger.error('system', 'Failed to update editor settings', { error });
       throw error;
     }
   },
@@ -56,9 +57,9 @@ export const useEditorSettingsStore = create<EditorSettingsStore>((set, get) => 
     try {
       await SettingsPersistenceService.save(STORAGE_KEY, defaultEditorSettings);
       set({ settings: defaultEditorSettings });
-      console.log('[EditorSettingsStore] Settings reset to defaults');
+      logger.info('system', 'Editor settings reset to defaults');
     } catch (error) {
-      console.error('[EditorSettingsStore] Failed to reset settings:', error);
+      logger.error('system', 'Failed to reset editor settings', { error });
       throw error;
     }
   },

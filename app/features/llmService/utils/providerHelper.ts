@@ -5,6 +5,7 @@
  */
 
 import type { LLMProvider } from '../types/provider.types';
+import { logger } from '../../../utils/logger';
 
 /**
  * モデルIDからプロバイダー名を取得
@@ -17,7 +18,7 @@ export function getProviderNameFromModelId(
   providers: Record<string, LLMProvider> | null
 ): string | null {
   if (!providers) {
-    console.warn('[providerHelper] Providers cache is null, cannot determine provider');
+    logger.warn('llm', 'Providers cache is null, cannot determine provider');
     return null;
   }
 
@@ -28,7 +29,7 @@ export function getProviderNameFromModelId(
     }
   }
 
-  console.warn(`[providerHelper] Provider not found for model: ${modelId}`);
+  logger.warn('llm', 'Provider not found for model', { modelId });
   return null;
 }
 

@@ -15,6 +15,7 @@ import { useTokenBalanceStore } from '../settingsStore';
 import APIService from '../../features/llmService/api';
 import { useLLMStore } from '../../features/llmService/stores/useLLMStore';
 import { getProviderNameFromModelId } from '../../features/llmService/utils/providerHelper';
+import { logger } from '../../utils/logger';
 
 /**
  * モデル切り替えフックの戻り値
@@ -58,7 +59,7 @@ export function useModelSwitch(): UseModelSwitchReturn {
       const providerName = getProviderNameFromModelId(modelId, providers);
 
       if (!providerName) {
-        console.error(`[useModelSwitch] Could not determine provider for model: ${modelId}`);
+        logger.error('llm', 'Could not determine provider for model', { modelId });
         // フォールバック: モデルだけ設定して続行
         APIService.setLLMModel(modelId);
         return;
@@ -68,7 +69,7 @@ export function useModelSwitch(): UseModelSwitchReturn {
       APIService.setLLMProvider(providerName);
       APIService.setLLMModel(modelId);
 
-      console.log(`[useModelSwitch] Switched to ${category} model: ${modelId} (provider: ${providerName})`);
+      logger.info('llm', 'Switched model', { category, modelId, providerName });
     },
     [loadModel]
   );

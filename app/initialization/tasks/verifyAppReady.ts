@@ -10,6 +10,7 @@ import {
   useTokenBalanceStore,
   useUsageTrackingStore
 } from '../../settings/settingsStore';
+import { logger } from '../../utils/logger';
 
 /**
  * アプリケーション準備完了確認タスク
@@ -48,8 +49,8 @@ export const verifyAppReadyTask: InitializationTask = {
 
     // デバッグログ（開発時のみ）
     if (__DEV__) {
-      console.log('[verifyAppReady] App is ready to start');
-      console.log('[verifyAppReady] Settings loaded:', {
+      logger.debug('init', 'App is ready to start');
+      logger.debug('init', 'Settings loaded', {
         theme: uiStore.settings.theme,
         fontSize: uiStore.settings.fontSize,
         loadedModels: tokenStore.loadedModels,
@@ -58,7 +59,7 @@ export const verifyAppReadyTask: InitializationTask = {
   },
 
   fallback: async (error: Error) => {
-    console.warn('[verifyAppReady] Verification failed, but continuing:', error);
+    logger.warn('init', 'Verification failed, but continuing', { error });
     // 検証に失敗してもアプリを起動させる（警告のみ）
   },
 

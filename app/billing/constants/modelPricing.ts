@@ -7,6 +7,8 @@
  * すべての価格情報はバックエンドが唯一の情報源（Single Source of Truth）。
  */
 
+import { logger } from '../../utils/logger';
+
 /**
  * トークンあたりの料金（USD）
  * 1Mトークンあたりの価格で定義
@@ -52,11 +54,11 @@ export function getModelPricing(modelId: string): ModelPricing | undefined {
       }
     }
   } catch (error) {
-    console.error('[Pricing] Failed to get pricing from backend cache', error);
+    logger.error('billing', 'Failed to get pricing from backend cache', { error });
   }
 
   // 価格情報が見つからない場合はundefinedを返す
-  console.warn(`[Pricing] No pricing information found for model: ${modelId}`);
+  logger.warn('billing', 'No pricing information found for model', { modelId });
   return undefined;
 }
 
@@ -74,7 +76,7 @@ export function calculateCost(
 ): number {
   const pricing = getModelPricing(modelId);
   if (!pricing) {
-    console.warn(`[Pricing] Unknown model: ${modelId}`);
+    logger.warn('billing', 'Unknown model', { modelId });
     return 0;
   }
 

@@ -4,6 +4,7 @@
  */
 
 import type { LLMProvider } from '../../features/llmService/types/index';
+import { logger } from '../../utils/logger';
 
 export interface ModelInfo {
   id: string;
@@ -60,7 +61,7 @@ export function convertProvidersToModelInfo(
         });
       } else {
         // フォールバック: メタデータがない場合は従来のロジック
-        console.warn(`Model metadata not found for ${modelId}, using fallback`);
+        logger.warn('llm', 'Model metadata not found, using fallback', { modelId });
         const category = modelId.toLowerCase().includes('flash') || modelId.toLowerCase().includes('mini') ? 'quick' : 'think';
 
         models.push({

@@ -8,6 +8,7 @@
 import * as Font from 'expo-font';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { InitializationTask, InitializationStage, TaskPriority } from '../types';
+import { logger } from '../../utils/logger';
 
 /**
  * アイコンフォント読み込みタスク
@@ -36,9 +37,9 @@ export const loadIconFontsTask: InitializationTask = {
         ...Ionicons.font,
         ...MaterialCommunityIcons.font,
       });
-      console.log('[AppInitializer] Icon fonts loaded successfully.');
+      logger.info('init', 'Icon fonts loaded successfully');
     } catch (error) {
-      console.error('[AppInitializer] Failed to load icon fonts:', error);
+      logger.error('init', 'Failed to load icon fonts', { error });
       // エラーを再スローして、初期化プロセスに失敗を通知する
       throw error;
     }

@@ -122,9 +122,9 @@ export class UnifiedErrorHandler {
       metadata: context.metadata,
     });
 
-    // コンソールにも出力（開発時のデバッグ用）
+    // 開発時のデバッグ用にも記録
     if (__DEV__) {
-      console.error(`[${context.location}] ${errorType}:`, error);
+      logger.debug(logCategory, `[${context.location}] ${errorType}:`, { error });
     }
   }
 

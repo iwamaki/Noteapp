@@ -22,6 +22,7 @@ import { CustomInlineInput } from '../../../components/CustomInlineInput';
 import { FileRepository } from '../../../data/repositories/fileRepository';
 import { FILE_LIST_FLAT_CONFIG } from '../config';
 import { CreateFileModalProps } from '../types';
+import { logger } from '../../../utils/logger';
 
 /**
  * ファイル作成モーダル
@@ -47,7 +48,7 @@ export const CreateFileModal: React.FC<CreateFileModalProps> = ({
       FileRepository.getAllCategories()
         .then(setExistingCategories)
         .catch((error) => {
-          console.error('Failed to load existing categories:', error);
+          logger.error('file', 'Failed to load existing categories:', { error });
           setExistingCategories([]);
         });
     }

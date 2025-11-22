@@ -498,7 +498,7 @@ function FileListScreenFlat() {
    * categoryGroupingService を使用
    */
   const sections = useMemo(() => {
-    console.log(`[FileListScreen] Grouping files with fileSortMethod: ${uiSettings.fileSortMethod}`);
+    logger.debug('file', 'Grouping files with fileSortMethod', { fileSortMethod: uiSettings.fileSortMethod });
     return groupFilesByCategoryHierarchical(files, uiSettings.categorySortMethod, uiSettings.fileSortMethod);
   }, [files, uiSettings.categorySortMethod, uiSettings.fileSortMethod]);
 

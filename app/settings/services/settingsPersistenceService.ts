@@ -5,6 +5,7 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { logger } from '../../utils/logger';
 
 const STORAGE_KEY_PREFIX = '@app_settings_';
 
@@ -18,9 +19,9 @@ export class SettingsPersistenceService {
     try {
       const fullKey = `${STORAGE_KEY_PREFIX}${key}`;
       await AsyncStorage.setItem(fullKey, JSON.stringify(data));
-      console.log(`[SettingsPersistence] Saved: ${key}`);
+      logger.info('system', 'Settings saved', { key });
     } catch (error) {
-      console.error(`[SettingsPersistence] Failed to save ${key}:`, error);
+      logger.error('system', 'Failed to save settings', { key, error });
       throw error;
     }
   }
@@ -38,14 +39,14 @@ export class SettingsPersistenceService {
 
       if (stored) {
         const parsed = JSON.parse(stored);
-        console.log(`[SettingsPersistence] Loaded: ${key}`);
+        logger.info('system', 'Settings loaded', { key });
         return { ...defaultValue, ...parsed }; // デフォルト値とマージ（新しいフィールド対応）
       }
 
-      console.log(`[SettingsPersistence] No data found for ${key}, using defaults`);
+      logger.info('system', 'No data found, using defaults', { key });
       return defaultValue;
     } catch (error) {
-      console.error(`[SettingsPersistence] Failed to load ${key}:`, error);
+      logger.error('system', 'Failed to load settings', { key, error });
       return defaultValue;
     }
   }
@@ -62,9 +63,9 @@ export class SettingsPersistenceService {
       ]);
 
       await AsyncStorage.multiSet(entries as [string, string][]);
-      console.log(`[SettingsPersistence] Batch saved: ${Object.keys(updates).join(', ')}`);
+      logger.info('system', 'Batch saved settings', { keys: Object.keys(updates) });
     } catch (error) {
-      console.error('[SettingsPersistence] Failed to batch save:', error);
+      logger.error('system', 'Failed to batch save settings', { error });
       throw error;
     }
   }
@@ -77,9 +78,9 @@ export class SettingsPersistenceService {
     try {
       const fullKey = `${STORAGE_KEY_PREFIX}${key}`;
       await AsyncStorage.removeItem(fullKey);
-      console.log(`[SettingsPersistence] Removed: ${key}`);
+      logger.info('system', 'Settings removed', { key });
     } catch (error) {
-      console.error(`[SettingsPersistence] Failed to remove ${key}:`, error);
+      logger.error('system', 'Failed to remove settings', { key, error });
       throw error;
     }
   }
@@ -94,10 +95,10 @@ export class SettingsPersistenceService {
 
       if (settingsKeys.length > 0) {
         await AsyncStorage.multiRemove(settingsKeys);
-        console.log(`[SettingsPersistence] Cleared all settings (${settingsKeys.length} keys)`);
+        logger.info('system', 'Cleared all settings', { count: settingsKeys.length });
       }
     } catch (error) {
-      console.error('[SettingsPersistence] Failed to clear settings:', error);
+      logger.error('system', 'Failed to clear settings', { error });
       throw error;
     }
   }
