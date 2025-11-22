@@ -572,6 +572,7 @@ async def google_callback(
                 "email": email,
                 "display_name": display_name or "",
                 "profile_picture_url": profile_picture_url or "",
+                "state": state,
             })
 
             # Construct App Links URL (Android Intent Filter will intercept this)
