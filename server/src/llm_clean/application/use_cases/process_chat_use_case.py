@@ -92,11 +92,14 @@ class ProcessChatUseCase:
 
         # Step 3: Call LLM provider
         try:
+            # Use user_id as client_id for WebSocket operations
+            # (フロントエンドがWebSocket接続時にclient_idを送っていないため、user_idを使用)
             llm_response = await self.llm_provider.chat(
                 message=request.message,
                 context=domain_context,
                 user_id=user_id,
-                model=request.model
+                model=request.model,
+                client_id=user_id  # WebSocketで使用されているclient_idはuser_id
             )
 
             logger.info(
@@ -105,9 +108,11 @@ class ProcessChatUseCase:
             )
 
         except Exception as e:
+            import traceback
             logger.error(
                 f"[ProcessChatUseCase] LLM provider error: {str(e)}"
             )
+            logger.error(f"[ProcessChatUseCase] Traceback: {traceback.format_exc()}")
             return ChatResponseDTO(
                 message="",
                 error=f"LLMエラーが発生しました: {str(e)}",

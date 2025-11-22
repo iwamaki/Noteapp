@@ -28,8 +28,10 @@ import { TokenUsageSection } from './components/TokenUsageSection';
 import { MainContainer } from '../components/MainContainer';
 import { useGoogleAuthCodeFlow } from '../auth/useGoogleAuthCodeFlow';
 import { useAuth } from '../auth/authStore';
+import { useTranslation } from 'react-i18next';
 
 function SettingsScreen() {
+  const { t } = useTranslation();
   const { colors, spacing, typography } = useTheme();
 
   // 各設定ストアから個別に取得
@@ -74,14 +76,14 @@ function SettingsScreen() {
   // Google認証エラーを表示
   useEffect(() => {
     if (googleAuthError) {
-      Alert.alert('エラー', `Googleログインに失敗しました: ${googleAuthError}`);
+      Alert.alert(t('common.error'), `${t('settings.account.loginError')}: ${googleAuthError}`);
     }
   }, [googleAuthError]);
 
   // 認証ストアのエラーを表示
   useEffect(() => {
     if (authError) {
-      Alert.alert('エラー', authError);
+      Alert.alert(t('common.error'), authError);
     }
   }, [authError]);
 
@@ -92,13 +94,11 @@ function SettingsScreen() {
       await handleGoogleAuthResult(authResult);
 
       Alert.alert(
-        '成功',
-        authResult.is_new_user
-          ? 'Googleアカウントでログインしました'
-          : 'Googleアカウントにログインしました'
+        t('common.ok'),
+        t('settings.account.loginSuccess')
       );
     } catch (error) {
-      Alert.alert('エラー', 'Googleログイン処理に失敗しました');
+      Alert.alert(t('common.error'), t('settings.account.loginProcessError'));
       console.error('Google auth result handling error:', error);
     }
   };
@@ -111,16 +111,16 @@ function SettingsScreen() {
   // Googleログアウトボタンのハンドラー
   const handleGoogleLogout = async () => {
     Alert.alert(
-      'ログアウト',
-      'Googleアカウントからログアウトしますか？',
+      t('settings.account.logout'),
+      t('settings.account.logoutConfirm'),
       [
-        { text: 'キャンセル', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'ログアウト',
+          text: t('settings.account.logout'),
           style: 'destructive',
           onPress: async () => {
             await logout();
-            Alert.alert('完了', 'ログアウトしました');
+            Alert.alert(t('common.done'), t('settings.account.logoutSuccess'));
           },
         },
       ]
@@ -234,7 +234,7 @@ function SettingsScreen() {
     <MainContainer isLoading={isLoading}>
       <ScrollView style={styles.scrollView}>
       <View style={styles.content}>
-        {renderSection('アカウント')}
+        {renderSection(t('settings.sections.account'))}
 
         {googleUser ? (
           // ログイン済み - アカウント情報を表示
@@ -253,7 +253,7 @@ function SettingsScreen() {
               {isLoggingOut ? (
                 <ActivityIndicator color={colors.background} />
               ) : (
-                <Text style={styles.logoutButtonText}>ログアウト</Text>
+                <Text style={styles.logoutButtonText}>{t('settings.account.logout')}</Text>
               )}
             </TouchableOpacity>
           </>
@@ -268,72 +268,81 @@ function SettingsScreen() {
               <ActivityIndicator color={colors.background} />
             ) : (
               <>
-                <Text style={styles.googleButtonText}>Googleでログイン</Text>
+                <Text style={styles.googleButtonText}>{t('settings.account.googleLogin')}</Text>
               </>
             )}
           </TouchableOpacity>
         )}
 
-        {renderSection('表示設定')}
+        {renderSection(t('settings.sections.display'))}
 
         {renderPicker(
-          'テーマ',
+          t('settings.display.theme'),
           uiSettings.settings.theme,
           [
-            { label: 'ライト', value: 'light' },
-            { label: 'ダーク', value: 'dark' },
-            { label: 'システム', value: 'system' },
+            { label: t('settings.theme.light'), value: 'light' },
+            { label: t('settings.theme.dark'), value: 'dark' },
+            { label: t('settings.theme.system'), value: 'system' },
           ],
           (value) => uiSettings.updateSettings({ theme: value as 'light' | 'dark' | 'system' })
         )}
 
         {renderPicker(
-          'フォントサイズ',
+          t('settings.display.fontSize'),
           uiSettings.settings.fontSize,
           [
-            { label: '小', value: 'small' },
-            { label: '中', value: 'medium' },
-            { label: '大', value: 'large' },
-            { label: '特大', value: 'xlarge' },
+            { label: t('settings.fontSize.small'), value: 'small' },
+            { label: t('settings.fontSize.medium'), value: 'medium' },
+            { label: t('settings.fontSize.large'), value: 'large' },
+            { label: t('settings.fontSize.extraLarge'), value: 'xlarge' },
           ],
           (value) => uiSettings.updateSettings({ fontSize: value as 'small' | 'medium' | 'large' | 'xlarge' })
         )}
 
         {renderPicker(
-          'デフォルトファイル表示',
+          t('settings.display.language'),
+          uiSettings.settings.language,
+          [
+            { label: t('settings.language.ja'), value: 'ja' },
+            { label: t('settings.language.en'), value: 'en' },
+          ],
+          (value) => uiSettings.updateSettings({ language: value as 'ja' | 'en' })
+        )}
+
+        {renderPicker(
+          t('settings.display.defaultFileView'),
           editorSettings.settings.defaultFileViewScreen,
           [
-            { label: '編集画面', value: 'edit' },
-            { label: 'プレビュー', value: 'preview' },
+            { label: t('settings.fileView.editor'), value: 'edit' },
+            { label: t('settings.fileView.preview'), value: 'preview' },
           ],
           (value) => editorSettings.updateSettings({ defaultFileViewScreen: value as 'edit' | 'preview' })
         )}
 
         {renderPicker(
-          'カテゴリーソート方法',
+          t('settings.display.categorySort'),
           uiSettings.settings.categorySortMethod,
           [
-            { label: '名前順', value: 'name' },
-            { label: 'ファイル数順', value: 'fileCount' },
+            { label: t('settings.sortMethod.name'), value: 'name' },
+            { label: t('settings.sortMethod.fileCount'), value: 'fileCount' },
           ],
           (value) => uiSettings.updateSettings({ categorySortMethod: value as 'name' | 'fileCount' })
         )}
 
         {renderPicker(
-          'ファイルソート方法',
+          t('settings.display.fileSort'),
           uiSettings.settings.fileSortMethod,
           [
-            { label: '名前順', value: 'name' },
-            { label: '更新日順', value: 'updatedAt' },
+            { label: t('settings.sortMethod.name'), value: 'name' },
+            { label: t('settings.sortMethod.updatedAt'), value: 'updatedAt' },
           ],
           (value) => uiSettings.updateSettings({ fileSortMethod: value as 'updatedAt' | 'name' })
         )}
 
-        {renderSection('LLM/AI機能')}
+        {renderSection(t('settings.sections.ai'))}
 
         <ListItem.Container>
-          {/* eslint-disable-next-line react-native/no-raw-text */}
-          <ListItem.Title>LLM機能を有効にする</ListItem.Title>
+          <ListItem.Title>{t('settings.ai.enable')}</ListItem.Title>
           <Switch
             value={llmSettings.settings.llmEnabled}
             onValueChange={(value: boolean) => llmSettings.updateSettings({ llmEnabled: value })}
@@ -346,21 +355,21 @@ function SettingsScreen() {
         <TokenUsageSection />
 
         <Text style={styles.infoText}>
-          その他の設定項目は今後のアップデートで追加予定です。
+          {t('settings.comingSoon')}
         </Text>
 
         {/* デバッグ用リセットボタン（開発モードのみ） */}
         {__DEV__ && (
           <>
-            {renderSection('デバッグ機能')}
+            {renderSection(t('settings.sections.debug'))}
             <TouchableOpacity
               style={[styles.resetButton, { backgroundColor: colors.primary }]}
               onPress={async () => {
                 await tokenBalanceStore.resetTokensAndUsage();
-                Alert.alert('完了', 'トークン残高と使用量をリセットしました');
+                Alert.alert(t('common.done'), t('settings.debug.resetTokenUsage'));
               }}
             >
-              <Text style={styles.resetButtonText}>トークンと使用量をリセット</Text>
+              <Text style={styles.resetButtonText}>{t('settings.debug.resetTokenUsage')}</Text>
             </TouchableOpacity>
           </>
         )}
@@ -376,7 +385,7 @@ function SettingsScreen() {
             ]);
           }}
         >
-          <Text style={styles.resetButtonText}>設定をリセット</Text>
+          <Text style={styles.resetButtonText}>{t('settings.debug.resetSettings')}</Text>
         </TouchableOpacity>
       </View>
       </ScrollView>

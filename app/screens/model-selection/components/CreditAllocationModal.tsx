@@ -14,6 +14,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { CustomModal } from '../../../components/CustomModal';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { useCreditAllocation } from '../hooks/useCreditAllocation';
@@ -29,6 +30,7 @@ export const CreditAllocationModal: React.FC<CreditAllocationModalProps> = ({
   onClose,
   initialModelId,
 }) => {
+  const { t } = useTranslation();
   const { colors, spacing, typography } = useTheme();
   const {
     modelInfo,
@@ -258,10 +260,10 @@ export const CreditAllocationModal: React.FC<CreditAllocationModalProps> = ({
     return (
       <CustomModal
         isVisible={isVisible}
-        title="💰 クレジット配分"
+        title={t('modals.creditAllocation.title')}
         buttons={[
           {
-            text: '閉じる',
+            text: t('common.button.close'),
             style: 'cancel',
             onPress: onClose,
           },
@@ -271,7 +273,7 @@ export const CreditAllocationModal: React.FC<CreditAllocationModalProps> = ({
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
           <Text style={styles.loadingText}>
-            モデル情報を読み込み中...
+            {t('modals.creditAllocation.loading')}
           </Text>
         </View>
       </CustomModal>
@@ -285,15 +287,15 @@ export const CreditAllocationModal: React.FC<CreditAllocationModalProps> = ({
   return (
     <CustomModal
       isVisible={isVisible}
-      title="💰 クレジット配分"
+      title={t('modals.creditAllocation.title')}
       buttons={[
         {
-          text: 'キャンセル',
+          text: t('common.button.cancel'),
           style: 'cancel',
           onPress: onClose,
         },
         {
-          text: isAllocating ? '配分中...' : '配分する',
+          text: isAllocating ? t('common.button.allocating') : t('common.button.allocate'),
           style: 'default',
           onPress: handleAllocate,
           disabled: isAllocating || capacityInfo.isOverLimit,
@@ -303,7 +305,7 @@ export const CreditAllocationModal: React.FC<CreditAllocationModalProps> = ({
     >
       {/* 現在のクレジット残高 */}
       <View style={styles.balanceContainer}>
-        <Text style={styles.balanceLabel}>未配分クレジット:</Text>
+        <Text style={styles.balanceLabel}>{t('modals.creditAllocation.unallocatedCredits')}</Text>
         <Text style={styles.balanceAmount}>{balance.credits}P</Text>
       </View>
 
@@ -316,7 +318,7 @@ export const CreditAllocationModal: React.FC<CreditAllocationModalProps> = ({
             color={categoryStyle?.color || colors.primary}
           />
           <Text style={styles.modelCategory}>
-            {categoryStyle?.label}モデル
+            {t('modals.creditAllocation.modelCategory', { category: categoryStyle?.label })}
           </Text>
         </View>
         <Text style={styles.modelName}>{modelInfo.name}</Text>
@@ -324,7 +326,7 @@ export const CreditAllocationModal: React.FC<CreditAllocationModalProps> = ({
       </View>
 
       {/* クレジット入力 */}
-      <Text style={[styles.sectionTitle, { marginTop: spacing.md }]}>配分するクレジット</Text>
+      <Text style={[styles.sectionTitle, { marginTop: spacing.md }]}>{t('modals.creditAllocation.allocatingCredits')}</Text>
       <View style={styles.inputRow}>
         <TouchableOpacity
           style={styles.stepButton}
@@ -404,7 +406,7 @@ export const CreditAllocationModal: React.FC<CreditAllocationModalProps> = ({
       <View style={styles.conversionContainer}>
         <View style={styles.tokenComparisonRow}>
           <View style={styles.tokenBox}>
-            <Text style={styles.tokenLabel}>追加前</Text>
+            <Text style={styles.tokenLabel}>{t('modals.creditAllocation.before')}</Text>
             <Text style={styles.tokenValue}>
               {(balance.allocatedTokens[modelInfo.id] || 0).toLocaleString()}
             </Text>
@@ -416,7 +418,7 @@ export const CreditAllocationModal: React.FC<CreditAllocationModalProps> = ({
             style={styles.arrowIcon}
           />
           <View style={styles.tokenBox}>
-            <Text style={styles.tokenLabel}>追加後</Text>
+            <Text style={styles.tokenLabel}>{t('modals.creditAllocation.after')}</Text>
             <Text style={styles.tokenValueAfter}>
               {((balance.allocatedTokens[modelInfo.id] || 0) + convertedTokens).toLocaleString()}
             </Text>
@@ -428,7 +430,7 @@ export const CreditAllocationModal: React.FC<CreditAllocationModalProps> = ({
       <View style={styles.capacityContainer}>
         <View style={styles.capacityHeader}>
           <Text style={styles.capacityLabel}>
-            {categoryStyle?.label}カテゴリー容量
+            {t('modals.creditAllocation.categoryCapacity', { category: categoryStyle?.label })}
           </Text>
           <Text style={styles.capacityPercent}>
             {capacityInfo.usagePercent.toFixed(0)}%
@@ -457,7 +459,7 @@ export const CreditAllocationModal: React.FC<CreditAllocationModalProps> = ({
             style={styles.warningIcon}
           />
           <Text style={styles.warningText}>
-            容量制限を超えています。最大{maxAllocatableCredits}Pまで配分できます。
+            {t('modals.creditAllocation.warning.overLimit', { credits: maxAllocatableCredits })}
           </Text>
         </View>
       )}

@@ -10,6 +10,7 @@ import {
   StyleSheet,
   ScrollView,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 import { MainContainer } from '../../components/MainContainer';
 import { PurchaseConfirmModal } from '../../components/PurchaseConfirmModal';
@@ -28,6 +29,8 @@ import { useTokenPurchaseHeader } from './hooks/useTokenPurchaseHeader';
 import type { TokenPackage } from '../../billing/constants/tokenPackages';
 
 export default function TokenPurchaseScreen() {
+  const { t } = useTranslation();
+
   // ヘッダー設定
   useTokenPurchaseHeader();
 
@@ -77,17 +80,17 @@ export default function TokenPurchaseScreen() {
 
     return [
       {
-        label: 'クレジット:',
+        label: t('tokenPurchase.credits'),
         value: `${selectedPackage.credits}P`,
         isPrimary: false,
       },
       {
-        label: '価格:',
+        label: t('tokenPurchase.price'),
         value: priceDisplay,
         isPrimary: true,
       },
     ];
-  }, [selectedPackage, tokenProducts]);
+  }, [selectedPackage, tokenProducts, t]);
 
   return (
     <MainContainer isLoading={loading}>
@@ -106,8 +109,8 @@ export default function TokenPurchaseScreen() {
 
         {/* 注意事項 */}
         <NoticeCard
-          title="【注意事項】"
-          text="• クレジットは購入後すぐに残高に追加されます&#10;• 購入したクレジットに有効期限はありません&#10;• クレジットの返金はできません&#10;• 端末変更やアンインストール後のクレジットの復元はできません"
+          title={t('tokenPurchase.notice.title')}
+          text={t('tokenPurchase.notice.text')}
         />
       </ScrollView>
 
@@ -117,8 +120,8 @@ export default function TokenPurchaseScreen() {
           isVisible={showConfirmModal}
           onClose={handleCancelPurchase}
           onConfirm={handleConfirmPurchase}
-          title="購入確認"
-          message={`${selectedPackage.name}を購入しますか？`}
+          title={t('tokenPurchase.confirmTitle')}
+          message={t('tokenPurchase.confirmMessage', { packageName: selectedPackage.name })}
           details={purchaseDetails}
           purchasing={purchasing}
         />

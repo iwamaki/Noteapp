@@ -8,6 +8,7 @@
 import { verifyAsyncStorageTask } from './verifyAsyncStorage';
 import { initializeFileSystemTask } from './initializeFileSystem';
 import { loadSettingsTask } from './loadSettings';
+import { initializeI18nTask } from './initializeI18n';
 import { configureLLMServiceTask } from './configureLLMService';
 import { preloadLLMProvidersTask } from './preloadLLMProviders';
 import { configureChatServiceTask } from './configureChatService';
@@ -31,6 +32,7 @@ export const allInitializationTasks: InitializationTask[] = [
   verifyAsyncStorageTask,
   initializeFileSystemTask,  // FileSystemディレクトリ構造の初期化
   loadSettingsTask,
+  initializeI18nTask,  // i18nの初期化（loadSettings後）
   authenticateDevice,  // デバイスID認証
 
   // Stage 2: CORE - コアサービス
@@ -50,11 +52,46 @@ export const allInitializationTasks: InitializationTask[] = [
   verifyAppReadyTask,
 ];
 
+/**
+ * 起動時に必須のタスク（ブロッキング）
+ * これらのタスクが完了するまでスプラッシュ画面を表示します
+ */
+export const blockingInitializationTasks: InitializationTask[] = [
+  // Stage 1: CRITICAL - 必須リソース
+  verifyAsyncStorageTask,
+  initializeFileSystemTask,
+  loadSettingsTask,
+  initializeI18nTask,  // i18nの初期化（loadSettings後）
+  authenticateDevice,
+
+  // Stage 2: CORE - コアサービス（UI表示に必須）
+  loadIconFontsTask,
+
+  // Stage 4: READY - UI表示準備完了
+  verifyAppReadyTask,
+];
+
+/**
+ * バックグラウンドで実行するタスク（非ブロッキング）
+ * 起動後に非同期で実行され、スプラッシュ画面をブロックしません
+ */
+export const backgroundInitializationTasks: InitializationTask[] = [
+  // Stage 3: SERVICES - アプリケーションサービス（起動時は不要）
+  configureLLMServiceTask,      // チャット開始時に必要
+  preloadLLMProvidersTask,       // 設定画面で必要
+  configureChatServiceTask,      // チャット開始時に必要
+  initializeWebSocketTask,       // チャット開始時に必要
+  initializeBillingServiceTask,  // 購入画面で必要
+  restorePendingPurchasesTask,   // バックグラウンドで復元
+  loadToolDefinitionsTask,       // チャット開始時に必要
+];
+
 // 個別エクスポート（オプション）
 export {
   verifyAsyncStorageTask,
   initializeFileSystemTask,
   loadSettingsTask,
+  initializeI18nTask,
   authenticateDevice,
   restorePendingPurchasesTask,
   configureLLMServiceTask,

@@ -13,11 +13,12 @@ from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from src.core.logger import log_llm_raw, logger
 
 # Clean Architecture DTOs (for compatibility with existing code)
-from src.llm_clean.application.dtos.chat_dtos import ChatContextDTO as ChatContext
 from src.llm_clean.application.dtos.chat_dtos import ChatResponseDTO as ChatResponse
 from src.llm_clean.application.dtos.chat_dtos import LLMCommandDTO as LegacyLLMCommand
 from src.llm_clean.application.dtos.chat_dtos import TokenUsageInfoDTO as TokenUsageInfo
-from src.llm_clean.application.dtos.chat_dtos import chat_context_dto_to_domain
+
+# Import domain model for type hints
+from src.llm_clean.domain.value_objects.chat_context import ChatContext
 from src.llm_clean.utils.token_counter import (
     count_message_tokens,
     count_tokens,
@@ -155,9 +156,8 @@ class BaseAgentLLMProvider(BaseLLMProvider):
         provider_name = self._get_provider_name()
 
         # 1. コンテキスト構築
-        # Convert DTO to domain model
-        context_domain = chat_context_dto_to_domain(context)
-        built_context = self._context_builder.build(context_domain)
+        # context is already a domain model (converted in use case layer)
+        built_context = self._context_builder.build(context)
 
         # リクエストログ記録
         self._log_agent_request(
@@ -173,7 +173,7 @@ class BaseAgentLLMProvider(BaseLLMProvider):
 
             # 3. レスポンス構築
             # 会話履歴を取得（トークン計算用）
-            conversation_history = context.conversationHistory if context and context.conversationHistory else []
+            conversation_history = context.conversation_history if context and context.conversation_history else []
 
             # AI応答を取得
             messages = result.get("messages", [])

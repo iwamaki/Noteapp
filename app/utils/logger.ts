@@ -1,7 +1,7 @@
 // app/utils/logger.ts
 import { AppState, AppStateStatus } from 'react-native';
 
-type LogCategory = 'chat' | 'chatService' | 'system' | 'file' | 'diff' | 'llm' | 'rag' | 'default' | 'tree' | 'platformInfo' | 'toolService' | 'editFileHandler' | 'createDirectoryHandler' | 'deleteItemHandler' | 'moveItemHandler' | 'itemResolver' | 'websocket' | 'clientId' | 'subscriptionSync' | 'billingApi' | 'billing' | 'auth' | 'api' | 'httpClient' | string;
+type LogCategory = 'chat' | 'chatService' | 'system' | 'file' | 'diff' | 'llm' | 'rag' | 'default' | 'tree' | 'platformInfo' | 'toolService' | 'editFileHandler' | 'createDirectoryHandler' | 'deleteItemHandler' | 'moveItemHandler' | 'itemResolver' | 'websocket' | 'clientId' | 'subscriptionSync' | 'billingApi' | 'billing' | 'auth' | 'api' | 'httpClient' | 'init' | string;
 type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'none';
 
 const LOG_LEVELS: Record<LogLevel, number> = {

@@ -11,12 +11,11 @@ import { logger } from '../../utils/logger';
 import { ActiveScreenContextProvider, ActiveScreenContext } from './types';
 import { FileRepository } from '@data/repositories/fileRepository';
 import { ChatAttachmentService } from './services/chatAttachmentService';
-import { ChatTokenService } from './services/chatTokenService';
-import { ChatCommandService } from './services/chatCommandService';
+import { TokenManagementService } from '../llmService/services/TokenManagementService';
+import { CommandService } from '../llmService/services/CommandService';
 import { useLLMSettingsStore } from '../../settings/settingsStore';
 import { useChatStore } from './store/chatStore';
 import { UnifiedErrorHandler } from './utils/errorHandler';
-import { ChatSummarizationService } from './services/chatSummarizationService';
 import { ChatWebSocketManager } from './services/chatWebSocketManager';
 
 /**
@@ -31,7 +30,7 @@ class ChatService {
   private currentProvider: ActiveScreenContextProvider | null = null;
 
   // コマンドサービス
-  private commandService: ChatCommandService;
+  private commandService: CommandService;
 
   // WebSocket管理マネージャー
   private wsManager: ChatWebSocketManager;
@@ -40,17 +39,17 @@ class ChatService {
   private attachmentService: ChatAttachmentService;
 
   // トークン使用量サービス
-  private tokenService: ChatTokenService;
+  private tokenService: TokenManagementService;
 
   private constructor() {
     // プライベートコンストラクタでシングルトンを保証
     // 各サービスを初期化
-    this.commandService = new ChatCommandService();
+    this.commandService = new CommandService();
     this.wsManager = new ChatWebSocketManager();
     this.attachmentService = new ChatAttachmentService((files) => {
       this.notifyAttachedFileChange(files);
     });
-    this.tokenService = new ChatTokenService(
+    this.tokenService = new TokenManagementService(
       (tokenUsage) => {
         this.notifyTokenUsageChange(tokenUsage);
       },
@@ -241,10 +240,11 @@ class ChatService {
       if (response.tokenUsage) {
         this.tokenService.updateTokenUsage(response.tokenUsage);
 
-        // 実際に使用したトークン数を記録（課金対象・モデル別）
+        // ローカル統計を更新（トークン消費はバックエンドで既に実行済み）
+        // /api/chat がバックエンドでトークンを消費するため、ここではローカルキャッシュと統計の更新のみ
         if (response.tokenUsage.inputTokens && response.tokenUsage.outputTokens && response.model) {
-          const { trackAndDeductTokens } = await import('../../billing/utils/tokenBalance');
-          await trackAndDeductTokens(
+          const { updateLocalTokenStats } = await import('../../billing/utils/tokenBalance');
+          await updateLocalTokenStats(
             response.tokenUsage.inputTokens,
             response.tokenUsage.outputTokens,
             response.model
@@ -309,8 +309,8 @@ class ChatService {
     this.setLoading(true);
 
     try {
-      // 要約サービスを使用して要約を実行
-      const result = await ChatSummarizationService.summarizeConversation(messages);
+      // 統合された要約サービスを使用して要約を実行
+      const result = await APIService.summarizeConversation(messages);
 
       if (!result.isActuallySummarized) {
         // 要約が効果的でなかった場合

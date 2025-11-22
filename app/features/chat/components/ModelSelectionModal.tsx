@@ -14,6 +14,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { CustomModal } from '../../../components/CustomModal';
 import { useTokenBalanceStore } from '../../../settings/settingsStore';
@@ -31,6 +32,7 @@ export const ModelSelectionModal: React.FC<ModelSelectionModalProps> = ({
   isVisible,
   onClose,
 }) => {
+  const { t } = useTranslation();
   const { colors, spacing } = useTheme();
   const { balance, loadedModels } = useTokenBalanceStore();
   const { switchModel } = useModelSwitch();
@@ -56,20 +58,20 @@ export const ModelSelectionModal: React.FC<ModelSelectionModalProps> = ({
         const models = convertProvidersToModelInfo(providers);
 
         if (models.length === 0) {
-          setLoadError('利用可能なモデルがありません');
+          setLoadError(t('chat.modelSelection.error.noModels'));
         } else {
           setAvailableModels(models);
         }
       } catch (error) {
         console.error('Failed to load models:', error);
-        setLoadError('モデル情報の読み込みに失敗しました');
+        setLoadError(t('chat.modelSelection.error.loadFailed'));
       } finally {
         setIsLoadingModels(false);
       }
     };
 
     loadModels();
-  }, [isVisible]);
+  }, [isVisible, t]);
 
   // 現在選択されているモデル
   const activeQuickModel = loadedModels.quick || 'gemini-2.5-flash';
@@ -149,7 +151,7 @@ export const ModelSelectionModal: React.FC<ModelSelectionModalProps> = ({
       return (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.loadingText}>モデル情報を読み込み中...</Text>
+          <Text style={styles.loadingText}>{t('chat.modelSelection.loading')}</Text>
         </View>
       );
     }
@@ -166,7 +168,7 @@ export const ModelSelectionModal: React.FC<ModelSelectionModalProps> = ({
               setLoadError(null);
             }}
           >
-            <Text style={styles.retryButtonText}>再試行</Text>
+            <Text style={styles.retryButtonText}>{t('common.button.retry')}</Text>
           </TouchableOpacity>
         </View>
       );
@@ -183,7 +185,7 @@ export const ModelSelectionModal: React.FC<ModelSelectionModalProps> = ({
               color={colors.accentQuick}
               style={styles.sectionIcon}
             />
-            <Text style={[styles.sectionTitle, { color: colors.accentQuick }]}>Quickモデル</Text>
+            <Text style={[styles.sectionTitle, { color: colors.accentQuick }]}>{t('chat.modelSelection.quickModels')}</Text>
           </View>
 
           {availableModels.filter(m => m.category === 'quick').map(model => (
@@ -208,7 +210,7 @@ export const ModelSelectionModal: React.FC<ModelSelectionModalProps> = ({
               color={colors.accentThink}
               style={styles.sectionIcon}
             />
-            <Text style={[styles.sectionTitle, { color: colors.accentThink }]}>Thinkモデル</Text>
+            <Text style={[styles.sectionTitle, { color: colors.accentThink }]}>{t('chat.modelSelection.thinkModels')}</Text>
           </View>
 
           {availableModels.filter(m => m.category === 'think').map(model => (
@@ -230,10 +232,10 @@ export const ModelSelectionModal: React.FC<ModelSelectionModalProps> = ({
   return (
     <CustomModal
       isVisible={isVisible}
-      title="LLMモデル選択"
+      title={t('chat.modelSelection.title')}
       buttons={[
         {
-          text: '閉じる',
+          text: t('common.button.close'),
           style: 'cancel',
           onPress: onClose,
         },

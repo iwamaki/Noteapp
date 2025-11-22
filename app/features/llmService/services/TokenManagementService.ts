@@ -1,10 +1,10 @@
 /**
- * @file chatTokenService.ts
+ * @file TokenManagementService.ts
  * @summary トークン使用量の追跡と自動要約トリガーを管理するサービス
  * @responsibility トークン使用量の保持、更新、通知、および100%超過時の自動要約トリガーを担当
  */
 
-import { TokenUsageInfo } from '../../llmService/types/index';
+import { TokenUsageInfo } from '../types/index';
 import { logger } from '../../../utils/logger';
 
 /**
@@ -20,7 +20,7 @@ type SummarizationNeededCallback = () => Promise<void>;
 /**
  * トークン使用量の追跡と自動要約トリガーを管理するサービスクラス
  */
-export class ChatTokenService {
+export class TokenManagementService {
   private tokenUsage: TokenUsageInfo | null = null;
   private onTokenUsageChange: TokenUsageChangeCallback | null = null;
   private onSummarizationNeeded: SummarizationNeededCallback | null = null;
@@ -46,11 +46,11 @@ export class ChatTokenService {
   public updateTokenUsage(tokenUsage: TokenUsageInfo): void {
     this.tokenUsage = tokenUsage;
     this.notifyChange();
-    logger.debug('chatService', 'Token usage updated:', tokenUsage);
+    logger.debug('TokenManagementService', 'Token usage updated:', tokenUsage);
 
     // 100%を超えたら自動的に要約を実行
     if (tokenUsage.usageRatio >= 1.0) {
-      logger.info('chatService', 'Token usage exceeded 100%, starting automatic summarization');
+      logger.info('TokenManagementService', 'Token usage exceeded 100%, starting automatic summarization');
       if (this.onSummarizationNeeded) {
         // 非同期で要約を実行（メッセージ送信処理をブロックしない）
         // setLoadingをfalseにした後に要約を開始する必要があるため、遅延実行

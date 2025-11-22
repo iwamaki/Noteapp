@@ -9,11 +9,12 @@ import {
   ListRenderItem,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { ChatMessage, TokenUsageInfo } from '../../llmService/index';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { MessageItem } from './MessageItem';
 import { ToggleTabButton } from './ToggleTabButton';
-import { getTokenUsageBarColor } from '../utils/tokenUsageHelpers';
+import { getTokenUsageBarColor } from '../../llmService/utils/tokenUsageHelpers';
 import { ModelSelectionModal } from './ModelSelectionModal';
 
 interface ChatHistoryProps {
@@ -39,6 +40,7 @@ const ChatHistoryComponent: React.FC<ChatHistoryProps> = ({
   tokenUsage,
   onResizeCompleteRef,
 }) => {
+  const { t } = useTranslation();
   const { colors, typography, iconSizes } = useTheme();
   const flatListRef = useRef<FlatList>(null);
   const [modelSelectionModalVisible, setModelSelectionModalVisible] = useState(false);
@@ -180,7 +182,7 @@ const ChatHistoryComponent: React.FC<ChatHistoryProps> = ({
           position="top"
         />
 
-        <Text style={styles.messagesHeaderTitle}>チャット履歴</Text>
+        <Text style={styles.messagesHeaderTitle}>{t('chat.history.title')}</Text>
         <View style={styles.headerButtonContainer}>
           <TouchableOpacity
             onPress={() => setModelSelectionModalVisible(true)}
@@ -239,7 +241,7 @@ const ChatHistoryComponent: React.FC<ChatHistoryProps> = ({
           isLoading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="small" color={colors.primary} />
-              <Text style={styles.loadingText}>AI が処理中です...</Text>
+              <Text style={styles.loadingText}>{t('chat.history.loading')}</Text>
             </View>
           ) : null
         }

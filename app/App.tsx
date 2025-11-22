@@ -12,9 +12,12 @@ import RootNavigator from './navigation/RootNavigator';
 import { ThemeProvider, useTheme } from './design/theme/ThemeContext';
 import { View, StyleSheet } from 'react-native';
 import { AppInitializer } from './initialization/AppInitializer';
-import { allInitializationTasks } from './initialization/tasks';
+import { blockingInitializationTasks, backgroundInitializationTasks } from './initialization/tasks';
 import { useInitializationStore } from './initialization/InitializationStore';
 import { SplashScreen } from './components/SplashScreen';
+import { logger } from './utils/logger';
+import * as NavigationBar from 'expo-navigation-bar';
+import './i18n'; // i18nを初期化
 
 /**
  * @function AppContent
@@ -24,6 +27,11 @@ import { SplashScreen } from './components/SplashScreen';
  */
 const AppContent = () => {
   const { themeMode, colors } = useTheme();
+
+  // ナビゲーションバーの色をテーマに合わせて設定
+  useEffect(() => {
+    NavigationBar.setBackgroundColorAsync(colors.background);
+  }, [colors.background]);
 
   const styles = StyleSheet.create({
     container: {
@@ -58,19 +66,48 @@ export default function App() {
     // 初期化マネージャーのセットアップと実行
     const initializeApp = async () => {
       try {
-        const initializer = AppInitializer.getInstance({
+        // ===== Phase 1: ブロッキングタスク（起動時必須） =====
+        logger.info('init', 'Starting blocking initialization tasks...');
+        const blockingInitializer = AppInitializer.getInstance({
           enableDebugLogs: __DEV__,
           minSplashDuration: 500, // 最低0.5秒表示
         });
 
-        // タスクを登録
-        initializer.registerTasks(allInitializationTasks);
+        // 必須タスクのみ登録
+        blockingInitializer.registerTasks(blockingInitializationTasks);
 
-        // 初期化を実行
-        await initializer.initialize();
+        // ブロッキング初期化を実行（これが完了するまでスプラッシュ画面を表示）
+        await blockingInitializer.initialize();
+
+        logger.info('init', 'Blocking initialization completed. Starting background tasks...');
+
+        // ===== Phase 2: バックグラウンドタスク（非同期実行） =====
+        // スプラッシュ画面を閉じた後、バックグラウンドで実行
+        initializeBackgroundTasks();
       } catch (error) {
-        console.error('[App] Initialization failed:', error);
+        logger.error('init', 'Initialization failed', error);
         setInitError(error instanceof Error ? error : new Error(String(error)));
+      }
+    };
+
+    // バックグラウンドタスクを非同期で実行
+    const initializeBackgroundTasks = async () => {
+      try {
+        // 新しいinitializerインスタンスを作成（独立して実行）
+        AppInitializer.resetInstance();
+        const backgroundInitializer = AppInitializer.getInstance({
+          enableDebugLogs: __DEV__,
+          minSplashDuration: 0, // バックグラウンドなので待機不要
+          useStore: false, // ストアを使わない（スプラッシュ画面に影響しない）
+        });
+
+        backgroundInitializer.registerTasks(backgroundInitializationTasks);
+        await backgroundInitializer.initialize();
+
+        logger.info('init', 'Background initialization completed');
+      } catch (error) {
+        // バックグラウンドタスクの失敗はアプリ起動に影響しない
+        logger.warn('init', 'Background initialization failed (non-critical)', error);
       }
     };
 
@@ -82,9 +119,12 @@ export default function App() {
     return <SplashScreen showProgress={__DEV__} />;
   }
 
+  // スプラッシュ画面が消えるタイミングを記録
+  logger.info('init', '🎯 Splash screen hidden, rendering main app...');
+
   // 初期化エラーがある場合は、エラー情報を表示（開発時のみ）
   if (__DEV__ && initError) {
-    console.warn('[App] Init error occurred but app is marked as initialized:', initError);
+    logger.warn('init', '[App] Init error occurred but app is marked as initialized:', initError);
   }
 
   return (

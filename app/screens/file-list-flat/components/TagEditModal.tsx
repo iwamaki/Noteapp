@@ -9,6 +9,7 @@
 
 import React from 'react';
 import { StyleSheet, Text } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { InputFormModal } from '../../../components/InputFormModal';
 import { TagEditModalProps } from '../types';
@@ -20,6 +21,7 @@ export const TagEditModal: React.FC<TagEditModalProps> = ({
   onClose,
   onSave,
 }) => {
+  const { t } = useTranslation();
   const { colors, typography, spacing } = useTheme();
 
   const handleSave = (inputValue: string) => {
@@ -45,16 +47,16 @@ export const TagEditModal: React.FC<TagEditModalProps> = ({
   return (
     <InputFormModal
       visible={visible}
-      title="タグを編集"
-      message={`「${fileName}」のタグを編集します。`}
+      title={t('modals.tagEdit.title')}
+      message={t('modals.tagEdit.message', { fileName })}
       initialValue={initialTags.join(', ')}
-      placeholder="例: 重要, todo, アイデア"
+      placeholder={t('modals.tagEdit.placeholder')}
       onClose={onClose}
       onSubmit={handleSave}
       multiline
     >
       <Text style={styles.hint}>
-        複数のタグはカンマ（,）またはスペースで区切って入力してください。#は自動で削除されます。
+        {t('modals.tagEdit.hint')}
       </Text>
     </InputFormModal>
   );

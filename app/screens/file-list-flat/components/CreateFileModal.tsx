@@ -15,6 +15,7 @@ import {
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { CustomModal } from '../../../components/CustomModal';
 import { CustomInlineInput } from '../../../components/CustomInlineInput';
@@ -33,6 +34,7 @@ export const CreateFileModal: React.FC<CreateFileModalProps> = ({
   onClose,
   onCreate,
 }) => {
+  const { t } = useTranslation();
   const { colors, spacing } = useTheme();
   const [title, setTitle] = useState('');
   const [categoryText, setCategoryText] = useState('');
@@ -112,15 +114,15 @@ export const CreateFileModal: React.FC<CreateFileModalProps> = ({
   return (
     <CustomModal
       isVisible={visible}
-      title="新規ファイル作成"
+      title={t('modals.createFile.title')}
       buttons={[
         {
-          text: 'キャンセル',
+          text: t('common.button.cancel'),
           style: 'cancel',
           onPress: handleCancel,
         },
         {
-          text: '作成',
+          text: t('common.button.create'),
           style: title.trim() ? 'default' : 'cancel',
           onPress: title.trim() ? handleCreate : undefined,
         },
@@ -135,10 +137,10 @@ export const CreateFileModal: React.FC<CreateFileModalProps> = ({
             { color: colors.textSecondary, marginBottom: spacing.xs },
           ]}
         >
-          タイトル
+          {t('modals.createFile.label.title')}
         </Text>
         <CustomInlineInput
-          placeholder="ファイルタイトルを入力"
+          placeholder={t('modals.createFile.placeholder.title')}
           value={title}
           onChangeText={setTitle}
           onClear={() => setTitle('')}
@@ -153,10 +155,10 @@ export const CreateFileModal: React.FC<CreateFileModalProps> = ({
             { color: colors.textSecondary, marginBottom: spacing.xs },
           ]}
         >
-          カテゴリー（階層パス）
+          {t('modals.createFile.label.category')}
         </Text>
         <CustomInlineInput
-          placeholder="例: 研究/AI/深層学習"
+          placeholder={t('modals.createFile.placeholder.category')}
           value={categoryText}
           onChangeText={setCategoryText}
           onClear={() => setCategoryText('')}
@@ -172,7 +174,7 @@ export const CreateFileModal: React.FC<CreateFileModalProps> = ({
                 { color: colors.textSecondary, marginBottom: spacing.xs },
               ]}
             >
-              既存のカテゴリー
+              {t('modals.createFile.label.existingCategories')}
             </Text>
             <ScrollView
               horizontal
@@ -222,10 +224,10 @@ export const CreateFileModal: React.FC<CreateFileModalProps> = ({
             { color: colors.textSecondary, marginBottom: spacing.xs },
           ]}
         >
-          タグ（カンマ区切り）
+          {t('modals.createFile.label.tags')}
         </Text>
         <CustomInlineInput
-          placeholder="例: 重要, TODO"
+          placeholder={t('modals.createFile.placeholder.tags')}
           value={tagsText}
           onChangeText={setTagsText}
           onClear={() => setTagsText('')}

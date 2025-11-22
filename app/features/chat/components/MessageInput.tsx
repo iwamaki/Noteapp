@@ -5,14 +5,16 @@
  */
 
 import React, { useMemo } from 'react';
-import { View, TouchableOpacity } from 'react-native';
+import { View, TouchableOpacity, Alert } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { CustomInlineInput } from '../../../components/CustomInlineInput';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { useChat } from '../hooks/useChat';
 import { CHAT_CONFIG } from '../config/chatConfig';
 import { useTokenBalanceStore } from '../../../settings/settingsStore';
 import { useModelSwitch } from '../../../settings/hooks/useModelSwitch';
+import { useAuth } from '../../../auth/authStore';
 
 interface MessageInputProps {
   inputText: string;
@@ -23,10 +25,12 @@ interface MessageInputProps {
  * メッセージ入力コンポーネント
  */
 const MessageInputComponent: React.FC<MessageInputProps> = ({ inputText, setInputText }) => {
+  const { t } = useTranslation();
   const { colors, iconSizes } = useTheme();
   const { sendMessage, isLoading } = useChat();
   const { loadedModels, activeModelCategory } = useTokenBalanceStore();
   const { switchModel } = useModelSwitch();
+  const { isAuthenticated } = useAuth();
 
   // loadedModels から Quick/Think モデルを取得（フォールバック付き）
   const quickModel = loadedModels?.quick || 'gemini-2.5-flash';
@@ -46,6 +50,21 @@ const MessageInputComponent: React.FC<MessageInputProps> = ({ inputText, setInpu
   const handleSendMessage = async () => {
     const trimmedInput = inputText.trim();
     if (trimmedInput.length > 0 && !isLoading) {
+      // ログインチェック
+      if (!isAuthenticated) {
+        Alert.alert(
+          t('chat.loginRequired.title'),
+          t('chat.loginRequired.message'),
+          [
+            {
+              text: t('common.ok'),
+              style: 'default',
+            },
+          ]
+        );
+        return;
+      }
+
       await sendMessage(trimmedInput);
       setInputText('');
     }
@@ -104,7 +123,7 @@ const MessageInputComponent: React.FC<MessageInputProps> = ({ inputText, setInpu
     <View style={styles.inputArea}>
       <CustomInlineInput
         style={styles.customInput}
-        placeholder="メッセージを入力..."
+        placeholder={t('chat.input.placeholder')}
         value={inputText}
         onChangeText={setInputText}
         multiline

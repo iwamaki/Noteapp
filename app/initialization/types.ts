@@ -207,6 +207,9 @@ export interface InitializerConfig {
 
   /** 並列実行する最大タスク数（同一ステージ内） */
   maxConcurrentTasks?: number;
+
+  /** InitializationStoreを使用するか（バックグラウンドタスクではfalseに設定） */
+  useStore?: boolean;
 }
 
 /**

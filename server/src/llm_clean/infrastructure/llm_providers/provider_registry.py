@@ -95,6 +95,12 @@ def _build_provider_registry() -> dict[str, ProviderConfig]:
             display_name="Google Gemini",
             default_model="gemini-2.5-flash",
             models={
+                "gemini-3-pro-preview": ModelMetadata(
+                    category="think",
+                    display_name="Gemini 3.0 Pro Preview",
+                    description="最新プレビュー版・最高性能（推奨）",
+                    recommended=True,
+                ),
                 "gemini-2.5-flash": ModelMetadata(
                     category="quick",
                     display_name="Gemini 2.5 Flash",

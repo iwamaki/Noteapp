@@ -8,6 +8,7 @@
 
 import { useState, useCallback } from 'react';
 import { Alert } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import * as DocumentPicker from 'expo-document-picker';
 import { Paths, Directory, File as FSFile } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
@@ -41,6 +42,7 @@ interface ImportFileData {
  * インポート/エクスポート機能を提供するフック
  */
 export const useImportExport = (): UseImportExportReturn => {
+  const { t } = useTranslation();
   const [isProcessing, setIsProcessing] = useState(false);
 
   /**
@@ -48,7 +50,7 @@ export const useImportExport = (): UseImportExportReturn => {
    */
   const exportFilesToZip = async (files: FileFlat[], zipFileName: string) => {
     if (files.length === 0) {
-      Alert.alert('エクスポート', 'エクスポートするファイルがありません');
+      Alert.alert(t('importExport.export.title'), t('importExport.export.noFiles'));
       return;
     }
 
@@ -109,11 +111,11 @@ export const useImportExport = (): UseImportExportReturn => {
     if (canShare) {
       await Sharing.shareAsync(zipFile.uri, {
         mimeType: 'application/zip',
-        dialogTitle: 'ノートをエクスポート',
+        dialogTitle: t('importExport.export.shareTitle'),
       });
       logger.info('file', `Successfully exported ${files.length} files as ZIP`);
     } else {
-      Alert.alert('エラー', '共有機能が利用できません');
+      Alert.alert(t('common.error'), t('importExport.export.sharingUnavailable'));
       logger.error('file', 'Sharing is not available on this device');
     }
   };
@@ -135,11 +137,11 @@ export const useImportExport = (): UseImportExportReturn => {
       await exportFilesToZip(files, `noteapp-export-${timestamp}.zip`);
     } catch (error: any) {
       logger.error('file', `Export failed: ${error.message}`, error);
-      Alert.alert('エラー', 'エクスポートに失敗しました');
+      Alert.alert(t('common.error'), t('importExport.export.failed'));
     } finally {
       setIsProcessing(false);
     }
-  }, []);
+  }, [t]);
 
   /**
    * ZIPファイルからインポート
@@ -214,11 +216,11 @@ export const useImportExport = (): UseImportExportReturn => {
       importData = JSON.parse(fileContent);
     } catch (parseError: any) {
       logger.error('file', `JSON parse error: ${parseError.message}`, parseError);
-      throw new Error('無効なJSONファイルです');
+      throw new Error(t('importExport.import.failed'));
     }
 
     if (!Array.isArray(importData)) {
-      throw new Error('ファイル形式が正しくありません（配列である必要があります）');
+      throw new Error(t('importExport.import.failed'));
     }
 
     let successCount = 0;
@@ -342,20 +344,20 @@ export const useImportExport = (): UseImportExportReturn => {
       // 結果を表示
       if (result_stats.successCount > 0) {
         Alert.alert(
-          'インポート完了',
+          t('importExport.import.completed'),
           `${result_stats.successCount}件のファイルをインポートしました${result_stats.errorCount > 0 ? `\n（${result_stats.errorCount}件失敗）` : ''}`
         );
         logger.info('file', `Import completed: ${result_stats.successCount} success, ${result_stats.errorCount} errors`);
       } else {
-        Alert.alert('エラー', 'インポートに失敗しました');
+        Alert.alert(t('common.error'), t('importExport.import.failed'));
       }
     } catch (error: any) {
       logger.error('file', `Import failed: ${error.message}`, error);
-      Alert.alert('エラー', error.message || 'インポートに失敗しました');
+      Alert.alert(t('common.error'), error.message || t('importExport.import.failed'));
     } finally {
       setIsProcessing(false);
     }
-  }, []);
+  }, [t]);
 
   /**
    * 単一ファイルのエクスポート機能
@@ -369,7 +371,7 @@ export const useImportExport = (): UseImportExportReturn => {
       // 指定されたファイルを取得
       const file = await FileRepository.getById(fileId);
       if (!file) {
-        Alert.alert('エラー', 'ファイルが見つかりません');
+        Alert.alert(t('common.error'), t('importExport.error.fileNotFound'));
         return;
       }
 
@@ -382,11 +384,11 @@ export const useImportExport = (): UseImportExportReturn => {
       await exportFilesToZip([file], zipFileName);
     } catch (error: any) {
       logger.error('file', `Export file failed: ${error.message}`, error);
-      Alert.alert('エラー', 'ファイルのエクスポートに失敗しました');
+      Alert.alert(t('common.error'), t('importExport.export.fileFailed'));
     } finally {
       setIsProcessing(false);
     }
-  }, []);
+  }, [t]);
 
   /**
    * カテゴリーのエクスポート機能
@@ -404,7 +406,7 @@ export const useImportExport = (): UseImportExportReturn => {
       const categoryFiles = filterFilesByCategory(allFiles, categoryPath);
 
       if (categoryFiles.length === 0) {
-        Alert.alert('エクスポート', 'このカテゴリーにファイルがありません');
+        Alert.alert(t('importExport.export.title'), t('importExport.export.noCategoryFiles'));
         return;
       }
 
@@ -418,11 +420,11 @@ export const useImportExport = (): UseImportExportReturn => {
       await exportFilesToZip(categoryFiles, zipFileName);
     } catch (error: any) {
       logger.error('file', `Export category failed: ${error.message}`, error);
-      Alert.alert('エラー', 'カテゴリーのエクスポートに失敗しました');
+      Alert.alert(t('common.error'), t('importExport.export.categoryFailed'));
     } finally {
       setIsProcessing(false);
     }
-  }, []);
+  }, [t]);
 
   return {
     isProcessing,

@@ -18,6 +18,7 @@ import {
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { CustomHeader } from '../../components/CustomHeader';
 import { MainContainer } from '../../components/MainContainer';
@@ -31,6 +32,7 @@ import { useModelSwitch } from '../../settings/hooks/useModelSwitch';
 type ModelSelectionScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ModelSelection'>;
 
 export const ModelSelectionScreen: React.FC = () => {
+  const { t } = useTranslation();
   const { colors, spacing, typography } = useTheme();
   const navigation = useNavigation<ModelSelectionScreenNavigationProp>();
   const { balance, loadedModels, getTotalTokensByCategory } = useTokenBalanceStore();
@@ -59,20 +61,20 @@ export const ModelSelectionScreen: React.FC = () => {
         const models = convertProvidersToModelInfo(providers);
 
         if (models.length === 0) {
-          setLoadError('利用可能なモデルがありません');
+          setLoadError(t('modelSelection.error.noModels'));
         } else {
           setAvailableModels(models);
         }
       } catch (error) {
         console.error('Failed to load models:', error);
-        setLoadError('モデル情報の読み込みに失敗しました');
+        setLoadError(t('modelSelection.error.loadFailed'));
       } finally {
         setIsLoadingModels(false);
       }
     };
 
     loadModels();
-  }, []);
+  }, [t]);
 
   // 現在選択されているモデル
   const activeQuickModel = loadedModels.quick || 'gemini-2.5-flash';
@@ -428,7 +430,7 @@ export const ModelSelectionScreen: React.FC = () => {
               ]} />
               <Text style={styles.legendText}>
                 {segment.model.shortName}: {(segment.tokens / 1_000_000).toFixed(2)}M
-                {segment.isActive && ' (適用中)'}
+                {segment.isActive && ` (${t('modelSelection.status.active')})`}
               </Text>
             </View>
           ))}
@@ -470,7 +472,7 @@ export const ModelSelectionScreen: React.FC = () => {
             {/* トークン量と装填状態ボタンを同じ行に */}
             <View style={styles.modelTokenRow}>
               <Text style={[styles.modelTokenAmount, { color: accentColor }]}>
-                残高：{tokens.toLocaleString()} トークン
+                {t('modelSelection.balance', { tokens: tokens.toLocaleString() })}
               </Text>
 
               {isActive ? (
@@ -480,12 +482,12 @@ export const ModelSelectionScreen: React.FC = () => {
                     size={14}
                     color={colors.white}
                   />
-                  <Text style={[styles.modelStatusText, { color: colors.white }]}>適用中</Text>
+                  <Text style={[styles.modelStatusText, { color: colors.white }]}>{t('modelSelection.status.active')}</Text>
                 </View>
               ) : (
                 <View style={[styles.modelStatusBadge, { backgroundColor: colors.background, borderColor: colors.border }]}>
                   <Text style={[styles.modelStatusText, { color: tokens > 0 ? colors.text : colors.textSecondary }]}>
-                    {tokens > 0 ? '選択' : '残高なし'}
+                    {tokens > 0 ? t('modelSelection.status.select') : t('modelSelection.status.noBalance')}
                   </Text>
                 </View>
               )}
@@ -509,7 +511,7 @@ export const ModelSelectionScreen: React.FC = () => {
     return (
       <MainContainer>
         <CustomHeader
-          title="LLM設定"
+          title={t('modelSelection.title')}
           leftButtons={[
             {
               icon: <Ionicons name="arrow-back" size={24} color={colors.text} />,
@@ -520,7 +522,7 @@ export const ModelSelectionScreen: React.FC = () => {
         <View style={styles.loadingCenterContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
           <Text style={styles.loadingText}>
-            モデル情報を読み込み中...
+            {t('modelSelection.loading')}
           </Text>
         </View>
       </MainContainer>
@@ -531,7 +533,7 @@ export const ModelSelectionScreen: React.FC = () => {
     return (
       <MainContainer>
         <CustomHeader
-          title="LLM設定"
+          title={t('modelSelection.title')}
           leftButtons={[
             {
               icon: <Ionicons name="arrow-back" size={24} color={colors.text} />,
@@ -552,7 +554,7 @@ export const ModelSelectionScreen: React.FC = () => {
               // リロード処理は useEffect で自動的に行われる
             }}
           >
-            <Text style={styles.retryButtonText}>再試行</Text>
+            <Text style={styles.retryButtonText}>{t('common.button.retry')}</Text>
           </TouchableOpacity>
         </View>
       </MainContainer>
@@ -562,7 +564,7 @@ export const ModelSelectionScreen: React.FC = () => {
   return (
     <MainContainer>
       <CustomHeader
-        title="LLM設定"
+        title={t('modelSelection.title')}
         leftButtons={[
           {
             icon: <Ionicons name="arrow-back" size={24} color={colors.text} />,
@@ -573,9 +575,9 @@ export const ModelSelectionScreen: React.FC = () => {
       <ScrollView style={styles.scrollContent}>
         {/* Quickモデル一覧 */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Quickモデル一覧</Text>
+          <Text style={styles.sectionTitle}>{t('modelSelection.quickModels.title')}</Text>
           <Text style={styles.sectionDescription}>
-            日常的な会話や軽いタスクに使用するモデルを選択
+            {t('modelSelection.quickModels.description')}
           </Text>
 
           {availableModels.filter(m => m.category === 'quick').map(model =>
@@ -585,9 +587,9 @@ export const ModelSelectionScreen: React.FC = () => {
 
         {/* Thinkモデル一覧 */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Thinkモデル一覧</Text>
+          <Text style={styles.sectionTitle}>{t('modelSelection.thinkModels.title')}</Text>
           <Text style={styles.sectionDescription}>
-            複雑な推論や高度なタスクに使用するモデルを選択
+            {t('modelSelection.thinkModels.description')}
           </Text>
 
           {availableModels.filter(m => m.category === 'think').map(model =>
@@ -597,9 +599,9 @@ export const ModelSelectionScreen: React.FC = () => {
 
         {/* トークン保持状況 */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>トークン保持状況</Text>
+          <Text style={styles.sectionTitle}>{t('modelSelection.tokenStatus.title')}</Text>
           <Text style={styles.sectionDescription}>
-            買いすぎ予防：各カテゴリーのMax容量に対する保持量
+            {t('modelSelection.tokenStatus.description')}
           </Text>
 
           {renderGauge(

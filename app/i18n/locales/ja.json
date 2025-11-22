@@ -1,0 +1,296 @@
+{
+  "settings": {
+    "title": "設定",
+    "sections": {
+      "account": "アカウント",
+      "display": "表示設定",
+      "ai": "AI機能",
+      "debug": "デバッグ機能"
+    },
+    "account": {
+      "googleLogin": "Googleでログイン",
+      "logout": "ログアウト",
+      "logoutConfirm": "Googleアカウントからログアウトしますか？",
+      "logoutSuccess": "ログアウトしました",
+      "loginSuccess": "ログインしました",
+      "loginError": "Googleログインに失敗しました",
+      "loginProcessError": "Googleログイン処理に失敗しました"
+    },
+    "display": {
+      "theme": "テーマ",
+      "fontSize": "フォントサイズ",
+      "defaultFileView": "デフォルトファイル表示",
+      "categorySort": "カテゴリーソート方法",
+      "fileSort": "ファイルソート方法",
+      "language": "言語"
+    },
+    "theme": {
+      "light": "ライト",
+      "dark": "ダーク",
+      "system": "システム"
+    },
+    "fontSize": {
+      "small": "小",
+      "medium": "中",
+      "large": "大",
+      "extraLarge": "特大"
+    },
+    "fileView": {
+      "editor": "編集画面",
+      "preview": "プレビュー"
+    },
+    "sortMethod": {
+      "name": "名前順",
+      "fileCount": "ファイル数順",
+      "updatedAt": "更新日順"
+    },
+    "language": {
+      "ja": "日本語",
+      "en": "English"
+    },
+    "ai": {
+      "enable": "AI機能を有効にする"
+    },
+    "debug": {
+      "resetTokenUsage": "トークンと使用量をリセット",
+      "resetSettings": "設定をリセット"
+    },
+    "comingSoon": "その他の設定項目は今後のアップデートで追加予定です。"
+  },
+  "tokenUsage": {
+    "loginRequired": "ログインが必要です",
+    "loginPrompt": "クレジットを購入するにはログインしてください。",
+    "credits": "クレジット",
+    "purchase": "購入",
+    "aiModelSettings": "AIモデル設定",
+    "details": "詳細",
+    "monthlyUsage": "今月の使用量",
+    "tokens": "トークン",
+    "monthlyConsumption": "今月の消費"
+  },
+  "common": {
+    "ok": "OK",
+    "done": "完了",
+    "error": "エラー",
+    "cancel": "キャンセル",
+    "button": {
+      "save": "保存",
+      "cancel": "キャンセル",
+      "delete": "削除",
+      "close": "閉じる",
+      "retry": "再試行",
+      "confirm": "確認",
+      "create": "作成",
+      "rename": "変更",
+      "purchase": "購入する",
+      "purchasing": "購入中...",
+      "allocate": "配分する",
+      "allocating": "配分中..."
+    },
+    "status": {
+      "loading": "読み込み中...",
+      "saving": "保存中...",
+      "processing": "処理中...",
+      "completed": "完了"
+    },
+    "message": {
+      "generic": "失敗しました",
+      "notFound": "見つかりません",
+      "unavailable": "利用できません"
+    }
+  },
+  "fileList": {
+    "title": "ファイル一覧",
+    "emptyState": "ファイルがありません。+ ボタンから新しいファイルを作成してください。",
+    "deleteConfirm": {
+      "title": "削除確認",
+      "message": "「{{title}}」を削除しますか？この操作は取り消せません。"
+    },
+    "categoryDeleteConfirm": {
+      "title": "カテゴリー削除",
+      "message": "カテゴリー「{{category}}」を削除しますか？\n\n⚠️ この操作は取り消せません\n\nこのカテゴリーに含まれる{{count}}個のファイルが削除されます。"
+    },
+    "moveMode": {
+      "instruction": "移動先をタップしてください",
+      "cancel": "キャンセル"
+    },
+    "error": {
+      "attachFailed": "ファイルの添付に失敗しました",
+      "moveFailed": "ファイルの移動に失敗しました"
+    }
+  },
+  "fileEdit": {
+    "saved": "保存しました！",
+    "unsavedChanges": {
+      "title": "未保存の変更があります。",
+      "message": "保存しますか？"
+    },
+    "button": {
+      "save": "保存する",
+      "dontSave": "保存しない"
+    },
+    "featureBar": {
+      "placeholder": "ファイルのタイトル"
+    }
+  },
+  "modals": {
+    "createFile": {
+      "title": "新規ファイル作成",
+      "label": {
+        "title": "タイトル",
+        "category": "カテゴリー（階層パス）",
+        "tags": "タグ（カンマ区切り）",
+        "existingCategories": "既存のカテゴリー"
+      },
+      "placeholder": {
+        "title": "ファイルタイトルを入力",
+        "category": "例: 研究/AI/深層学習",
+        "tags": "例: 重要, TODO"
+      }
+    },
+    "fileActions": {
+      "title": "ファイル操作",
+      "attachToChat": "チャットに添付",
+      "export": "エクスポート",
+      "rename": "名前を変更",
+      "editCategory": "カテゴリーを編集",
+      "editTags": "タグを編集",
+      "move": "移動",
+      "copy": "コピーを作成",
+      "delete": "削除"
+    },
+    "categoryEdit": {
+      "title": "カテゴリーを編集",
+      "message": "「{{fileName}}」のカテゴリーを編集します。",
+      "placeholder": "例: 研究/AI/深層学習",
+      "hint": "階層構造を表すには「/」で区切ってください（例: 研究/AI）"
+    },
+    "tagEdit": {
+      "title": "タグを編集",
+      "message": "「{{fileName}}」のタグを編集します。",
+      "placeholder": "例: 重要, todo, アイデア",
+      "hint": "複数のタグはカンマ（,）またはスペースで区切って入力してください。#は自動で削除されます。"
+    },
+    "categoryActions": {
+      "title": "カテゴリー操作",
+      "fileCount": "{{count}}個のファイル",
+      "createQA": "Q&Aを作成",
+      "export": "エクスポート",
+      "rename": "名前を変更",
+      "delete": "削除"
+    },
+    "renameItem": {
+      "title": "ノート名を変更",
+      "message": "新しいノート名を入力してください。",
+      "placeholder": "新しいノート名"
+    },
+    "creditAllocation": {
+      "title": "💰 クレジット配分",
+      "loading": "モデル情報を読み込み中...",
+      "unallocatedCredits": "未配分クレジット:",
+      "allocatingCredits": "配分するクレジット",
+      "modelCategory": "{{category}}モデル",
+      "categoryCapacity": "{{category}}カテゴリー容量",
+      "before": "追加前",
+      "after": "追加後",
+      "warning": {
+        "overLimit": "容量制限を超えています。最大{{credits}}Pまで配分できます。"
+      }
+    }
+  },
+  "modelSelection": {
+    "title": "AIモデル設定",
+    "loading": "モデル情報を読み込み中...",
+    "quickModels": {
+      "title": "Quickモデル一覧",
+      "description": "日常的な会話や軽いタスクに使用するモデルを選択"
+    },
+    "thinkModels": {
+      "title": "Thinkモデル一覧",
+      "description": "複雑な推論や高度なタスクに使用するモデルを選択"
+    },
+    "tokenStatus": {
+      "title": "トークン保持状況",
+      "description": "買いすぎ予防：各カテゴリーのMax容量に対する保持量"
+    },
+    "balance": "残高：{{tokens}} トークン",
+    "status": {
+      "active": "適用中",
+      "select": "選択",
+      "noBalance": "残高なし"
+    },
+    "error": {
+      "noModels": "利用可能なモデルがありません",
+      "loadFailed": "モデル情報の読み込みに失敗しました"
+    }
+  },
+  "tokenPurchase": {
+    "title": "購入",
+    "confirmTitle": "購入確認",
+    "confirmMessage": "{{packageName}}を購入しますか？",
+    "credits": "クレジット:",
+    "price": "価格:",
+    "notice": {
+      "title": "【注意事項】",
+      "text": "• クレジットは購入後すぐに残高に追加されます\n• 購入したクレジットに有効期限はありません\n• クレジットの返金はできません\n• 端末変更やアンインストール後のクレジットの復元はできません"
+    }
+  },
+  "chat": {
+    "input": {
+      "placeholder": "メッセージを入力..."
+    },
+    "loginRequired": {
+      "title": "ログインが必要です",
+      "message": "チャットを利用するにはログインしてください。\n\n設定画面の「アカウント」セクションから「Googleでログイン」ボタンを押してください。"
+    },
+    "history": {
+      "title": "チャット履歴",
+      "loading": "AI が処理中です..."
+    },
+    "modelSelection": {
+      "title": "AIモデル選択",
+      "quickModels": "Quickモデル",
+      "thinkModels": "Thinkモデル",
+      "loading": "モデル情報を読み込み中...",
+      "error": {
+        "noModels": "利用可能なモデルがありません",
+        "loadFailed": "モデル情報の読み込みに失敗しました"
+      }
+    }
+  },
+  "importExport": {
+    "export": {
+      "title": "エクスポート",
+      "noFiles": "エクスポートするファイルがありません",
+      "noCategoryFiles": "このカテゴリーにファイルがありません",
+      "shareTitle": "ノートをエクスポート",
+      "sharingUnavailable": "共有機能が利用できません",
+      "failed": "エクスポートに失敗しました",
+      "fileFailed": "ファイルのエクスポートに失敗しました",
+      "categoryFailed": "カテゴリーのエクスポートに失敗しました"
+    },
+    "import": {
+      "completed": "インポート完了",
+      "failed": "インポートに失敗しました"
+    },
+    "error": {
+      "fileNotFound": "ファイルが見つかりません"
+    }
+  },
+  "rag": {
+    "createQA": {
+      "title": "Q&A作成",
+      "noFiles": "このカテゴリーにファイルがありません",
+      "completed": "Q&A作成完了",
+      "completedMessage": "カテゴリー「{{categoryName}}」のファイル（{{count}}件）を知識ベースに追加しました。\n\nチャットで「{{categoryName}}について教えて」のように質問すると、このカテゴリーの内容に基づいた回答が得られます。\n\nコレクション名: {{collectionName}}\n作成されたチャンク数: {{chunks}}\n総文字数: {{characters}}",
+      "failed": "Q&A作成に失敗しました。"
+    },
+    "metadata": {
+      "title": "タイトル:",
+      "category": "カテゴリー:",
+      "uncategorized": "未分類",
+      "categoryPrefix": "カテゴリー: {{name}}",
+      "categoryDescription": "{{count}}個のファイルを含むカテゴリー"
+    }
+  }
+}

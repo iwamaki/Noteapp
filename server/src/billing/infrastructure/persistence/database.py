@@ -1,41 +1,23 @@
 # @file database.py
 # @summary データベース接続とセットアップ
-# @responsibility SQLiteデータベースの初期化、セッション管理、初期データ投入
-
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+# @responsibility データベースの初期化、初期データ投入
 
 from src.core.logger import logger
+from src.data import SessionLocal
+from src.data.models import Credit, TokenPricing, User
 
-from ...domain.entities import Base, Credit, TokenPricing, User
 from ..config.constants import DEFAULT_USER_ID, INITIAL_PRICING_DATA
-
-# データベースURL（SQLite）
-DATABASE_URL = "sqlite:///./billing.db"
-
-# エンジン作成
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False},  # SQLite用設定
-    echo=False  # SQLクエリのログ出力（デバッグ時はTrue）
-)
-
-# セッションファクトリー
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 def init_db():
-    """データベースとテーブルを初期化
+    """データベース初期データを投入
 
     アプリケーション起動時に一度だけ呼び出される。
-    - テーブルが存在しない場合は作成
     - デフォルトユーザーと価格マスターデータを投入
+
+    Note: テーブル作成はAlembicマイグレーションで管理
     """
     logger.info("Initializing billing database...")
-
-    # テーブル作成
-    Base.metadata.create_all(bind=engine)
-    logger.info("Database tables created")
 
     # 初期データ投入
     _insert_initial_data()
@@ -55,11 +37,13 @@ def _insert_initial_data():
         if not existing_user:
             default_user = User(user_id=DEFAULT_USER_ID)
             db.add(default_user)
+            db.commit()  # ユーザーを先にコミット
             logger.info(f"Created default user: {DEFAULT_USER_ID}")
 
             # デフォルトユーザーのクレジットレコード作成
             default_credit = Credit(user_id=DEFAULT_USER_ID, credits=0)
             db.add(default_credit)
+            db.commit()  # クレジットをコミット
             logger.info(f"Created credit record for {DEFAULT_USER_ID}")
 
         # 価格マスターデータを投入（存在しない場合のみ）
@@ -73,7 +57,7 @@ def _insert_initial_data():
                 db.add(pricing)
                 logger.info(f"Created pricing for {pricing_data['model_id']}")
 
-        db.commit()
+        db.commit()  # 価格データをコミット
         logger.info("Initial data inserted successfully")
 
     except Exception as e:
@@ -84,18 +68,3 @@ def _insert_initial_data():
         db.close()
 
 
-def get_db():
-    """DBセッションを取得（FastAPI Depends用）
-
-    FastAPIのDependencyとして使用される。
-    リクエストごとに新しいセッションを作成し、
-    リクエスト終了時に自動的にクローズする。
-
-    Yields:
-        Session: SQLAlchemyセッション
-    """
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()

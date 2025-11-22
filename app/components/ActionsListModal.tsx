@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '../design/theme/ThemeContext';
 import { CustomModal } from './CustomModal';
 import { Ionicons } from '@expo/vector-icons';
@@ -52,6 +53,7 @@ export const ActionsListModal: React.FC<ActionsListModalProps> = ({
   actions,
   onClose,
 }) => {
+  const { t } = useTranslation();
   const { colors, typography, spacing } = useTheme();
 
   const styles = StyleSheet.create({
@@ -110,7 +112,7 @@ export const ActionsListModal: React.FC<ActionsListModalProps> = ({
       onClose={onClose}
       buttons={[
         {
-          text: 'キャンセル',
+          text: t('common.button.cancel'),
           style: 'cancel',
           onPress: onClose,
         },

@@ -67,3 +67,4 @@ scripts/
 server/billing.db
 .env.development
 .env.production.bak
+.claude

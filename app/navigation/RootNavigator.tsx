@@ -21,6 +21,7 @@ import { ModelSelectionScreen } from '../screens/model-selection/ModelSelectionS
 import { useTheme } from '../design/theme/ThemeContext';
 import { ChatInputBar } from '../features/chat/components/ChatInputBar';
 import { useLLMSettingsStore } from '../settings/settingsStore';
+import { logger } from '../utils/logger';
 
 
 // スタックナビゲーターの作成
@@ -32,6 +33,11 @@ function RootNavigatorContent() {
   const { colors } = useTheme();
   const { settings } = useLLMSettingsStore();
 
+  // RootNavigator マウント時のログ
+  React.useEffect(() => {
+    logger.info('init', '📱 RootNavigator mounted');
+  }, []);
+
   const shouldShowChat = (currentRouteName === 'FileList' || currentRouteName === 'FileEdit') && settings.llmEnabled;
 
   return (
@@ -39,6 +45,7 @@ function RootNavigatorContent() {
       <NavigationContainer
         ref={navigationRef}
         onReady={() => {
+          logger.info('init', '🗺️  NavigationContainer ready');
           setCurrentRouteName(navigationRef.current?.getCurrentRoute()?.name);
         }}
         onStateChange={() => {

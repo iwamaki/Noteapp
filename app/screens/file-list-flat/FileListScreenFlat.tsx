@@ -20,6 +20,7 @@
 // ===== React & React Native =====
 import React, { useCallback, useMemo, useEffect, useState } from 'react';
 import { StyleSheet, SectionList, Alert, View, Text, TouchableOpacity } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 // ===== Navigation =====
 import { useNavigation, NavigationProp, useFocusEffect } from '@react-navigation/native';
@@ -66,6 +67,10 @@ import { getCategoryNameFromPath } from './utils';
 import { FILE_LIST_FLAT_CONFIG } from './config';
 
 function FileListScreenFlat() {
+  // FileListScreen レンダリング開始を記録
+  logger.info('init', '📄 FileListScreen rendering...');
+
+  const { t } = useTranslation();
   const { colors, spacing } = useTheme();
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const uiSettings = useUISettingsStore((state) => state.settings);
@@ -127,9 +132,16 @@ function FileListScreenFlat() {
 
   // データ初期読み込み（初回マウント時のみ実行）
   useEffect(() => {
-    logger.info('file', 'FileListScreenFlat: Initial data refresh triggered.');
+    logger.info('init', '📄 FileListScreen mounted, triggering initial data load...');
     refreshData();
   }, []);
+
+  // ローディング完了を監視
+  useEffect(() => {
+    if (!loading && files.length > 0) {
+      logger.info('init', '✅ FileListScreen data loaded and rendered');
+    }
+  }, [loading, files.length]);
 
   // 画面がフォーカスされた時にデータを再取得（編集画面から戻ってきた時など）
   useFocusEffect(
@@ -237,7 +249,7 @@ function FileListScreenFlat() {
           closeRenameModal();
         } catch (error: any) {
           logger.error('file', `Failed to rename file to ${newName}: ${error.message}`, error);
-          Alert.alert('エラー', error.message);
+          Alert.alert(t('common.error'), error.message);
         }
       }
     },
@@ -268,7 +280,7 @@ function FileListScreenFlat() {
         setFileForCategoryEdit(null);
       } catch (error: any) {
         logger.error('file', `Failed to update category: ${error.message}`, error);
-        Alert.alert('エラー', error.message);
+        Alert.alert(t('common.error'), error.message);
       }
     },
     [fileForCategoryEdit, updateFileCategory]
@@ -298,7 +310,7 @@ function FileListScreenFlat() {
         setFileForTagEdit(null);
       } catch (error: any) {
         logger.error('file', `Failed to update tags: ${error.message}`, error);
-        Alert.alert('エラー', error.message);
+        Alert.alert(t('common.error'), error.message);
       }
     },
     [fileForTagEdit, updateFileTags]
@@ -354,7 +366,7 @@ function FileListScreenFlat() {
     } catch (error: any) {
       logger.error('file', `Failed to delete category: ${error.message}`, error);
       setCategoryToDelete(null);
-      Alert.alert('エラー', error.message);
+      Alert.alert(t('common.error'), error.message);
     }
   }, [categoryToDelete, refreshData]);
 
@@ -374,7 +386,7 @@ function FileListScreenFlat() {
         setShowCategoryRenameModal(true);
       } catch (error: any) {
         logger.error('file', `Failed to get category impact: ${error.message}`, error);
-        Alert.alert('エラー', error.message);
+        Alert.alert(t('common.error'), error.message);
       }
     },
     []
@@ -398,7 +410,7 @@ function FileListScreenFlat() {
         await refreshData();
       } catch (error: any) {
         logger.error('file', `Failed to rename category: ${error.message}`, error);
-        Alert.alert('エラー', error.message);
+        Alert.alert(t('common.error'), error.message);
       }
     },
     [categoryForRename, refreshData]
@@ -432,7 +444,7 @@ function FileListScreenFlat() {
       // 成功時はAlertを表示せず、UIの添付ファイル表示のみで通知
     } catch (error: any) {
       logger.error('file', `Failed to attach file to chat: ${error.message}`, error);
-      Alert.alert('エラー', 'ファイルの添付に失敗しました');
+      Alert.alert(t('common.error'), t('fileList.error.attachFailed'));
     }
   }, []);
 
@@ -473,7 +485,7 @@ function FileListScreenFlat() {
         // ファイル一覧に留まるため、遷移しない
       } catch (error: any) {
         logger.error('file', `Failed to create file ${title}: ${error.message}`, error);
-        Alert.alert('エラー', error.message);
+        Alert.alert(t('common.error'), error.message);
       }
     },
     [createFile, closeCreateModal]
@@ -523,10 +535,10 @@ function FileListScreenFlat() {
         exitMoveMode();
       } catch (error: any) {
         logger.error('file', `Failed to move file: ${error.message}`, error);
-        Alert.alert('エラー', 'ファイルの移動に失敗しました');
+        Alert.alert(t('common.error'), t('fileList.error.moveFailed'));
       }
     },
-    [moveSourceFileId, moveFile, exitMoveMode]
+    [moveSourceFileId, moveFile, exitMoveMode, t]
   );
 
   /**
@@ -548,10 +560,10 @@ function FileListScreenFlat() {
         exitMoveMode();
       } catch (error: any) {
         logger.error('file', `Failed to move file: ${error.message}`, error);
-        Alert.alert('エラー', 'ファイルの移動に失敗しました');
+        Alert.alert(t('common.error'), t('fileList.error.moveFailed'));
       }
     },
-    [isMoveMode, moveSourceFileId, moveFile, exitMoveMode]
+    [isMoveMode, moveSourceFileId, moveFile, exitMoveMode, t]
   );
 
   // contentContainerStyleをメモ化
@@ -718,14 +730,14 @@ function FileListScreenFlat() {
       {isMoveMode && (
         <View style={[styles.moveBar, { backgroundColor: colors.background }]}>
           <Text style={{ fontSize: FILE_LIST_FLAT_CONFIG.typography.heading, color: colors.text }}>
-            移動先をタップしてください
+            {t('fileList.moveMode.instruction')}
           </Text>
           <TouchableOpacity
             style={styles.cancelButton}
             onPress={handleCancelMove}
           >
             <Text style={{ fontSize: FILE_LIST_FLAT_CONFIG.typography.heading, color: colors.primary, fontWeight: '600' }}>
-              キャンセル
+              {t('fileList.moveMode.cancel')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -763,11 +775,11 @@ function FileListScreenFlat() {
 
       <CustomModal
         isVisible={showDeleteConfirmModal}
-        title="削除確認"
-        message={`「${fileToDelete?.title}」を削除しますか？この操作は取り消せません。`}
+        title={t('fileList.deleteConfirm.title')}
+        message={t('fileList.deleteConfirm.message', { title: fileToDelete?.title })}
         buttons={[
           {
-            text: 'キャンセル',
+            text: t('common.button.cancel'),
             style: 'cancel',
             onPress: () => {
               setShowDeleteConfirmModal(false);
@@ -775,7 +787,7 @@ function FileListScreenFlat() {
             },
           },
           {
-            text: '削除',
+            text: t('common.button.delete'),
             style: 'destructive',
             onPress: handleConfirmDelete,
           },
@@ -845,15 +857,14 @@ function FileListScreenFlat() {
       {categoryToDelete && (
         <CustomModal
           isVisible={showCategoryDeleteConfirmModal}
-          title="カテゴリー削除"
-          message={`「${categoryToDelete.path}」を削除しますか？\n\n⚠️ この操作は取り消せません\n\n削除される内容:\n• 直接属するファイル: ${categoryToDelete.impact.directFileCount}個${
-            categoryToDelete.impact.childCategories.length > 0
-              ? `\n• 子カテゴリー: ${categoryToDelete.impact.childCategories.length}個 (${categoryToDelete.impact.totalFileCount - categoryToDelete.impact.directFileCount}個のファイル)`
-              : ''
-          }\n━━━━━━━━━━━━━━━━━━\n合計: ${categoryToDelete.impact.totalFileCount}個のファイルが削除されます`}
+          title={t('fileList.categoryDeleteConfirm.title')}
+          message={t('fileList.categoryDeleteConfirm.message', {
+            category: categoryToDelete.path,
+            count: categoryToDelete.impact.totalFileCount
+          })}
           buttons={[
             {
-              text: 'キャンセル',
+              text: t('common.button.cancel'),
               style: 'cancel',
               onPress: () => {
                 setShowCategoryDeleteConfirmModal(false);
@@ -861,7 +872,7 @@ function FileListScreenFlat() {
               },
             },
             {
-              text: '削除する',
+              text: t('common.button.delete'),
               style: 'destructive',
               onPress: handleConfirmDeleteCategory,
             },

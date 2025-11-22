@@ -3,6 +3,7 @@
  * @summary ノートの名前変更モーダル
  */
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { InputFormModal } from '../../../components/InputFormModal';
 import { RenameItemModalProps } from '../types';
 
@@ -12,6 +13,8 @@ export const RenameItemModal: React.FC<RenameItemModalProps> = ({
   onClose,
   onRename,
 }) => {
+  const { t } = useTranslation();
+
   const handleRename = (newName: string) => {
     onRename(newName);
     onClose();
@@ -20,13 +23,13 @@ export const RenameItemModal: React.FC<RenameItemModalProps> = ({
   return (
     <InputFormModal
       visible={visible}
-      title="ノート名を変更"
-      message="新しいノート名を入力してください。"
+      title={t('modals.renameItem.title')}
+      message={t('modals.renameItem.message')}
       initialValue={initialName}
-      placeholder="新しいノート名"
+      placeholder={t('modals.renameItem.placeholder')}
       onClose={onClose}
       onSubmit={handleRename}
-      submitButtonText="変更"
+      submitButtonText={t('common.button.rename')}
       validateInput={(value) => value.length > 0}
     />
   );

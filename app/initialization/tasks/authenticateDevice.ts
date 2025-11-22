@@ -21,20 +21,25 @@ export const authenticateDevice: InitializationTask = {
   description: 'デバイスIDを登録し、認証状態を初期化します',
   stage: InitializationStage.CRITICAL,
   priority: TaskPriority.CRITICAL,
-  timeout: 10000, // 10秒タイムアウト
+  timeout: 7000, // 7秒タイムアウト（最適化: 10秒→7秒）
+  retry: {
+    maxAttempts: 2, // ネットワークエラー時に1回リトライ
+    delayMs: 1000,
+  },
 
   execute: async () => {
     try {
       logger.info('auth', 'Starting device authentication and auth store initialization...');
 
-      // 1. デバイスIDを取得または生成
-      const deviceId = await getOrCreateDeviceId();
+      // 1. デバイスIDとユーザーIDを並列取得（最適化: 並列化）
+      const [deviceId, existingUserId] = await Promise.all([
+        getOrCreateDeviceId(),
+        getUserId(),
+      ]);
+
       logger.info('auth', 'Device ID obtained', {
         deviceIdPrefix: deviceId.substring(0, 8)
       });
-
-      // 2. 既存のユーザーIDを確認
-      const existingUserId = await getUserId();
 
       if (existingUserId) {
         logger.info('auth', 'Existing user ID found', {
@@ -73,13 +78,12 @@ export const authenticateDevice: InitializationTask = {
             isNewUser: response.is_new_user
           });
 
-          // ユーザーIDを保存
-          await saveUserId(response.user_id);
-          logger.info('auth', 'User ID saved successfully');
-
-          // トークンを保存
-          await saveTokens(response.access_token, response.refresh_token);
-          logger.info('auth', 'Tokens saved successfully');
+          // ユーザーIDとトークンを並列保存（最適化: 並列化）
+          await Promise.all([
+            saveUserId(response.user_id),
+            saveTokens(response.access_token, response.refresh_token),
+          ]);
+          logger.info('auth', 'User ID and tokens saved successfully');
         }
       } else {
         // 新規登録フロー
@@ -91,13 +95,12 @@ export const authenticateDevice: InitializationTask = {
           isNewUser: response.is_new_user
         });
 
-        // ユーザーIDを保存
-        await saveUserId(response.user_id);
-        logger.info('auth', 'User ID saved successfully');
-
-        // トークンを保存
-        await saveTokens(response.access_token, response.refresh_token);
-        logger.info('auth', 'Tokens saved successfully');
+        // ユーザーIDとトークンを並列保存（最適化: 並列化）
+        await Promise.all([
+          saveUserId(response.user_id),
+          saveTokens(response.access_token, response.refresh_token),
+        ]);
+        logger.info('auth', 'User ID and tokens saved successfully');
       }
 
       // 3. 認証ストアを初期化（SecureStoreから状態を復元）

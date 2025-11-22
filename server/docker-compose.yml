@@ -11,6 +11,7 @@ services:
       - .env.development
     depends_on:
       - redis
+      - postgres
     environment:
       # ========================================
       # Python 設定
@@ -71,5 +72,24 @@ services:
     restart: unless-stopped
     command: redis-server --appendonly yes
 
+  postgres:
+    image: postgres:15-alpine
+    container_name: noteapp-postgres-dev
+    environment:
+      POSTGRES_USER: noteapp_user
+      POSTGRES_PASSWORD: noteapp_dev_password
+      POSTGRES_DB: noteapp_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U noteapp_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
 volumes:
   redis_data:
+  postgres_data:

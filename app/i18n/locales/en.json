@@ -1,0 +1,296 @@
+{
+  "settings": {
+    "title": "Settings",
+    "sections": {
+      "account": "Account",
+      "display": "Display",
+      "ai": "AI Features",
+      "debug": "Debug"
+    },
+    "account": {
+      "googleLogin": "Sign in with Google",
+      "logout": "Sign Out",
+      "logoutConfirm": "Are you sure you want to sign out from your Google account?",
+      "logoutSuccess": "Signed out successfully",
+      "loginSuccess": "Signed in successfully",
+      "loginError": "Google sign-in failed",
+      "loginProcessError": "Failed to process Google sign-in"
+    },
+    "display": {
+      "theme": "Theme",
+      "fontSize": "Font Size",
+      "defaultFileView": "Default File View",
+      "categorySort": "Category Sort",
+      "fileSort": "File Sort",
+      "language": "Language"
+    },
+    "theme": {
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    },
+    "fontSize": {
+      "small": "Small",
+      "medium": "Medium",
+      "large": "Large",
+      "extraLarge": "Extra Large"
+    },
+    "fileView": {
+      "editor": "Editor",
+      "preview": "Preview"
+    },
+    "sortMethod": {
+      "name": "Name",
+      "fileCount": "File Count",
+      "updatedAt": "Updated Date"
+    },
+    "language": {
+      "ja": "日本語",
+      "en": "English"
+    },
+    "ai": {
+      "enable": "Enable AI Features"
+    },
+    "debug": {
+      "resetTokenUsage": "Reset Token Usage",
+      "resetSettings": "Reset Settings"
+    },
+    "comingSoon": "More settings will be added in future updates."
+  },
+  "tokenUsage": {
+    "loginRequired": "Login Required",
+    "loginPrompt": "Please log in to purchase credits.",
+    "credits": "Credits",
+    "purchase": "Purchase",
+    "aiModelSettings": "AI Model Settings",
+    "details": "Details",
+    "monthlyUsage": "Monthly Usage",
+    "tokens": "Tokens",
+    "monthlyConsumption": "Monthly Consumption"
+  },
+  "common": {
+    "ok": "OK",
+    "done": "Done",
+    "error": "Error",
+    "cancel": "Cancel",
+    "button": {
+      "save": "Save",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "close": "Close",
+      "retry": "Retry",
+      "confirm": "Confirm",
+      "create": "Create",
+      "rename": "Rename",
+      "purchase": "Purchase",
+      "purchasing": "Purchasing...",
+      "allocate": "Allocate",
+      "allocating": "Allocating..."
+    },
+    "status": {
+      "loading": "Loading...",
+      "saving": "Saving...",
+      "processing": "Processing...",
+      "completed": "Completed"
+    },
+    "message": {
+      "generic": "Failed",
+      "notFound": "Not found",
+      "unavailable": "Unavailable"
+    }
+  },
+  "fileList": {
+    "title": "Files",
+    "emptyState": "No files. Tap the + button to create a new file.",
+    "deleteConfirm": {
+      "title": "Confirm Delete",
+      "message": "Delete \"{{title}}\"? This action cannot be undone."
+    },
+    "categoryDeleteConfirm": {
+      "title": "Delete Category",
+      "message": "Delete category \"{{category}}\"?\n\n⚠️ This action cannot be undone\n\n{{count}} file(s) in this category will be deleted."
+    },
+    "moveMode": {
+      "instruction": "Tap the destination",
+      "cancel": "Cancel"
+    },
+    "error": {
+      "attachFailed": "Failed to attach file",
+      "moveFailed": "Failed to move file"
+    }
+  },
+  "fileEdit": {
+    "saved": "Saved!",
+    "unsavedChanges": {
+      "title": "Unsaved changes.",
+      "message": "Save changes?"
+    },
+    "button": {
+      "save": "Save",
+      "dontSave": "Don't Save"
+    },
+    "featureBar": {
+      "placeholder": "File title"
+    }
+  },
+  "modals": {
+    "createFile": {
+      "title": "Create New File",
+      "label": {
+        "title": "Title",
+        "category": "Category (Path)",
+        "tags": "Tags (comma-separated)",
+        "existingCategories": "Existing Categories"
+      },
+      "placeholder": {
+        "title": "Enter file title",
+        "category": "e.g., Research/AI/Deep Learning",
+        "tags": "e.g., Important, TODO"
+      }
+    },
+    "fileActions": {
+      "title": "File Actions",
+      "attachToChat": "Attach to Chat",
+      "export": "Export",
+      "rename": "Rename",
+      "editCategory": "Edit Category",
+      "editTags": "Edit Tags",
+      "move": "Move",
+      "copy": "Duplicate",
+      "delete": "Delete"
+    },
+    "categoryEdit": {
+      "title": "Edit Category",
+      "message": "Edit category for \"{{fileName}}\".",
+      "placeholder": "e.g., Research/AI/Deep Learning",
+      "hint": "Use \"/\" to separate hierarchy levels (e.g., Research/AI)"
+    },
+    "tagEdit": {
+      "title": "Edit Tags",
+      "message": "Edit tags for \"{{fileName}}\".",
+      "placeholder": "e.g., Important, todo, idea",
+      "hint": "Separate multiple tags with commas (,) or spaces. # will be automatically removed."
+    },
+    "categoryActions": {
+      "title": "Category Actions",
+      "fileCount": "{{count}} file(s)",
+      "createQA": "Create Q&A",
+      "export": "Export",
+      "rename": "Rename",
+      "delete": "Delete"
+    },
+    "renameItem": {
+      "title": "Rename Note",
+      "message": "Enter a new note name.",
+      "placeholder": "New note name"
+    },
+    "creditAllocation": {
+      "title": "💰 Credit Allocation",
+      "loading": "Loading model information...",
+      "unallocatedCredits": "Unallocated Credits:",
+      "allocatingCredits": "Credits to Allocate",
+      "modelCategory": "{{category}} Models",
+      "categoryCapacity": "{{category}} Category Capacity",
+      "before": "Before",
+      "after": "After",
+      "warning": {
+        "overLimit": "Capacity limit exceeded. You can allocate up to {{credits}}P."
+      }
+    }
+  },
+  "modelSelection": {
+    "title": "AI Model Settings",
+    "loading": "Loading model information...",
+    "quickModels": {
+      "title": "Quick Models",
+      "description": "Select models for everyday conversations and light tasks"
+    },
+    "thinkModels": {
+      "title": "Think Models",
+      "description": "Select models for complex reasoning and advanced tasks"
+    },
+    "tokenStatus": {
+      "title": "Token Holdings",
+      "description": "Over-purchase prevention: Holdings vs Max capacity for each category"
+    },
+    "balance": "Balance: {{tokens}} tokens",
+    "status": {
+      "active": "Active",
+      "select": "Select",
+      "noBalance": "No Balance"
+    },
+    "error": {
+      "noModels": "No models available",
+      "loadFailed": "Failed to load model information"
+    }
+  },
+  "tokenPurchase": {
+    "title": "Purchase",
+    "confirmTitle": "Confirm Purchase",
+    "confirmMessage": "Purchase {{packageName}}?",
+    "credits": "Credits:",
+    "price": "Price:",
+    "notice": {
+      "title": "【Important Notice】",
+      "text": "• Credits will be added to your balance immediately after purchase\n• Purchased credits have no expiration date\n• Credits cannot be refunded\n• Credits cannot be restored after device change or app uninstall"
+    }
+  },
+  "chat": {
+    "input": {
+      "placeholder": "Type a message..."
+    },
+    "loginRequired": {
+      "title": "Login Required",
+      "message": "Please log in to use chat.\n\nGo to the \"Account\" section in Settings and tap \"Sign in with Google\"."
+    },
+    "history": {
+      "title": "Chat History",
+      "loading": "AI is processing..."
+    },
+    "modelSelection": {
+      "title": "Select AI Model",
+      "quickModels": "Quick Models",
+      "thinkModels": "Think Models",
+      "loading": "Loading model information...",
+      "error": {
+        "noModels": "No models available",
+        "loadFailed": "Failed to load model information"
+      }
+    }
+  },
+  "importExport": {
+    "export": {
+      "title": "Export",
+      "noFiles": "No files to export",
+      "noCategoryFiles": "No files in this category",
+      "shareTitle": "Export Note",
+      "sharingUnavailable": "Sharing is unavailable",
+      "failed": "Export failed",
+      "fileFailed": "Failed to export file",
+      "categoryFailed": "Failed to export category"
+    },
+    "import": {
+      "completed": "Import completed",
+      "failed": "Import failed"
+    },
+    "error": {
+      "fileNotFound": "File not found"
+    }
+  },
+  "rag": {
+    "createQA": {
+      "title": "Create Q&A",
+      "noFiles": "No files in this category",
+      "completed": "Q&A creation completed",
+      "completedMessage": "Added {{count}} file(s) from category \"{{categoryName}}\" to the knowledge base.\n\nYou can now ask questions like \"Tell me about {{categoryName}}\" in chat to get answers based on this category's content.\n\nCollection name: {{collectionName}}\nChunks created: {{chunks}}\nTotal characters: {{characters}}",
+      "failed": "Q&A creation failed."
+    },
+    "metadata": {
+      "title": "Title:",
+      "category": "Category:",
+      "uncategorized": "Uncategorized",
+      "categoryPrefix": "Category: {{name}}",
+      "categoryDescription": "Category containing {{count}} file(s)"
+    }
+  }
+}

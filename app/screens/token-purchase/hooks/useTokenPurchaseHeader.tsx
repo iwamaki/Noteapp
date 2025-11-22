@@ -8,11 +8,13 @@ import React, { useLayoutEffect, useCallback } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { RootStackParamList } from '../../../navigation/types';
 import { CustomHeader } from '../../../components/CustomHeader';
 import { useTheme } from '../../../design/theme/ThemeContext';
 
 export const useTokenPurchaseHeader = () => {
+  const { t } = useTranslation();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { colors, iconSizes } = useTheme();
 
@@ -26,7 +28,7 @@ export const useTokenPurchaseHeader = () => {
     navigation.setOptions({
       header: () => (
         <CustomHeader
-          title="購入"
+          title={t('tokenPurchase.title')}
           leftButtons={[
             {
               icon: <Ionicons name="arrow-back-outline" size={iconSizes.medium} color={colors.text} />,
@@ -41,5 +43,6 @@ export const useTokenPurchaseHeader = () => {
     handleGoBack,
     colors.text,
     iconSizes.medium,
+    t,
   ]);
 };

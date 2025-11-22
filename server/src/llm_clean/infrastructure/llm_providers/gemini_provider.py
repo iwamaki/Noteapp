@@ -45,9 +45,4 @@ class GeminiProvider(BaseAgentLLMProvider):
             temperature=0.7,
             # Note: convert_system_message_to_humanは非推奨のため削除
             # システムメッセージは base_provider.py で適切に処理される
-            client_options=None,
-            transport=None,
-            additional_headers=None,
-            client=None,
-            async_client=None,
         )

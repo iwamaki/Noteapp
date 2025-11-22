@@ -6,6 +6,7 @@
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { CustomModal } from './CustomModal';
 import { useTheme } from '../design/theme/ThemeContext';
 
@@ -35,10 +36,15 @@ export const PurchaseConfirmModal: React.FC<PurchaseConfirmModalProps> = ({
   message,
   details,
   purchasing = false,
-  confirmButtonText = '購入する',
-  cancelButtonText = 'キャンセル',
+  confirmButtonText,
+  cancelButtonText,
 }) => {
+  const { t } = useTranslation();
   const { colors, spacing, typography } = useTheme();
+
+  // デフォルトのボタンテキストを翻訳キーから取得
+  const defaultConfirmText = confirmButtonText || t('common.button.purchase');
+  const defaultCancelText = cancelButtonText || t('common.button.cancel');
 
   const styles = StyleSheet.create({
     detailContainer: {
@@ -73,12 +79,12 @@ export const PurchaseConfirmModal: React.FC<PurchaseConfirmModalProps> = ({
       onClose={onClose}
       buttons={[
         {
-          text: cancelButtonText,
+          text: defaultCancelText,
           style: 'cancel',
           onPress: onClose,
         },
         {
-          text: purchasing ? '購入中...' : confirmButtonText,
+          text: purchasing ? t('common.button.purchasing') : defaultConfirmText,
           style: 'default',
           onPress: onConfirm,
         },

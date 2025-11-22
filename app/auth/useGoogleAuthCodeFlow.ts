@@ -214,7 +214,7 @@ export function useGoogleAuthCodeFlow(): UseGoogleAuthCodeFlowResult {
 
       // WebBrowser で認証画面を開く
       // App Links (HTTPS) を使用（Custom URI Schemeはフォールバック）
-      const redirectUrl = `${apiBaseUrl}/auth/callback`;
+      const redirectUrl = `${apiBaseUrl}/api/auth/callback`;
       const browserResult = await WebBrowser.openAuthSessionAsync(
         auth_url,
         redirectUrl

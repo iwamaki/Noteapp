@@ -9,6 +9,7 @@
 
 import React from 'react';
 import { StyleSheet, Text } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { InputFormModal } from '../../../components/InputFormModal';
 import { CategoryEditModalProps } from '../types';
@@ -20,6 +21,7 @@ export const CategoryEditModal: React.FC<CategoryEditModalProps> = ({
   onClose,
   onSave,
 }) => {
+  const { t } = useTranslation();
   const { colors, typography, spacing } = useTheme();
 
   const handleSave = (category: string) => {
@@ -39,15 +41,15 @@ export const CategoryEditModal: React.FC<CategoryEditModalProps> = ({
   return (
     <InputFormModal
       visible={visible}
-      title="カテゴリーを編集"
-      message={`「${fileName}」のカテゴリーを編集します。`}
+      title={t('modals.categoryEdit.title')}
+      message={t('modals.categoryEdit.message', { fileName })}
       initialValue={initialCategory}
-      placeholder="例: 研究/AI/深層学習"
+      placeholder={t('modals.categoryEdit.placeholder')}
       onClose={onClose}
       onSubmit={handleSave}
     >
       <Text style={styles.hint}>
-        階層構造を表すには「/」で区切ってください（例: 研究/AI）
+        {t('modals.categoryEdit.hint')}
       </Text>
     </InputFormModal>
   );

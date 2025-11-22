@@ -7,6 +7,7 @@
 import { create } from 'zustand';
 import { UISettings, defaultUISettings } from '../types/uiSettings.types';
 import { SettingsPersistenceService } from '../services/settingsPersistenceService';
+import { changeLanguage } from '../../i18n';
 
 const STORAGE_KEY = 'ui';
 
@@ -46,6 +47,12 @@ export const useUISettingsStore = create<UISettingsStore>((set, get) => ({
       await SettingsPersistenceService.save(STORAGE_KEY, newSettings);
       set({ settings: newSettings });
       console.log('[UISettingsStore] Settings updated:', updates);
+
+      // 言語設定が変更された場合、i18nextの言語も変更
+      if (updates.language) {
+        await changeLanguage(updates.language);
+        console.log('[UISettingsStore] Language changed to:', updates.language);
+      }
     } catch (error) {
       console.error('[UISettingsStore] Failed to update settings:', error);
       throw error;

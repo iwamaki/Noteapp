@@ -5,7 +5,8 @@
  */
 
 import { logger } from '../../../utils/logger';
-import { createWebSocketClient, WebSocketClient, WebSocketMessage } from '../../api';
+import { WebSocketClient, WebSocketMessage } from '../../api';
+import { WebSocketManager } from '../../llmService/core/WebSocketManager';
 import { getOrCreateClientId } from '../utils/clientId';
 import { CHAT_CONFIG } from '../config/chatConfig';
 import {
@@ -21,9 +22,12 @@ import {
  * ChatService用のWebSocket管理マネージャークラス
  */
 export class ChatWebSocketManager {
-  private wsClient: WebSocketClient | null = null;
+  private wsManager: WebSocketManager;
   private clientId: string | null = null;
-  private isInitialized: boolean = false;
+
+  constructor() {
+    this.wsManager = new WebSocketManager('chat');
+  }
 
   /**
    * WebSocket接続を初期化
@@ -34,7 +38,7 @@ export class ChatWebSocketManager {
    * @param backendUrl バックエンドのURL（例: "https://xxxxx.ngrok-free.app"）
    */
   async initialize(backendUrl: string): Promise<void> {
-    if (this.isInitialized) {
+    if (this.wsManager.isWebSocketInitialized()) {
       logger.debug('chatService', 'WebSocket already initialized');
       return;
     }
@@ -44,8 +48,8 @@ export class ChatWebSocketManager {
       this.clientId = await getOrCreateClientId();
       logger.info('chatService', `WebSocket client_id: ${this.clientId}`);
 
-      // 共通WebSocketClientを使用（自動再接続、ハートビート付き）
-      this.wsClient = createWebSocketClient(
+      // コアWebSocketManagerを使用
+      await this.wsManager.initialize(
         `${backendUrl}/ws`,
         {
           maxReconnectAttempts: CHAT_CONFIG.websocket.maxReconnectAttempts,
@@ -62,14 +66,9 @@ export class ChatWebSocketManager {
           onError: (error) => {
             logger.error('chatService', 'WebSocket error:', error);
           },
-        },
-        'chat'
+        }
       );
 
-      // WebSocket接続を確立
-      this.wsClient.connect();
-
-      this.isInitialized = true;
       logger.info('chatService', 'WebSocket initialization completed');
     } catch (error) {
       logger.error('chatService', 'Failed to initialize WebSocket:', error);
@@ -81,11 +80,8 @@ export class ChatWebSocketManager {
    * WebSocket接続を切断
    */
   disconnect(): void {
-    if (this.wsClient) {
-      this.wsClient.disconnect();
-      this.isInitialized = false;
-      logger.info('chatService', 'WebSocket disconnected');
-    }
+    this.wsManager.disconnect();
+    logger.info('chatService', 'WebSocket disconnected');
   }
 
   /**
@@ -99,14 +95,14 @@ export class ChatWebSocketManager {
    * WebSocketクライアントのインスタンスを取得
    */
   getClient(): WebSocketClient | null {
-    return this.wsClient;
+    return this.wsManager.getClient();
   }
 
   /**
    * 初期化済みかどうかを確認
    */
   isWebSocketInitialized(): boolean {
-    return this.isInitialized;
+    return this.wsManager.isWebSocketInitialized();
   }
 
   /**
@@ -120,13 +116,13 @@ export class ChatWebSocketManager {
       switch (message.type) {
         case 'fetch_file_content': {
           const response = await handleFetchFileContent(message as FetchFileContentRequest);
-          this.wsClient?.send(response);
+          this.wsManager.send(response);
           break;
         }
 
         case 'fetch_search_results': {
           const response = await handleFetchSearchResults(message as FetchSearchResultsRequest);
-          this.wsClient?.send(response);
+          this.wsManager.send(response);
           break;
         }
 

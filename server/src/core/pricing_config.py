@@ -80,6 +80,10 @@ def calculate_selling_price(
 # 参照: https://ai.google.dev/pricing
 # 最終更新: 2025-01
 GEMINI_COST_INFO: dict[str, CostInfo] = {
+    "gemini-3-pro-preview": CostInfo(
+        input_price_per_1m=2.0,
+        output_price_per_1m=12.0,
+    ),
     "gemini-2.5-pro": CostInfo(
         input_price_per_1m=1.25,
         output_price_per_1m=10.0,

@@ -8,7 +8,7 @@
  * - useConversationStore: 会話履歴の管理
  */
 
-import { ChatContext, LLMResponse, LLMService, SummarizeResponse, useLLMStore } from './index';
+import { ChatContext, LLMResponse, LLMService, useLLMStore, SummarizationResult, ChatMessage } from './index';
 
 export interface CreateFileRequest {
   title: string;
@@ -103,8 +103,8 @@ export class APIService {
   }
 
   // 会話履歴を要約
-  static async summarizeConversation(): Promise<SummarizeResponse> {
-    return this.llmServiceInstance.summarizeConversation();
+  static async summarizeConversation(currentMessages: ChatMessage[]): Promise<SummarizationResult> {
+    return this.llmServiceInstance.summarizeConversation(currentMessages);
   }
 
   // === RAG（知識ベース）関連のAPI ===

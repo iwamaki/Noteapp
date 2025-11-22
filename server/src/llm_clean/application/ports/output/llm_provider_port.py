@@ -23,7 +23,8 @@ class LLMProviderPort(ABC):
         message: str,
         context: Any | None = None,
         user_id: str | None = None,
-        model: str | None = None
+        model: str | None = None,
+        client_id: str | None = None
     ) -> dict[str, Any]:
         """Process a chat message
 
@@ -32,6 +33,7 @@ class LLMProviderPort(ABC):
             context: Chat context (Domain ChatContext)
             user_id: User ID for billing
             model: Model to use
+            client_id: WebSocket client ID for tool operations
 
         Returns:
             Dict containing response message, commands, token usage, etc.

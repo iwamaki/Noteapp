@@ -148,12 +148,14 @@ export const useFlatListStore = create<FlatListStore>((set, get) => ({
    * データを再取得
    */
   refreshData: async () => {
+    const startTime = Date.now();
     try {
       set({ loading: true, error: null });
-      logger.info('file', 'Refreshing flat file list...');
+      logger.info('init', '📁 Starting file data load...');
 
       const files = await FileListUseCasesFlat.getAllFiles();
-      logger.info('file', `Loaded ${files.length} files`);
+      const duration = Date.now() - startTime;
+      logger.info('init', `📁 File data loaded: ${files.length} files in ${duration}ms`);
 
       set({ files });
     } catch (error: any) {
@@ -162,6 +164,8 @@ export const useFlatListStore = create<FlatListStore>((set, get) => ({
       Alert.alert('エラー', 'データの読み込みに失敗しました');
     } finally {
       set({ loading: false });
+      const totalDuration = Date.now() - startTime;
+      logger.info('init', `📁 File data load completed in ${totalDuration}ms (including state update)`);
     }
   },
 
