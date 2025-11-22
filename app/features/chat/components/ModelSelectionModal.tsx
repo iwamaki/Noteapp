@@ -230,7 +230,7 @@ export const ModelSelectionModal: React.FC<ModelSelectionModalProps> = ({
   return (
     <CustomModal
       isVisible={isVisible}
-      title="LLMモデル選択"
+      title="AIモデル選択"
       buttons={[
         {
           text: '閉じる',

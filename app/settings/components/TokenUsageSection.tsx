@@ -203,7 +203,7 @@ export const TokenUsageSection: React.FC = () => {
               color={colors.primary}
               style={styles.iconContainer}
             />
-            <Text><ListItem.Title>LLM設定</ListItem.Title></Text>
+            <Text><ListItem.Title>AIモデル設定</ListItem.Title></Text>
           </View>
           <View style={styles.buttonRow}>
             <TouchableOpacity

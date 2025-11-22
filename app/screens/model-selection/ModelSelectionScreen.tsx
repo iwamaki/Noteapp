@@ -509,7 +509,7 @@ export const ModelSelectionScreen: React.FC = () => {
     return (
       <MainContainer>
         <CustomHeader
-          title="LLM設定"
+          title="AIモデル設定"
           leftButtons={[
             {
               icon: <Ionicons name="arrow-back" size={24} color={colors.text} />,
@@ -531,7 +531,7 @@ export const ModelSelectionScreen: React.FC = () => {
     return (
       <MainContainer>
         <CustomHeader
-          title="LLM設定"
+          title="AIモデル設定"
           leftButtons={[
             {
               icon: <Ionicons name="arrow-back" size={24} color={colors.text} />,
@@ -562,7 +562,7 @@ export const ModelSelectionScreen: React.FC = () => {
   return (
     <MainContainer>
       <CustomHeader
-        title="LLM設定"
+        title="AIモデル設定"
         leftButtons={[
           {
             icon: <Ionicons name="arrow-back" size={24} color={colors.text} />,

@@ -329,11 +329,11 @@ function SettingsScreen() {
           (value) => uiSettings.updateSettings({ fileSortMethod: value as 'updatedAt' | 'name' })
         )}
 
-        {renderSection('LLM/AI機能')}
+        {renderSection('AI機能')}
 
         <ListItem.Container>
           {/* eslint-disable-next-line react-native/no-raw-text */}
-          <ListItem.Title>LLM機能を有効にする</ListItem.Title>
+          <ListItem.Title>AI機能を有効にする</ListItem.Title>
           <Switch
             value={llmSettings.settings.llmEnabled}
             onValueChange={(value: boolean) => llmSettings.updateSettings({ llmEnabled: value })}
