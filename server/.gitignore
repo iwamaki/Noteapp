@@ -26,8 +26,9 @@ billing.db
 # Secrets
 .secrets/
 
-# Data directory
-src/data/
+# Data directory (ignore vector store data, but track Python code)
+src/data/vector_stores/*
+!src/data/vector_stores/.gitkeep
 
 # Temporary scripts
 fix_imports.py

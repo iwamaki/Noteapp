@@ -8,8 +8,8 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 
 from src.core.logger import logger
+from src.data.models import Credit, TokenBalance, TokenPricing, Transaction
 
-from ...domain.entities import Credit, TokenBalance, TokenPricing, Transaction
 from ...infrastructure.config.constants import TOKEN_CAPACITY_LIMITS
 
 

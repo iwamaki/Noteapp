@@ -2,8 +2,8 @@
 # @summary Entity exports
 # @responsibility エンティティの公開
 
-# エンティティはbillingモジュールから参照
-from src.billing.domain.entities import Credit, DeviceAuth, User
+# エンティティはsrc.data.modelsから参照
+from src.data.models import Credit, DeviceAuth, User
 
 __all__ = [
     "DeviceAuth",

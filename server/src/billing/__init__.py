@@ -14,13 +14,8 @@ presentation -> application -> domain
 infrastructure -> domain
 """
 
-# Domain layer
-# Application layer
-from .application import (
-    BillingService,
-    TokenBalanceValidator,
-)
-from .domain import (
+# Domain layer (moved to src.data.models)
+from src.data.models import (
     Base,
     Credit,
     DeviceAuth,
@@ -28,6 +23,12 @@ from .domain import (
     TokenPricing,
     Transaction,
     User,
+)
+
+# Application layer
+from .application import (
+    BillingService,
+    TokenBalanceValidator,
 )
 
 # Infrastructure layer
