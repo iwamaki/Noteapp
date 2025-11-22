@@ -19,7 +19,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { RootStackParamList } from '../../navigation/types';
-import { useMonthlyCost } from '../../billing/utils/costCalculation';
+import { useMonthlyCredits } from '../../billing/utils/costCalculation';
 import { useTokenBalanceStore, useUsageTrackingStore } from '../settingsStore';
 import { ListItem } from '../../components/ListItem';
 import { useAuth } from '../../auth/authStore';
@@ -33,8 +33,8 @@ export const TokenUsageSection: React.FC = () => {
   const { usage } = useUsageTrackingStore();
   const { isAuthenticated } = useAuth();
 
-  // 月間コスト情報を取得（開発時のみ）
-  const costInfo = __DEV__ ? useMonthlyCost() : null;
+  // 月間クレジット消費情報を取得
+  const creditsInfo = useMonthlyCredits();
 
   // 購入ボタンのハンドラー
   const handlePurchasePress = () => {
@@ -83,11 +83,8 @@ export const TokenUsageSection: React.FC = () => {
       fontWeight: '600',
     },
     usageContainer: {
-      backgroundColor: colors.secondary,
-      padding: spacing.md,
       marginHorizontal: spacing.md,
       marginBottom: spacing.md,
-      borderRadius: 12,
     },
     modelBreakdownTitle: {
       ...typography.caption,
@@ -102,7 +99,7 @@ export const TokenUsageSection: React.FC = () => {
       alignItems: 'center',
       paddingVertical: spacing.sm,
       borderBottomWidth: 1,
-      borderBottomColor: colors.border,
+      borderBottomColor: colors.secondary,
     },
     modelInfoLeft: {
       flex: 1,
@@ -132,11 +129,7 @@ export const TokenUsageSection: React.FC = () => {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingVertical: spacing.md,
       marginTop: spacing.sm,
-      borderTopWidth: 2,
-      borderTopColor: colors.primary,
-      backgroundColor: `${colors.primary}10`, // 10% opacity
     },
     totalCostLabel: {
       ...typography.body,
@@ -225,41 +218,46 @@ export const TokenUsageSection: React.FC = () => {
         </View>
       </ListItem.Container>
 
-      {/* モデル別詳細（開発時のみ） */}
-      {__DEV__ && Object.keys(usage.monthlyTokensByModel).length > 0 && (
-        <View style={styles.usageContainer}>
-          <Text style={styles.modelBreakdownTitle}>モデル別詳細（開発用）</Text>
-          {Object.entries(usage.monthlyTokensByModel).map(([modelId, modelUsage]) => {
-            const totalTokens = modelUsage.inputTokens + modelUsage.outputTokens;
-            // 開発時のみコスト情報を取得
-            const modelCost = costInfo
-              ? costInfo.costByModel.find(m => m.modelId === modelId)
-              : null;
-            return (
-              <View key={modelId} style={styles.modelBreakdownItem}>
-                <View style={styles.modelInfoLeft}>
-                  <Text style={styles.modelName}>{modelId}</Text>
-                  <Text style={styles.modelUsage}>
-                    合計: {totalTokens.toLocaleString()}
-                  </Text>
-                  <Text style={styles.modelTokenDetail}>
-                    入力: {modelUsage.inputTokens.toLocaleString()} | 出力: {modelUsage.outputTokens.toLocaleString()}
-                  </Text>
-                </View>
-                {modelCost && (
-                  <Text style={styles.modelCost}>{modelCost.formattedCost}</Text>
-                )}
-              </View>
-            );
-          })}
-          {/* 開発時のみ総コストを表示 */}
-          {costInfo && costInfo.totalCost > 0 && (
-            <View style={styles.totalCostContainer}>
-              <Text style={styles.totalCostLabel}>今月のコスト</Text>
-              <Text style={styles.totalCostValue}>{costInfo.formattedTotalCost}</Text>
+      {/* 今月の使用量 */}
+      {Object.keys(usage.monthlyTokensByModel).length > 0 && (
+        <>
+          <ListItem.Container>
+            <View style={styles.iconRow}>
+              <MaterialCommunityIcons
+                name="chart-line"
+                size={20}
+                color={colors.primary}
+                style={styles.iconContainer}
+              />
+              <Text><ListItem.Title>今月の使用量</ListItem.Title></Text>
             </View>
-          )}
-        </View>
+          </ListItem.Container>
+
+          {/* モデル別詳細 */}
+          <View style={styles.usageContainer}>
+            {creditsInfo.creditsByModel.map((modelCredits) => {
+              const totalTokens = modelCredits.inputTokens + modelCredits.outputTokens;
+              return (
+                <View key={modelCredits.modelId} style={styles.modelBreakdownItem}>
+                  <View style={styles.modelInfoLeft}>
+                    <Text style={styles.modelName}>{modelCredits.displayName}</Text>
+                    <Text style={styles.modelUsage}>
+                      {totalTokens.toLocaleString()}トークン
+                    </Text>
+                  </View>
+                  <Text style={styles.modelCost}>{modelCredits.formattedCredits}</Text>
+                </View>
+              );
+            })}
+            {/* 総クレジット消費を表示 */}
+            {creditsInfo.totalCredits > 0 && (
+              <View style={styles.totalCostContainer}>
+                <Text style={styles.totalCostLabel}>今月の消費</Text>
+                <Text style={styles.totalCostValue}>{creditsInfo.formattedTotalCredits}</Text>
+              </View>
+            )}
+          </View>
+        </>
       )}
     </>
   );
