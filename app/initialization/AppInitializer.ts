@@ -24,6 +24,7 @@ const DEFAULT_CONFIG: Required<InitializerConfig> = {
   globalTimeout: 60000, // 60秒
   stopOnCriticalError: true,
   maxConcurrentTasks: 3,
+  useStore: true, // デフォルトでストアを使用
 };
 
 /**
@@ -81,11 +82,13 @@ export class AppInitializer {
    */
   public async initialize(): Promise<void> {
     this.startTime = Date.now();
-    const store = useInitializationStore.getState();
+    const store = this.config.useStore ? useInitializationStore.getState() : null;
 
     try {
       logger.info('init', 'Starting application initialization...');
-      store.startInitialization();
+      if (store) {
+        store.startInitialization();
+      }
 
       // ステージ順に実行
       const stages = [
@@ -101,7 +104,9 @@ export class AppInitializer {
         // クリティカルエラーがあればここで中断
         if (this.config.stopOnCriticalError && this.hasCriticalErrors(stage)) {
           logger.error('init', `Critical error in stage ${stage}. Stopping initialization.`);
-          store.failInitialization();
+          if (store) {
+            store.failInitialization();
+          }
           throw new Error(`Critical initialization failure at stage: ${stage}`);
         }
       }
@@ -109,7 +114,9 @@ export class AppInitializer {
       // 最小スプラッシュ表示時間を保証
       await this.ensureMinimumSplashDuration();
 
-      store.completeInitialization();
+      if (store) {
+        store.completeInitialization();
+      }
       const duration = Date.now() - this.startTime;
       logger.info('init', `Initialization completed in ${duration}ms`);
 
@@ -117,7 +124,9 @@ export class AppInitializer {
       this.printTimingReport();
     } catch (error) {
       logger.error('init', 'Initialization failed', error);
-      store.failInitialization();
+      if (store) {
+        store.failInitialization();
+      }
       throw error;
     }
   }
@@ -126,7 +135,7 @@ export class AppInitializer {
    * ステージを実行
    */
   private async executeStage(stage: InitializationStage): Promise<void> {
-    const store = useInitializationStore.getState();
+    const store = this.config.useStore ? useInitializationStore.getState() : null;
     const stageTasks = this.getTasksForStage(stage);
 
     if (stageTasks.length === 0) {
@@ -135,12 +144,14 @@ export class AppInitializer {
     }
 
     logger.info('init', `Starting stage: ${stage} (${stageTasks.length} tasks)`);
-    store.startStage(stage);
+    if (store) {
+      store.startStage(stage);
 
-    // タスクを登録
-    stageTasks.forEach((task) => {
-      store.registerTask(task.id, stage);
-    });
+      // タスクを登録
+      stageTasks.forEach((task) => {
+        store.registerTask(task.id, stage);
+      });
+    }
 
     // 依存関係を解決して実行順序を決定
     const executionOrder = this.resolveExecutionOrder(stageTasks);
@@ -148,7 +159,9 @@ export class AppInitializer {
     // タスクを順次実行（並列実行も考慮）
     await this.executeTasks(executionOrder);
 
-    store.completeStage(stage);
+    if (store) {
+      store.completeStage(stage);
+    }
     logger.info('init', `Completed stage: ${stage}`);
   }
 
@@ -168,12 +181,14 @@ export class AppInitializer {
    * 単一タスクを実行
    */
   private async executeTask(task: InitializationTask): Promise<void> {
-    const store = useInitializationStore.getState();
+    const store = this.config.useStore ? useInitializationStore.getState() : null;
     const timeout = task.timeout || this.config.globalTimeout;
     const maxAttempts = task.retry?.maxAttempts || 1;
 
     logger.debug('init', `Executing task: ${task.id} (${task.name})`);
-    store.startTask(task.id, task.name);
+    if (store) {
+      store.startTask(task.id, task.name);
+    }
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
@@ -181,10 +196,14 @@ export class AppInitializer {
         await this.executeWithTimeout(task.execute, timeout);
 
         // 成功
-        store.completeTask(task.id);
-        const taskState = store.stages[store.currentStage!]?.tasks[task.id];
-        const duration = taskState?.duration || 0;
-        logger.debug('init', `Task completed: ${task.id} (${duration}ms)`);
+        if (store) {
+          store.completeTask(task.id);
+          const taskState = store.stages[store.currentStage!]?.tasks[task.id];
+          const duration = taskState?.duration || 0;
+          logger.debug('init', `Task completed: ${task.id} (${duration}ms)`);
+        } else {
+          logger.debug('init', `Task completed: ${task.id}`);
+        }
         return;
       } catch (error) {
         logger.warn('init', `Task failed (attempt ${attempt}/${maxAttempts}): ${task.id}`, error);
@@ -213,7 +232,7 @@ export class AppInitializer {
     error: unknown,
     retryCount: number
   ): Promise<void> {
-    const store = useInitializationStore.getState();
+    const store = this.config.useStore ? useInitializationStore.getState() : null;
 
     const initError: InitializationError = {
       taskId: task.id,
@@ -230,7 +249,9 @@ export class AppInitializer {
       try {
         logger.info('init', `Running fallback for task: ${task.id}`);
         await task.fallback(error instanceof Error ? error : new Error(String(error)));
-        store.completeTask(task.id);
+        if (store) {
+          store.completeTask(task.id);
+        }
         logger.info('init', `Fallback succeeded for task: ${task.id}`);
         return;
       } catch (fallbackError) {
@@ -239,7 +260,9 @@ export class AppInitializer {
     }
 
     // タスクを失敗としてマーク
-    store.failTask(task.id, initError);
+    if (store) {
+      store.failTask(task.id, initError);
+    }
 
     // クリティカル優先度の場合は例外をスロー
     if (task.priority === TaskPriority.CRITICAL) {
@@ -327,6 +350,10 @@ export class AppInitializer {
    * クリティカルエラーがあるかチェック
    */
   private hasCriticalErrors(stage: InitializationStage): boolean {
+    if (!this.config.useStore) {
+      return false; // ストアを使わない場合はチェックしない
+    }
+
     const store = useInitializationStore.getState();
     const stageState = store.stages[stage];
 
@@ -400,7 +427,7 @@ export class AppInitializer {
    * タイミングレポートを出力
    */
   private printTimingReport(): void {
-    if (!this.config.enableDebugLogs) return;
+    if (!this.config.enableDebugLogs || !this.config.useStore) return;
 
     const store = useInitializationStore.getState();
     const { stages } = store;

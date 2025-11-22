@@ -66,6 +66,9 @@ import { getCategoryNameFromPath } from './utils';
 import { FILE_LIST_FLAT_CONFIG } from './config';
 
 function FileListScreenFlat() {
+  // FileListScreen レンダリング開始を記録
+  logger.info('init', '📄 FileListScreen rendering...');
+
   const { colors, spacing } = useTheme();
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const uiSettings = useUISettingsStore((state) => state.settings);
@@ -127,9 +130,16 @@ function FileListScreenFlat() {
 
   // データ初期読み込み（初回マウント時のみ実行）
   useEffect(() => {
-    logger.info('file', 'FileListScreenFlat: Initial data refresh triggered.');
+    logger.info('init', '📄 FileListScreen mounted, triggering initial data load...');
     refreshData();
   }, []);
+
+  // ローディング完了を監視
+  useEffect(() => {
+    if (!loading && files.length > 0) {
+      logger.info('init', '✅ FileListScreen data loaded and rendered');
+    }
+  }, [loading, files.length]);
 
   // 画面がフォーカスされた時にデータを再取得（編集画面から戻ってきた時など）
   useFocusEffect(

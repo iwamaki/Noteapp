@@ -91,6 +91,7 @@ export default function App() {
         const backgroundInitializer = AppInitializer.getInstance({
           enableDebugLogs: __DEV__,
           minSplashDuration: 0, // バックグラウンドなので待機不要
+          useStore: false, // ストアを使わない（スプラッシュ画面に影響しない）
         });
 
         backgroundInitializer.registerTasks(backgroundInitializationTasks);
@@ -111,9 +112,12 @@ export default function App() {
     return <SplashScreen showProgress={__DEV__} />;
   }
 
+  // スプラッシュ画面が消えるタイミングを記録
+  logger.info('init', '🎯 Splash screen hidden, rendering main app...');
+
   // 初期化エラーがある場合は、エラー情報を表示（開発時のみ）
   if (__DEV__ && initError) {
-    console.warn('[App] Init error occurred but app is marked as initialized:', initError);
+    logger.warn('init', '[App] Init error occurred but app is marked as initialized:', initError);
   }
 
   return (
