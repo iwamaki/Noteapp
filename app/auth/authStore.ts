@@ -197,7 +197,8 @@ export const useAuthStore = create<AuthState>((set) => ({
       const hasTokens = await hasValidTokens();
 
       // 5. 認証状態を判定
-      const isAuthenticated = !!(hasTokens && userId);
+      // デバイス認証（匿名）ではなく、Googleログインしている場合のみ認証済みとする
+      const isAuthenticated = !!(hasTokens && userId && googleUser);
 
       // 6. 状態を更新
       set({
