@@ -21,6 +21,7 @@ class Settings:
         # ========================================
         self.gemini_api_key: str | None = None
         self.openai_api_key: str | None = None
+        self.anthropic_api_key: str | None = None
         self.google_cse_api_key: str | None = None  # Google Custom Search API用
 
         # ========================================
@@ -43,6 +44,7 @@ class Settings:
         gcp_project_id = os.getenv("GCP_PROJECT_ID")
         gemini_secret_id = os.getenv("GEMINI_API_SECRET_ID", "GOOGLE_API_KEY")
         openai_secret_id = os.getenv("OPENAI_API_SECRET_ID", "OPENAI_API_KEY")
+        anthropic_secret_id = os.getenv("ANTHROPIC_API_SECRET_ID", "ANTHROPIC_API_KEY")
         google_cse_secret_id = os.getenv("GOOGLE_CSE_API_SECRET_ID", "GOOGLE_CSE_API_KEY")
 
         # Secret Manager から API キーを取得（必須）
@@ -80,6 +82,16 @@ class Settings:
                     logger.warning(
                         "OPENAI_API_KEY not found in Secret Manager. "
                         "OpenAI provider will not be available."
+                    )
+
+            # Anthropic API キーの取得（オプション）
+            if anthropic_secret_id:
+                self.anthropic_api_key = self._get_secret(client, gcp_project_id, anthropic_secret_id)
+                # Anthropic はオプションなので、エラーにはしない
+                if not self.anthropic_api_key:
+                    logger.warning(
+                        "ANTHROPIC_API_KEY not found in Secret Manager. "
+                        "Anthropic provider will not be available."
                     )
 
             # Google Custom Search API キーの取得（オプション）

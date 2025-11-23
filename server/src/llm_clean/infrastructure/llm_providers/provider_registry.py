@@ -83,6 +83,7 @@ def _build_provider_registry() -> dict[str, ProviderConfig]:
     実行時にインポートすることで循環依存を回避する。
     """
     # 実行時にインポート（循環依存回避）
+    from .anthropic_provider import AnthropicProvider
     from .gemini_provider import GeminiProvider
     from .openai_provider import OpenAIProvider
 
@@ -146,6 +147,23 @@ def _build_provider_registry() -> dict[str, ProviderConfig]:
                     category="quick",
                     display_name="GPT-5 Mini",
                     description="OpenAIの最新高速モデル（推奨）",
+                    recommended=True,
+                ),
+            },
+        ),
+
+        # ========================================
+        # Anthropic
+        # ========================================
+        "anthropic": ProviderConfig(
+            provider_class=AnthropicProvider,
+            display_name="Anthropic",
+            default_model="claude-haiku-4-5",
+            models={
+                "claude-haiku-4-5": ModelMetadata(
+                    category="quick",
+                    display_name="Claude Haiku 4.5",
+                    description="高速・高性能・コスト効率的（推奨）",
                     recommended=True,
                 ),
             },

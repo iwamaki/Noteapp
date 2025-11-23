@@ -113,6 +113,8 @@ class LLMClientFactory:
             return settings.gemini_api_key
         elif provider_name == "openai":
             return settings.openai_api_key
+        elif provider_name == "anthropic":
+            return settings.anthropic_api_key
         else:
             return None
 

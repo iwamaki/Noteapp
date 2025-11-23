@@ -112,6 +112,16 @@ OPENAI_COST_INFO: dict[str, CostInfo] = {
     ),
 }
 
+# Anthropic モデルの原価（USD/1M tokens）
+# 参照: https://platform.claude.com/docs/en/about-claude/pricing
+# 最終更新: 2025-01
+ANTHROPIC_COST_INFO: dict[str, CostInfo] = {
+    "claude-haiku-4-5": CostInfo(
+        input_price_per_1m=1.0,
+        output_price_per_1m=5.0,
+    ),
+}
+
 # 全モデルの価格情報（自動計算）
 MODEL_PRICING: dict[str, ModelPricing] = {}
 
@@ -137,6 +147,24 @@ def _initialize_pricing():
 
     # OpenAIモデルの価格情報を追加
     for model_id, cost_info in OPENAI_COST_INFO.items():
+        selling_price = calculate_selling_price(
+            cost_info.input_price_per_1m,
+            cost_info.output_price_per_1m,
+            PRICING_CONFIG
+        )
+
+        # 表示名を取得
+        display_name = model_id.replace("-", " ").title()
+
+        MODEL_PRICING[model_id] = ModelPricing(
+            model_id=model_id,
+            display_name=display_name,
+            cost=cost_info,
+            selling_price_jpy=selling_price,
+        )
+
+    # Anthropicモデルの価格情報を追加
+    for model_id, cost_info in ANTHROPIC_COST_INFO.items():
         selling_price = calculate_selling_price(
             cost_info.input_price_per_1m,
             cost_info.output_price_per_1m,

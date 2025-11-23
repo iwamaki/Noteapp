@@ -29,8 +29,8 @@ class JsonFormatter(logging.Formatter):
         else:
             log_data["message"] = record.getMessage()
 
-        # JSON形式を読みやすいようにインデントして出力
-        return json.dumps(log_data, ensure_ascii=False, indent=2, default=self.default_serializer)
+        # JSON形式で出力（1行1JSON形式でjq解析を容易に）
+        return json.dumps(log_data, ensure_ascii=False, default=self.default_serializer)
 
 def setup_logger():
     """アプリケーションのロガーを設定する"""
