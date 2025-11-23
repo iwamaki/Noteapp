@@ -539,8 +539,8 @@ class BaseAgentLLMProvider(BaseLLMProvider):
             # 使用率を計算
             usage_ratio = current_tokens / max_tokens if max_tokens > 0 else 0.0
 
-            # 要約が必要かどうか（80%以上で推奨）
-            needs_summary = usage_ratio >= 0.8
+            # 要約が必要かどうか（50%以上で推奨）
+            needs_summary = usage_ratio >= 0.5
 
             logger.debug(
                 f"Token usage: {current_tokens}/{max_tokens} "

@@ -45,8 +45,8 @@ const ChatHistoryComponent: React.FC<ChatHistoryProps> = ({
   const flatListRef = useRef<FlatList>(null);
   const [modelSelectionModalVisible, setModelSelectionModalVisible] = useState(false);
 
-  // 要約ボタンを有効にする条件: トークン使用量が75%超
-  const canSummarize = tokenUsage ? tokenUsage.usageRatio > 0.75 : false;
+  // 要約ボタンを有効にする条件: トークン使用量が50%超
+  const canSummarize = tokenUsage ? tokenUsage.usageRatio > 0.5 : false;
 
   // リサイズ完了時のスクロール処理を設定
   useEffect(() => {

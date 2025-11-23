@@ -321,8 +321,15 @@ class ChatService {
       // 実際に要約された場合
       useChatStore.getState().setMessages(result.messages);
 
-      // トークン使用量をリセット（要約後は新しいカウントになる）
-      this.tokenService.resetTokenUsage();
+      // トークン使用量を要約後の値に更新
+      const currentMaxTokens = this.tokenService.getTokenUsage()?.maxTokens || 4000;
+      const newTokenUsage: TokenUsageInfo = {
+        currentTokens: result.response.compressedTokens,
+        maxTokens: currentMaxTokens,
+        usageRatio: result.response.compressedTokens / currentMaxTokens,
+        needsSummary: false, // 要約直後なので不要
+      };
+      this.tokenService.updateTokenUsage(newTokenUsage);
     } catch (error) {
       const errorMessage = UnifiedErrorHandler.handleChatError(
         {
