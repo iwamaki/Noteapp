@@ -7,6 +7,7 @@
 
 import { InitializationTask, InitializationStage, TaskPriority } from '../types';
 import APIService from '../../features/llmService/api';
+import { logger } from '../../utils/logger';
 
 /**
  * LLMプロバイダープリロードタスク
@@ -31,18 +32,18 @@ export const preloadLLMProvidersTask: InitializationTask = {
       await APIService.loadLLMProviders();
 
       if (__DEV__) {
-        console.log('[preloadLLMProviders] Successfully preloaded LLM providers');
+        logger.debug('init', 'Successfully preloaded LLM providers');
       }
     } catch (error) {
       // エラーログは出すが、エラーを投げない（失敗してもアプリは続行）
-      console.warn('[preloadLLMProviders] Failed to preload LLM providers:', error);
+      logger.warn('init', 'Failed to preload LLM providers', { error });
       // エラーを握りつぶす（SettingsScreenで再読み込みが試行される）
     }
   },
 
   fallback: async (error: Error) => {
     // プリロード失敗時は何もしない（SettingsScreenで通常の読み込みが行われる）
-    console.warn('[preloadLLMProviders] Preload failed, will load on-demand in SettingsScreen:', error);
+    logger.warn('init', 'Preload failed, will load on-demand in SettingsScreen', { error });
   },
 
   retry: {

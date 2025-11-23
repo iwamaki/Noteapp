@@ -7,7 +7,7 @@ steps:
     args:
       - 'build'
       - '-t'
-      - 'gcr.io/$PROJECT_ID/noteapp-api:$SHORT_SHA'
+      - 'gcr.io/$PROJECT_ID/noteapp-api:$BUILD_ID'
       - '-t'
       - 'gcr.io/$PROJECT_ID/noteapp-api:latest'
       - '.'
@@ -16,7 +16,7 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'push'
-      - 'gcr.io/$PROJECT_ID/noteapp-api:$SHORT_SHA'
+      - 'gcr.io/$PROJECT_ID/noteapp-api:$BUILD_ID'
 
   - name: 'gcr.io/cloud-builders/docker'
     args:
@@ -31,19 +31,21 @@ steps:
       - 'deploy'
       - 'noteapp-api'
       - '--image'
-      - 'gcr.io/$PROJECT_ID/noteapp-api:$SHORT_SHA'
+      - 'gcr.io/$PROJECT_ID/noteapp-api:$BUILD_ID'
       - '--region'
       - 'asia-northeast1'  # 東京リージョン
       - '--platform'
       - 'managed'
       - '--allow-unauthenticated'  # 公開API（認証はアプリ側で実装）
       - '--set-env-vars'
-      - 'ENV=production,LOG_LEVEL=INFO,GCP_PROJECT_ID=$PROJECT_ID'
+      - 'ENVIRONMENT=production,LOG_LEVEL=INFO,LOG_FORMAT=json,GCP_PROJECT_ID=$PROJECT_ID,ALLOWED_ORIGINS=https://noteapp.iwamaki.app,GOOGLE_CSE_ID=2682c97053a18473c,ANDROID_PACKAGE_NAME=com.iwash.NoteApp,GEMINI_API_SECRET_ID=GEMINI_API_KEY,OPENAI_API_SECRET_ID=OPENAI_API_KEY,GOOGLE_CSE_API_SECRET_ID=GOOGLE_CSE_API_KEY,GOOGLE_OAUTH_REDIRECT_URI=https://api.noteapp.iwamaki.app/api/auth/google/callback,API_DOMAIN=api.noteapp.iwamaki.app,OAUTH_STATE_STORAGE=memory,USE_REDIS_FOR_TOKEN_BLACKLIST=false'
       - '--set-secrets'
-      - 'GEMINI_API_KEY=GEMINI_API_KEY:latest,OPENAI_API_KEY=OPENAI_API_KEY:latest,GOOGLE_CSE_API_KEY=GOOGLE_CSE_API_KEY:latest'
+      - 'GEMINI_API_KEY=GEMINI_API_KEY:latest,OPENAI_API_KEY=OPENAI_API_KEY:latest,GOOGLE_CSE_API_KEY=GOOGLE_CSE_API_KEY:latest,JWT_SECRET_KEY=JWT_SECRET_KEY:latest,GOOGLE_WEB_CLIENT_ID=GOOGLE_WEB_CLIENT_ID:latest,GOOGLE_WEB_CLIENT_SECRET=GOOGLE_WEB_CLIENT_SECRET:latest,DATABASE_URL=DATABASE_URL:latest'
+      - '--service-account'
+      - 'note-app-sa@strategic-haven-450402-p6.iam.gserviceaccount.com'
 
 images:
-  - 'gcr.io/$PROJECT_ID/noteapp-api:$SHORT_SHA'
+  - 'gcr.io/$PROJECT_ID/noteapp-api:$BUILD_ID'
   - 'gcr.io/$PROJECT_ID/noteapp-api:latest'
 
 timeout: '1200s'  # 20分

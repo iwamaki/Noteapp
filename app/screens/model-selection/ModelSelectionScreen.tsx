@@ -28,6 +28,7 @@ import { convertProvidersToModelInfo, type ModelInfo } from './constants';
 import APIService from '../../features/llmService/api';
 import { CreditAllocationModal } from './components/CreditAllocationModal';
 import { useModelSwitch } from '../../settings/hooks/useModelSwitch';
+import { logger } from '../../utils/logger';
 
 type ModelSelectionScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ModelSelection'>;
 
@@ -66,7 +67,7 @@ export const ModelSelectionScreen: React.FC = () => {
           setAvailableModels(models);
         }
       } catch (error) {
-        console.error('Failed to load models:', error);
+        logger.error('llm', 'Failed to load models:', { error });
         setLoadError(t('modelSelection.error.loadFailed'));
       } finally {
         setIsLoadingModels(false);

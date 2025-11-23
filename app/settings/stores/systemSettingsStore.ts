@@ -7,6 +7,7 @@
 import { create } from 'zustand';
 import { SystemSettings, defaultSystemSettings } from '../types/systemSettings.types';
 import { SettingsPersistenceService } from '../services/settingsPersistenceService';
+import { logger } from '../../utils/logger';
 
 const STORAGE_KEY = 'system';
 
@@ -32,7 +33,7 @@ export const useSystemSettingsStore = create<SystemSettingsStore>((set, get) => 
       );
       set({ settings });
     } catch (error) {
-      console.error('[SystemSettingsStore] Failed to load settings:', error);
+      logger.error('system', 'Failed to load system settings', { error });
       set({ settings: defaultSystemSettings });
     } finally {
       set({ isLoading: false });
@@ -45,9 +46,9 @@ export const useSystemSettingsStore = create<SystemSettingsStore>((set, get) => 
     try {
       await SettingsPersistenceService.save(STORAGE_KEY, newSettings);
       set({ settings: newSettings });
-      console.log('[SystemSettingsStore] Settings updated:', updates);
+      logger.info('system', 'System settings updated', { updates });
     } catch (error) {
-      console.error('[SystemSettingsStore] Failed to update settings:', error);
+      logger.error('system', 'Failed to update system settings', { error });
       throw error;
     }
   },
@@ -56,9 +57,9 @@ export const useSystemSettingsStore = create<SystemSettingsStore>((set, get) => 
     try {
       await SettingsPersistenceService.save(STORAGE_KEY, defaultSystemSettings);
       set({ settings: defaultSystemSettings });
-      console.log('[SystemSettingsStore] Settings reset to defaults');
+      logger.info('system', 'System settings reset to defaults');
     } catch (error) {
-      console.error('[SystemSettingsStore] Failed to reset settings:', error);
+      logger.error('system', 'Failed to reset system settings', { error });
       throw error;
     }
   },

@@ -10,6 +10,7 @@ import type { Product } from 'react-native-iap';
 import { initializeTokenIAP, getAvailableTokenPackages } from '../../../billing/services/tokenIapService';
 import { TOKEN_PACKAGES } from '../../../billing/constants/tokenPackages';
 import type { TokenPackage } from '../../../billing/constants/tokenPackages';
+import { logger } from '../../../utils/logger';
 
 interface UseProductLoaderReturn {
   loading: boolean;
@@ -30,14 +31,14 @@ export const useProductLoader = (): UseProductLoaderReturn => {
 
       // トークンパッケージの読み込み
       const loadedProducts = await getAvailableTokenPackages();
-      console.log('[useProductLoader] Loaded token products from IAP:', loadedProducts);
+      logger.info('billing', 'Loaded token products from IAP', { loadedProducts });
 
       if (loadedProducts.length === 0) {
-        console.warn('[useProductLoader] No token products found from IAP');
+        logger.warn('billing', 'No token products found from IAP');
 
         // 開発モード: モックデータを使用してUIを確認
         if (__DEV__) {
-          console.log('[useProductLoader] DEV MODE: Using all packages for UI testing');
+          logger.debug('billing', 'DEV MODE: Using all packages for UI testing');
           setAvailablePackages(TOKEN_PACKAGES);
         }
       } else {
@@ -47,15 +48,15 @@ export const useProductLoader = (): UseProductLoaderReturn => {
           productIds.includes(pkg.productId)
         );
 
-        console.log('[useProductLoader] Product IDs from IAP:', productIds);
-        console.log('[useProductLoader] Matched packages:', matchedPackages);
+        logger.debug('billing', 'Product IDs from IAP', { productIds });
+        logger.debug('billing', 'Matched packages', { matchedPackages });
 
         setAvailablePackages(matchedPackages);
       }
 
       setTokenProducts(loadedProducts);
     } catch (error) {
-      console.error('[useProductLoader] Failed to load products:', error);
+      logger.error('billing', 'Failed to load products', { error });
       Alert.alert('エラー', '商品情報の読み込みに失敗しました');
     } finally {
       setLoading(false);

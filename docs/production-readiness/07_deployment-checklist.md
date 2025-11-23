@@ -78,10 +78,14 @@
   - [ ] Refresh Token TTL: 30日
   - [ ] Token Blacklist稼働（Redis）
 
-- [ ] **HTTPS強制**
-  - [ ] TLS 1.3使用
-  - [ ] 証明書有効期限確認
-  - [ ] HTTP→HTTPSリダイレクト
+- [x] **HTTPS強制** ✅ Cloud Runが自動的に実装
+  - [x] TLS 1.3使用（Cloud Runデフォルト）
+  - [x] 証明書自動更新（Google管理）
+  - [x] HTTPSのみ受付（HTTPポートは公開されていない）
+  - [x] HSTSヘッダー実装済み（server/src/main.py:123-124）
+
+  **注意:** Cloud Run使用時、アプリケーションレベルでのHTTPSリダイレクトミドルウェアは不要です。
+  Cloud Runが自動的にHTTPS終端を処理し、HTTPリクエストは受け付けません。
 
 - [ ] **Rate Limiting**
   - [ ] バックエンド: SlowAPI設定済み

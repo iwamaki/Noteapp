@@ -8,6 +8,7 @@ import { create } from 'zustand';
 import { UISettings, defaultUISettings } from '../types/uiSettings.types';
 import { SettingsPersistenceService } from '../services/settingsPersistenceService';
 import { changeLanguage } from '../../i18n';
+import { logger } from '../../utils/logger';
 
 const STORAGE_KEY = 'ui';
 
@@ -33,7 +34,7 @@ export const useUISettingsStore = create<UISettingsStore>((set, get) => ({
       );
       set({ settings });
     } catch (error) {
-      console.error('[UISettingsStore] Failed to load settings:', error);
+      logger.error('system', 'Failed to load UI settings', { error });
       set({ settings: defaultUISettings });
     } finally {
       set({ isLoading: false });
@@ -46,15 +47,15 @@ export const useUISettingsStore = create<UISettingsStore>((set, get) => ({
     try {
       await SettingsPersistenceService.save(STORAGE_KEY, newSettings);
       set({ settings: newSettings });
-      console.log('[UISettingsStore] Settings updated:', updates);
+      logger.info('system', 'UI settings updated', { updates });
 
       // 言語設定が変更された場合、i18nextの言語も変更
       if (updates.language) {
         await changeLanguage(updates.language);
-        console.log('[UISettingsStore] Language changed to:', updates.language);
+        logger.info('system', 'Language changed', { language: updates.language });
       }
     } catch (error) {
-      console.error('[UISettingsStore] Failed to update settings:', error);
+      logger.error('system', 'Failed to update UI settings', { error });
       throw error;
     }
   },
@@ -63,9 +64,9 @@ export const useUISettingsStore = create<UISettingsStore>((set, get) => ({
     try {
       await SettingsPersistenceService.save(STORAGE_KEY, defaultUISettings);
       set({ settings: defaultUISettings });
-      console.log('[UISettingsStore] Settings reset to defaults');
+      logger.info('system', 'UI settings reset to defaults');
     } catch (error) {
-      console.error('[UISettingsStore] Failed to reset settings:', error);
+      logger.error('system', 'Failed to reset UI settings', { error });
       throw error;
     }
   },

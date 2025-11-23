@@ -7,6 +7,7 @@
 import { InitializationTask, InitializationStage, TaskPriority } from '../types';
 import { useUISettingsStore } from '../../settings/settingsStore';
 import { changeLanguage } from '../../i18n';
+import { logger } from '../../utils/logger';
 
 /**
  * i18n初期化タスク
@@ -28,11 +29,11 @@ export const initializeI18nTask: InitializationTask = {
 
     // i18nextの言語を設定
     await changeLanguage(language);
-    console.log('[initializeI18nTask] Language set to:', language);
+    logger.info('init', 'Language set', { language });
   },
 
   fallback: async (error: Error) => {
-    console.warn('[initializeI18nTask] Failed to initialize i18n, using default language:', error);
+    logger.warn('init', 'Failed to initialize i18n, using default language', { error });
     // デフォルト言語（日本語）で続行
     await changeLanguage('ja');
   },

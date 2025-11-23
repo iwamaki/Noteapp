@@ -16,16 +16,19 @@ from src.core.logger import logger
 
 class AuthenticationError(Exception):
     """認証エラーの基底クラス"""
+
     pass
 
 
 class DeviceNotFoundError(AuthenticationError):
     """デバイスが見つからない"""
+
     pass
 
 
 class DeviceAccessDeniedError(AuthenticationError):
     """デバイスへのアクセスが拒否された"""
+
     pass
 
 
@@ -85,7 +88,6 @@ class AuthService:
             logger.error(f"Failed to register device: {e}")
             raise AuthenticationError(f"Device registration failed: {e}") from e
 
-
     def get_user_id_by_device(self, device_id: str) -> str | None:
         """
         デバイスIDからユーザーIDを取得
@@ -127,7 +129,15 @@ class AuthService:
         device = self.db.query(DeviceAuth).filter_by(device_id=device_id).first()
 
         if not device:
-            logger.warning(f"Device verification failed: Device not found - {device_id}")
+            # セキュリティイベントログ: 未登録デバイスのアクセス試行
+            logger.warning(
+                "Unregistered device access attempt",
+                extra={
+                    "event_type": "security",
+                    "event": "device_not_found",
+                    "device_id": device_id[:8] + "...",
+                },
+            )
             raise DeviceNotFoundError(f"Device not registered: {device_id}")
 
         server_user_id = device.user_id
@@ -139,16 +149,23 @@ class AuthService:
 
         if server_user_id != client_user_id:
             # 不一致の場合
+            # セキュリティイベントログ: ユーザーID不一致（潜在的な攻撃）
             logger.warning(
-                f"User ID mismatch detected - "
-                f"device_id: {device_id}, "
-                f"client_user_id: {client_user_id}, "
-                f"server_user_id: {server_user_id}"
+                "User ID mismatch detected - possible account takeover attempt",
+                extra={
+                    "event_type": "security",
+                    "event": "user_id_mismatch",
+                    "device_id": device_id[:8] + "...",
+                    "client_user_id": client_user_id,
+                    "server_user_id": server_user_id,
+                },
             )
             return False, server_user_id, "User ID mismatch. Please update to the correct user_id."
 
         # 一致している場合
-        logger.info(f"Device verification successful - device_id: {device_id}, user_id: {server_user_id}")
+        logger.info(
+            f"Device verification successful - device_id: {device_id}, user_id: {server_user_id}"
+        )
         return True, server_user_id, "Device and user verified successfully"
 
     def logout(self, access_token: str, refresh_token: str) -> None:
@@ -193,8 +210,8 @@ class AuthService:
                 "User logged out successfully",
                 extra={
                     "user_id": user_id,
-                    "device_id": device_id[:20] + "..." if device_id else "unknown"
-                }
+                    "device_id": device_id[:20] + "..." if device_id else "unknown",
+                },
             )
 
         except Exception as e:
@@ -210,8 +227,9 @@ class AuthService:
         """
         while True:
             # ランダムな文字列を生成
-            random_part = ''.join(secrets.choice(string.ascii_lowercase + string.digits)
-                                for _ in range(9))
+            random_part = "".join(
+                secrets.choice(string.ascii_lowercase + string.digits) for _ in range(9)
+            )
             user_id = f"user_{random_part}"
 
             # 既存のユーザーIDと重複していないか確認
@@ -261,13 +279,18 @@ class AuthService:
 
             # ユーザーの所有確認
             if device.user_id != user_id:
+                # セキュリティイベントログ: 不正なデバイス削除試行
                 logger.warning(
-                    f"Device access denied: user_id={user_id}, "
-                    f"device_id={device_id}, owner={device.user_id}"
+                    "Unauthorized device deletion attempt",
+                    extra={
+                        "event_type": "security",
+                        "event": "unauthorized_device_access",
+                        "requester_user_id": user_id,
+                        "device_id": device_id[:8] + "...",
+                        "actual_owner": device.user_id,
+                    },
                 )
-                raise DeviceAccessDeniedError(
-                    "You don't have permission to delete this device"
-                )
+                raise DeviceAccessDeniedError("You don't have permission to delete this device")
 
             # 論理削除
             device.is_active = False
@@ -283,10 +306,7 @@ class AuthService:
             raise AuthenticationError(f"Failed to delete device: {e}") from e
 
     def update_device_info(
-        self,
-        device_id: str,
-        device_name: str | None = None,
-        device_type: str | None = None
+        self, device_id: str, device_name: str | None = None, device_type: str | None = None
     ) -> None:
         """
         デバイス情報を更新

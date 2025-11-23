@@ -5,6 +5,7 @@
  */
 
 import { InitializationTask, InitializationStage, TaskPriority } from '../types';
+import { logger } from '../../utils/logger';
 
 /**
  * ChatService設定タスク
@@ -25,12 +26,12 @@ export const configureChatServiceTask: InitializationTask = {
     // ChatServiceはAPIServiceからLLM設定を読み取るため、
     // ここでの設定は不要です。
     if (__DEV__) {
-      console.log('[configureChatService] ChatService initialized (no configuration needed)');
+      logger.debug('init', 'ChatService initialized (no configuration needed)');
     }
   },
 
   fallback: async (error: Error) => {
-    console.warn('[configureChatService] Failed to initialize ChatService:', error);
+    logger.warn('init', 'Failed to initialize ChatService', error);
   },
 
   retry: {

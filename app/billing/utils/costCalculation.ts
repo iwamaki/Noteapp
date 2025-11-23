@@ -7,6 +7,7 @@
 import { useUsageTrackingStore } from '../../settings/settingsStore';
 import { calculateCost, formatCost, getModelPricing } from '../constants/modelPricing';
 import { getTokenPrice } from '../constants/tokenPricing';
+import { logger } from '../../utils/logger';
 
 /**
  * 月間コスト情報を計算
@@ -86,7 +87,7 @@ export function calculateCredits(
 ): number {
   const sellingPrice = getTokenPrice(modelId);
   if (!sellingPrice) {
-    console.warn(`[Credits] Unknown model: ${modelId}`);
+    logger.warn('billing', 'Unknown model', { modelId });
     return 0;
   }
 

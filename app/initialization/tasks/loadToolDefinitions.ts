@@ -6,6 +6,7 @@
 
 import { InitializationTask, InitializationStage, TaskPriority } from '../types';
 import ToolService from '../../features/chat/services/ToolService';
+import { logger } from '../../utils/logger';
 
 /**
  * ツール定義読み込みタスク
@@ -28,7 +29,7 @@ export const loadToolDefinitionsTask: InitializationTask = {
     // デバッグログ（開発時のみ）
     if (__DEV__) {
       const tools = ToolService.getTools();
-      console.log('[loadToolDefinitions] Tool definitions loaded:', {
+      logger.debug('init', 'Tool definitions loaded', {
         count: tools.length,
         tools: tools.map(t => t.name),
       });
@@ -36,8 +37,8 @@ export const loadToolDefinitionsTask: InitializationTask = {
   },
 
   fallback: async (error: Error) => {
-    console.warn('[loadToolDefinitions] Failed to load tool definitions:', error);
-    console.warn('[loadToolDefinitions] Continuing with empty tool definitions.');
+    logger.warn('init', 'Failed to load tool definitions', { error });
+    logger.warn('init', 'Continuing with empty tool definitions');
     // ToolServiceはエラー時に空配列で初期化されるため、アプリケーションは継続可能
     // ただし、コマンド検証機能は利用できなくなります
   },

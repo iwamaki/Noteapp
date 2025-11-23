@@ -29,6 +29,7 @@ import { MainContainer } from '../components/MainContainer';
 import { useGoogleAuthCodeFlow } from '../auth/useGoogleAuthCodeFlow';
 import { useAuth } from '../auth/authStore';
 import { useTranslation } from 'react-i18next';
+import { logger } from '../utils/logger';
 
 function SettingsScreen() {
   const { t } = useTranslation();
@@ -99,7 +100,7 @@ function SettingsScreen() {
       );
     } catch (error) {
       Alert.alert(t('common.error'), t('settings.account.loginProcessError'));
-      console.error('Google auth result handling error:', error);
+      logger.error('auth', 'Google auth result handling error:', { error });
     }
   };
 

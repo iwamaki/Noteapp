@@ -15,6 +15,7 @@ import {
   FILE_METADATA_FILENAME,
   FILE_CONTENT_FILENAME,
 } from './fileSystemPaths';
+import { logger } from '../../../utils/logger';
 
 // =============================================================================
 // File Metadata Operations
@@ -37,7 +38,7 @@ export const readFileMetadata = async (
     const text = await metadataFile.text();
     return JSON.parse(text) as FileMetadataFlat;
   } catch (e) {
-    console.error('Failed to read file metadata:', e);
+    logger.error('file', 'Failed to read file metadata', { error: e });
     return null;
   }
 };
@@ -82,7 +83,7 @@ export const readFileContent = async (fileDir: Directory): Promise<string | null
     }
     return await contentFile.text();
   } catch (e) {
-    console.error('Failed to read file content:', e);
+    logger.error('file', 'Failed to read file content', { error: e });
     return null;
   }
 };
@@ -154,7 +155,7 @@ export const readFileContentAsLines = async (fileDir: Directory): Promise<FileLi
       content: line,
     }));
   } catch (e) {
-    console.error('Failed to read file content as lines:', e);
+    logger.error('file', 'Failed to read file content as lines', { error: e });
     return null;
   }
 };

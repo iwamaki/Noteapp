@@ -318,9 +318,34 @@ curl -v https://api.noteapp.iwamaki.app/
 
 ### 実装済みの対策
 
-1. **HTTPS通信**
-   - TLS 1.3 による暗号化
-   - Google管理のSSL証明書
+1. **HTTPS強制（インフラレベル）**
+
+   **Cloud Runによる自動実装:**
+   - ✅ **HTTPSのみ受付** - HTTPポート（80番）は一切公開されていません
+   - ✅ **HTTPリクエスト拒否** - Cloud Runレイヤーで自動的にブロック
+   - ✅ **SSL/TLS証明書** - Google管理の証明書（自動発行・更新）
+   - ✅ **TLS 1.3使用** - 最新の暗号化プロトコル
+   - ✅ **強力な暗号化** - TLS_AES_256_GCM_SHA384 / X25519 / RSASSA-PSS
+
+   **アプリケーションレベル:**
+   - ✅ **HSTSヘッダー** - server/src/main.py:123-124
+     ```python
+     response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+     ```
+
+   **アーキテクチャ:**
+   ```
+   [クライアント]
+       ↓ HTTPS（強制）
+   [api.noteapp.iwamaki.app]
+       ↓ Cloud Run Load Balancer
+       ↓ SSL終端（TLS 1.3）
+       ↓ HTTP（内部通信）
+   [FastAPI :8080]
+   ```
+
+   **重要:** Cloud Run使用時、アプリケーションレベルでのHTTPSリダイレクトミドルウェアは不要です。
+   HTTPリクエストはCloud Runに到達する前に拒否されます。
 
 2. **API Key管理**
    - Secret Manager で一元管理

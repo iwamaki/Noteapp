@@ -7,6 +7,7 @@
 import { create } from 'zustand';
 import { LLMSettings, defaultLLMSettings } from '../types/llmSettings.types';
 import { SettingsPersistenceService } from '../services/settingsPersistenceService';
+import { logger } from '../../utils/logger';
 
 const STORAGE_KEY = 'llm';
 
@@ -32,7 +33,7 @@ export const useLLMSettingsStore = create<LLMSettingsStore>((set, get) => ({
       );
       set({ settings });
     } catch (error) {
-      console.error('[LLMSettingsStore] Failed to load settings:', error);
+      logger.error('system', 'Failed to load settings', error);
       set({ settings: defaultLLMSettings });
     } finally {
       set({ isLoading: false });
@@ -45,9 +46,9 @@ export const useLLMSettingsStore = create<LLMSettingsStore>((set, get) => ({
     try {
       await SettingsPersistenceService.save(STORAGE_KEY, newSettings);
       set({ settings: newSettings });
-      console.log('[LLMSettingsStore] Settings updated:', updates);
+      logger.info('system', 'Settings updated', updates);
     } catch (error) {
-      console.error('[LLMSettingsStore] Failed to update settings:', error);
+      logger.error('system', 'Failed to update settings', error);
       throw error;
     }
   },
@@ -56,9 +57,9 @@ export const useLLMSettingsStore = create<LLMSettingsStore>((set, get) => ({
     try {
       await SettingsPersistenceService.save(STORAGE_KEY, defaultLLMSettings);
       set({ settings: defaultLLMSettings });
-      console.log('[LLMSettingsStore] Settings reset to defaults');
+      logger.info('system', 'Settings reset to defaults');
     } catch (error) {
-      console.error('[LLMSettingsStore] Failed to reset settings:', error);
+      logger.error('system', 'Failed to reset settings', error);
       throw error;
     }
   },

@@ -6,6 +6,7 @@
  */
 
 import * as SecureStore from 'expo-secure-store';
+import { logger } from '../utils/logger';
 
 // SecureStore のキー
 const GOOGLE_USER_EMAIL_KEY = 'google_user_email';
@@ -38,7 +39,7 @@ export async function saveGoogleUserInfo(userInfo: GoogleUserInfo): Promise<void
       await SecureStore.setItemAsync(GOOGLE_USER_PICTURE_KEY, userInfo.profilePictureUrl);
     }
   } catch (error) {
-    console.error('Failed to save Google user info:', error);
+    logger.error('auth', 'Failed to save Google user info', { error });
     throw new Error('Failed to save Google user info');
   }
 }
@@ -65,7 +66,7 @@ export async function getGoogleUserInfo(): Promise<GoogleUserInfo | null> {
       profilePictureUrl: profilePictureUrl || undefined,
     };
   } catch (error) {
-    console.error('Failed to get Google user info:', error);
+    logger.error('auth', 'Failed to get Google user info', { error });
     return null;
   }
 }
@@ -81,7 +82,7 @@ export async function clearGoogleUserInfo(): Promise<void> {
       SecureStore.deleteItemAsync(GOOGLE_USER_PICTURE_KEY),
     ]);
   } catch (error) {
-    console.error('Failed to clear Google user info:', error);
+    logger.error('auth', 'Failed to clear Google user info', { error });
     throw new Error('Failed to clear Google user info');
   }
 }

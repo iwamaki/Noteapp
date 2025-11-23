@@ -7,6 +7,7 @@
 import { create } from 'zustand';
 import { UsageData, defaultUsageData } from '../types/usage.types';
 import { SettingsPersistenceService } from '../services/settingsPersistenceService';
+import { logger } from '../../utils/logger';
 
 const STORAGE_KEY = 'usage_tracking';
 
@@ -42,7 +43,7 @@ export const useUsageTrackingStore = create<UsageTrackingStore>((set, get) => ({
       const usage = await SettingsPersistenceService.load(STORAGE_KEY, defaultUsageData);
       set({ usage });
     } catch (error) {
-      console.error('[UsageTrackingStore] Failed to load usage:', error);
+      logger.error('system', 'Failed to load usage', { error });
       set({ usage: defaultUsageData });
     } finally {
       set({ isLoading: false });
@@ -76,7 +77,7 @@ export const useUsageTrackingStore = create<UsageTrackingStore>((set, get) => ({
 
     await SettingsPersistenceService.save(STORAGE_KEY, newUsage);
     set({ usage: newUsage });
-    console.log(`[UsageTrackingStore] Tokens recorded for model ${modelId}: input=${inputTokens}, output=${outputTokens}`);
+    logger.info('system', 'Tokens recorded', { modelId, inputTokens, outputTokens });
   },
 
   incrementLLMRequestCount: async () => {
@@ -138,7 +139,7 @@ export const useUsageTrackingStore = create<UsageTrackingStore>((set, get) => ({
 
     await SettingsPersistenceService.save(STORAGE_KEY, newUsage);
     set({ usage: newUsage });
-    console.log(`[UsageTrackingStore] Monthly usage reset for ${currentMonth}`);
+    logger.info('system', 'Monthly usage reset', { month: currentMonth });
   },
 
   checkAndResetMonthlyUsageIfNeeded: async () => {
@@ -148,7 +149,7 @@ export const useUsageTrackingStore = create<UsageTrackingStore>((set, get) => ({
 
     // 初回起動または月が変わった場合
     if (!lastResetMonth || lastResetMonth !== currentMonth) {
-      console.log(`[UsageTrackingStore] Month changed: ${lastResetMonth} → ${currentMonth}`);
+      logger.info('system', 'Month changed', { from: lastResetMonth, to: currentMonth });
       await resetMonthlyUsage();
     }
   },
@@ -156,17 +157,17 @@ export const useUsageTrackingStore = create<UsageTrackingStore>((set, get) => ({
   handleAuthenticationChange: async (userId: string | null) => {
     if (userId) {
       // ログイン時: 使用量はそのまま保持（ユーザー切り替え時も継続）
-      console.log('[UsageTrackingStore] User logged in, keeping usage data');
+      logger.info('system', 'User logged in, keeping usage data', { userId });
     } else {
       // ログアウト時: 使用量をクリア
-      console.log('[UsageTrackingStore] User logged out, clearing usage data');
+      logger.info('system', 'User logged out, clearing usage data');
       try {
         const resetUsage: UsageData = defaultUsageData;
         await SettingsPersistenceService.save(STORAGE_KEY, resetUsage);
         set({ usage: resetUsage });
-        console.log('[UsageTrackingStore] Usage data cleared');
+        logger.info('system', 'Usage data cleared');
       } catch (error) {
-        console.error('[UsageTrackingStore] Failed to clear usage data:', error);
+        logger.error('system', 'Failed to clear usage data', { error });
       }
     }
   },

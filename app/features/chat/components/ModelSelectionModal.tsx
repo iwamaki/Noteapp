@@ -22,6 +22,7 @@ import { convertProvidersToModelInfo, type ModelInfo } from '../../../screens/mo
 import APIService from '../../llmService/api';
 import { ModelCard } from './ModelCard';
 import { useModelSwitch } from '../../../settings/hooks/useModelSwitch';
+import { logger } from '../../../utils/logger';
 
 interface ModelSelectionModalProps {
   isVisible: boolean;
@@ -63,7 +64,7 @@ export const ModelSelectionModal: React.FC<ModelSelectionModalProps> = ({
           setAvailableModels(models);
         }
       } catch (error) {
-        console.error('Failed to load models:', error);
+        logger.error('chat', 'Failed to load models:', { error });
         setLoadError(t('chat.modelSelection.error.loadFailed'));
       } finally {
         setIsLoadingModels(false);

@@ -9,6 +9,7 @@ import { useTokenBalanceStore, TOKEN_CAPACITY_LIMITS } from '../../../settings/s
 import { creditsToTokens, getTokenPrice } from '../../../billing/constants/tokenPricing';
 import APIService from '../../../features/llmService/api';
 import { convertProvidersToModelInfo, type ModelInfo } from '../constants';
+import { logger } from '../../../utils/logger';
 
 interface UseCreditAllocationProps {
   isVisible: boolean;
@@ -50,7 +51,7 @@ export const useCreditAllocation = ({
 
         setModelInfo(model);
       } catch (error) {
-        console.error('Failed to load model:', error);
+        logger.error('llm', 'Failed to load model:', { error });
         Alert.alert('エラー', 'モデル情報の読み込みに失敗しました');
         onClose();
       } finally {
@@ -154,7 +155,7 @@ export const useCreditAllocation = ({
         [{ text: 'OK', onPress: onClose }]
       );
     } catch (error: any) {
-      console.error('[CreditAllocationModal] Allocation error:', error);
+      logger.error('llm', 'Credit allocation error:', { error });
       Alert.alert('エラー', error.message || '配分中にエラーが発生しました');
     } finally {
       setIsAllocating(false);
