@@ -38,9 +38,9 @@ steps:
       - 'managed'
       - '--allow-unauthenticated'  # 公開API（認証はアプリ側で実装）
       - '--set-env-vars'
-      - 'ENV=production,LOG_LEVEL=INFO,GCP_PROJECT_ID=$PROJECT_ID'
+      - 'ENVIRONMENT=production,LOG_LEVEL=INFO,LOG_FORMAT=json,GCP_PROJECT_ID=$PROJECT_ID,ALLOWED_ORIGINS=https://noteapp.iwamaki.app,GOOGLE_CSE_ID=2682c97053a18473c,ANDROID_PACKAGE_NAME=com.iwash.NoteApp'
       - '--set-secrets'
-      - 'GEMINI_API_KEY=GEMINI_API_KEY:latest,OPENAI_API_KEY=OPENAI_API_KEY:latest,GOOGLE_CSE_API_KEY=GOOGLE_CSE_API_KEY:latest'
+      - 'GEMINI_API_KEY=GEMINI_API_KEY:latest,OPENAI_API_KEY=OPENAI_API_KEY:latest,GOOGLE_CSE_API_KEY=GOOGLE_CSE_API_KEY:latest,JWT_SECRET_KEY=JWT_SECRET_KEY:latest,GOOGLE_WEB_CLIENT_ID=GOOGLE_WEB_CLIENT_ID:latest,GOOGLE_WEB_CLIENT_SECRET=GOOGLE_WEB_CLIENT_SECRET:latest'
 
 images:
   - 'gcr.io/$PROJECT_ID/noteapp-api:$SHORT_SHA'

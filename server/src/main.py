@@ -15,6 +15,7 @@ from src.api.websocket import manager
 from src.auth import TokenType, router, validate_jwt_secret, verify_token
 from src.billing import init_db
 from src.billing.presentation.router import router as billing_router
+from src.core.cloud_logger import setup_cloud_logging
 from src.core.logger import logger
 from src.llm_clean.infrastructure import (
     CollectionManager,
@@ -40,6 +41,9 @@ async def lifespan(app: FastAPI):
     # 起動時の処理
     logger.info("Application startup...")
 
+    # Cloud Logging初期化（本番環境のみ）
+    setup_cloud_logging()
+
     # JWT_SECRET_KEYのバリデーション（セキュリティチェック）
     try:
         validate_jwt_secret()
@@ -50,23 +54,38 @@ async def lifespan(app: FastAPI):
             "Please set a strong JWT_SECRET_KEY environment variable (minimum 32 characters)."
         ) from e
 
-    # Billingデータベースを初期化
-    init_db()
-    logger.info("Billing database initialized")
+    # Billingデータベースを初期化（DATABASE_URLが設定されている場合のみ）
+    try:
+        init_db()
+        logger.info("Billing database initialized")
+    except Exception as e:
+        logger.warning(
+            f"Billing database initialization skipped: {e}",
+            extra={"event_type": "startup", "component": "database"}
+        )
 
     # コレクションマネージャーを初期化
-    collection_manager = CollectionManager()
+    try:
+        collection_manager = CollectionManager()
 
-    # クリーンアップジョブを開始（10分間隔）
-    await start_cleanup_job(collection_manager, interval_minutes=10)
-    logger.info("Cleanup job started")
+        # クリーンアップジョブを開始（10分間隔）
+        await start_cleanup_job(collection_manager, interval_minutes=10)
+        logger.info("Cleanup job started")
+    except Exception as e:
+        logger.warning(
+            f"Cleanup job initialization skipped: {e}",
+            extra={"event_type": "startup", "component": "cleanup_job"}
+        )
 
     yield
 
     # シャットダウン時の処理
     logger.info("Application shutdown...")
-    await stop_cleanup_job()
-    logger.info("Cleanup job stopped")
+    try:
+        await stop_cleanup_job()
+        logger.info("Cleanup job stopped")
+    except Exception as e:
+        logger.warning(f"Cleanup job stop skipped: {e}")
 
 
 app = FastAPI(title="LLM File App API", lifespan=lifespan)
