@@ -32,8 +32,7 @@ yarn-error.*
 
 # local env files
 .env
-.env.production
-.local
+.env.local
 
 # typescript
 *.tsbuildinfo
@@ -65,6 +64,5 @@ build/
 # else
 scripts/
 server/billing.db
-.env.development
-.env.production.bak
+.env.*.bak
 .claude
