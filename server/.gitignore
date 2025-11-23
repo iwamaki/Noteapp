@@ -13,6 +13,7 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+.mypy_cache/
 
 # Python virtual environment
 venv/

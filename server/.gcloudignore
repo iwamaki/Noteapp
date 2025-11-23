@@ -1,0 +1,66 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+*.cover
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Linting and formatting
+.ruff_cache/
+.mypy_cache/
+.ruff/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Docker
+docker-compose*.yml
+!docker-compose.yml
+
+# Development files
+README.md
+tests/
+*.md
+docs/
+
+# Alembic (if not needed in production)
+alembic/
+alembic.ini
+
+# Data files (vector stores, etc. - not src/data which is source code)
+/data/

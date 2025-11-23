@@ -15,7 +15,6 @@ from src.api.websocket import manager
 from src.auth import TokenType, router, validate_jwt_secret, verify_token
 from src.billing import init_db
 from src.billing.presentation.router import router as billing_router
-from src.core.cloud_logger import setup_cloud_logging
 from src.core.logger import logger
 from src.llm_clean.infrastructure import (
     CollectionManager,
@@ -40,9 +39,6 @@ async def lifespan(app: FastAPI):
     """
     # 起動時の処理
     logger.info("Application startup...")
-
-    # Cloud Logging初期化（本番環境のみ）
-    setup_cloud_logging()
 
     # JWT_SECRET_KEYのバリデーション（セキュリティチェック）
     try:
@@ -197,9 +193,10 @@ async def validate_origin(request: Request, call_next):
                 source_url.startswith(allowed) for allowed in allowed_origins
             ):
                 logger.warning(
-                    "security",
                     "Invalid origin detected - possible CSRF attack",
                     extra={
+                        "event_type": "security",
+                        "event": "invalid_origin",
                         "origin": origin,
                         "referer": referer,
                         "method": request.method,

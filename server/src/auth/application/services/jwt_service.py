@@ -115,9 +115,9 @@ def verify_token(token: str, expected_type: str = TokenType.ACCESS) -> dict[str,
         if token_type != expected_type:
             # セキュリティイベントログ: トークンタイプ不一致
             logger.warning(
-                "security",
                 "Token type mismatch detected",
                 extra={
+                    "event_type": "security",
                     "event": "token_type_mismatch",
                     "expected_type": expected_type,
                     "actual_type": token_type,
@@ -134,9 +134,9 @@ def verify_token(token: str, expected_type: str = TokenType.ACCESS) -> dict[str,
             if exp_datetime < datetime.utcnow():
                 # セキュリティイベントログ: トークン期限切れ
                 logger.warning(
-                    "security",
                     "Expired token detected",
                     extra={
+                        "event_type": "security",
                         "event": "token_expired",
                         "expired_at": exp_datetime.isoformat(),
                         "user_id": payload.get("sub"),
@@ -155,9 +155,9 @@ def verify_token(token: str, expected_type: str = TokenType.ACCESS) -> dict[str,
     except JWTError as e:
         # セキュリティイベントログ: JWT検証失敗
         logger.warning(
-            "security",
             "Invalid JWT token detected",
             extra={
+                "event_type": "security",
                 "event": "invalid_token",
                 "error": str(e),
                 "token_prefix": token[:20] + "..." if len(token) > 20 else token,

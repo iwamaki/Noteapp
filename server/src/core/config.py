@@ -46,7 +46,9 @@ class Settings:
         google_cse_secret_id = os.getenv("GOOGLE_CSE_API_SECRET_ID", "GOOGLE_CSE_API_KEY")
 
         # Secret Manager から API キーを取得（必須）
-        if not os.getenv("GOOGLE_APPLICATION_CREDENTIALS"):
+        # Cloud Run環境では自動認証されるため、GOOGLE_APPLICATION_CREDENTIALSは不要
+        environment = os.getenv("ENVIRONMENT", "development")
+        if environment != "production" and not os.getenv("GOOGLE_APPLICATION_CREDENTIALS"):
             raise ValueError(
                 "GOOGLE_APPLICATION_CREDENTIALS environment variable is not set. "
                 "Please set the path to your service account key file."

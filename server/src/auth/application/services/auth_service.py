@@ -131,9 +131,9 @@ class AuthService:
         if not device:
             # セキュリティイベントログ: 未登録デバイスのアクセス試行
             logger.warning(
-                "security",
                 "Unregistered device access attempt",
                 extra={
+                    "event_type": "security",
                     "event": "device_not_found",
                     "device_id": device_id[:8] + "...",
                 },
@@ -151,9 +151,9 @@ class AuthService:
             # 不一致の場合
             # セキュリティイベントログ: ユーザーID不一致（潜在的な攻撃）
             logger.warning(
-                "security",
                 "User ID mismatch detected - possible account takeover attempt",
                 extra={
+                    "event_type": "security",
                     "event": "user_id_mismatch",
                     "device_id": device_id[:8] + "...",
                     "client_user_id": client_user_id,
@@ -281,9 +281,9 @@ class AuthService:
             if device.user_id != user_id:
                 # セキュリティイベントログ: 不正なデバイス削除試行
                 logger.warning(
-                    "security",
                     "Unauthorized device deletion attempt",
                     extra={
+                        "event_type": "security",
                         "event": "unauthorized_device_access",
                         "requester_user_id": user_id,
                         "device_id": device_id[:8] + "...",

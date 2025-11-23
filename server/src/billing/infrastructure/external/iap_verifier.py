@@ -5,6 +5,7 @@
 import os
 from typing import Any
 
+import google.auth
 from google.oauth2 import service_account
 from googleapiclient.discovery import build  # type: ignore[import-untyped]
 
@@ -13,6 +14,7 @@ from src.core.logger import logger
 SCOPES = ['https://www.googleapis.com/auth/androidpublisher']
 SERVICE_ACCOUNT_FILE = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 PACKAGE_NAME = os.getenv("ANDROID_PACKAGE_NAME", "com.iwash.NoteApp")
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
 
 
 def verify_purchase(product_id: str, purchase_token: str) -> dict[str, Any]:
@@ -30,15 +32,17 @@ def verify_purchase(product_id: str, purchase_token: str) -> dict[str, Any]:
         ValueError: 検証失敗時
     """
     try:
-        if not SERVICE_ACCOUNT_FILE:
-            raise ValueError("GOOGLE_APPLICATION_CREDENTIALS environment variable is not set")
-
-        if not os.path.exists(SERVICE_ACCOUNT_FILE):
-            raise ValueError(f"Service account file not found: {SERVICE_ACCOUNT_FILE}")
-
-        credentials = service_account.Credentials.from_service_account_file(
-            SERVICE_ACCOUNT_FILE, scopes=SCOPES
-        )
+        # Cloud Run環境では自動認証、開発環境ではサービスアカウントファイルを使用
+        if ENVIRONMENT == "production" or not SERVICE_ACCOUNT_FILE:
+            # Cloud Runの自動認証を使用
+            credentials, _ = google.auth.default(scopes=SCOPES)
+        else:
+            # 開発環境: サービスアカウントファイルから認証情報を読み込む
+            if not os.path.exists(SERVICE_ACCOUNT_FILE):
+                raise ValueError(f"Service account file not found: {SERVICE_ACCOUNT_FILE}")
+            credentials = service_account.Credentials.from_service_account_file(
+                SERVICE_ACCOUNT_FILE, scopes=SCOPES
+            )
 
         service = build('androidpublisher', 'v3', credentials=credentials)
 
@@ -96,13 +100,18 @@ def acknowledge_purchase(product_id: str, purchase_token: str):
         例外を再スローせずにログ記録のみ行う。
     """
     try:
-        if not SERVICE_ACCOUNT_FILE:
-            logger.warning("GOOGLE_APPLICATION_CREDENTIALS not set, skipping acknowledgment")
-            return
-
-        credentials = service_account.Credentials.from_service_account_file(
-            SERVICE_ACCOUNT_FILE, scopes=SCOPES
-        )
+        # Cloud Run環境では自動認証、開発環境ではサービスアカウントファイルを使用
+        if ENVIRONMENT == "production" or not SERVICE_ACCOUNT_FILE:
+            # Cloud Runの自動認証を使用
+            credentials, _ = google.auth.default(scopes=SCOPES)
+        else:
+            # 開発環境: サービスアカウントファイルから認証情報を読み込む
+            if not os.path.exists(SERVICE_ACCOUNT_FILE):
+                logger.warning(f"Service account file not found: {SERVICE_ACCOUNT_FILE}, skipping acknowledgment")
+                return
+            credentials = service_account.Credentials.from_service_account_file(
+                SERVICE_ACCOUNT_FILE, scopes=SCOPES
+            )
 
         service = build('androidpublisher', 'v3', credentials=credentials)
 
