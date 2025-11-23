@@ -1,6 +1,6 @@
-# LLM File App - Backend API
+# NoteApp - Backend API
 
-FastAPIとLangChainを使用したバックエンドAPI
+FastAPIを使用したバックエンドAPI（Google Cloud Run対応）
 
 ## セットアップ
 
