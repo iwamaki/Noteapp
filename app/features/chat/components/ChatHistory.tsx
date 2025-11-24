@@ -26,6 +26,7 @@ interface ChatHistoryProps {
   onSummarize: () => void;
   messageAreaHeight: number;
   panHandlers: PanResponderInstance['panHandlers'];
+  isResizing: boolean;
   tokenUsage: TokenUsageInfo | null;
   onResizeCompleteRef: MutableRefObject<(() => void) | null>;
 }
@@ -38,6 +39,7 @@ const ChatHistoryComponent: React.FC<ChatHistoryProps> = ({
   onSummarize,
   messageAreaHeight,
   panHandlers,
+  isResizing,
   tokenUsage,
   onResizeCompleteRef,
 }) => {
@@ -49,14 +51,12 @@ const ChatHistoryComponent: React.FC<ChatHistoryProps> = ({
   // 要約ボタンを有効にする条件: トークン使用量が50%超
   const canSummarize = tokenUsage ? tokenUsage.usageRatio > 0.5 : false;
 
-  // リサイズ完了時のスクロール処理を設定
+  // リサイズ完了時のスクロール処理を設定（空の関数に設定してスクロールを無効化）
   useEffect(() => {
     onResizeCompleteRef.current = () => {
-      if (messages.length > 0) {
-        flatListRef.current?.scrollToEnd({ animated: true });
-      }
+      // リサイズ後のスクロールは行わない（チャットバブルの位置を維持）
     };
-  }, [messages, onResizeCompleteRef]);
+  }, [onResizeCompleteRef]);
 
   // 新しいメッセージが追加されたときのスクロール処理
   useEffect(() => {
@@ -243,6 +243,7 @@ const ChatHistoryComponent: React.FC<ChatHistoryProps> = ({
         keyExtractor={keyExtractor}
         style={styles.messagesScrollView}
         contentContainerStyle={styles.messagesContent}
+        showsVerticalScrollIndicator={true}
         ListFooterComponent={
           isLoading ? (
             <View style={styles.loadingContainer}>
@@ -252,7 +253,7 @@ const ChatHistoryComponent: React.FC<ChatHistoryProps> = ({
           ) : null
         }
         onContentSizeChange={() => {
-          if (messages.length > 0) {
+          if (messages.length > 0 && !isResizing) {
             flatListRef.current?.scrollToEnd({ animated: true });
           }
         }}

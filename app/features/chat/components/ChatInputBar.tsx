@@ -25,6 +25,7 @@ export const ChatInputBar: React.FC = () => {
     resetChat,
     chatAreaHeight,
     panResponder,
+    isResizing,
     tokenUsage,
     summarizeConversation,
     onResizeCompleteRef,
@@ -66,6 +67,7 @@ export const ChatInputBar: React.FC = () => {
           onSummarize={summarizeConversation}
           messageAreaHeight={chatAreaHeight}
           panHandlers={panResponder.panHandlers}
+          isResizing={isResizing}
           tokenUsage={tokenUsage}
           onResizeCompleteRef={onResizeCompleteRef}
         />
