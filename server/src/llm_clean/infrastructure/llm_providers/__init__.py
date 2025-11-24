@@ -5,6 +5,7 @@ LLMプロバイダーの実装を提供します（Infrastructure Layer）。
 Domain InterfacesとApplication Portsを実装し、具体的なLLM APIと通信します。
 """
 
+from .anthropic_provider import AnthropicProvider
 from .base_provider import BaseAgentLLMProvider, BaseLLMProvider
 from .gemini_provider import GeminiProvider
 from .openai_provider import OpenAIProvider
@@ -24,6 +25,7 @@ __all__ = [
     "BaseAgentLLMProvider",
 
     # Concrete providers
+    "AnthropicProvider",
     "GeminiProvider",
     "OpenAIProvider",
 
