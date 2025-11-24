@@ -16,6 +16,7 @@ import { MessageItem } from './MessageItem';
 import { ToggleTabButton } from './ToggleTabButton';
 import { getTokenUsageBarColor } from '../../llmService/utils/tokenUsageHelpers';
 import { ModelSelectionModal } from './ModelSelectionModal';
+import { logger } from '../../../utils/logger';
 
 interface ChatHistoryProps {
   messages: ChatMessage[];
@@ -65,6 +66,11 @@ const ChatHistoryComponent: React.FC<ChatHistoryProps> = ({
       }, 100);
     }
   }, [messages]);
+
+  // isLoadingの変化を追跡
+  useEffect(() => {
+    logger.debug('chat', `[ChatHistory] isLoading changed to: ${isLoading}, messages count: ${messages.length}`);
+  }, [isLoading, messages.length]);
 
   const renderMessage: ListRenderItem<ChatMessage> = useCallback(
     ({ item }) => (

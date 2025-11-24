@@ -223,6 +223,7 @@ class ChatService {
           timestamp: new Date(),
         };
         this.addMessage(errorMessage);
+        this.setLoading(false); // エラー時もローディング解除
         logger.error('chatService', 'Error from backend:', response.error);
         return; // エラー時は後続処理をスキップ
       }
@@ -236,7 +237,10 @@ class ChatService {
       };
       this.addMessage(aiMessage);
 
-      // トークン使用量情報を更新（100%超過時は自動要約がトリガーされる）
+      // AIメッセージを表示したら即座にローディング状態を解除
+      this.setLoading(false);
+
+      // トークン使用量情報を更新（ローディング解除後に実行）
       if (response.tokenUsage) {
         this.tokenService.updateTokenUsage(response.tokenUsage);
 
@@ -252,7 +256,7 @@ class ChatService {
         }
       }
 
-      // コマンドの処理
+      // コマンドの処理（ローディング解除後に実行）
       if (response.commands && response.commands.length > 0) {
         logger.debug('chatService', 'Commands received from LLM:', response.commands);
         await this.dispatchCommands(response.commands);
@@ -269,8 +273,8 @@ class ChatService {
       }
     } catch (error) {
       this.handleError(error);
-    } finally {
       this.setLoading(false);
+    } finally {
       // メッセージ送信後に添付ファイルをクリア
       if (this.attachmentService.getAttachedFiles().length > 0) {
         this.clearAttachedFiles();
@@ -380,7 +384,9 @@ class ChatService {
    * ローディング状態を設定
    */
   private setLoading(loading: boolean): void {
+    logger.debug('chatService', `[setLoading] Setting isLoading to: ${loading}`);
     useChatStore.getState().setIsLoading(loading);
+    logger.debug('chatService', `[setLoading] isLoading is now: ${useChatStore.getState().isLoading}`);
   }
 
   /**
