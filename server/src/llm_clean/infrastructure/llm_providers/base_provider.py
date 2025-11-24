@@ -19,14 +19,11 @@ from src.llm_clean.application.dtos.chat_dtos import TokenUsageInfoDTO as TokenU
 
 # Import domain model for type hints
 from src.llm_clean.domain.value_objects.chat_context import ChatContext
-from src.llm_clean.utils.token_counter import (
-    count_message_tokens,
-    count_tokens,
-)
 from src.llm_clean.utils.tools import AVAILABLE_TOOLS
 
 # Clean Architecture imports
 from ...domain.entities.llm_command import LLMCommand
+from ...domain.interfaces.token_counter import ITokenCounter
 from ...domain.services.command_extractor_service import CommandExtractorService
 from .config import AGENT_VERBOSE, DEFAULT_SYSTEM_PROMPT, MAX_CONVERSATION_TOKENS
 from .context_builder import ChatContextBuilder
@@ -64,17 +61,19 @@ class BaseAgentLLMProvider(BaseLLMProvider):
     - コンテキスト構築とコマンド抽出の委譲
     """
 
-    def __init__(self, api_key: str, model: str):
+    def __init__(self, api_key: str, model: str, token_counter: ITokenCounter):
         """コンストラクタ
 
         Args:
             api_key: APIキー
             model: 使用するモデル名
+            token_counter: トークンカウンター（クリーンアーキテクチャ版）
         """
         self.model = model
         self.llm = self._create_llm_client(api_key, model)
         self._context_builder = ChatContextBuilder()
         self._command_extractor = CommandExtractorService()
+        self._token_counter = token_counter
         self._setup_agent()
 
     @abstractmethod
@@ -247,7 +246,7 @@ class BaseAgentLLMProvider(BaseLLMProvider):
 
         # ===== トークン残高チェック =====
         if user_id and model_id:
-            from src.billing import SessionLocal, TokenBalanceValidator, estimate_output_tokens
+            from src.billing import SessionLocal, TokenBalanceValidator
 
             # 1. メッセージをトークンカウント用の辞書形式に変換
             message_dicts = []
@@ -257,11 +256,11 @@ class BaseAgentLLMProvider(BaseLLMProvider):
                 message_dicts.append({"role": role, "content": content})
 
             # 2. メッセージのトークン数を計算
-            message_tokens = count_message_tokens(message_dicts, provider=self._get_provider_name(), model=self.model)
+            message_tokens = self._token_counter.count_message_tokens(message_dicts, self.model)
 
             # 3. システムプロンプトのトークン数を計算
             system_prompt = self._get_system_prompt()
-            system_prompt_tokens = count_tokens(system_prompt) if system_prompt else 0
+            system_prompt_tokens = self._token_counter.count_tokens(system_prompt) if system_prompt else 0
 
             # 4. ツール定義のトークン数を計算
             # LangChainがツールをLLMに送る際の形式に近い文字列を生成
@@ -281,13 +280,13 @@ class BaseAgentLLMProvider(BaseLLMProvider):
                 tools_text_parts.append(tool_info)
 
             tools_text = "\n\n".join(tools_text_parts)
-            tools_tokens = count_tokens(tools_text) if tools_text else 0
+            tools_tokens = self._token_counter.count_tokens(tools_text) if tools_text else 0
 
             # 5. 総入力トークン数を計算
             input_tokens = message_tokens + system_prompt_tokens + tools_tokens
 
             # 6. 出力トークンは推定
-            estimated_output = estimate_output_tokens(input_tokens)
+            estimated_output = self._token_counter.estimate_output_tokens(input_tokens)
             total_estimated = input_tokens + estimated_output
 
             logger.info(
@@ -515,6 +514,10 @@ class BaseAgentLLMProvider(BaseLLMProvider):
                                 f"Actual token usage from API: "
                                 f"input={input_tokens}, output={output_tokens}, total={total_tokens}"
                             )
+                            # 詳細なusage_metadataをログ出力（デバッグ用）
+                            logger.debug(
+                                f"[{provider_name}] Full usage_metadata: {usage_metadata}"
+                            )
                             break
 
             # 会話履歴が空の場合でも初期状態を返す
@@ -530,10 +533,9 @@ class BaseAgentLLMProvider(BaseLLMProvider):
                 )
 
             # 現在のトークン数を計算
-            current_tokens = count_message_tokens(
+            current_tokens = self._token_counter.count_message_tokens(
                 conversation_history,
-                provider=provider_name,
-                model=self.model
+                self.model
             )
 
             # 使用率を計算

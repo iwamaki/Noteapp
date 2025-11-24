@@ -1,14 +1,26 @@
 """Token Counter Utilities (Compatibility Layer)
 
+DEPRECATED: This module is deprecated and will be removed in a future version.
+Please use TokenCounterFactory from infrastructure.token_counting instead.
+
 This module provides utility functions for token counting that maintain
 compatibility with existing code while using the Clean Architecture implementation.
 """
+import warnings
 from typing import Any
 
 from src.core.config import settings
 from src.core.logger import logger
 
 from ..infrastructure.token_counting.gemini_token_counter import GeminiTokenCounter
+
+# Deprecation warning
+warnings.warn(
+    "utils.token_counter is deprecated. Use TokenCounterFactory from "
+    "infrastructure.token_counting instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 # Cache token counter instances
 _token_counter_cache: dict[str, GeminiTokenCounter] = {}
