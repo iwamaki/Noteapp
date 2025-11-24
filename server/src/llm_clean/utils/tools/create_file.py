@@ -4,19 +4,19 @@ from langchain.tools import tool
 @tool
 def create_file(title: str, content: str = "", category: str = "", tags: str = "") -> str:
     """
-    新しいファイルを作成します（フラット構造）。
+    Create a new file in flat structure.
 
-    このツールはフロントエンドでファイル作成を実行するためのコマンドを生成します。
-    実際のファイル作成はフロントエンドで行われます。
+    This tool generates a command for frontend to create a file.
+    Actual file creation is executed on the frontend.
 
     Args:
-        title: 作成するファイルの名前（例: "会議メモ", "新しいアイデア"）
-        content: ファイルの初期内容（省略可）
-        category: カテゴリー（階層パス形式、例: "仕事/議事録", "研究/AI"）
-        tags: タグ（カンマ区切り、例: "重要,至急"）
+        title: File name to create (e.g., "Meeting Notes", "Ideas")
+        content: Initial file content (optional)
+        category: Category in hierarchical path format (e.g., "Work/Minutes", "Research/AI")
+        tags: Comma-separated tags (e.g., "important,urgent")
 
     Returns:
-        作成コマンドが生成されたことを示すメッセージ
+        Message indicating the creation command was generated
     """
     msg_parts = [f"ファイル '{title}' を作成するコマンドを生成しました。"]
 

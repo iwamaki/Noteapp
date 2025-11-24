@@ -13,29 +13,29 @@ async def search_files(
     search_type: Literal["title", "content", "tag", "category"] = "title"
 ) -> str:
     """
-    ファイルを検索します（WebSocket経由）。
+    Search files via WebSocket.
 
-    このツールは、指定されたクエリでファイルを検索します。
-    検索タイプによって、タイトル、内容、タグ、カテゴリーで検索できます。
+    This tool searches files by specified query.
+    Search type determines whether to search by title, content, tag, or category.
 
-    動作フロー:
-    1. WebSocket経由でフロントエンドに検索リクエストを送信
-    2. フロントエンドはExpo FileSystemから全ファイルをスキャンして検索
-    3. マッチしたファイルのリストを返す
-    4. バックエンドは結果を整形してLLMに返す
+    Workflow:
+    1. Send search request to frontend via WebSocket
+    2. Frontend scans all files from Expo FileSystem
+    3. Return list of matching files
+    4. Backend formats results and returns to LLM
 
-    これにより、LLMがファイル横断的に情報を検索できます。
+    This allows LLM to search across files efficiently.
 
     Args:
-        query: 検索クエリ（例: "会議", "TODO", "重要"）
-        search_type: 検索タイプ
-            - "title": ファイル名で検索（デフォルト）
-            - "content": ファイル内容で検索
-            - "tag": タグで検索
-            - "category": カテゴリーで検索
+        query: Search query (e.g., "meeting", "TODO", "important")
+        search_type: Search type
+            - "title": Search by file name (default)
+            - "content": Search by file content
+            - "tag": Search by tag
+            - "category": Search by category
 
     Returns:
-        検索結果のリスト、またはエラーメッセージ
+        List of search results, or error message
     """
     logger.info(f"search_files tool called: query={query}, search_type={search_type}")
 

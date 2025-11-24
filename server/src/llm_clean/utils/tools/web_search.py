@@ -16,25 +16,25 @@ async def web_search(
     fetch_details: int = 3
 ) -> str:
     """
-    インターネット上の情報を検索し、詳細な内容を取得します。
+    Search the web and fetch detailed content.
 
-    このツールは、Google Custom Search APIを使用して指定されたクエリでWeb検索を実行し、
-    上位結果のページ内容も取得することで、より深い情報を提供します。
+    This tool uses Google Custom Search API to execute web search for specified query,
+    and also fetches page content from top results to provide deeper information.
 
-    使用例:
-    - 最新のニュースや情報を取得したい場合
-    - 技術的な問題の解決策を調べる場合
-    - 一般的な知識や事実を確認する場合
-    - 深い情報や詳細な説明が必要な場合
+    Use cases:
+    - Get latest news or information
+    - Research technical problem solutions
+    - Verify general knowledge or facts
+    - Need deeper information or detailed explanations
 
     Args:
-        query: 検索クエリ（例: "Python async/await 使い方", "最新のAIニュース"）
-        max_results: 取得する検索結果の最大数（1-10、デフォルト: 5）
-        fetch_details: ページ内容を取得する上位結果の数（0-5、デフォルト: 3）
-                      0に設定すると、スニペットのみを返します
+        query: Search query (e.g., "Python async/await usage", "latest AI news")
+        max_results: Maximum number of search results (1-10, default: 5)
+        fetch_details: Number of top results to fetch page content (0-5, default: 3)
+                      Set to 0 to return snippets only
 
     Returns:
-        検索結果と詳細内容、またはエラーメッセージ
+        Search results with detailed content, or error message
     """
     logger.info(f"web_search tool called: query={query}, max_results={max_results}, fetch_details={fetch_details}")
 

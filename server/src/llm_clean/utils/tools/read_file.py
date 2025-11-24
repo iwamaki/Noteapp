@@ -14,23 +14,23 @@ from src.llm_clean.utils.tools.context_manager import (
 @tool
 async def read_file(title: str) -> str:
     """
-    指定されたファイルの内容を読み取ります（フラット構造、WebSocket経由）。
+    Read file content in flat structure via WebSocket.
 
-    このツールは、ファイル名（title）を指定してファイルの内容を動的に取得します。
+    This tool dynamically fetches file content by filename (title).
 
-    動作フロー:
-    1. まず、現在開いているファイルかチェック（編集画面のコンテキスト）
-    2. そうでない場合、WebSocket経由でフロントエンドにファイル内容をリクエスト
-    3. フロントエンドはExpo FileSystemからファイルを読み取り、レスポンスを返す
-    4. バックエンドはレスポンスを受け取り、LLMに内容を返す
+    Workflow:
+    1. Check if file is currently open (editing screen context)
+    2. If not, request file content from frontend via WebSocket
+    3. Frontend reads file from Expo FileSystem and returns response
+    4. Backend receives response and returns content to LLM
 
-    これにより、LLMが必要なファイルだけを動的に取得できます（効率的）。
+    This allows LLM to fetch only needed files efficiently.
 
     Args:
-        title: 読み取るファイルの名前（例: "会議メモ", "新しいドキュメント"）
+        title: File name to read (e.g., "Meeting Notes", "Document")
 
     Returns:
-        ファイルの内容、またはファイルが見つからない/取得できない場合はエラーメッセージ
+        File content, or error message if file not found or inaccessible
     """
     logger.info(f"read_file tool called: title={title}")
 
