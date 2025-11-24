@@ -34,7 +34,15 @@ export const useChat = () => {
 
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
+      // タップ開始時は常にfalseを返し、即座にPanResponderを起動しない
+      // これによりボタンのonPressが正常に動作する
+      onStartShouldSetPanResponder: () => false,
+      // 実際に移動が検出された場合のみPanResponderを起動
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        // 縦方向の移動が5px以上の場合のみPanResponderを起動
+        // これにより、軽いタップ（ボタンクリック）とドラッグを区別できる
+        return Math.abs(gestureState.dy) > 5;
+      },
       onPanResponderGrant: () => {
         // ドラッグ開始時の高さを記録（refから最新の値を取得）
         gestureStartHeight.current = currentHeightValue.current;
