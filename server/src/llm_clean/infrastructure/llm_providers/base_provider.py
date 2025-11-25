@@ -117,7 +117,10 @@ class BaseAgentLLMProvider(BaseLLMProvider):
         """
         # 有効なツールのリストをログ出力
         tool_names = [tool.name for tool in AVAILABLE_TOOLS]
-        logger.info(f"Setting up agent with {len(AVAILABLE_TOOLS)} enabled tools: {tool_names}")
+        logger.info(
+            f"Setting up agent with {len(AVAILABLE_TOOLS)} enabled tools: {tool_names}",
+            extra={"category": "llm"}
+        )
 
         # LangChain 1.0: create_agentを使用
         # プロンプトテンプレートは不要で、system_promptを直接指定
@@ -213,7 +216,7 @@ class BaseAgentLLMProvider(BaseLLMProvider):
             )
 
         except Exception as e:
-            logger.error(f"Agent execution error: {e}")
+            logger.error(f"Agent execution error: {e}", extra={"category": "llm"})
             return self._build_error_response(
                 str(e),
                 provider_name,
@@ -238,8 +241,10 @@ class BaseAgentLLMProvider(BaseLLMProvider):
         Returns:
             エージェント実行結果（messagesキーを含む辞書）
         """
-        # DEBUG: パラメータ値を確認
-        logger.info(f"[DEBUG] _execute_agent called with user_id={user_id}, model_id={model_id}")
+        logger.debug(
+            f"_execute_agent called with user_id={user_id}, model_id={model_id}",
+            extra={"category": "llm"}
+        )
 
         # LangChain 1.0: messagesリストにchat_historyと新しいmessageを統合
         messages = chat_history + [HumanMessage(content=message)]
@@ -290,9 +295,10 @@ class BaseAgentLLMProvider(BaseLLMProvider):
             total_estimated = input_tokens + estimated_output
 
             logger.info(
-                f"[TokenCheck] Estimated tokens before LLM call: "
+                f"Estimated tokens before LLM call: "
                 f"messages={message_tokens}, system={system_prompt_tokens}, tools={tools_tokens}, "
-                f"input_total={input_tokens}, output_est={estimated_output}, total={total_estimated}"
+                f"input_total={input_tokens}, output_est={estimated_output}, total={total_estimated}",
+                extra={"category": "llm"}
             )
 
             # 7. トークン残高を検証
@@ -512,11 +518,12 @@ class BaseAgentLLMProvider(BaseLLMProvider):
                             total_tokens = usage_metadata.get('total_tokens')
                             logger.debug(
                                 f"Actual token usage from API: "
-                                f"input={input_tokens}, output={output_tokens}, total={total_tokens}"
+                                f"input={input_tokens}, output={output_tokens}, total={total_tokens}",
+                                extra={"category": "llm"}
                             )
-                            # 詳細なusage_metadataをログ出力（デバッグ用）
                             logger.debug(
-                                f"[{provider_name}] Full usage_metadata: {usage_metadata}"
+                                f"Full usage_metadata: {usage_metadata}",
+                                extra={"category": "llm", "provider": provider_name}
                             )
                             break
 
@@ -546,7 +553,8 @@ class BaseAgentLLMProvider(BaseLLMProvider):
 
             logger.debug(
                 f"Token usage: {current_tokens}/{max_tokens} "
-                f"({usage_ratio:.1%}) - Summary recommended: {needs_summary}"
+                f"({usage_ratio:.1%}) - Summary recommended: {needs_summary}",
+                extra={"category": "llm"}
             )
 
             return TokenUsageInfo(
@@ -560,5 +568,5 @@ class BaseAgentLLMProvider(BaseLLMProvider):
             )
 
         except Exception as e:
-            logger.error(f"Error calculating token usage: {e}")
+            logger.error(f"Error calculating token usage: {e}", extra={"category": "llm"})
             return None

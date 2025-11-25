@@ -23,11 +23,28 @@ class JsonFormatter(logging.Formatter):
             "logger": record.name
         }
 
+        # extraパラメータからcategoryを取得（デフォルトは"default"）
+        category = getattr(record, 'category', 'default')
+        log_data["category"] = category
+
         # メッセージがすでにdict型ならそのままマージ
         if isinstance(record.msg, dict):
             log_data.update(record.msg)
         else:
             log_data["message"] = record.getMessage()
+
+        # extraパラメータの他のフィールドもマージ（標準フィールドとcategory以外）
+        excluded_attrs = {
+            'name', 'msg', 'args', 'created', 'filename', 'funcName',
+            'levelname', 'levelno', 'lineno', 'module', 'msecs',
+            'message', 'pathname', 'process', 'processName',
+            'relativeCreated', 'thread', 'threadName', 'exc_info',
+            'exc_text', 'stack_info', 'category', 'asctime'
+        }
+
+        for key, value in record.__dict__.items():
+            if key not in excluded_attrs and not key.startswith('_'):
+                log_data[key] = value
 
         # JSON形式で出力（1行1JSON形式でjq解析を容易に）
         return json.dumps(log_data, ensure_ascii=False, default=self.default_serializer)

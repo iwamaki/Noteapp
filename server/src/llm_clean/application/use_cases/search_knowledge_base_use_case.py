@@ -45,17 +45,17 @@ class SearchKnowledgeBaseUseCase:
             ValueError: If collection doesn't exist
         """
         logger.info(
-            f"[SearchKnowledgeBaseUseCase] Searching: "
-            f"collection={request.collection_name}, query={request.query[:50]}, "
-            f"top_k={request.top_k}"
+            f"Searching: collection={request.collection_name}, "
+            f"query={request.query[:50]}, top_k={request.top_k}",
+            extra={"category": "llm"}
         )
 
         # Step 1: Check if collection exists
         exists = await self.vector_store.collection_exists(request.collection_name)
         if not exists:
             logger.error(
-                f"[SearchKnowledgeBaseUseCase] Collection not found: "
-                f"{request.collection_name}"
+                f"Collection not found: {request.collection_name}",
+                extra={"category": "llm"}
             )
             raise ValueError(f"コレクション '{request.collection_name}' が見つかりません")
 
@@ -68,12 +68,14 @@ class SearchKnowledgeBaseUseCase:
             )
 
             logger.info(
-                f"[SearchKnowledgeBaseUseCase] Found {len(raw_results)} results"
+                f"Found {len(raw_results)} results",
+                extra={"category": "llm"}
             )
 
         except Exception as e:
             logger.error(
-                f"[SearchKnowledgeBaseUseCase] Search failed: {str(e)}"
+                f"Search failed: {str(e)}",
+                extra={"category": "llm"}
             )
             raise
 
@@ -95,7 +97,8 @@ class SearchKnowledgeBaseUseCase:
         )
 
         logger.info(
-            "[SearchKnowledgeBaseUseCase] Search completed successfully"
+            "Search completed successfully",
+            extra={"category": "llm"}
         )
 
         return response

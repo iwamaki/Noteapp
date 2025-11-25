@@ -34,10 +34,13 @@ class OAuthService:
         """
         try:
             auth_url = self.oauth_client.generate_auth_url(state)
-            logger.debug(f"OAuth auth flow started with state: {state[:10]}...")
+            logger.debug(
+                f"OAuth auth flow started with state: {state[:10]}...",
+                extra={"category": "auth"}
+            )
             return auth_url
         except Exception as e:
-            logger.error(f"Failed to start OAuth auth flow: {e}")
+            logger.error(f"Failed to start OAuth auth flow: {e}", extra={"category": "auth"})
             raise OAuthServiceError(f"Failed to start auth flow: {str(e)}") from e
 
     def exchange_code(self, code: str) -> dict[str, Any]:
@@ -60,10 +63,16 @@ class OAuthService:
         """
         try:
             tokens = self.oauth_client.exchange_code_for_tokens(code)
-            logger.info("Successfully exchanged authorization code for tokens")
+            logger.info(
+                "Successfully exchanged authorization code for tokens",
+                extra={"category": "auth"}
+            )
             return tokens
         except Exception as e:
-            logger.error(f"Failed to exchange authorization code: {e}")
+            logger.error(
+                f"Failed to exchange authorization code: {e}",
+                extra={"category": "auth"}
+            )
             raise OAuthServiceError(f"Token exchange failed: {str(e)}") from e
 
     def get_user_info(self, access_token: str) -> dict[str, Any]:
@@ -87,8 +96,11 @@ class OAuthService:
         """
         try:
             user_info = self.oauth_client.get_user_info(access_token)
-            logger.info(f"Successfully fetched user info: email={user_info.get('email', '')[:20]}...")
+            logger.info(
+                f"Successfully fetched user info: email={user_info.get('email', '')[:20]}...",
+                extra={"category": "auth"}
+            )
             return user_info
         except Exception as e:
-            logger.error(f"Failed to fetch user info: {e}")
+            logger.error(f"Failed to fetch user info: {e}", extra={"category": "auth"})
             raise OAuthServiceError(f"User info fetch failed: {str(e)}") from e

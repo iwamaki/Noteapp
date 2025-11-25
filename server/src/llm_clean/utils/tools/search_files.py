@@ -37,16 +37,22 @@ async def search_files(
     Returns:
         List of search results, or error message
     """
-    logger.info(f"search_files tool called: query={query}, search_type={search_type}")
+    logger.info(
+        f"search_files tool called: query={query}, search_type={search_type}",
+        extra={"category": "tool"}
+    )
 
     # WebSocket接続のクライアントIDを取得
     client_id = get_client_id()
     if not client_id:
-        logger.error("No client_id available for WebSocket request")
+        logger.error("No client_id available for WebSocket request", extra={"category": "tool"})
         return "エラー: WebSocket接続が確立されていません。検索を実行できません。アプリを再起動してください。"
 
     try:
-        logger.info(f"Requesting search via WebSocket: query={query}, search_type={search_type}, client_id={client_id}")
+        logger.info(
+            f"Requesting search via WebSocket: query={query}, search_type={search_type}, client_id={client_id}",
+            extra={"category": "tool"}
+        )
 
         # フロントエンドに検索リクエスト（30秒タイムアウト）
         results = await manager.request_search_results(
@@ -85,12 +91,18 @@ async def search_files(
 
         result_parts.append("\n\n特定のファイルの内容を読むには、read_file ツールを使用してください。")
 
-        logger.info(f"Search completed: query={query}, results_count={len(results)}")
+        logger.info(
+            f"Search completed: query={query}, results_count={len(results)}",
+            extra={"category": "tool"}
+        )
         return "".join(result_parts)
 
     except Exception as e:
         error_msg = str(e)
-        logger.error(f"Error requesting search: query={query}, error={error_msg}")
+        logger.error(
+            f"Error requesting search: query={query}, error={error_msg}",
+            extra={"category": "tool"}
+        )
 
         # エラーメッセージをユーザーフレンドリーに変換
         if "is not connected" in error_msg:

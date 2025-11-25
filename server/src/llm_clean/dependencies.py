@@ -80,13 +80,15 @@ class BillingPortImpl(BillingPort):
                 output_tokens=output_tokens
             )
             logger.info(
-                f"[BillingPortImpl] Token consumption recorded: "
-                f"model={model_id}, input={input_tokens}, output={output_tokens}"
+                f"Token consumption recorded: model={model_id}, "
+                f"input={input_tokens}, output={output_tokens}",
+                extra={"category": "billing"}
             )
             return True
         except Exception as e:
             logger.error(
-                f"[BillingPortImpl] Failed to record token consumption: {str(e)}"
+                f"Failed to record token consumption: {str(e)}",
+                extra={"category": "billing"}
             )
             return False
 
@@ -143,7 +145,7 @@ class LLMProviderPortImpl(LLMProviderPort):
         if client_id:
             from src.llm_clean.utils.tools.context_manager import set_client_id
             set_client_id(client_id)
-            logger.debug(f"[LLMProviderPortImpl] Set client_id: {client_id}")
+            logger.debug(f"Set client_id: {client_id}", extra={"category": "llm"})
 
         response = await self._provider.chat(message, context, user_id, model or self.model)
 
@@ -274,7 +276,8 @@ def get_provider_registry() -> dict[str, LLMProviderPort]:
                 provider_ports[provider_name] = provider_port
             except Exception as e:
                 logger.error(
-                    f"[get_provider_registry] Failed to create port for {provider_name}: {str(e)}"
+                    f"Failed to create port for {provider_name}: {str(e)}",
+                    extra={"category": "llm"}
                 )
 
     return provider_ports

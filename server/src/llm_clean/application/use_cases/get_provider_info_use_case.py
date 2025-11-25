@@ -31,7 +31,7 @@ class GetProviderInfoUseCase:
         Returns:
             List of LLMProviderDTO with provider and model information
         """
-        logger.info("[GetProviderInfoUseCase] Retrieving provider information")
+        logger.info("Retrieving provider information", extra={"category": "llm"})
 
         provider_dtos: list[LLMProviderDTO] = []
 
@@ -63,18 +63,19 @@ class GetProviderInfoUseCase:
                 provider_dtos.append(provider_dto)
 
                 logger.info(
-                    f"[GetProviderInfoUseCase] Added provider: {name}, "
-                    f"models={len(models)}, status={status}"
+                    f"Added provider: {name}, models={len(models)}, status={status}",
+                    extra={"category": "llm"}
                 )
 
             except Exception as e:
                 logger.error(
-                    f"[GetProviderInfoUseCase] Error getting provider info "
-                    f"for {provider_name}: {str(e)}"
+                    f"Error getting provider info for {provider_name}: {str(e)}",
+                    extra={"category": "llm"}
                 )
 
         logger.info(
-            f"[GetProviderInfoUseCase] Retrieved {len(provider_dtos)} providers"
+            f"Retrieved {len(provider_dtos)} providers",
+            extra={"category": "llm"}
         )
 
         return provider_dtos

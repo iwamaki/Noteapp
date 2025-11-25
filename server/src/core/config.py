@@ -81,7 +81,8 @@ class Settings:
                 if not self.openai_api_key:
                     logger.warning(
                         "OPENAI_API_KEY not found in Secret Manager. "
-                        "OpenAI provider will not be available."
+                        "OpenAI provider will not be available.",
+                        extra={"category": "config"}
                     )
 
             # Anthropic API キーの取得（オプション）
@@ -91,7 +92,8 @@ class Settings:
                 if not self.anthropic_api_key:
                     logger.warning(
                         "ANTHROPIC_API_KEY not found in Secret Manager. "
-                        "Anthropic provider will not be available."
+                        "Anthropic provider will not be available.",
+                        extra={"category": "config"}
                     )
 
             # Google Custom Search API キーの取得（オプション）
@@ -101,7 +103,8 @@ class Settings:
                 if not self.google_cse_api_key:
                     logger.warning(
                         "GOOGLE_CSE_API_KEY not found in Secret Manager. "
-                        "Web search functionality will not be available."
+                        "Web search functionality will not be available.",
+                        extra={"category": "config"}
                     )
         except exceptions.PermissionDenied as e:
             raise ValueError(
@@ -128,9 +131,12 @@ class Settings:
             secret_value: str = response.payload.data.decode("UTF-8").strip()
             return secret_value
         except exceptions.NotFound:
-            logger.warning(f"Secret '{secret_id}' not found in project '{project_id}'.")
+            logger.warning(
+                f"Secret '{secret_id}' not found in project '{project_id}'.",
+                extra={"category": "config"}
+            )
         except Exception as e:
-            logger.warning(f"Error accessing secret '{secret_id}': {e}")
+            logger.warning(f"Error accessing secret '{secret_id}': {e}", extra={"category": "config"})
         return None
 
     def _ensure_metadata_initialized(self):

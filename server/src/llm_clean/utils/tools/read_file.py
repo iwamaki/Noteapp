@@ -32,7 +32,7 @@ async def read_file(title: str) -> str:
     Returns:
         File content, or error message if file not found or inaccessible
     """
-    logger.info(f"read_file tool called: title={title}")
+    logger.info(f"read_file tool called: title={title}", extra={"category": "tool"})
 
     # 1. まず、現在開いているファイルかチェック（編集画面）
     current_file_context = get_file_context()
@@ -42,7 +42,7 @@ async def read_file(title: str) -> str:
 
         # ファイル名の比較
         if title.strip() == current_filename.strip():
-            logger.info(f"File content found in current context: {title}")
+            logger.info(f"File content found in current context: {title}", extra={"category": "tool"})
             if current_content:
                 return f"ファイル '{current_filename}' の内容:\n\n{current_content}"
             else:
@@ -70,11 +70,14 @@ async def read_file(title: str) -> str:
     # 3. WebSocket経由でフロントエンドにファイル内容をリクエスト
     client_id = get_client_id()
     if not client_id:
-        logger.error("No client_id available for WebSocket request")
+        logger.error("No client_id available for WebSocket request", extra={"category": "tool"})
         return f"エラー: WebSocket接続が確立されていません。ファイル '{title}' を読み取れません。アプリを再起動してください。"
 
     try:
-        logger.info(f"Requesting file content via WebSocket: title={title}, client_id={client_id}")
+        logger.info(
+            f"Requesting file content via WebSocket: title={title}, client_id={client_id}",
+            extra={"category": "tool"}
+        )
 
         # フロントエンドにリクエスト（30秒タイムアウト）
         content = await manager.request_file_content(client_id, title, timeout=30)
@@ -94,12 +97,18 @@ async def read_file(title: str) -> str:
 
         result_parts.append(f"\n\n{content}")
 
-        logger.info(f"File content successfully retrieved: title={title}, length={len(content)}")
+        logger.info(
+            f"File content successfully retrieved: title={title}, length={len(content)}",
+            extra={"category": "tool"}
+        )
         return "".join(result_parts)
 
     except Exception as e:
         error_msg = str(e)
-        logger.error(f"Error requesting file content: title={title}, error={error_msg}")
+        logger.error(
+            f"Error requesting file content: title={title}, error={error_msg}",
+            extra={"category": "tool"}
+        )
 
         # エラーメッセージをユーザーフレンドリーに変換
         if "is not connected" in error_msg:

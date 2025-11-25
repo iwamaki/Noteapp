@@ -38,15 +38,17 @@ async def chat_post(
         ChatResponseDTO with response message, commands, token usage, etc.
     """
     logger.info(
-        f"[ChatRouterClean] Received chat request: user={user_id}, "
-        f"provider={request.provider}, model={request.model}"
+        f"Received chat request: user={user_id}, "
+        f"provider={request.provider}, model={request.model}",
+        extra={"category": "chat"}
     )
 
     if request.context:
         logger.info(
-            f"[ChatRouterClean] Context: "
+            f"Context: "
             f"currentPath={request.context.currentPath}, "
-            f"historyLength={len(request.context.conversationHistory) if request.context.conversationHistory else 0}"
+            f"historyLength={len(request.context.conversationHistory) if request.context.conversationHistory else 0}",
+            extra={"category": "chat"}
         )
 
     try:
@@ -62,23 +64,24 @@ async def chat_post(
         response = await use_case.execute(request, user_id)
 
         logger.info(
-            f"[ChatRouterClean] Chat processing completed: "
+            f"Chat processing completed: "
             f"message_length={len(response.message)}, "
-            f"commands={len(response.commands) if response.commands else 0}"
+            f"commands={len(response.commands) if response.commands else 0}",
+            extra={"category": "chat"}
         )
 
         return response
 
     except ValueError as e:
         # Token validation error or other value errors
-        logger.warning(f"[ChatRouterClean] Validation error: {str(e)}")
+        logger.warning(f"Validation error: {str(e)}", extra={"category": "chat"})
         raise HTTPException(status_code=400, detail=str(e)) from e
 
     except Exception as e:
         # Unexpected errors
-        logger.error(f"[ChatRouterClean] Unexpected error: {str(e)}")
+        logger.error(f"Unexpected error: {str(e)}", extra={"category": "chat"})
         import traceback
-        logger.error(traceback.format_exc())
+        logger.error(traceback.format_exc(), extra={"category": "chat"})
         raise HTTPException(status_code=500, detail=f"内部エラーが発生しました: {str(e)}") from e
 
 
@@ -101,9 +104,10 @@ async def summarize_conversation(
         SummarizeResponseDTO with summary and compression statistics
     """
     logger.info(
-        f"[ChatRouterClean] Received summarization request: "
+        f"Received summarization request: "
         f"user={user_id}, messages={len(request.conversationHistory)}, "
-        f"provider={request.provider}"
+        f"provider={request.provider}",
+        extra={"category": "chat"}
     )
 
     try:
@@ -119,21 +123,22 @@ async def summarize_conversation(
         response = await use_case.execute(request, user_id)
 
         logger.info(
-            f"[ChatRouterClean] Summarization completed: "
+            f"Summarization completed: "
             f"{response.originalTokens} -> {response.compressedTokens} tokens "
-            f"(compression ratio: {response.compressionRatio:.2%})"
+            f"(compression ratio: {response.compressionRatio:.2%})",
+            extra={"category": "chat"}
         )
 
         return response
 
     except ValueError as e:
         # Token validation error
-        logger.warning(f"[ChatRouterClean] Validation error: {str(e)}")
+        logger.warning(f"Validation error: {str(e)}", extra={"category": "chat"})
         raise HTTPException(status_code=400, detail=str(e)) from e
 
     except Exception as e:
         # Unexpected errors
-        logger.error(f"[ChatRouterClean] Unexpected error: {str(e)}")
+        logger.error(f"Unexpected error: {str(e)}", extra={"category": "chat"})
         import traceback
-        logger.error(traceback.format_exc())
+        logger.error(traceback.format_exc(), extra={"category": "chat"})
         raise HTTPException(status_code=500, detail=f"内部エラーが発生しました: {str(e)}") from e

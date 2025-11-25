@@ -49,7 +49,10 @@ def _get_token_counter(provider: str = "gemini", model: str | None = None) -> Ge
                 default_model=default_model
             )
         else:
-            logger.warning(f"Unsupported provider for token counting: {provider}")
+            logger.warning(
+                f"Unsupported provider for token counting: {provider}",
+                extra={"category": "llm"}
+            )
             return None
 
     return _token_counter_cache.get(cache_key)
@@ -67,13 +70,16 @@ def count_tokens(text: str) -> int:
     try:
         counter = _get_token_counter("gemini")
         if not counter:
-            logger.warning("Token counter not available, using character-based estimation")
+            logger.warning(
+                "Token counter not available, using character-based estimation",
+                extra={"category": "llm"}
+            )
             return len(text) // 4
 
         return counter.count_tokens(text)
 
     except Exception as e:
-        logger.error(f"Error counting tokens: {e}")
+        logger.error(f"Error counting tokens: {e}", extra={"category": "llm"})
         return len(text) // 4
 
 
@@ -100,7 +106,10 @@ def count_message_tokens(
         counter = _get_token_counter(provider, model)
 
         if not counter:
-            logger.warning("Token counter not available, using character-based estimation")
+            logger.warning(
+                "Token counter not available, using character-based estimation",
+                extra={"category": "llm"}
+            )
             total_chars = sum(len(str(m.get("content", ""))) for m in messages)
             return total_chars // 4
 
@@ -110,7 +119,7 @@ def count_message_tokens(
         return counter.count_message_tokens(messages, model)
 
     except Exception as e:
-        logger.error(f"Error counting message tokens: {e}")
+        logger.error(f"Error counting message tokens: {e}", extra={"category": "llm"})
         total_chars = sum(len(str(m.get("content", ""))) for m in messages)
         return total_chars // 4
 
@@ -155,7 +164,8 @@ def estimate_compression_needed(
 
     logger.info(
         f"Token estimate: {current_tokens}/{max_tokens} "
-        f"({usage_ratio:.1%}) - Compression needed: {needs_compression}"
+        f"({usage_ratio:.1%}) - Compression needed: {needs_compression}",
+        extra={"category": "llm"}
     )
 
     return needs_compression, current_tokens, usage_ratio

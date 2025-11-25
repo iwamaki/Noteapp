@@ -50,7 +50,8 @@ class InMemoryTokenBlacklist(TokenBlacklistManager):
         self._blacklist: dict[str, float] = {}
         logger.warning(
             "Using InMemoryTokenBlacklist. "
-            "NOT suitable for production. Use RedisTokenBlacklist instead."
+            "NOT suitable for production. Use RedisTokenBlacklist instead.",
+            extra={"category": "auth"}
         )
 
     def add_to_blacklist(self, token: str, expires_in_seconds: int) -> None:
@@ -58,8 +59,8 @@ class InMemoryTokenBlacklist(TokenBlacklistManager):
         expiry_timestamp = time.time() + expires_in_seconds
         self._blacklist[token] = expiry_timestamp
         logger.debug(
-            f"Token added to blacklist (in-memory): "
-            f"expires_in={expires_in_seconds}s"
+            f"Token added to blacklist (in-memory): expires_in={expires_in_seconds}s",
+            extra={"category": "auth"}
         )
 
         # 古いエントリをクリーンアップ
@@ -91,7 +92,10 @@ class InMemoryTokenBlacklist(TokenBlacklistManager):
             del self._blacklist[token]
 
         if expired_tokens:
-            logger.debug(f"Cleaned up {len(expired_tokens)} expired blacklist entries")
+            logger.debug(
+                f"Cleaned up {len(expired_tokens)} expired blacklist entries",
+                extra={"category": "auth"}
+            )
 
 
 class RedisTokenBlacklist(TokenBlacklistManager):
@@ -108,7 +112,7 @@ class RedisTokenBlacklist(TokenBlacklistManager):
         """
         self._redis = redis_client
         self._key_prefix = "token_blacklist:"
-        logger.info("Using RedisTokenBlacklist for token management")
+        logger.info("Using RedisTokenBlacklist for token management", extra={"category": "auth"})
 
     def add_to_blacklist(self, token: str, expires_in_seconds: int) -> None:
         """
@@ -125,7 +129,7 @@ class RedisTokenBlacklist(TokenBlacklistManager):
 
         logger.info(
             "Token added to blacklist (Redis)",
-            extra={"expires_in": expires_in_seconds}
+            extra={"category": "auth", "expires_in": expires_in_seconds}
         )
 
     def is_blacklisted(self, token: str) -> bool:
@@ -187,6 +191,7 @@ def get_blacklist_manager() -> TokenBlacklistManager:
             logger.info(
                 "Token blacklist initialized with Redis",
                 extra={
+                    "category": "auth",
                     "host": redis_host,
                     "port": redis_port,
                     "db": redis_db
@@ -196,11 +201,15 @@ def get_blacklist_manager() -> TokenBlacklistManager:
         except Exception as e:
             logger.error(
                 f"Failed to connect to Redis for token blacklist: {e}. "
-                "Falling back to InMemoryTokenBlacklist."
+                "Falling back to InMemoryTokenBlacklist.",
+                extra={"category": "auth"}
             )
             _blacklist_manager = InMemoryTokenBlacklist()
     else:
         _blacklist_manager = InMemoryTokenBlacklist()
-        logger.info("Token blacklist initialized with in-memory storage (development mode)")
+        logger.info(
+            "Token blacklist initialized with in-memory storage (development mode)",
+            extra={"category": "auth"}
+        )
 
     return _blacklist_manager

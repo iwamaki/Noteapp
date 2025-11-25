@@ -60,7 +60,10 @@ class GeminiProvider(BaseAgentLLMProvider):
         if not model.startswith("gemini"):
             model = settings.get_default_model("gemini")
 
-        logger.info(f"[GeminiProvider] Creating LLM client for model: {model}")
+        logger.info(
+            f"Creating LLM client for model: {model}",
+            extra={"category": "llm", "provider": "gemini"}
+        )
 
         return ChatGoogleGenerativeAI(
             model=model,

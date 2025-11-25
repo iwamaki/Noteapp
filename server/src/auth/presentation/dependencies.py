@@ -39,7 +39,10 @@ async def verify_token_auth(
     # トークンがブラックリストに含まれているかチェック
     blacklist_manager = get_blacklist_manager()
     if blacklist_manager.is_blacklisted(token):
-        logger.warning("Authentication failed: Token has been revoked (logged out)")
+        logger.warning(
+            "Authentication failed: Token has been revoked (logged out)",
+            extra={"category": "auth"}
+        )
         raise HTTPException(
             status_code=401,
             detail="Token has been revoked. Please login again."
@@ -49,7 +52,10 @@ async def verify_token_auth(
     payload = verify_token(token, TokenType.ACCESS)
 
     if not payload:
-        logger.warning("Authentication failed: Invalid or expired token")
+        logger.warning(
+            "Authentication failed: Invalid or expired token",
+            extra={"category": "auth"}
+        )
         raise HTTPException(
             status_code=401,
             detail="Invalid or expired token. Please login again."
@@ -57,7 +63,10 @@ async def verify_token_auth(
 
     user_id = payload.get("sub")
     if not user_id:
-        logger.warning("Authentication failed: Missing user_id in token")
+        logger.warning(
+            "Authentication failed: Missing user_id in token",
+            extra={"category": "auth"}
+        )
         raise HTTPException(
             status_code=401,
             detail="Invalid token payload"
@@ -65,7 +74,7 @@ async def verify_token_auth(
 
     logger.debug(
         "Token authentication successful",
-        extra={"user_id": user_id}
+        extra={"category": "auth", "user_id": user_id}
     )
 
     return user_id
@@ -89,7 +98,10 @@ async def verify_user(
         HTTPException: 認証失敗時（401 Unauthorized）
     """
     if not device_id:
-        logger.warning("Authentication failed: Missing X-Device-ID header")
+        logger.warning(
+            "Authentication failed: Missing X-Device-ID header",
+            extra={"category": "auth"}
+        )
         raise HTTPException(
             status_code=401,
             detail="Device ID required. Please provide X-Device-ID header."
@@ -100,7 +112,7 @@ async def verify_user(
     if not re.match(uuid_pattern, device_id, re.IGNORECASE):
         logger.warning(
             "Authentication failed: Invalid device ID format",
-            extra={"device_id": device_id[:20] + "..."}
+            extra={"category": "auth", "device_id": device_id[:20] + "..."}
         )
         raise HTTPException(
             status_code=401,
@@ -113,7 +125,7 @@ async def verify_user(
     if not user_id:
         logger.warning(
             "Authentication failed: Device not found",
-            extra={"device_id": device_id}
+            extra={"category": "auth", "device_id": device_id}
         )
         raise HTTPException(
             status_code=401,
@@ -122,7 +134,7 @@ async def verify_user(
 
     logger.debug(
         "Authentication successful",
-        extra={"device_id": device_id, "user_id": user_id}
+        extra={"category": "auth", "device_id": device_id, "user_id": user_id}
     )
 
     return user_id

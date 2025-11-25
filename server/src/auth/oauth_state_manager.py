@@ -63,7 +63,8 @@ class OAuthStateManager:
         }
 
         logger.debug(
-            f"OAuth state generated: state={state[:10]}..., device_id={device_id[:20]}..."
+            f"OAuth state generated: state={state[:10]}..., device_id={device_id[:20]}...",
+            extra={"category": "auth"}
         )
 
         # 古い state をクリーンアップ
@@ -84,12 +85,18 @@ class OAuthStateManager:
         state_data = self._states.get(state)
 
         if not state_data:
-            logger.warning(f"OAuth state not found: state={state[:10]}...")
+            logger.warning(
+                f"OAuth state not found: state={state[:10]}...",
+                extra={"category": "auth"}
+            )
             return None
 
         # 有効期限をチェック
         if time.time() > state_data["expires_at"]:
-            logger.warning(f"OAuth state expired: state={state[:10]}...")
+            logger.warning(
+                f"OAuth state expired: state={state[:10]}...",
+                extra={"category": "auth"}
+            )
             del self._states[state]
             return None
 
@@ -98,7 +105,8 @@ class OAuthStateManager:
         del self._states[state]
 
         logger.debug(
-            f"OAuth state verified: state={state[:10]}..., device_id={device_id[:20]}..."
+            f"OAuth state verified: state={state[:10]}..., device_id={device_id[:20]}...",
+            extra={"category": "auth"}
         )
 
         return device_id
@@ -116,7 +124,10 @@ class OAuthStateManager:
             del self._states[state]
 
         if expired_states:
-            logger.debug(f"Cleaned up {len(expired_states)} expired OAuth states")
+            logger.debug(
+                f"Cleaned up {len(expired_states)} expired OAuth states",
+                extra={"category": "auth"}
+            )
 
     def get_stats(self) -> dict[str, int]:
         """統計情報を取得（デバッグ用）"""
@@ -161,9 +172,12 @@ class RedisStateManager:
             )
             # 接続テスト
             self._redis.ping()
-            logger.info(f"Redis connection established: {self._redis_url}")
+            logger.info(
+                f"Redis connection established: {self._redis_url}",
+                extra={"category": "auth"}
+            )
         except Exception as e:
-            logger.error(f"Failed to connect to Redis: {e}")
+            logger.error(f"Failed to connect to Redis: {e}", extra={"category": "auth"})
             raise RuntimeError(f"Redis connection failed: {e}") from e
 
     def generate_state(self, device_id: str) -> str:
@@ -195,10 +209,11 @@ class RedisStateManager:
                 json.dumps(state_data)
             )
             logger.debug(
-                f"OAuth state generated (Redis): state={state[:10]}..., device_id={device_id[:20]}..."
+                f"OAuth state generated (Redis): state={state[:10]}..., device_id={device_id[:20]}...",
+                extra={"category": "auth"}
             )
         except Exception as e:
-            logger.error(f"Failed to save state to Redis: {e}")
+            logger.error(f"Failed to save state to Redis: {e}", extra={"category": "auth"})
             raise RuntimeError(f"Failed to save OAuth state: {e}") from e
 
         return state
@@ -220,7 +235,10 @@ class RedisStateManager:
             state_data_str = self._redis.get(key)
 
             if not state_data_str:
-                logger.warning(f"OAuth state not found (Redis): state={state[:10]}...")
+                logger.warning(
+                    f"OAuth state not found (Redis): state={state[:10]}...",
+                    extra={"category": "auth"}
+                )
                 return None
 
             # JSONデコード
@@ -228,7 +246,10 @@ class RedisStateManager:
 
             # 有効期限をチェック（念のため）
             if time.time() > state_data["expires_at"]:
-                logger.warning(f"OAuth state expired (Redis): state={state[:10]}...")
+                logger.warning(
+                    f"OAuth state expired (Redis): state={state[:10]}...",
+                    extra={"category": "auth"}
+                )
                 self._redis.delete(key)
                 return None
 
@@ -237,13 +258,14 @@ class RedisStateManager:
             self._redis.delete(key)
 
             logger.debug(
-                f"OAuth state verified (Redis): state={state[:10]}..., device_id={device_id[:20]}..."
+                f"OAuth state verified (Redis): state={state[:10]}..., device_id={device_id[:20]}...",
+                extra={"category": "auth"}
             )
 
             return device_id
 
         except Exception as e:
-            logger.error(f"Failed to verify state in Redis: {e}")
+            logger.error(f"Failed to verify state in Redis: {e}", extra={"category": "auth"})
             return None
 
     def get_stats(self) -> dict[str, int]:
@@ -256,7 +278,7 @@ class RedisStateManager:
                 "ttl_seconds": self._ttl
             }
         except Exception as e:
-            logger.error(f"Failed to get stats from Redis: {e}")
+            logger.error(f"Failed to get stats from Redis: {e}", extra={"category": "auth"})
             return {
                 "active_states": -1,
                 "ttl_seconds": self._ttl
@@ -286,15 +308,21 @@ def get_state_manager() -> StateManagerProtocol:
     storage_type = os.getenv("OAUTH_STATE_STORAGE", "memory").lower()
 
     if storage_type == "redis":
-        logger.info("Initializing RedisStateManager...")
+        logger.info("Initializing RedisStateManager...", extra={"category": "auth"})
         try:
             _state_manager = RedisStateManager(ttl_seconds=300)
         except Exception as e:
-            logger.error(f"Failed to initialize RedisStateManager: {e}")
-            logger.warning("Falling back to in-memory OAuthStateManager")
+            logger.error(
+                f"Failed to initialize RedisStateManager: {e}",
+                extra={"category": "auth"}
+            )
+            logger.warning(
+                "Falling back to in-memory OAuthStateManager",
+                extra={"category": "auth"}
+            )
             _state_manager = OAuthStateManager(ttl_seconds=300)
     else:
-        logger.info("Initializing OAuthStateManager (in-memory)...")
+        logger.info("Initializing OAuthStateManager (in-memory)...", extra={"category": "auth"})
         _state_manager = OAuthStateManager(ttl_seconds=300)
 
     return _state_manager

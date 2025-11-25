@@ -17,7 +17,7 @@ def init_db():
 
     Note: テーブル作成はAlembicマイグレーションで管理
     """
-    logger.info("Initializing billing database...")
+    logger.info("Initializing billing database...", extra={"category": "billing"})
 
     # 初期データ投入
     _insert_initial_data()
@@ -38,13 +38,13 @@ def _insert_initial_data():
             default_user = User(user_id=DEFAULT_USER_ID)
             db.add(default_user)
             db.commit()  # ユーザーを先にコミット
-            logger.info(f"Created default user: {DEFAULT_USER_ID}")
+            logger.info(f"Created default user: {DEFAULT_USER_ID}", extra={"category": "billing"})
 
             # デフォルトユーザーのクレジットレコード作成
             default_credit = Credit(user_id=DEFAULT_USER_ID, credits=0)
             db.add(default_credit)
             db.commit()  # クレジットをコミット
-            logger.info(f"Created credit record for {DEFAULT_USER_ID}")
+            logger.info(f"Created credit record for {DEFAULT_USER_ID}", extra={"category": "billing"})
 
         # 価格マスターデータを投入（存在しない場合のみ）
         for pricing_data in INITIAL_PRICING_DATA:
@@ -55,14 +55,14 @@ def _insert_initial_data():
             if not existing_pricing:
                 pricing = TokenPricing(**pricing_data)
                 db.add(pricing)
-                logger.info(f"Created pricing for {pricing_data['model_id']}")
+                logger.info(f"Created pricing for {pricing_data['model_id']}", extra={"category": "billing"})
 
         db.commit()  # 価格データをコミット
-        logger.info("Initial data inserted successfully")
+        logger.info("Initial data inserted successfully", extra={"category": "billing"})
 
     except Exception as e:
         db.rollback()
-        logger.error(f"Failed to insert initial data: {e}")
+        logger.error(f"Failed to insert initial data: {e}", extra={"category": "billing"})
         raise
     finally:
         db.close()

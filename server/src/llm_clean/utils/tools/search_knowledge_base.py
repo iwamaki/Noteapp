@@ -39,7 +39,10 @@ async def search_knowledge_base(
     Returns:
         検索結果と詳細内容、またはエラーメッセージ
     """
-    logger.info(f"search_knowledge_base tool called: query={query}, max_results={max_results}, collection={collection_name}")
+    logger.info(
+        f"search_knowledge_base tool called: query={query}, max_results={max_results}, collection={collection_name}",
+        extra={"category": "tool"}
+    )
 
     # パラメータの範囲チェック
     max_results = max(1, min(10, max_results))
@@ -76,7 +79,7 @@ async def search_knowledge_base(
 
         if not results:
             response = f"検索結果: クエリ '{query}' に一致する情報が見つかりませんでした。"
-            logger.info(f"search_knowledge_base response: {response}")
+            logger.info(f"search_knowledge_base response: {response}", extra={"category": "tool"})
             return response
 
         # 結果を整形
@@ -86,17 +89,19 @@ async def search_knowledge_base(
         logger.info(
             f"search_knowledge_base response generated: "
             f"collection={stats.get('collection_name', 'unknown')}, "
-            f"query={query}, "
-            f"results_count={len(results)}, "
-            f"response_length={len(response)} chars"
+            f"query={query}, results_count={len(results)}, response_length={len(response)} chars",
+            extra={"category": "tool"}
         )
-        logger.debug(f"Full response:\n{response}")
+        logger.debug(f"Full response:\n{response}", extra={"category": "tool"})
 
         return response
 
     except Exception as e:
         error_msg = str(e)
-        logger.error(f"Error in search_knowledge_base: query={query}, error={error_msg}")
+        logger.error(
+            f"Error in search_knowledge_base: query={query}, error={error_msg}",
+            extra={"category": "tool"}
+        )
         return f"エラー: 知識ベースの検索に失敗しました: {error_msg}"
 
 
@@ -138,5 +143,9 @@ def _format_search_results(query: str, results: list, stats: dict) -> str:
         result_parts.append(f"\n{content}")
         result_parts.append(f"\n{'-'*60}")
 
-    logger.info(f"Knowledge base search completed: collection={stats.get('collection_name', 'unknown')}, query={query}, results_count={len(results)}")
+    logger.info(
+        f"Knowledge base search completed: collection={stats.get('collection_name', 'unknown')}, "
+        f"query={query}, results_count={len(results)}",
+        extra={"category": "tool"}
+    )
     return "".join(result_parts)

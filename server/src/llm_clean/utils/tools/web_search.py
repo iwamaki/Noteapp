@@ -36,7 +36,10 @@ async def web_search(
     Returns:
         Search results with detailed content, or error message
     """
-    logger.info(f"web_search tool called: query={query}, max_results={max_results}, fetch_details={fetch_details}")
+    logger.info(
+        f"web_search tool called: query={query}, max_results={max_results}, fetch_details={fetch_details}",
+        extra={"category": "tool"}
+    )
 
     # パラメータの範囲チェック
     max_results = max(1, min(10, max_results))
@@ -49,7 +52,10 @@ async def web_search(
 
     if not api_key or not search_engine_id:
         error_msg = "Google Custom Search APIの設定が不足しています。"
-        logger.error(f"Missing API credentials: api_key={bool(api_key)}, search_engine_id={bool(search_engine_id)}")
+        logger.error(
+            f"Missing API credentials: api_key={bool(api_key)}, search_engine_id={bool(search_engine_id)}",
+            extra={"category": "tool"}
+        )
         return (
             f"エラー: {error_msg}\n\n"
             "必要な設定:\n"
@@ -80,7 +86,10 @@ async def web_search(
             page_contents = []
             if fetch_details > 0:
                 urls_to_fetch = [item.get('link') for item in data["items"][:fetch_details] if item.get('link')]
-                logger.info(f"Fetching detailed content from {len(urls_to_fetch)} URLs")
+                logger.info(
+                    f"Fetching detailed content from {len(urls_to_fetch)} URLs",
+                    extra={"category": "tool"}
+                )
 
                 # 並列にページ内容を取得
                 html_contents = await asyncio.gather(
@@ -94,15 +103,21 @@ async def web_search(
                         text = _extract_text_from_html(html)
                         if text:
                             page_contents.append({"url": url, "content": text})
-                            logger.info(f"Successfully fetched content from {url} ({len(text)} chars)")
+                            logger.info(
+                                f"Successfully fetched content from {url} ({len(text)} chars)",
+                                extra={"category": "tool"}
+                            )
                         else:
-                            logger.warning(f"Failed to extract text from {url}")
+                            logger.warning(f"Failed to extract text from {url}", extra={"category": "tool"})
 
             return _format_google_results_with_content(query, data["items"], max_results, page_contents)
 
     except httpx.HTTPStatusError as e:
         error_msg = f"HTTP {e.response.status_code}: {e.response.text}"
-        logger.error(f"HTTP error in web_search: query={query}, error={error_msg}")
+        logger.error(
+            f"HTTP error in web_search: query={query}, error={error_msg}",
+            extra={"category": "tool"}
+        )
 
         if e.response.status_code == 429:
             return "エラー: 検索のレート制限に達しました。しばらく待ってから再試行してください。"
@@ -112,17 +127,23 @@ async def web_search(
             return f"エラー: Web検索に失敗しました (HTTP {e.response.status_code})"
 
     except httpx.TimeoutException:
-        logger.error(f"Timeout in web_search: query={query}")
+        logger.error(f"Timeout in web_search: query={query}", extra={"category": "tool"})
         return "エラー: 検索がタイムアウトしました。後でもう一度お試しください。"
 
     except httpx.RequestError as e:
         error_msg = str(e)
-        logger.error(f"Network error in web_search: query={query}, error={error_msg}")
+        logger.error(
+            f"Network error in web_search: query={query}, error={error_msg}",
+            extra={"category": "tool"}
+        )
         return "エラー: ネットワーク接続に問題があります。インターネット接続を確認してください。"
 
     except Exception as e:
         error_msg = str(e)
-        logger.error(f"Error in web_search: query={query}, error={error_msg}")
+        logger.error(
+            f"Error in web_search: query={query}, error={error_msg}",
+            extra={"category": "tool"}
+        )
         return f"エラー: Web検索に失敗しました: {error_msg}"
 
 
@@ -145,13 +166,16 @@ async def _fetch_page_content(url: str, timeout: float = 10.0) -> str | None:
             response.raise_for_status()
             return response.text
     except httpx.TimeoutException:
-        logger.warning(f"Timeout fetching URL: {url}")
+        logger.warning(f"Timeout fetching URL: {url}", extra={"category": "tool"})
         return None
     except httpx.HTTPStatusError as e:
-        logger.warning(f"HTTP error {e.response.status_code} fetching URL: {url}")
+        logger.warning(
+            f"HTTP error {e.response.status_code} fetching URL: {url}",
+            extra={"category": "tool"}
+        )
         return None
     except Exception as e:
-        logger.warning(f"Error fetching URL {url}: {str(e)}")
+        logger.warning(f"Error fetching URL {url}: {str(e)}", extra={"category": "tool"})
         return None
 
 
@@ -194,7 +218,7 @@ def _extract_text_from_html(html: str, max_length: int = 4000) -> str:
 
         return text
     except Exception as e:
-        logger.warning(f"Error extracting text from HTML: {str(e)}")
+        logger.warning(f"Error extracting text from HTML: {str(e)}", extra={"category": "tool"})
         return ""
 
 
@@ -220,7 +244,10 @@ def _format_google_results(query: str, results: list, max_results: int) -> str:
             snippet_text = snippet[:200] + "..." if len(snippet) > 200 else snippet
             result_parts.append(f"\n   概要: {snippet_text}")
 
-    logger.info(f"Google search completed: query={query}, results_count={len(results)}")
+    logger.info(
+        f"Google search completed: query={query}, results_count={len(results)}",
+        extra={"category": "tool"}
+    )
     return "".join(result_parts)
 
 
@@ -263,5 +290,8 @@ def _format_google_results_with_content(
             result_parts.append(f"\n{page['content']}")
             result_parts.append(f"\n{'-'*60}\n")
 
-    logger.info(f"Google search completed: query={query}, results_count={len(results)}, detailed_pages={len(page_contents)}")
+    logger.info(
+        f"Google search completed: query={query}, results_count={len(results)}, detailed_pages={len(page_contents)}",
+        extra={"category": "tool"}
+    )
     return "".join(result_parts)

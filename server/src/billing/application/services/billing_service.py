@@ -52,9 +52,12 @@ class BillingService:
         balances = self.db.query(TokenBalance).filter_by(user_id=self.user_id).all()
         allocated_tokens = {b.model_id: b.allocated_tokens for b in balances}
 
-        logger.debug(f"[BillingService] Balance fetched for {self.user_id}: "
-                    f"credits={credit.credits if credit else 0}, "
-                    f"allocated_tokens={allocated_tokens}")
+        logger.debug(
+            f"Balance fetched for {self.user_id}: "
+            f"credits={credit.credits if credit else 0}, "
+            f"allocated_tokens={allocated_tokens}",
+            extra={"category": "billing"}
+        )
 
         return {
             "credits": credit.credits if credit else 0,
@@ -91,7 +94,10 @@ class BillingService:
         Returns:
             Dict: {"success": True, "new_balance": int}
         """
-        logger.info(f"[BillingService] Adding {credits} credits for {self.user_id}")
+        logger.info(
+            f"Adding {credits} credits for {self.user_id}",
+            extra={"category": "billing"}
+        )
 
         # クレジットレコード取得または作成
         credit = self.db.query(Credit).filter_by(user_id=self.user_id).first()
@@ -116,11 +122,14 @@ class BillingService:
 
         try:
             self.db.commit()
-            logger.info(f"[BillingService] Credits added successfully. New balance: {credit.credits}")
+            logger.info(
+                f"Credits added successfully. New balance: {credit.credits}",
+                extra={"category": "billing"}
+            )
             return {"success": True, "new_balance": credit.credits}
         except Exception as e:
             self.db.rollback()
-            logger.error(f"[BillingService] Failed to add credits: {e}")
+            logger.error(f"Failed to add credits: {e}", extra={"category": "billing"})
             raise
 
     def allocate_credits(self, allocations: list[dict]) -> dict:
@@ -138,7 +147,10 @@ class BillingService:
         Raises:
             ValueError: クレジット不足、容量制限超過、価格情報なしの場合
         """
-        logger.info(f"[BillingService] Allocating credits: {allocations}")
+        logger.info(
+            f"Allocating credits: {allocations}",
+            extra={"category": "billing"}
+        )
 
         credit = self.db.query(Credit).filter_by(user_id=self.user_id).first()
 
@@ -211,20 +223,24 @@ class BillingService:
             )
             self.db.add(transaction)
 
-            logger.info(f"[BillingService] Allocated {credits_to_allocate}P "
-                       f"({tokens} tokens) to {model_id}")
+            logger.info(
+                f"Allocated {credits_to_allocate}P ({tokens} tokens) to {model_id}",
+                extra={"category": "billing"}
+            )
 
         # クレジット減算
         credit.credits -= total_credits
 
         try:
             self.db.commit()
-            logger.info(f"[BillingService] Credits allocated successfully. "
-                       f"Remaining credits: {credit.credits}")
+            logger.info(
+                f"Credits allocated successfully. Remaining credits: {credit.credits}",
+                extra={"category": "billing"}
+            )
             return {"success": True}
         except Exception as e:
             self.db.rollback()
-            logger.error(f"[BillingService] Failed to allocate credits: {e}")
+            logger.error(f"Failed to allocate credits: {e}", extra={"category": "billing"})
             raise
 
     # =====================================
@@ -250,8 +266,11 @@ class BillingService:
         """
         total_tokens = input_tokens + output_tokens
 
-        logger.info(f"[BillingService] Consuming {total_tokens} tokens from {model_id} "
-                   f"(input={input_tokens}, output={output_tokens})")
+        logger.info(
+            f"Consuming {total_tokens} tokens from {model_id} "
+            f"(input={input_tokens}, output={output_tokens})",
+            extra={"category": "billing"}
+        )
 
         balance = self.db.query(TokenBalance).filter_by(
             user_id=self.user_id, model_id=model_id
@@ -284,12 +303,14 @@ class BillingService:
 
         try:
             self.db.commit()
-            logger.info(f"[BillingService] Tokens consumed successfully. "
-                       f"Remaining: {balance.allocated_tokens}")
+            logger.info(
+                f"Tokens consumed successfully. Remaining: {balance.allocated_tokens}",
+                extra={"category": "billing"}
+            )
             return {"success": True, "remaining_tokens": balance.allocated_tokens}
         except Exception as e:
             self.db.rollback()
-            logger.error(f"[BillingService] Failed to consume tokens: {e}")
+            logger.error(f"Failed to consume tokens: {e}", extra={"category": "billing"})
             raise
 
     # =====================================
@@ -367,7 +388,10 @@ class BillingService:
         ).all()
 
         total = sum(b.allocated_tokens or 0 for b in balances)
-        logger.debug(f"[BillingService] Category '{category}' total tokens: {total}")
+        logger.debug(
+            f"Category '{category}' total tokens: {total}",
+            extra={"category": "billing"}
+        )
         return total
 
     # =====================================
@@ -396,7 +420,10 @@ class BillingService:
             self.db.query(Transaction).filter_by(user_id=self.user_id).delete()
 
             self.db.commit()
-            logger.info(f"[BillingService] All data reset for user {self.user_id}")
+            logger.info(
+                f"All data reset for user {self.user_id}",
+                extra={"category": "billing"}
+            )
 
             return {
                 "success": True,
@@ -404,5 +431,5 @@ class BillingService:
             }
         except Exception as e:
             self.db.rollback()
-            logger.error(f"[BillingService] Failed to reset data: {e}")
+            logger.error(f"Failed to reset data: {e}", extra={"category": "billing"})
             raise ValueError(f"データリセットに失敗しました: {str(e)}") from e
