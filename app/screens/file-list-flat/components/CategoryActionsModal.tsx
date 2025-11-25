@@ -46,18 +46,18 @@ export const CategoryActionsModal: React.FC<CategoryActionsModalProps> = ({
   // 常に表示するアクション
   actions.push(
     {
-      icon: 'share-outline',
-      label: t('modals.categoryActions.export'),
-      onPress: () => {
-        onExport(categoryPath);
-        onClose();
-      },
-    },
-    {
       icon: 'create-outline',
       label: t('modals.categoryActions.rename'),
       onPress: () => {
         onRename(categoryPath);
+        onClose();
+      },
+    },
+    {
+      icon: 'share-outline',
+      label: t('modals.categoryActions.export'),
+      onPress: () => {
+        onExport(categoryPath);
         onClose();
       },
     },
