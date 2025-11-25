@@ -6,6 +6,7 @@
 
 import * as SecureStore from 'expo-secure-store';
 import { logger } from '../utils/logger';
+import { isJwtExpired, getJwtTimeToExpiry } from './jwtUtils';
 
 const ACCESS_TOKEN_KEY = 'noteapp_access_token';
 const REFRESH_TOKEN_KEY = 'noteapp_refresh_token';
@@ -101,4 +102,42 @@ export async function hasValidTokens(): Promise<boolean> {
   const accessToken = await getAccessToken();
   const refreshToken = await getRefreshToken();
   return !!(accessToken && refreshToken);
+}
+
+/**
+ * アクセストークンが期限切れかチェック
+ * @param bufferSeconds バッファ時間（秒）。この時間前を期限切れとみなす
+ * @returns 期限切れの場合true、有効な場合false、トークンがない場合もtrue
+ */
+export async function isAccessTokenExpired(bufferSeconds: number = 0): Promise<boolean> {
+  const accessToken = await getAccessToken();
+  if (!accessToken) {
+    return true;
+  }
+  return isJwtExpired(accessToken, bufferSeconds);
+}
+
+/**
+ * リフレッシュトークンが期限切れかチェック
+ * @param bufferSeconds バッファ時間（秒）。この時間前を期限切れとみなす
+ * @returns 期限切れの場合true、有効な場合false、トークンがない場合もtrue
+ */
+export async function isRefreshTokenExpired(bufferSeconds: number = 0): Promise<boolean> {
+  const refreshToken = await getRefreshToken();
+  if (!refreshToken) {
+    return true;
+  }
+  return isJwtExpired(refreshToken, bufferSeconds);
+}
+
+/**
+ * アクセストークンの残り有効時間を取得（ミリ秒）
+ * @returns 残り時間（ミリ秒）、トークンがない場合は0
+ */
+export async function getAccessTokenTimeToExpiry(): Promise<number> {
+  const accessToken = await getAccessToken();
+  if (!accessToken) {
+    return 0;
+  }
+  return getJwtTimeToExpiry(accessToken);
 }

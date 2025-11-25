@@ -11,6 +11,7 @@
  */
 
 import { create } from 'zustand';
+import { AppState, AppStateStatus } from 'react-native';
 import { logger } from '../utils/logger';
 
 // 既存のサービスをインポート
@@ -18,6 +19,10 @@ import {
   getRefreshToken,
   saveTokens,
   hasValidTokens,
+  isAccessTokenExpired,
+  isRefreshTokenExpired,
+  getAccessTokenTimeToExpiry,
+  clearTokens,
 } from './tokenService';
 import {
   getOrCreateDeviceId,
@@ -32,6 +37,26 @@ import {
 } from './googleUserService';
 import { performLogout } from './logoutService';
 import { refreshAccessToken } from './authApiClient';
+
+// ======================
+// 定数
+// ======================
+
+/** トークンリフレッシュのバッファ時間（秒）- 期限の5分前にリフレッシュ */
+const TOKEN_REFRESH_BUFFER_SECONDS = 5 * 60;
+
+/** 最小リフレッシュ間隔（ミリ秒）- 1分 */
+const MIN_REFRESH_INTERVAL_MS = 60 * 1000;
+
+// ======================
+// モジュールレベル変数
+// ======================
+
+/** トークンリフレッシュタイマーID */
+let tokenRefreshTimerId: ReturnType<typeof setTimeout> | null = null;
+
+/** AppState変更リスナーのサブスクリプション */
+let appStateSubscription: ReturnType<typeof AppState.addEventListener> | null = null;
 
 /**
  * 認証ストアの状態型定義
@@ -132,6 +157,23 @@ interface AuthState {
    * エラーをクリア
    */
   clearError: () => void;
+
+  /**
+   * プロアクティブなトークンリフレッシュタイマーをセットアップ
+   * アクセストークンの期限が切れる前に自動リフレッシュ
+   */
+  setupTokenRefreshTimer: () => Promise<void>;
+
+  /**
+   * AppState変更リスナーをセットアップ
+   * フォアグラウンド復帰時にトークン状態をチェック
+   */
+  setupAppStateListener: () => void;
+
+  /**
+   * クリーンアップ（タイマーとリスナーを解除）
+   */
+  cleanup: () => void;
 }
 
 /**
@@ -178,6 +220,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   /**
    * 認証状態を初期化
    * アプリ起動時に SecureStore から状態を復元
+   * トークンの有効期限もチェックし、期限切れの場合はリフレッシュを試みる
    */
   initialize: async () => {
     logger.info('auth', 'Initializing auth store...');
@@ -196,15 +239,48 @@ export const useAuthStore = create<AuthState>((set) => ({
       // 4. トークンの有無を確認
       const hasTokens = await hasValidTokens();
 
-      // 5. 認証状態を判定
-      // デバイス認証（匿名）ではなく、Googleログインしている場合のみ認証済みとする
-      const isAuthenticated = !!(hasTokens && userId && googleUser);
+      // 5. トークンの有効期限をチェック
+      let isAuthenticated = false;
+
+      if (hasTokens && userId && googleUser) {
+        // リフレッシュトークンが期限切れの場合はログアウト状態にする
+        const refreshExpired = await isRefreshTokenExpired();
+        if (refreshExpired) {
+          logger.warn('auth', 'Refresh token expired, clearing tokens');
+          await clearTokens();
+          await clearGoogleUserInfo();
+          isAuthenticated = false;
+        } else {
+          // アクセストークンが期限切れの場合はリフレッシュを試みる
+          const accessExpired = await isAccessTokenExpired();
+          if (accessExpired) {
+            logger.info('auth', 'Access token expired, attempting refresh...');
+            try {
+              const refreshToken = await getRefreshToken();
+              if (refreshToken) {
+                const response = await refreshAccessToken(refreshToken);
+                await saveTokens(response.access_token, response.refresh_token);
+                logger.info('auth', 'Token refreshed successfully during initialization');
+                isAuthenticated = true;
+              }
+            } catch (refreshError) {
+              logger.error('auth', 'Token refresh failed during initialization', refreshError);
+              await clearTokens();
+              await clearGoogleUserInfo();
+              isAuthenticated = false;
+            }
+          } else {
+            // トークンは有効
+            isAuthenticated = true;
+          }
+        }
+      }
 
       // 6. 状態を更新
       set({
         deviceId,
-        userId,
-        googleUser,
+        userId: isAuthenticated ? userId : null,
+        googleUser: isAuthenticated ? googleUser : null,
         isAuthenticated,
         isInitializing: false,
       });
@@ -215,6 +291,13 @@ export const useAuthStore = create<AuthState>((set) => ({
         deviceIdPrefix: deviceId.substring(0, 8),
         userIdPrefix: userId?.substring(0, 8) || 'none',
       });
+
+      // 7. 認証済みの場合、プロアクティブリフレッシュとAppStateリスナーをセットアップ
+      if (isAuthenticated) {
+        const store = useAuthStore.getState();
+        await store.setupTokenRefreshTimer();
+        store.setupAppStateListener();
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       logger.error('auth', 'Failed to initialize auth store', error);
@@ -303,6 +386,11 @@ export const useAuthStore = create<AuthState>((set) => ({
         // 設定同期失敗はログインを失敗させない
         logger.warn('auth', 'Failed to synchronize settings after login', settingsError);
       }
+
+      // 6. プロアクティブリフレッシュとAppStateリスナーをセットアップ
+      const store = useAuthStore.getState();
+      await store.setupTokenRefreshTimer();
+      store.setupAppStateListener();
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       logger.error('auth', 'Failed to handle Google auth result', error);
@@ -326,6 +414,9 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoggingOut: true, error: null });
 
     try {
+      // 0. タイマーとリスナーをクリーンアップ
+      useAuthStore.getState().cleanup();
+
       // 1. サーバーにログアウトを通知してトークンを無効化
       await performLogout();
 
@@ -448,6 +539,123 @@ export const useAuthStore = create<AuthState>((set) => ({
    */
   clearError: () => {
     set({ error: null });
+  },
+
+  /**
+   * プロアクティブなトークンリフレッシュタイマーをセットアップ
+   * アクセストークンの期限が切れる5分前に自動リフレッシュ
+   */
+  setupTokenRefreshTimer: async () => {
+    // 既存のタイマーをクリア
+    if (tokenRefreshTimerId) {
+      clearTimeout(tokenRefreshTimerId);
+      tokenRefreshTimerId = null;
+    }
+
+    try {
+      const timeToExpiry = await getAccessTokenTimeToExpiry();
+
+      if (timeToExpiry <= 0) {
+        logger.debug('auth', 'Token already expired, skipping timer setup');
+        return;
+      }
+
+      // リフレッシュタイミング = 期限の5分前
+      // ただし最小1分間隔を保証
+      const refreshInMs = Math.max(
+        timeToExpiry - TOKEN_REFRESH_BUFFER_SECONDS * 1000,
+        MIN_REFRESH_INTERVAL_MS
+      );
+
+      logger.info('auth', `Token refresh timer set for ${Math.round(refreshInMs / 1000 / 60)} minutes`);
+
+      tokenRefreshTimerId = setTimeout(async () => {
+        logger.info('auth', 'Proactive token refresh triggered');
+        const store = useAuthStore.getState();
+        const success = await store.refreshTokens();
+
+        if (success) {
+          // リフレッシュ成功したら次のタイマーをセット
+          await store.setupTokenRefreshTimer();
+        } else {
+          // リフレッシュ失敗したらログアウト状態にする
+          logger.warn('auth', 'Proactive token refresh failed');
+          set({ isAuthenticated: false });
+        }
+      }, refreshInMs);
+    } catch (error) {
+      logger.error('auth', 'Failed to setup token refresh timer', error);
+    }
+  },
+
+  /**
+   * AppState変更リスナーをセットアップ
+   * フォアグラウンド復帰時にトークン状態をチェック
+   */
+  setupAppStateListener: () => {
+    // 既存のリスナーを解除
+    if (appStateSubscription) {
+      appStateSubscription.remove();
+      appStateSubscription = null;
+    }
+
+    const handleAppStateChange = async (nextAppState: AppStateStatus) => {
+      if (nextAppState === 'active') {
+        logger.debug('auth', 'App returned to foreground, checking token status');
+
+        const store = useAuthStore.getState();
+        if (!store.isAuthenticated) {
+          return;
+        }
+
+        try {
+          // リフレッシュトークンが期限切れならログアウト
+          const refreshExpired = await isRefreshTokenExpired();
+          if (refreshExpired) {
+            logger.warn('auth', 'Refresh token expired while app was in background');
+            await store.logout();
+            return;
+          }
+
+          // アクセストークンが期限切れならリフレッシュ
+          const accessExpired = await isAccessTokenExpired();
+          if (accessExpired) {
+            logger.info('auth', 'Access token expired while app was in background, refreshing...');
+            const success = await store.refreshTokens();
+            if (!success) {
+              logger.warn('auth', 'Token refresh failed on foreground');
+              await store.logout();
+              return;
+            }
+          }
+
+          // タイマーを再セットアップ
+          await store.setupTokenRefreshTimer();
+        } catch (error) {
+          logger.error('auth', 'Error checking token status on foreground', error);
+        }
+      }
+    };
+
+    appStateSubscription = AppState.addEventListener('change', handleAppStateChange);
+    logger.debug('auth', 'AppState listener set up');
+  },
+
+  /**
+   * クリーンアップ（タイマーとリスナーを解除）
+   */
+  cleanup: () => {
+    if (tokenRefreshTimerId) {
+      clearTimeout(tokenRefreshTimerId);
+      tokenRefreshTimerId = null;
+      logger.debug('auth', 'Token refresh timer cleared');
+    }
+
+    if (appStateSubscription) {
+      appStateSubscription.remove();
+      appStateSubscription = null;
+      logger.debug('auth', 'AppState listener removed');
+    }
   },
 }));
 
