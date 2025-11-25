@@ -3,7 +3,7 @@
  * @summary このファイルは、アプリケーションの設定画面をレンダリングします。
  * @responsibility ユーザーがアプリケーションの各種設定（表示、動作、LLM関連など）を閲覧・変更できるUIを提供し、設定の永続化と更新を管理します。
  */
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,8 @@ import {
   Switch,
   Alert,
   ActivityIndicator,
+  Modal,
+  TextInput,
 } from 'react-native';
 import {
   useUISettingsStore,
@@ -30,6 +32,10 @@ import { useGoogleAuthCodeFlow } from '../auth/useGoogleAuthCodeFlow';
 import { useAuth } from '../auth/authStore';
 import { useTranslation } from 'react-i18next';
 import { logger } from '../utils/logger';
+import {
+  FeedbackApiService,
+  type FeedbackCategory,
+} from '../features/feedback';
 
 function SettingsScreen() {
   const { t } = useTranslation();
@@ -131,6 +137,50 @@ function SettingsScreen() {
   // ヘッダー設定
   useSettingsHeader();
 
+  // フィードバック関連のstate
+  const [feedbackModalVisible, setFeedbackModalVisible] = useState(false);
+  const [feedbackCategory, setFeedbackCategory] = useState<FeedbackCategory>('other');
+  const [feedbackContent, setFeedbackContent] = useState('');
+  const [isSendingFeedback, setIsSendingFeedback] = useState(false);
+
+  // フィードバック送信ハンドラー
+  const handleSendFeedback = useCallback(async () => {
+    if (!feedbackContent.trim()) {
+      Alert.alert(t('common.error'), t('settings.feedback.contentRequired'));
+      return;
+    }
+
+    if (!googleUser) {
+      Alert.alert(t('common.error'), t('settings.feedback.loginRequired'));
+      return;
+    }
+
+    setIsSendingFeedback(true);
+
+    try {
+      const backendUrl = process.env.EXPO_PUBLIC_API_BASE_URL;
+      if (!backendUrl) {
+        throw new Error('Backend URL not configured');
+      }
+
+      const feedbackService = new FeedbackApiService(backendUrl);
+      await feedbackService.sendFeedback({
+        category: feedbackCategory,
+        content: feedbackContent.trim(),
+      });
+
+      Alert.alert(t('common.done'), t('settings.feedback.sendSuccess'));
+      setFeedbackModalVisible(false);
+      setFeedbackContent('');
+      setFeedbackCategory('other');
+    } catch (error) {
+      logger.error('feedback', 'Failed to send feedback', { error });
+      Alert.alert(t('common.error'), t('settings.feedback.sendFailed'));
+    } finally {
+      setIsSendingFeedback(false);
+    }
+  }, [feedbackCategory, feedbackContent, googleUser, t]);
+
   const renderSection = (title: string) => (
     <Text style={styles.sectionTitle}>{title}</Text>
   );
@@ -223,6 +273,112 @@ function SettingsScreen() {
         marginTop: spacing.sm,
       },
       logoutButtonText: {
+        ...typography.body,
+        color: colors.background,
+      },
+      feedbackButton: {
+        backgroundColor: colors.primary,
+        padding: spacing.lg,
+        borderRadius: 8,
+        alignItems: 'center',
+        marginTop: spacing.md,
+      },
+      feedbackButtonText: {
+        ...typography.subtitle,
+        color: colors.background,
+      },
+      modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: spacing.lg,
+      },
+      modalContent: {
+        backgroundColor: colors.background,
+        borderRadius: 12,
+        padding: spacing.lg,
+        width: '100%',
+        maxWidth: 400,
+      },
+      modalTitle: {
+        ...typography.subtitle,
+        color: colors.text,
+        marginBottom: spacing.lg,
+        textAlign: 'center',
+      },
+      categoryLabel: {
+        ...typography.body,
+        color: colors.text,
+        marginBottom: spacing.sm,
+      },
+      categoryButtonsContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: spacing.sm,
+        marginBottom: spacing.lg,
+      },
+      categoryButton: {
+        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.md,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: colors.border,
+        backgroundColor: colors.secondary,
+      },
+      categoryButtonActive: {
+        backgroundColor: colors.primary,
+        borderColor: colors.primary,
+      },
+      categoryButtonText: {
+        ...typography.body,
+        color: colors.text,
+      },
+      categoryButtonTextActive: {
+        color: colors.background,
+      },
+      contentLabel: {
+        ...typography.body,
+        color: colors.text,
+        marginBottom: spacing.sm,
+      },
+      contentInput: {
+        ...typography.body,
+        color: colors.text,
+        borderWidth: 1,
+        borderColor: colors.border,
+        borderRadius: 8,
+        padding: spacing.md,
+        height: 120,
+        textAlignVertical: 'top',
+        marginBottom: spacing.lg,
+      },
+      modalButtonsContainer: {
+        flexDirection: 'row',
+        gap: spacing.md,
+      },
+      modalCancelButton: {
+        flex: 1,
+        padding: spacing.md,
+        borderRadius: 8,
+        alignItems: 'center',
+        backgroundColor: colors.secondary,
+      },
+      modalCancelButtonText: {
+        ...typography.body,
+        color: colors.text,
+      },
+      modalSendButton: {
+        flex: 1,
+        padding: spacing.md,
+        borderRadius: 8,
+        alignItems: 'center',
+        backgroundColor: colors.primary,
+      },
+      modalSendButtonDisabled: {
+        backgroundColor: colors.textSecondary,
+      },
+      modalSendButtonText: {
         ...typography.body,
         color: colors.background,
       },
@@ -359,6 +515,15 @@ function SettingsScreen() {
           {t('settings.comingSoon')}
         </Text>
 
+        {/* フィードバックセクション */}
+        {renderSection(t('settings.sections.feedback'))}
+        <TouchableOpacity
+          style={styles.feedbackButton}
+          onPress={() => setFeedbackModalVisible(true)}
+        >
+          <Text style={styles.feedbackButtonText}>{t('settings.feedback.sendButton')}</Text>
+        </TouchableOpacity>
+
         {/* デバッグ用リセットボタン（開発モードのみ） */}
         {__DEV__ && (
           <>
@@ -390,6 +555,84 @@ function SettingsScreen() {
         </TouchableOpacity>
       </View>
       </ScrollView>
+
+      {/* フィードバックモーダル */}
+      <Modal
+        visible={feedbackModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setFeedbackModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>{t('settings.feedback.modalTitle')}</Text>
+
+            {/* カテゴリ選択 */}
+            <Text style={styles.categoryLabel}>{t('settings.feedback.categoryLabel')}</Text>
+            <View style={styles.categoryButtonsContainer}>
+              {(['bug', 'feature', 'improvement', 'other'] as FeedbackCategory[]).map((category) => (
+                <TouchableOpacity
+                  key={category}
+                  style={[
+                    styles.categoryButton,
+                    feedbackCategory === category && styles.categoryButtonActive,
+                  ]}
+                  onPress={() => setFeedbackCategory(category)}
+                >
+                  <Text
+                    style={[
+                      styles.categoryButtonText,
+                      feedbackCategory === category && styles.categoryButtonTextActive,
+                    ]}
+                  >
+                    {t(`settings.feedback.category.${category}`)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* 内容入力 */}
+            <Text style={styles.contentLabel}>{t('settings.feedback.contentLabel')}</Text>
+            <TextInput
+              style={styles.contentInput}
+              placeholder={t('settings.feedback.contentPlaceholder')}
+              placeholderTextColor={colors.textSecondary}
+              value={feedbackContent}
+              onChangeText={setFeedbackContent}
+              multiline
+              textAlignVertical="top"
+            />
+
+            {/* ボタン */}
+            <View style={styles.modalButtonsContainer}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => {
+                  setFeedbackModalVisible(false);
+                  setFeedbackContent('');
+                  setFeedbackCategory('other');
+                }}
+              >
+                <Text style={styles.modalCancelButtonText}>{t('common.cancel')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.modalSendButton,
+                  isSendingFeedback && styles.modalSendButtonDisabled,
+                ]}
+                onPress={handleSendFeedback}
+                disabled={isSendingFeedback}
+              >
+                {isSendingFeedback ? (
+                  <ActivityIndicator color={colors.background} size="small" />
+                ) : (
+                  <Text style={styles.modalSendButtonText}>{t('settings.feedback.send')}</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </MainContainer>
   );
 }

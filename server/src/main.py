@@ -17,6 +17,7 @@ from src.billing import init_db
 from src.billing.presentation.router import router as billing_router
 from src.core.logger import logger
 from src.error_log import error_log_router
+from src.feedback import feedback_router
 from src.llm_clean.infrastructure import (
     CollectionManager,
     start_cleanup_job,
@@ -218,6 +219,7 @@ app.include_router(tools_router_clean)
 app.include_router(knowledge_base_router_clean)
 app.include_router(billing_router)
 app.include_router(error_log_router)
+app.include_router(feedback_router)
 app.include_router(router)
 
 
@@ -238,6 +240,7 @@ async def root():
             "billing": "/api/billing",
             "auth": "/api/auth",
             "error_logs": "/api/error-logs",
+            "feedback": "/api/feedback",
         },
     }
 

@@ -5,6 +5,7 @@
       "account": "アカウント",
       "display": "表示設定",
       "ai": "AI機能",
+      "feedback": "フィードバック",
       "debug": "デバッグ機能"
     },
     "account": {
@@ -54,6 +55,24 @@
     "debug": {
       "resetTokenUsage": "トークンと使用量をリセット",
       "resetSettings": "設定をリセット"
+    },
+    "feedback": {
+      "sendButton": "フィードバックを送信",
+      "modalTitle": "フィードバックを送信",
+      "categoryLabel": "カテゴリ",
+      "category": {
+        "bug": "バグ報告",
+        "feature": "機能要望",
+        "improvement": "改善提案",
+        "other": "その他"
+      },
+      "contentLabel": "内容",
+      "contentPlaceholder": "フィードバックの内容を入力してください...",
+      "send": "送信",
+      "sendSuccess": "フィードバックを送信しました。ありがとうございます！",
+      "sendFailed": "フィードバックの送信に失敗しました",
+      "contentRequired": "フィードバックの内容を入力してください",
+      "loginRequired": "フィードバックを送信するにはログインが必要です"
     },
     "comingSoon": "その他の設定項目は今後のアップデートで追加予定です。"
   },

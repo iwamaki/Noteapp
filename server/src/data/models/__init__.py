@@ -3,6 +3,7 @@ from .auth import TokenBlacklist
 from .base import Base
 from .billing import Credit, TokenBalance, TokenPricing, Transaction
 from .error_log import ErrorLog
+from .feedback import Feedback
 from .user import DeviceAuth, User
 
 __all__ = [
@@ -15,4 +16,5 @@ __all__ = [
     'Transaction',
     'TokenBlacklist',
     'ErrorLog',
+    'Feedback',
 ]
