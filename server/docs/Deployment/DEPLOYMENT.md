@@ -281,6 +281,56 @@ Cloud Run の無料枠：
 
 ---
 
+## 🔀 マルチインスタンス対応
+
+Cloud Runでマルチインスタンス（自動スケーリング）を有効にする場合、以下の設定が必要です。
+
+### 環境変数設定
+
+```yaml
+# cloudbuild.yaml または gcloud run deploy コマンドで設定
+OAUTH_STATE_STORAGE=hmac        # HMACベースのステートレス認証（推奨）
+TOKEN_BLACKLIST_STORAGE=postgres # PostgreSQLベースのブラックリスト（推奨）
+```
+
+| 環境変数 | 設定値 | 説明 |
+|---------|-------|------|
+| `OAUTH_STATE_STORAGE` | `hmac` (推奨) | HMAC署名付きステートレス方式。サーバー側で状態を保持しない。 |
+|                        | `redis` | Redis使用（Redis利用時） |
+|                        | `memory` | インメモリ（シングルインスタンス限定） |
+| `TOKEN_BLACKLIST_STORAGE` | `postgres` (推奨) | PostgreSQL使用。マルチインスタンス対応。 |
+|                            | `redis` | Redis使用（Redis利用時） |
+|                            | `memory` | インメモリ（シングルインスタンス限定） |
+
+### Session Affinity（WebSocket用）
+
+WebSocket接続を維持するために、Session Affinityを有効にします：
+
+```bash
+gcloud run deploy noteapp-api \
+  --session-affinity \
+  ... (他のオプション)
+```
+
+### マイグレーション実行
+
+初回デプロイまたはテーブル追加時は、Cloud SQLへのマイグレーションが必要です：
+
+```bash
+# Cloud SQL Proxy 経由で接続して実行
+cloud_sql_proxy -instances=PROJECT_ID:REGION:INSTANCE_NAME=tcp:5432 &
+
+# マイグレーション実行
+DATABASE_URL=postgresql://user:password@localhost:5432/dbname alembic upgrade head
+```
+
+### 実装詳細
+
+1. **HmacStateManager**: OAuth stateにdevice_id、有効期限、nonceを埋め込み、HMAC-SHA256で署名。サーバー側で状態を保持しない。
+2. **PostgresTokenBlacklist**: ログアウト時にトークンハッシュをDBに保存。JWT有効期限後に自動削除。
+
+---
+
 ## 🔐 セキュリティ
 
 ### 実装済みのセキュリティ対策
@@ -290,12 +340,15 @@ Cloud Run の無料枠：
 ✅ デバッグエンドポイント（`/api/billing/reset`）は本番環境で無効化
 ✅ HTTPS通信（Cloud Runが自動でSSL証明書を発行）
 ✅ デバイスID認証（`X-Device-ID` ヘッダー）
+✅ JWT認証（アクセストークン30分、リフレッシュトークン30日）
+✅ トークンブラックリスト（ログアウト時のトークン無効化）
+✅ OAuth CSRF対策（HMAC署名付きstate）
 
 ### 推奨される追加対策
 
 - Cloud Armor でDDoS対策
 - Cloud CDN でキャッシュ
-- Rate Limiting の実装
+- Rate Limiting の実装（slowapiで実装済み）
 
 ---
 
