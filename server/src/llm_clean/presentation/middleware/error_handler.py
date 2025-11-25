@@ -37,11 +37,11 @@ def handle_route_errors(
             raise
         except ValueError as e:
             error_msg = str(e)
-            logger.error(f"Validation error in {func.__name__}: {error_msg}")
+            logger.error(f"Validation error in {func.__name__}: {error_msg}", extra={"category": "api"})
             raise HTTPException(status_code=400, detail=error_msg) from e
         except Exception as e:
             error_msg = str(e)
-            logger.error(f"Unexpected error in {func.__name__}: {error_msg}")
+            logger.error(f"Unexpected error in {func.__name__}: {error_msg}", extra={"category": "api"})
             raise HTTPException(status_code=500, detail=error_msg) from e
 
     return wrapper

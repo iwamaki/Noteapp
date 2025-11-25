@@ -60,7 +60,8 @@ class VectorStoreManager:
         logger.info(
             f"VectorStoreManager initialized: "
             f"collection={collection_name}, "
-            f"storage_path={self.storage_path}"
+            f"storage_path={self.storage_path}",
+            extra={"category": "vectorstore"}
         )
 
     def _initialize_embeddings(self) -> GoogleGenerativeAIEmbeddings:
@@ -94,12 +95,12 @@ class VectorStoreManager:
                     self.embeddings,
                     allow_dangerous_deserialization=True
                 )
-                logger.info(f"Loaded existing vector store from {self.storage_path}")
+                logger.info(f"Loaded existing vector store from {self.storage_path}", extra={"category": "vectorstore"})
             except Exception as e:
-                logger.warning(f"Failed to load vector store: {e}")
+                logger.warning(f"Failed to load vector store: {e}", extra={"category": "vectorstore"})
                 self.vector_store = None
         else:
-            logger.info("No existing vector store found. Will create new one when documents are added.")
+            logger.info("No existing vector store found. Will create new one when documents are added.", extra={"category": "vectorstore"})
 
     def add_documents(
         self,
@@ -113,29 +114,29 @@ class VectorStoreManager:
             save_after_add: 追加後に自動保存するかどうか
         """
         if not documents:
-            logger.warning("No documents to add")
+            logger.warning("No documents to add", extra={"category": "vectorstore"})
             return
 
         try:
             if self.vector_store is None:
                 # 新規作成
-                logger.info(f"Creating new vector store with {len(documents)} documents")
+                logger.info(f"Creating new vector store with {len(documents)} documents", extra={"category": "vectorstore"})
                 self.vector_store = FAISS.from_documents(
                     documents,
                     self.embeddings
                 )
             else:
                 # 既存のストアに追加
-                logger.info(f"Adding {len(documents)} documents to existing vector store")
+                logger.info(f"Adding {len(documents)} documents to existing vector store", extra={"category": "vectorstore"})
                 self.vector_store.add_documents(documents)
 
             if save_after_add:
                 self.save()
 
-            logger.info(f"Successfully added {len(documents)} documents")
+            logger.info(f"Successfully added {len(documents)} documents", extra={"category": "vectorstore"})
 
         except Exception as e:
-            logger.error(f"Error adding documents to vector store: {e}")
+            logger.error(f"Error adding documents to vector store: {e}", extra={"category": "vectorstore"})
             raise
 
     def similarity_search(
@@ -155,7 +156,7 @@ class VectorStoreManager:
             検索結果のリスト（各要素は{content, metadata, score}の辞書）
         """
         if self.vector_store is None:
-            logger.warning("Vector store is empty. No documents to search.")
+            logger.warning("Vector store is empty. No documents to search.", extra={"category": "vectorstore"})
             return []
 
         try:
@@ -178,26 +179,27 @@ class VectorStoreManager:
             logger.info(
                 f"Similarity search completed: "
                 f"query='{query[:50]}...', "
-                f"results={len(formatted_results)}/{k}"
+                f"results={len(formatted_results)}/{k}",
+                extra={"category": "vectorstore"}
             )
 
             return formatted_results
 
         except Exception as e:
-            logger.error(f"Error during similarity search: {e}")
+            logger.error(f"Error during similarity search: {e}", extra={"category": "vectorstore"})
             raise
 
     def save(self) -> None:
         """ベクトルストアをディスクに保存"""
         if self.vector_store is None:
-            logger.warning("No vector store to save")
+            logger.warning("No vector store to save", extra={"category": "vectorstore"})
             return
 
         try:
             self.vector_store.save_local(str(self.storage_path))
-            logger.info(f"Vector store saved to {self.storage_path}")
+            logger.info(f"Vector store saved to {self.storage_path}", extra={"category": "vectorstore"})
         except Exception as e:
-            logger.error(f"Error saving vector store: {e}")
+            logger.error(f"Error saving vector store: {e}", extra={"category": "vectorstore"})
             raise
 
     def get_stats(self) -> dict[str, Any]:
@@ -237,7 +239,7 @@ class VectorStoreManager:
                 index_path.unlink()
             if pkl_path.exists():
                 pkl_path.unlink()
-            logger.info(f"Vector store cleared: {self.collection_name}")
+            logger.info(f"Vector store cleared: {self.collection_name}", extra={"category": "vectorstore"})
         except Exception as e:
-            logger.error(f"Error clearing vector store: {e}")
+            logger.error(f"Error clearing vector store: {e}", extra={"category": "vectorstore"})
             raise

@@ -44,7 +44,7 @@ def get_vector_store(collection_name: str = "default", create_if_missing: bool =
     if vector_store is None:
         if create_if_missing:
             # 永久保存コレクションとして作成
-            logger.info(f"Creating new persistent collection: {collection_name}")
+            logger.info(f"Creating new persistent collection: {collection_name}", extra={"category": "api"})
             vector_store = manager.create_collection(
                 name=collection_name,
                 collection_type="persistent",
@@ -79,7 +79,7 @@ async def upload_document(
     Returns:
         アップロード結果とドキュメント情報
     """
-    logger.info(f"Document upload requested: {file.filename} to collection '{collection_name}'")
+    logger.info(f"Document upload requested: {file.filename} to collection '{collection_name}'", extra={"category": "api"})
 
     if not file.filename:
         raise HTTPException(status_code=400, detail="ファイル名が指定されていません")
@@ -121,7 +121,8 @@ async def upload_document(
 
         logger.info(
             f"Document uploaded successfully: {file.filename} to '{collection_name}' "
-            f"({len(chunks)} chunks, {doc_summary['total_characters']} chars)"
+            f"({len(chunks)} chunks, {doc_summary['total_characters']} chars)",
+            extra={"category": "api"}
         )
 
         return JSONResponse(content={
@@ -190,7 +191,7 @@ async def clear_knowledge_base(
     vector_store = get_vector_store(collection_name)
     vector_store.clear()
 
-    logger.info(f"Knowledge base cleared: {collection_name}")
+    logger.info(f"Knowledge base cleared: {collection_name}", extra={"category": "api"})
 
     return JSONResponse(content={
         "success": True,
@@ -219,7 +220,7 @@ async def upload_text(
         アップロード結果とドキュメント情報
     """
     text = request.text
-    logger.info(f"Text upload requested: {len(text)} characters to collection '{collection_name}'")
+    logger.info(f"Text upload requested: {len(text)} characters to collection '{collection_name}'", extra={"category": "api"})
 
     if not text.strip():
         raise HTTPException(status_code=400, detail="テキストが空です")
@@ -249,7 +250,8 @@ async def upload_text(
 
     logger.info(
         f"Text uploaded successfully to '{collection_name}': "
-        f"{len(chunks)} chunks, {doc_summary['total_characters']} chars"
+        f"{len(chunks)} chunks, {doc_summary['total_characters']} chars",
+        extra={"category": "api"}
     )
 
     return JSONResponse(content={
@@ -304,7 +306,7 @@ async def create_temp_collection(request: CreateCollectionRequest):
     # メタデータ取得
     metadata = manager.get_metadata(collection_name)
 
-    logger.info(f"Temp collection created: {collection_name}")
+    logger.info(f"Temp collection created: {collection_name}", extra={"category": "api"})
 
     return JSONResponse(content={
         "success": True,
@@ -372,7 +374,7 @@ async def delete_collection(name: str):
     success = manager.delete_collection(name)
 
     if success:
-        logger.info(f"Collection deleted: {name}")
+        logger.info(f"Collection deleted: {name}", extra={"category": "api"})
         return JSONResponse(content={
             "success": True,
             "message": f"コレクション '{name}' を削除しました"
@@ -396,7 +398,7 @@ async def cleanup_expired_collections():
     manager = get_collection_manager()
     deleted_count = manager.cleanup_expired()
 
-    logger.info(f"Cleanup completed: {deleted_count} collections deleted")
+    logger.info(f"Cleanup completed: {deleted_count} collections deleted", extra={"category": "api"})
 
     return JSONResponse(content={
         "success": True,

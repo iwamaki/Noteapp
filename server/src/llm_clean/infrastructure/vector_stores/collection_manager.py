@@ -62,12 +62,12 @@ class CollectionManager:
         self.metadata: dict[str, CollectionMetadata] = {}
         self._load_metadata()
 
-        logger.info(f"CollectionManager initialized: base_path={self.base_storage_path}")
+        logger.info(f"CollectionManager initialized: base_path={self.base_storage_path}", extra={"category": "vectorstore"})
 
     def _load_metadata(self) -> None:
         """メタデータファイルから情報を読み込む"""
         if not self.metadata_file.exists():
-            logger.info("No metadata file found. Starting with empty metadata.")
+            logger.info("No metadata file found. Starting with empty metadata.", extra={"category": "vectorstore"})
             # デフォルトコレクションを作成
             self.metadata["default"] = CollectionMetadata(
                 name="default",
@@ -92,10 +92,10 @@ class CollectionManager:
 
                 self.metadata[name] = CollectionMetadata(**meta_dict)
 
-            logger.info(f"Loaded metadata for {len(self.metadata)} collections")
+            logger.info(f"Loaded metadata for {len(self.metadata)} collections", extra={"category": "vectorstore"})
 
         except Exception as e:
-            logger.error(f"Error loading metadata: {e}")
+            logger.error(f"Error loading metadata: {e}", extra={"category": "vectorstore"})
             self.metadata = {}
 
     def _save_metadata(self) -> None:
@@ -112,10 +112,10 @@ class CollectionManager:
             with open(self.metadata_file, "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False, indent=2, default=str)
 
-            logger.debug(f"Metadata saved: {len(self.metadata)} collections")
+            logger.debug(f"Metadata saved: {len(self.metadata)} collections", extra={"category": "vectorstore"})
 
         except Exception as e:
-            logger.error(f"Error saving metadata: {e}")
+            logger.error(f"Error saving metadata: {e}", extra={"category": "vectorstore"})
             raise
 
     def create_collection(
@@ -173,7 +173,8 @@ class CollectionManager:
 
         logger.info(
             f"Collection created: name={name}, type={collection_type}, "
-            f"ttl_hours={ttl_hours}, expires_at={expires_at}"
+            f"ttl_hours={ttl_hours}, expires_at={expires_at}",
+            extra={"category": "vectorstore"}
         )
 
         return vector_store
@@ -192,13 +193,13 @@ class CollectionManager:
 
         # メタデータが存在しない場合
         if name not in self.metadata:
-            logger.warning(f"Collection '{name}' not found in metadata")
+            logger.warning(f"Collection '{name}' not found in metadata", extra={"category": "vectorstore"})
             return None
 
         # 期限切れチェック
         metadata = self.metadata[name]
         if metadata.expires_at and datetime.now(UTC) > metadata.expires_at:
-            logger.warning(f"Collection '{name}' has expired. Cleaning up...")
+            logger.warning(f"Collection '{name}' has expired. Cleaning up...", extra={"category": "vectorstore"})
             self.delete_collection(name)
             return None
 
@@ -209,7 +210,7 @@ class CollectionManager:
         # キャッシュにない場合は新規作成
         storage_path = self.base_storage_path / name
         if not storage_path.exists():
-            logger.warning(f"Collection storage path not found: {storage_path}")
+            logger.warning(f"Collection storage path not found: {storage_path}", extra={"category": "vectorstore"})
             return None
 
         vector_store = VectorStoreManager(
@@ -233,7 +234,7 @@ class CollectionManager:
         """
         # デフォルトコレクションは削除できない
         if name == "default":
-            logger.warning("Cannot delete default collection")
+            logger.warning("Cannot delete default collection", extra={"category": "vectorstore"})
             return False
 
         # メタデータから削除
@@ -250,10 +251,10 @@ class CollectionManager:
         if storage_path.exists():
             try:
                 shutil.rmtree(storage_path)
-                logger.info(f"Collection deleted: {name}")
+                logger.info(f"Collection deleted: {name}", extra={"category": "vectorstore"})
                 return True
             except Exception as e:
-                logger.error(f"Error deleting collection storage: {e}")
+                logger.error(f"Error deleting collection storage: {e}", extra={"category": "vectorstore"})
                 return False
 
         return True
@@ -324,7 +325,7 @@ class CollectionManager:
                 deleted_count += 1
 
         if deleted_count > 0:
-            logger.info(f"Cleaned up {deleted_count} expired collections")
+            logger.info(f"Cleaned up {deleted_count} expired collections", extra={"category": "vectorstore"})
 
         return deleted_count
 

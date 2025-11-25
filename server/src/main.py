@@ -38,13 +38,13 @@ async def lifespan(app: FastAPI):
     起動時とシャットダウン時に実行される処理を定義します。
     """
     # 起動時の処理
-    logger.info("Application startup...")
+    logger.info("Application startup...", extra={"category": "startup"})
 
     # JWT_SECRET_KEYのバリデーション（セキュリティチェック）
     try:
         validate_jwt_secret()
     except ValueError as e:
-        logger.error(f"JWT secret key validation failed: {e}")
+        logger.error(f"JWT secret key validation failed: {e}", extra={"category": "startup"})
         raise RuntimeError(
             "Application startup aborted due to invalid JWT_SECRET_KEY. "
             "Please set a strong JWT_SECRET_KEY environment variable (minimum 32 characters)."
@@ -53,11 +53,11 @@ async def lifespan(app: FastAPI):
     # Billingデータベースを初期化（DATABASE_URLが設定されている場合のみ）
     try:
         init_db()
-        logger.info("Billing database initialized")
+        logger.info("Billing database initialized", extra={"category": "startup"})
     except Exception as e:
         logger.warning(
             f"Billing database initialization skipped: {e}",
-            extra={"event_type": "startup", "component": "database"}
+            extra={"category": "startup", "component": "database"}
         )
 
     # コレクションマネージャーを初期化
@@ -66,22 +66,22 @@ async def lifespan(app: FastAPI):
 
         # クリーンアップジョブを開始（10分間隔）
         await start_cleanup_job(collection_manager, interval_minutes=10)
-        logger.info("Cleanup job started")
+        logger.info("Cleanup job started", extra={"category": "startup"})
     except Exception as e:
         logger.warning(
             f"Cleanup job initialization skipped: {e}",
-            extra={"event_type": "startup", "component": "cleanup_job"}
+            extra={"category": "startup", "component": "cleanup_job"}
         )
 
     yield
 
     # シャットダウン時の処理
-    logger.info("Application shutdown...")
+    logger.info("Application shutdown...", extra={"category": "startup"})
     try:
         await stop_cleanup_job()
-        logger.info("Cleanup job stopped")
+        logger.info("Cleanup job stopped", extra={"category": "startup"})
     except Exception as e:
-        logger.warning(f"Cleanup job stop skipped: {e}")
+        logger.warning(f"Cleanup job stop skipped: {e}", extra={"category": "startup"})
 
 
 app = FastAPI(title="LLM File App API", lifespan=lifespan)
@@ -195,6 +195,7 @@ async def validate_origin(request: Request, call_next):
                 logger.warning(
                     "Invalid origin detected - possible CSRF attack",
                     extra={
+                        "category": "startup",
                         "event_type": "security",
                         "event": "invalid_origin",
                         "origin": origin,
@@ -294,26 +295,26 @@ async def websocket_endpoint(websocket: WebSocket):
         auth_message = await websocket.receive_json()
 
         if auth_message.get("type") != "auth":
-            logger.warning("WebSocket: Authentication message expected")
+            logger.warning("WebSocket: Authentication message expected", extra={"category": "websocket"})
             await websocket.close(code=1008, reason="Authentication required")
             return
 
         access_token = auth_message.get("access_token")
         if not access_token:
-            logger.warning("WebSocket: Missing access token")
+            logger.warning("WebSocket: Missing access token", extra={"category": "websocket"})
             await websocket.close(code=1008, reason="Access token required")
             return
 
         # トークン検証
         payload = verify_token(access_token, TokenType.ACCESS)
         if not payload:
-            logger.warning("WebSocket: Invalid or expired token")
+            logger.warning("WebSocket: Invalid or expired token", extra={"category": "websocket"})
             await websocket.close(code=1008, reason="Invalid or expired token")
             return
 
         user_id = payload.get("sub")
         if not user_id:
-            logger.warning("WebSocket: Missing user_id in token")
+            logger.warning("WebSocket: Missing user_id in token", extra={"category": "websocket"})
             await websocket.close(code=1008, reason="Invalid token payload")
             return
 
@@ -323,7 +324,8 @@ async def websocket_endpoint(websocket: WebSocket):
         # 認証成功 - 接続を確立
         await manager.connect(websocket, client_id)
         logger.info(
-            f"WebSocket authenticated and connected: user_id={user_id}, client_id={client_id}"
+            f"WebSocket authenticated and connected: user_id={user_id}, client_id={client_id}",
+            extra={"category": "websocket"}
         )
 
         # 認証成功メッセージを送信
@@ -343,7 +345,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 content = data.get("content")
                 error = data.get("error")
 
-                logger.debug(f"Received file_content_response: request_id={request_id}")
+                logger.debug(f"Received file_content_response: request_id={request_id}", extra={"category": "websocket"})
 
                 # 保留中のリクエストを解決
                 manager.resolve_request(request_id, content, error)
@@ -355,7 +357,8 @@ async def websocket_endpoint(websocket: WebSocket):
                 error = data.get("error")
 
                 logger.debug(
-                    f"Received search_results_response: request_id={request_id}, results_count={len(results) if results else 0}"
+                    f"Received search_results_response: request_id={request_id}, results_count={len(results) if results else 0}",
+                    extra={"category": "websocket"}
                 )
 
                 # 保留中のリクエストを解決
@@ -371,7 +374,8 @@ async def websocket_endpoint(websocket: WebSocket):
                 access_token = data.get("access_token")
                 if not access_token:
                     logger.warning(
-                        f"Re-auth message missing access_token from client_id={client_id}"
+                        f"Re-auth message missing access_token from client_id={client_id}",
+                        extra={"category": "websocket"}
                     )
                     continue
 
@@ -379,7 +383,8 @@ async def websocket_endpoint(websocket: WebSocket):
                 payload = verify_token(access_token, TokenType.ACCESS)
                 if not payload:
                     logger.warning(
-                        f"Re-auth failed: Invalid or expired token from client_id={client_id}"
+                        f"Re-auth failed: Invalid or expired token from client_id={client_id}",
+                        extra={"category": "websocket"}
                     )
                     await manager.send_message(
                         client_id, {"type": "auth_error", "message": "Invalid or expired token"}
@@ -390,7 +395,8 @@ async def websocket_endpoint(websocket: WebSocket):
                 token_user_id = payload.get("sub")
                 if token_user_id != user_id:
                     logger.warning(
-                        f"Re-auth failed: User ID mismatch (current={user_id}, token={token_user_id})"
+                        f"Re-auth failed: User ID mismatch (current={user_id}, token={token_user_id})",
+                        extra={"category": "websocket"}
                     )
                     await manager.send_message(
                         client_id, {"type": "auth_error", "message": "User ID mismatch"}
@@ -399,22 +405,24 @@ async def websocket_endpoint(websocket: WebSocket):
 
                 # 再認証成功
                 logger.info(
-                    f"Re-authentication successful: user_id={user_id}, client_id={client_id}"
+                    f"Re-authentication successful: user_id={user_id}, client_id={client_id}",
+                    extra={"category": "websocket"}
                 )
                 await manager.send_message(
                     client_id, {"type": "auth_success", "user_id": user_id, "client_id": client_id}
                 )
 
             else:
-                logger.warning(f"Unknown message type: {data.get('type')}")
+                logger.warning(f"Unknown message type: {data.get('type')}", extra={"category": "websocket"})
 
     except WebSocketDisconnect:
-        logger.info(f"WebSocket disconnected: user_id={user_id}, client_id={client_id}")
+        logger.info(f"WebSocket disconnected: user_id={user_id}, client_id={client_id}", extra={"category": "websocket"})
         if client_id:
             manager.disconnect(client_id)
     except Exception as e:
         logger.error(
-            f"WebSocket error: user_id={user_id if user_id else 'unknown'}, client_id={client_id if client_id else 'unknown'}, {e}"
+            f"WebSocket error: user_id={user_id if user_id else 'unknown'}, client_id={client_id if client_id else 'unknown'}, {e}",
+            extra={"category": "websocket"}
         )
         if client_id:
             manager.disconnect(client_id)

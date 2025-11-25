@@ -54,7 +54,7 @@ class ConnectionManager:
         # ハートビート用のタイムスタンプを初期化
         self.last_ping[client_id] = time.time()
 
-        logger.info(f"WebSocket connected: client_id={client_id}")
+        logger.info(f"WebSocket connected: client_id={client_id}", extra={"category": "websocket"})
 
         # 接続チェックタスクが未起動なら開始
         if self.check_task is None or self.check_task.done():
@@ -84,7 +84,7 @@ class ConnectionManager:
         if client_id in self.last_ping:
             del self.last_ping[client_id]
 
-        logger.info(f"WebSocket disconnected: client_id={client_id}")
+        logger.info(f"WebSocket disconnected: client_id={client_id}", extra={"category": "websocket"})
 
     async def send_message(self, client_id: str, message: dict):
         """
@@ -99,7 +99,7 @@ class ConnectionManager:
             try:
                 await websocket.send_json(message)
             except Exception as e:
-                logger.error(f"Error sending message to {client_id}: {e}")
+                logger.error(f"Error sending message to {client_id}: {e}", extra={"category": "websocket"})
                 self.disconnect(client_id)
 
     async def request_file_content(
@@ -137,7 +137,7 @@ class ConnectionManager:
         self.pending_requests[request_id] = future
         self.client_requests[client_id].add(request_id)
 
-        logger.info(f"Requesting file content: client_id={client_id}, title={title}, request_id={request_id}")
+        logger.info(f"Requesting file content: client_id={client_id}, title={title}, request_id={request_id}", extra={"category": "websocket"})
 
         try:
             # フロントエンドにリクエスト送信
@@ -150,11 +150,11 @@ class ConnectionManager:
             # レスポンスを待つ（タイムアウト付き）
             content: str | None = await asyncio.wait_for(future, timeout=timeout)
 
-            logger.info(f"File content received: title={title}, length={len(content) if content else 0}")
+            logger.info(f"File content received: title={title}, length={len(content) if content else 0}", extra={"category": "websocket"})
             return content
 
         except TimeoutError:
-            logger.error(f"Timeout waiting for file content: title={title}, request_id={request_id}")
+            logger.error(f"Timeout waiting for file content: title={title}, request_id={request_id}", extra={"category": "websocket"})
             raise Exception(f"ファイル '{title}' の取得がタイムアウトしました（{timeout}秒）") from None
 
         finally:
@@ -201,7 +201,7 @@ class ConnectionManager:
         self.pending_requests[request_id] = future
         self.client_requests[client_id].add(request_id)
 
-        logger.info(f"Requesting search: client_id={client_id}, query={query}, search_type={search_type}, request_id={request_id}")
+        logger.info(f"Requesting search: client_id={client_id}, query={query}, search_type={search_type}, request_id={request_id}", extra={"category": "websocket"})
 
         try:
             # フロントエンドに検索リクエスト送信
@@ -215,11 +215,11 @@ class ConnectionManager:
             # レスポンスを待つ（タイムアウト付き）
             results = await asyncio.wait_for(future, timeout=timeout)
 
-            logger.info(f"Search results received: query={query}, results_count={len(results) if results else 0}")
+            logger.info(f"Search results received: query={query}, results_count={len(results) if results else 0}", extra={"category": "websocket"})
             return results if results else []
 
         except TimeoutError:
-            logger.error(f"Timeout waiting for search results: query={query}, request_id={request_id}")
+            logger.error(f"Timeout waiting for search results: query={query}, request_id={request_id}", extra={"category": "websocket"})
             raise Exception(f"検索 '{query}' がタイムアウトしました（{timeout}秒）") from None
 
         finally:
@@ -239,17 +239,17 @@ class ConnectionManager:
             error: エラーメッセージ（取得失敗時）
         """
         if request_id not in self.pending_requests:
-            logger.warning(f"Unknown request_id: {request_id}")
+            logger.warning(f"Unknown request_id: {request_id}", extra={"category": "websocket"})
             return
 
         future = self.pending_requests[request_id]
 
         if not future.done():
             if error:
-                logger.error(f"File content request failed: request_id={request_id}, error={error}")
+                logger.error(f"File content request failed: request_id={request_id}, error={error}", extra={"category": "websocket"})
                 future.set_exception(Exception(error))
             else:
-                logger.debug(f"File content request resolved: request_id={request_id}")
+                logger.debug(f"File content request resolved: request_id={request_id}", extra={"category": "websocket"})
                 future.set_result(content)
 
     def handle_ping(self, client_id: str):
@@ -262,7 +262,7 @@ class ConnectionManager:
         if client_id in self.active_connections:
             # 最後のping受信時刻を更新
             self.last_ping[client_id] = time.time()
-            logger.debug(f"Ping received from client_id={client_id}")
+            logger.debug(f"Ping received from client_id={client_id}", extra={"category": "websocket"})
 
     async def check_stale_connections(self):
         """
@@ -271,7 +271,7 @@ class ConnectionManager:
         60秒以上pingが来ない接続を切断します。
         このメソッドはバックグラウンドタスクとして実行されます。
         """
-        logger.info("Stale connection check task started")
+        logger.info("Stale connection check task started", extra={"category": "websocket"})
 
         while True:
             try:
@@ -286,7 +286,8 @@ class ConnectionManager:
                         stale_clients.append(client_id)
                         logger.warning(
                             f"Stale connection detected: client_id={client_id}, "
-                            f"last_ping={now - last_time:.1f}s ago"
+                            f"last_ping={now - last_time:.1f}s ago",
+                            extra={"category": "websocket"}
                         )
 
                 # stale接続を切断
@@ -295,17 +296,17 @@ class ConnectionManager:
                         try:
                             websocket = self.active_connections[client_id]
                             await websocket.close(code=1000, reason="Heartbeat timeout")
-                            logger.info(f"Closed stale connection: client_id={client_id}")
+                            logger.info(f"Closed stale connection: client_id={client_id}", extra={"category": "websocket"})
                         except Exception as e:
-                            logger.error(f"Error closing stale connection {client_id}: {e}")
+                            logger.error(f"Error closing stale connection {client_id}: {e}", extra={"category": "websocket"})
                         finally:
                             self.disconnect(client_id)
 
             except asyncio.CancelledError:
-                logger.info("Stale connection check task cancelled")
+                logger.info("Stale connection check task cancelled", extra={"category": "websocket"})
                 break
             except Exception as e:
-                logger.error(f"Error in stale connection check: {e}")
+                logger.error(f"Error in stale connection check: {e}", extra={"category": "websocket"})
                 await asyncio.sleep(30)
 
 

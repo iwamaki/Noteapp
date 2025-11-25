@@ -27,7 +27,7 @@ def get_collection_manager() -> CollectionManager:
     global _collection_manager
     if _collection_manager is None:
         _collection_manager = CollectionManager()
-        logger.info("CollectionManager singleton instance created")
+        logger.info("CollectionManager singleton instance created", extra={"category": "vectorstore"})
     return _collection_manager
 
 
@@ -52,7 +52,8 @@ def get_document_processor(
         )
         logger.info(
             f"DocumentProcessor singleton instance created "
-            f"(chunk_size={chunk_size}, chunk_overlap={chunk_overlap})"
+            f"(chunk_size={chunk_size}, chunk_overlap={chunk_overlap})",
+            extra={"category": "vectorstore"}
         )
     return _document_processor
 

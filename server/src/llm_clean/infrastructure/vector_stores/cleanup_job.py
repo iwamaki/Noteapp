@@ -34,16 +34,16 @@ class CleanupJob:
         self.task: asyncio.Task | None = None
         self._running = False
 
-        logger.info(f"CleanupJob initialized: interval={interval_minutes} minutes")
+        logger.info(f"CleanupJob initialized: interval={interval_minutes} minutes", extra={"category": "vectorstore"})
 
     async def start(self) -> None:
         """クリーンアップジョブを開始"""
         if self._running:
-            logger.warning("CleanupJob is already running")
+            logger.warning("CleanupJob is already running", extra={"category": "vectorstore"})
             return
 
         self._running = True
-        logger.info("CleanupJob started")
+        logger.info("CleanupJob started", extra={"category": "vectorstore"})
 
         # 起動時に1回実行
         await self._cleanup()
@@ -57,14 +57,14 @@ class CleanupJob:
             return
 
         self._running = False
-        logger.info("Stopping CleanupJob...")
+        logger.info("Stopping CleanupJob...", extra={"category": "vectorstore"})
 
         if self.task:
             self.task.cancel()
             try:
                 await self.task
             except asyncio.CancelledError:
-                logger.info("CleanupJob stopped")
+                logger.info("CleanupJob stopped", extra={"category": "vectorstore"})
 
     async def _run_periodic(self) -> None:
         """定期的にクリーンアップを実行"""
@@ -78,25 +78,25 @@ class CleanupJob:
                     await self._cleanup()
 
             except asyncio.CancelledError:
-                logger.info("CleanupJob periodic task cancelled")
+                logger.info("CleanupJob periodic task cancelled", extra={"category": "vectorstore"})
                 break
             except Exception as e:
-                logger.error(f"Error in CleanupJob periodic task: {e}")
+                logger.error(f"Error in CleanupJob periodic task: {e}", extra={"category": "vectorstore"})
                 # エラーが発生してもジョブは継続
 
     async def _cleanup(self) -> None:
         """期限切れコレクションをクリーンアップ"""
         try:
-            logger.info("Running cleanup job...")
+            logger.info("Running cleanup job...", extra={"category": "vectorstore"})
             deleted_count = self.collection_manager.cleanup_expired()
 
             if deleted_count > 0:
-                logger.info(f"Cleanup completed: {deleted_count} collections deleted")
+                logger.info(f"Cleanup completed: {deleted_count} collections deleted", extra={"category": "vectorstore"})
             else:
-                logger.debug("Cleanup completed: no expired collections")
+                logger.debug("Cleanup completed: no expired collections", extra={"category": "vectorstore"})
 
         except Exception as e:
-            logger.error(f"Error during cleanup: {e}")
+            logger.error(f"Error during cleanup: {e}", extra={"category": "vectorstore"})
 
 
 # グローバルなクリーンアップジョブインスタンス
@@ -119,7 +119,7 @@ async def start_cleanup_job(
     global _cleanup_job
 
     if _cleanup_job is not None:
-        logger.warning("CleanupJob already exists. Stopping previous job...")
+        logger.warning("CleanupJob already exists. Stopping previous job...", extra={"category": "vectorstore"})
         await _cleanup_job.stop()
 
     _cleanup_job = CleanupJob(collection_manager, interval_minutes)
