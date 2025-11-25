@@ -55,9 +55,9 @@ class SummarizeConversationUseCase:
             ValueError: If token balance is insufficient
         """
         logger.info(
-            f"[SummarizeConversationUseCase] Starting summarization: "
-            f"user={user_id}, messages={len(request.conversationHistory)}, "
-            f"preserve_recent={request.preserve_recent}"
+            f"Starting summarization: user={user_id}, "
+            f"messages={len(request.conversationHistory)}, preserve_recent={request.preserve_recent}",
+            extra={"category": "llm"}
         )
 
         # Step 1: Calculate original tokens
@@ -70,7 +70,8 @@ class SummarizeConversationUseCase:
         # Step 2: Split messages
         if len(request.conversationHistory) <= request.preserve_recent:
             logger.warning(
-                "[SummarizeConversationUseCase] Conversation is too short to summarize"
+                "Conversation is too short to summarize",
+                extra={"category": "llm"}
             )
             return SummarizeResponseDTO(
                 summary=SummaryResultDTO(
@@ -88,8 +89,8 @@ class SummarizeConversationUseCase:
         recent_messages = request.conversationHistory[-request.preserve_recent:]
 
         logger.info(
-            f"[SummarizeConversationUseCase] Split messages: "
-            f"{len(old_messages)} old, {len(recent_messages)} recent"
+            f"Split messages: {len(old_messages)} old, {len(recent_messages)} recent",
+            extra={"category": "llm"}
         )
 
         # Step 3: Estimate tokens for summarization
@@ -98,7 +99,8 @@ class SummarizeConversationUseCase:
         total_estimated = old_tokens + estimated_summary_tokens
 
         logger.info(
-            f"[SummarizeConversationUseCase] Estimated tokens: {total_estimated}"
+            f"Estimated tokens: {total_estimated}",
+            extra={"category": "llm"}
         )
 
         # Step 4: Validate token balance
@@ -107,7 +109,8 @@ class SummarizeConversationUseCase:
             self.billing.validate_token_balance(model_to_use, total_estimated)
         except ValueError as e:
             logger.error(
-                f"[SummarizeConversationUseCase] Token validation failed: {str(e)}"
+                f"Token validation failed: {str(e)}",
+                extra={"category": "llm"}
             )
             raise
 
@@ -126,12 +129,14 @@ class SummarizeConversationUseCase:
 
             summary_text = llm_response.get("message", "")
             logger.info(
-                f"[SummarizeConversationUseCase] Summary generated: {len(summary_text)} chars"
+                f"Summary generated: {len(summary_text)} chars",
+                extra={"category": "llm"}
             )
 
         except Exception as e:
             logger.error(
-                f"[SummarizeConversationUseCase] Summarization failed: {str(e)}"
+                f"Summarization failed: {str(e)}",
+                extra={"category": "llm"}
             )
             raise
 
@@ -152,11 +157,13 @@ class SummarizeConversationUseCase:
                     }
                 )
                 logger.info(
-                    "[SummarizeConversationUseCase] Token consumption recorded"
+                    "Token consumption recorded",
+                    extra={"category": "llm"}
                 )
             except Exception as e:
                 logger.error(
-                    f"[SummarizeConversationUseCase] Failed to record tokens: {str(e)}"
+                    f"Failed to record tokens: {str(e)}",
+                    extra={"category": "llm"}
                 )
 
         # Step 8: Calculate compressed tokens
@@ -173,9 +180,9 @@ class SummarizeConversationUseCase:
         compression_ratio = compressed_tokens / original_tokens if original_tokens > 0 else 1.0
 
         logger.info(
-            f"[SummarizeConversationUseCase] Compression: "
-            f"{original_tokens} -> {compressed_tokens} tokens "
-            f"(ratio: {compression_ratio:.2%})"
+            f"Compression: {original_tokens} -> {compressed_tokens} tokens "
+            f"(ratio: {compression_ratio:.2%})",
+            extra={"category": "llm"}
         )
 
         # Step 9: Construct response

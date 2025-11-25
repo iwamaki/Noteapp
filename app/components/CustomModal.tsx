@@ -45,6 +45,24 @@ export const CustomModal: React.FC<CustomModalProps> = ({
 }) => {
   const { colors, typography, spacing } = useTheme();
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const [internalVisible, setInternalVisible] = useState(false);
+  const [debouncedKeyboardVisible, setDebouncedKeyboardVisible] = useState(false);
+
+  // モーダルが開く時にキーボードを閉じてから表示
+  // キーボードのクローズアニメーションが完了してからモーダルを表示することで、
+  // KeyboardAvoidingViewのレイアウト変更と競合しないようにする
+  useEffect(() => {
+    if (isVisible) {
+      Keyboard.dismiss();
+      // キーボードが完全に閉じるまで少し待ってからモーダルを表示
+      const timer = setTimeout(() => {
+        setInternalVisible(true);
+      }, 100);
+      return () => clearTimeout(timer);
+    } else {
+      setInternalVisible(false);
+    }
+  }, [isVisible]);
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
@@ -62,15 +80,22 @@ export const CustomModal: React.FC<CustomModalProps> = ({
     };
   }, []);
 
+  // キーボード表示状態を即座に反映
+  // KeyboardAvoidingViewのbehaviorを無効化しているため、
+  // 手動のjustifyContent切り替えのみで位置調整を行う
+  useEffect(() => {
+    setDebouncedKeyboardVisible(isKeyboardVisible);
+  }, [isKeyboardVisible]);
+
   const styles = StyleSheet.create({
     centeredView: {
       flex: 1,
-      justifyContent: isKeyboardVisible ? 'flex-end' : 'center', // キーボード表示時は下寄せ、非表示時は中央
+      justifyContent: debouncedKeyboardVisible ? 'flex-end' : 'center', // キーボード表示時は下寄せ、非表示時は中央
       alignItems: 'center',
       backgroundColor: colors.overlay, // Semi-transparent overlay
       paddingHorizontal: spacing.xl,
-      paddingBottom: isKeyboardVisible ? spacing.xl : 0, // キーボード表示時のみ下部余白
-      paddingVertical: isKeyboardVisible ? 0 : spacing.xl, // 中央配置時は上下余白
+      paddingBottom: debouncedKeyboardVisible ? spacing.xl : 0, // キーボード表示時のみ下部余白
+      paddingVertical: debouncedKeyboardVisible ? 0 : spacing.xl, // 中央配置時は上下余白
     },
     modalView: {
       backgroundColor: colors.background,
@@ -196,11 +221,11 @@ export const CustomModal: React.FC<CustomModalProps> = ({
     <Modal
       animationType="fade"
       transparent={true}
-      visible={isVisible}
+      visible={internalVisible}
       onRequestClose={onClose}
     >
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'position' : 'height'}
         style={styles.keyboardAvoidingView}
         keyboardVerticalOffset={keyboardVerticalOffset}
       >

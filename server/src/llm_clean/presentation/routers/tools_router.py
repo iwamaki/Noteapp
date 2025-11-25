@@ -53,7 +53,7 @@ async def get_tools() -> list[dict]:
                         "required": []
                     }
             except Exception as e:
-                logger.error(f"Error converting schema for tool {tool.name}: {str(e)}")
+                logger.error(f"Error converting schema for tool {tool.name}: {str(e)}", extra={"category": "api"})
                 tool_info["args_schema"] = {
                     "type": "object",
                     "properties": {},
@@ -69,5 +69,5 @@ async def get_tools() -> list[dict]:
 
         tools_definition.append(tool_info)
 
-    logger.info(f"Returning {len(tools_definition)} tool definitions")
+    logger.info(f"Returning {len(tools_definition)} tool definitions", extra={"category": "api"})
     return tools_definition

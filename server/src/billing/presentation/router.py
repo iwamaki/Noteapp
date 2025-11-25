@@ -53,7 +53,7 @@ async def get_balance(
         balance = service.get_balance()
         return TokenBalanceResponse(**balance)
     except Exception as e:
-        logger.error(f"[billing_router] Error in get_balance: {e}")
+        logger.error(f"Error in get_balance: {e}", extra={"category": "billing"})
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"残高取得に失敗しました: {str(e)}"
@@ -90,7 +90,7 @@ async def get_category_balance(
         total = service.get_category_balance(category)
         return CategoryBalanceResponse(category=category, total_tokens=total)
     except Exception as e:
-        logger.error(f"[billing_router] Error in get_category_balance: {e}")
+        logger.error(f"Error in get_category_balance: {e}", extra={"category": "billing"})
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"カテゴリー別残高取得に失敗しました: {str(e)}"
@@ -146,6 +146,7 @@ async def add_credits(
         logger.warning(
             "Invalid purchase attempt",
             extra={
+                "category": "billing",
                 "user_id": user_id,
                 "product_id": product_id,
                 "error": str(e)
@@ -166,6 +167,7 @@ async def add_credits(
             logger.warning(
                 "Duplicate purchase attempt detected",
                 extra={
+                    "category": "billing",
                     "user_id": user_id,
                     "transaction_id": transaction_id
                 }
@@ -185,13 +187,13 @@ async def add_credits(
 
         return OperationSuccessResponse(**result)
     except ValueError as e:
-        logger.warning(f"[billing_router] Validation error in add_credits: {e}")
+        logger.warning(f"Validation error in add_credits: {e}", extra={"category": "billing"})
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         ) from e
     except Exception as e:
-        logger.error(f"[billing_router] Error in add_credits: {e}")
+        logger.error(f"Error in add_credits: {e}", extra={"category": "billing"})
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"クレジット追加に失敗しました: {str(e)}"
@@ -227,13 +229,13 @@ async def allocate_credits(
         result = service.allocate_credits(allocations)
         return OperationSuccessResponse(**result)
     except ValueError as e:
-        logger.warning(f"[billing_router] Validation error in allocate_credits: {e}")
+        logger.warning(f"Validation error in allocate_credits: {e}", extra={"category": "billing"})
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         ) from e
     except Exception as e:
-        logger.error(f"[billing_router] Error in allocate_credits: {e}")
+        logger.error(f"Error in allocate_credits: {e}", extra={"category": "billing"})
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"クレジット配分に失敗しました: {str(e)}"
@@ -276,13 +278,13 @@ async def consume_tokens(
         )
         return ConsumeTokensResponse(**result)
     except ValueError as e:
-        logger.warning(f"[billing_router] Validation error in consume_tokens: {e}")
+        logger.warning(f"Validation error in consume_tokens: {e}", extra={"category": "billing"})
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         ) from e
     except Exception as e:
-        logger.error(f"[billing_router] Error in consume_tokens: {e}")
+        logger.error(f"Error in consume_tokens: {e}", extra={"category": "billing"})
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"トークン消費に失敗しました: {str(e)}"
@@ -314,7 +316,7 @@ async def get_transactions(
         transactions = service.get_transactions(limit=limit)
         return [TransactionResponse(**t) for t in transactions]
     except Exception as e:
-        logger.error(f"[billing_router] Error in get_transactions: {e}")
+        logger.error(f"Error in get_transactions: {e}", extra={"category": "billing"})
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"取引履歴取得に失敗しました: {str(e)}"
@@ -349,7 +351,7 @@ async def get_pricing(db: Session = Depends(get_db)):
 
         return PricingInfoResponse(pricing=pricing)
     except Exception as e:
-        logger.error(f"[billing_router] Error in get_pricing: {e}")
+        logger.error(f"Error in get_pricing: {e}", extra={"category": "billing"})
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"価格情報取得に失敗しました: {str(e)}"
@@ -379,7 +381,10 @@ async def reset_all_data(
     # 本番環境では無効化
     env = os.getenv("ENV", "development")
     if env == "production":
-        logger.warning(f"Reset endpoint accessed in production by user: {user_id}")
+        logger.warning(
+            f"Reset endpoint accessed in production by user: {user_id}",
+            extra={"category": "billing"}
+        )
         raise HTTPException(
             status_code=403,
             detail="This endpoint is not available in production environment"
@@ -390,13 +395,13 @@ async def reset_all_data(
         result = service.reset_all_data()
         return OperationSuccessResponse(**result)
     except ValueError as e:
-        logger.warning(f"[billing_router] Validation error in reset_all_data: {e}")
+        logger.warning(f"Validation error in reset_all_data: {e}", extra={"category": "billing"})
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         ) from e
     except Exception as e:
-        logger.error(f"[billing_router] Error in reset_all_data: {e}")
+        logger.error(f"Error in reset_all_data: {e}", extra={"category": "billing"})
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"データリセットに失敗しました: {str(e)}"

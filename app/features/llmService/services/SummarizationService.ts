@@ -83,25 +83,6 @@ export class SummarizationService {
 
       const result: SummarizeResponse = response.data;
 
-      // compressionRatioが0.95以上の場合（効果が小さい、または逆効果）
-      const isActuallySummarized = result.compressionRatio < 0.95;
-
-      if (!isActuallySummarized) {
-        // 要約が効果的でなかった場合
-        logger.info(
-          'llm',
-          `Summarization not effective (compressionRatio: ${result.compressionRatio})`
-        );
-
-        const infoMessage = this.createNotEffectiveMessage(result);
-
-        return {
-          isActuallySummarized: false,
-          messages: [infoMessage],
-          response: result,
-        };
-      }
-
       // 会話履歴を要約結果で置き換える（ストア経由）
       const newHistory: ChatMessage[] = [];
 
@@ -167,31 +148,8 @@ export class SummarizationService {
   }
 
   /**
-   * 要約が効果的でなかった場合のメッセージを作成
-   */
-  private createNotEffectiveMessage(result: SummarizeResponse): ChatMessage {
-    let message: string;
-
-    if (result.compressionRatio >= 1.0) {
-      // トークンが増えた場合
-      const increase = result.compressedTokens - result.originalTokens;
-      message = `⚠️ 要約を実行しましたが、トークン数が削減されませんでした。\n\n元のトークン数: ${result.originalTokens}\n要約後: ${result.compressedTokens}（+${increase}）\n\n会話が短すぎるため、要約の効果がありません。\nもう少し会話を続けてから要約をお試しください。`;
-    } else {
-      // 削減効果が小さい場合
-      const reduction = ((1 - result.compressionRatio) * 100).toFixed(1);
-      message = `ℹ️ 要約の削減効果が小さいため、適用されませんでした。\n\n元のトークン数: ${result.originalTokens}\n要約後: ${result.compressedTokens}\n削減率: ${reduction}%\n\nもう少し会話を続けてから要約をお試しください。`;
-    }
-
-    return {
-      role: 'system',
-      content: message,
-      timestamp: new Date(),
-    };
-  }
-
-  /**
    * 要約後のメッセージリストを作成
-   * 既存のメッセージにisSummarizedフラグを追加し、要約メッセージと完了メッセージを追加
+   * 既存のメッセージにisSummarizedフラグを追加し、要約メッセージを追加
    */
   private createSummarizedMessages(
     currentMessages: ChatMessage[],
@@ -213,14 +171,6 @@ export class SummarizationService {
       timestamp: new Date(),
     };
     messages.push(summaryMessage);
-
-    // 要約完了のシステムメッセージを追加
-    const completionMessage: ChatMessage = {
-      role: 'system',
-      content: `✅ 要約が完了しました。${result.originalTokens}トークン → ${result.compressedTokens}トークン（${((1 - result.compressionRatio) * 100).toFixed(1)}%削減）`,
-      timestamp: new Date(),
-    };
-    messages.push(completionMessage);
 
     return messages;
   }

@@ -41,9 +41,9 @@ class TokenBalanceValidator:
         available_tokens: int = balance["allocated_tokens"].get(model_id, 0)
 
         logger.debug(
-            f"[TokenBalanceValidator] Balance check: "
-            f"user={self.user_id}, model={model_id}, "
-            f"available={available_tokens}, needed={tokens_needed}"
+            f"Balance check: user={self.user_id}, model={model_id}, "
+            f"available={available_tokens}, needed={tokens_needed}",
+            extra={"category": "billing"}
         )
 
         return bool(available_tokens >= tokens_needed)
@@ -75,9 +75,9 @@ class TokenBalanceValidator:
         available_tokens = balance["allocated_tokens"].get(model_id, 0)
 
         logger.info(
-            f"[TokenBalanceValidator] Validating balance: "
-            f"user={self.user_id}, model={model_id}, "
-            f"available={available_tokens}, needed={tokens_needed}"
+            f"Validating balance: user={self.user_id}, model={model_id}, "
+            f"available={available_tokens}, needed={tokens_needed}",
+            extra={"category": "billing"}
         )
 
         if available_tokens < tokens_needed:
@@ -90,14 +90,14 @@ class TokenBalanceValidator:
                 f"トークンを購入してください。"
             )
             logger.warning(
-                f"[TokenBalanceValidator] Insufficient balance: "
-                f"user={self.user_id}, model={model_id}, shortage={shortage}"
+                f"Insufficient balance: user={self.user_id}, model={model_id}, shortage={shortage}",
+                extra={"category": "billing"}
             )
             raise ValueError(error_msg)
 
         logger.info(
-            f"[TokenBalanceValidator] Balance check passed: "
-            f"user={self.user_id}, model={model_id}"
+            f"Balance check passed: user={self.user_id}, model={model_id}",
+            extra={"category": "billing"}
         )
 
     def verify_balance_exists(self, model_id: str) -> bool:

@@ -31,10 +31,19 @@ export const useChat = () => {
   const gestureStartHeight = useRef(CHAT_CONFIG.ui.chatAreaInitialHeight);
   const currentHeightValue = useRef(CHAT_CONFIG.ui.chatAreaInitialHeight);
   const onResizeCompleteRef = useRef<(() => void) | null>(null);
+  const rafIdRef = useRef<number | null>(null);
 
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
+      // タップ開始時は常にfalseを返し、即座にPanResponderを起動しない
+      // これによりボタンのonPressが正常に動作する
+      onStartShouldSetPanResponder: () => false,
+      // 実際に移動が検出された場合のみPanResponderを起動
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        // 縦方向の移動が5px以上の場合のみPanResponderを起動
+        // これにより、軽いタップ（ボタンクリック）とドラッグを区別できる
+        return Math.abs(gestureState.dy) > 5;
+      },
       onPanResponderGrant: () => {
         // ドラッグ開始時の高さを記録（refから最新の値を取得）
         gestureStartHeight.current = currentHeightValue.current;
@@ -50,11 +59,26 @@ export const useChat = () => {
           clampedHeight = CHAT_CONFIG.ui.chatAreaMaxHeight;
         }
 
-        // 高さを更新（stateとrefの両方を更新）
-        setChatAreaHeight(clampedHeight);
+        // refを更新
         currentHeightValue.current = clampedHeight;
+
+        // requestAnimationFrameを使って次のフレームで更新
+        // 既にスケジュールされている場合はスキップ（フレームごとに1回のみ更新）
+        if (rafIdRef.current === null) {
+          rafIdRef.current = requestAnimationFrame(() => {
+            setChatAreaHeight(currentHeightValue.current);
+            rafIdRef.current = null;
+          });
+        }
       },
       onPanResponderRelease: () => {
+        // 保留中のrequestAnimationFrameをキャンセル
+        if (rafIdRef.current !== null) {
+          cancelAnimationFrame(rafIdRef.current);
+          rafIdRef.current = null;
+        }
+        // 最終的な高さを設定
+        setChatAreaHeight(currentHeightValue.current);
         setIsResizing(false);
         // リサイズ完了後のコールバックを実行（スクロール位置調整など）
         if (onResizeCompleteRef.current) {

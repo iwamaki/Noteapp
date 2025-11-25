@@ -30,14 +30,23 @@ def _get_secret_from_secret_manager(project_id: str, secret_id: str) -> str | No
         secret_name = f"projects/{project_id}/secrets/{secret_id}/versions/latest"
         response = client.access_secret_version(request={"name": secret_name})
         secret_value = response.payload.data.decode("UTF-8").strip()
-        logger.info(f"Successfully loaded {secret_id} from Secret Manager")
+        logger.info(
+            f"Successfully loaded {secret_id} from Secret Manager",
+            extra={"category": "auth"}
+        )
         return secret_value
     except exceptions.NotFound:
-        logger.warning(f"Secret '{secret_id}' not found in Secret Manager project '{project_id}'")
+        logger.warning(
+            f"Secret '{secret_id}' not found in Secret Manager project '{project_id}'",
+            extra={"category": "auth"}
+        )
     except exceptions.PermissionDenied as e:
-        logger.warning(f"Permission denied accessing Secret Manager: {e}")
+        logger.warning(
+            f"Permission denied accessing Secret Manager: {e}",
+            extra={"category": "auth"}
+        )
     except Exception as e:
-        logger.warning(f"Error accessing Secret Manager: {e}")
+        logger.warning(f"Error accessing Secret Manager: {e}", extra={"category": "auth"})
     return None
 
 
@@ -74,7 +83,10 @@ def load_jwt_secret() -> str:
     # 2. 環境変数からフォールバック（開発環境用）
     env_secret = os.getenv("JWT_SECRET_KEY", "")
     if env_secret:
-        logger.info("Using JWT_SECRET_KEY from environment variable (development mode)")
+        logger.info(
+            "Using JWT_SECRET_KEY from environment variable (development mode)",
+            extra={"category": "auth"}
+        )
         _SECRET_KEY = env_secret
         return _SECRET_KEY
 
@@ -127,7 +139,7 @@ def validate_jwt_secret() -> None:
 
     logger.info(
         "JWT secret key validated successfully",
-        extra={"key_length": len(secret_key)}
+        extra={"category": "auth", "key_length": len(secret_key)}
     )
 
 
@@ -169,7 +181,10 @@ def get_secret(secret_id: str, fallback_env_var: str | None = None) -> str | Non
     if fallback_env_var:
         env_value = os.getenv(fallback_env_var)
         if env_value:
-            logger.info(f"Using {fallback_env_var} from environment variable (development mode)")
+            logger.info(
+                f"Using {fallback_env_var} from environment variable (development mode)",
+                extra={"category": "auth"}
+            )
             return env_value
 
     return None

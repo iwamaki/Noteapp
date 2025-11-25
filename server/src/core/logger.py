@@ -6,7 +6,48 @@ import logging
 import os
 import sys
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal
+
+# ========================================
+# ログカテゴリー定義
+# ========================================
+# フロントエンド（app/utils/logger.ts）と対応するカテゴリー
+#
+# | Backend Category | Frontend Category    | Description                    |
+# |------------------|---------------------|--------------------------------|
+# | auth             | auth                | 認証（OAuth, JWT, デバイス管理）   |
+# | billing          | billing, billingApi | 課金・トークン管理                |
+# | llm              | llm                 | LLMプロバイダー、ユースケース       |
+# | tool             | toolService         | LLMツール（web_search等）         |
+# | chat             | chat, chatService   | チャットルーター                  |
+# | config           | -                   | 設定・シークレット管理             |
+# | websocket        | websocket, clientId | WebSocket通信                  |
+# | vectorstore      | rag                 | ベクトルストア操作                |
+# | document         | file                | ドキュメント処理                  |
+# | startup          | init                | アプリ起動・初期化                |
+# | api              | api                 | APIルーター・ミドルウェア          |
+# | default          | default             | 未分類（フォールバック）           |
+# ========================================
+LogCategory = Literal[
+    "auth",        # 認証（OAuth, JWT, デバイス管理）
+    "billing",     # 課金・トークン管理
+    "llm",         # LLMプロバイダー、ユースケース
+    "tool",        # LLMツール（web_search, read_file等）
+    "chat",        # チャットルーター
+    "config",      # 設定・シークレット管理
+    "websocket",   # WebSocket通信
+    "vectorstore", # ベクトルストア操作
+    "document",    # ドキュメント処理
+    "startup",     # アプリ起動・初期化
+    "api",         # APIルーター・ミドルウェア
+    "default",     # 未分類（フォールバック）
+]
+
+# 有効なカテゴリーのセット（検証用）
+VALID_CATEGORIES: set[str] = {
+    "auth", "billing", "llm", "tool", "chat", "config",
+    "websocket", "vectorstore", "document", "startup", "api", "default"
+}
 
 
 class JsonFormatter(logging.Formatter):
@@ -17,20 +58,40 @@ class JsonFormatter(logging.Formatter):
         return str(obj)
 
     def format(self, record):
+        # 順番: level → category → message → ... → timestamp
+        # extraパラメータからcategoryを取得（デフォルトは"default"）
+        category = getattr(record, 'category', 'default')
+
         log_data = {
-            "timestamp": datetime.utcnow().isoformat(),
             "level": record.levelname,
-            "logger": record.name
+            "category": category,
         }
 
         # メッセージがすでにdict型ならそのままマージ
         if isinstance(record.msg, dict):
-            log_data.update(record.msg)
+            log_data["message"] = record.msg.get("message", "")
+            log_data.update({k: v for k, v in record.msg.items() if k != "message"})
         else:
             log_data["message"] = record.getMessage()
 
-        # JSON形式を読みやすいようにインデントして出力
-        return json.dumps(log_data, ensure_ascii=False, indent=2, default=self.default_serializer)
+        # extraパラメータの他のフィールドもマージ（標準フィールドとcategory以外）
+        excluded_attrs = {
+            'name', 'msg', 'args', 'created', 'filename', 'funcName',
+            'levelname', 'levelno', 'lineno', 'module', 'msecs',
+            'message', 'pathname', 'process', 'processName',
+            'relativeCreated', 'thread', 'threadName', 'exc_info',
+            'exc_text', 'stack_info', 'category', 'asctime'
+        }
+
+        for key, value in record.__dict__.items():
+            if key not in excluded_attrs and not key.startswith('_'):
+                log_data[key] = value
+
+        # timestampを最後に追加
+        log_data["timestamp"] = datetime.utcnow().isoformat()
+
+        # JSON形式で出力（1行1JSON形式でjq解析を容易に）
+        return json.dumps(log_data, ensure_ascii=False, default=self.default_serializer)
 
 def setup_logger():
     """アプリケーションのロガーを設定する"""

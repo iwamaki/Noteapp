@@ -74,20 +74,16 @@ class Logger {
       return;
     }
 
-    if (level === 'debug' || level === 'info') {
-      // For debug and info, print concisely without full JSON wrapper
-      console.log(`[${category}] ${message}`, ...args);
-    } else {
-      // For warn and error, retain structured JSON with pretty-printing
-      const logEntry = {
-        timestamp: new Date().toISOString(),
-        level: level,
-        category: category,
-        message: message,
-        data: args.length > 0 ? args : undefined,
-      };
-      console.log(JSON.stringify(logEntry, null, 2));
-    }
+    // 全てのログレベルでJSON形式で出力
+    // 順番: level → category → message → data → timestamp
+    const logEntry = {
+      level: level.toUpperCase(),
+      category: category,
+      message: message,
+      ...(args.length > 0 && { data: args }),
+      timestamp: new Date().toISOString(),
+    };
+    console.log(JSON.stringify(logEntry));
   }
 
   debug(category: LogCategory, message: string, ...args: any[]) {

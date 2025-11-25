@@ -106,7 +106,7 @@ class ChatContextBuilder:
         elif isinstance(active_screen, FilelistScreenContext):
             # Note: FilelistScreenContext は画面識別のみに使用
             # ファイルリスト情報は allFiles として送信される
-            logger.info("Active screen: FilelistScreen (no context set - using allFiles)")
+            logger.info("Active screen: FilelistScreen (no context set - using allFiles)", extra={"category": "llm"})
 
     def _setup_edit_screen_context(self, screen: EditScreenContext) -> None:
         """編集画面のコンテキストを設定
@@ -120,12 +120,12 @@ class ChatContextBuilder:
         # ツール用のファイルコンテキスト設定（ツールは常にコンテキストを必要とする）
         set_file_context({'filename': file_path, 'content': file_content})
         self._has_file_context = True
-        logger.info(f"File context set from EditScreen: {file_path}")
+        logger.info(f"File context set from EditScreen: {file_path}", extra={"category": "llm"})
 
         # ツール用のディレクトリコンテキスト設定
         current_path = self._extract_directory_path(file_path)
         set_directory_context({'currentPath': current_path, 'fileList': []})
-        logger.info(f"Directory context set from EditScreen: {current_path}")
+        logger.info(f"Directory context set from EditScreen: {current_path}", extra={"category": "llm"})
 
         # LLMに渡すコンテキストメッセージ生成
         # Note: fileContentはフロントエンドでsendFileContextToLLMの設定に従って空文字になる
@@ -159,7 +159,7 @@ class ChatContextBuilder:
         """
         set_file_context(file_content)
         self._has_file_context = True
-        logger.info("File context set from currentFileContent")
+        logger.info("File context set from currentFileContent", extra={"category": "llm"})
 
         content = file_content.get('content')
         if content:
@@ -194,7 +194,7 @@ class ChatContextBuilder:
             # 複数ファイルのメッセージを結合
             self._context_msg = '\n'.join(context_messages)
             self._has_file_context = True
-            logger.info(f"File context set from attachedFileContent: {len(files_content)} file(s)")
+            logger.info(f"File context set from attachedFileContent: {len(files_content)} file(s)", extra={"category": "llm"})
 
         # Note: set_file_context()は呼ばない
         # 添付ファイルはLLMへの情報提供が目的であり、ツールの編集対象ではないため
@@ -207,12 +207,12 @@ class ChatContextBuilder:
         """
         # sendFileContextToLLMがFalseの場合はスキップ
         if context.send_file_context_to_llm is False:
-            logger.info("All files context skipped: send_file_context_to_llm is False")
+            logger.info("All files context skipped: send_file_context_to_llm is False", extra={"category": "llm"})
             return
 
         if context.all_files:
             set_all_files_context(context.all_files)
-            logger.info(f"All files context set: {len(context.all_files)} files")
+            logger.info(f"All files context set: {len(context.all_files)} files", extra={"category": "llm"})
 
     def _append_context_message(self) -> None:
         """コンテキストメッセージを履歴に追加
@@ -245,7 +245,7 @@ class ChatContextBuilder:
             elif role == 'system':
                 # システムメッセージ（要約など）をサポート
                 self._chat_history.append(SystemMessage(content=content))
-                logger.info("System message (summary) added to chat history")
+                logger.info("System message (summary) added to chat history", extra={"category": "llm"})
 
     @staticmethod
     def _extract_directory_path(file_path: str) -> str:

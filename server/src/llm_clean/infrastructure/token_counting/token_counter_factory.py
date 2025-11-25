@@ -4,7 +4,9 @@ Factory for creating appropriate token counter implementations.
 """
 
 from ...domain.interfaces.token_counter import ITokenCounter
+from .anthropic_token_counter import AnthropicTokenCounter
 from .gemini_token_counter import GeminiTokenCounter
+from .openai_token_counter import OpenAITokenCounter
 
 
 class TokenCounterFactory:
@@ -53,11 +55,12 @@ class TokenCounterFactory:
             counter = GeminiTokenCounter(api_key, default_model)
 
         elif provider.lower() == "openai":
-            # TODO: Implement OpenAI token counter
-            raise NotImplementedError(
-                "OpenAI token counter is not yet implemented. "
-                "Use Gemini counter for now or implement OpenAITokenCounter."
-            )
+            default_model = model or "gpt-4o-mini"
+            counter = OpenAITokenCounter(api_key, default_model)
+
+        elif provider.lower() == "anthropic":
+            default_model = model or "claude-3-5-sonnet-20241022"
+            counter = AnthropicTokenCounter(api_key, default_model)
 
         else:
             raise ValueError(f"Unsupported provider: {provider}")

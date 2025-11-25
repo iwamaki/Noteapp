@@ -50,6 +50,7 @@ def create_access_token(user_id: str, device_id: str) -> str:
     logger.debug(
         "Access token created",
         extra={
+            "category": "auth",
             "user_id": user_id,
             "device_id": device_id[:20] + "...",
             "expires_at": expire.isoformat(),
@@ -86,6 +87,7 @@ def create_refresh_token(user_id: str, device_id: str) -> str:
     logger.debug(
         "Refresh token created",
         extra={
+            "category": "auth",
             "user_id": user_id,
             "device_id": device_id[:20] + "...",
             "expires_at": expire.isoformat(),
@@ -117,6 +119,7 @@ def verify_token(token: str, expected_type: str = TokenType.ACCESS) -> dict[str,
             logger.warning(
                 "Token type mismatch detected",
                 extra={
+                    "category": "auth",
                     "event_type": "security",
                     "event": "token_type_mismatch",
                     "expected_type": expected_type,
@@ -136,6 +139,7 @@ def verify_token(token: str, expected_type: str = TokenType.ACCESS) -> dict[str,
                 logger.warning(
                     "Expired token detected",
                     extra={
+                        "category": "auth",
                         "event_type": "security",
                         "event": "token_expired",
                         "expired_at": exp_datetime.isoformat(),
@@ -147,7 +151,7 @@ def verify_token(token: str, expected_type: str = TokenType.ACCESS) -> dict[str,
 
         logger.debug(
             "Token verified successfully",
-            extra={"user_id": payload.get("sub"), "token_type": token_type},
+            extra={"category": "auth", "user_id": payload.get("sub"), "token_type": token_type},
         )
 
         return payload
@@ -157,6 +161,7 @@ def verify_token(token: str, expected_type: str = TokenType.ACCESS) -> dict[str,
         logger.warning(
             "Invalid JWT token detected",
             extra={
+                "category": "auth",
                 "event_type": "security",
                 "event": "invalid_token",
                 "error": str(e),
@@ -165,7 +170,10 @@ def verify_token(token: str, expected_type: str = TokenType.ACCESS) -> dict[str,
         )
         return None
     except Exception as e:
-        logger.error(f"Unexpected error during token verification: {str(e)}")
+        logger.error(
+            f"Unexpected error during token verification: {str(e)}",
+            extra={"category": "auth"}
+        )
         return None
 
 

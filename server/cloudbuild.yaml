@@ -38,9 +38,12 @@ steps:
       - 'managed'
       - '--allow-unauthenticated'  # 公開API（認証はアプリ側で実装）
       - '--set-env-vars'
-      - 'ENVIRONMENT=production,LOG_LEVEL=INFO,LOG_FORMAT=json,GCP_PROJECT_ID=$PROJECT_ID,ALLOWED_ORIGINS=https://noteapp.iwamaki.app,GOOGLE_CSE_ID=2682c97053a18473c,ANDROID_PACKAGE_NAME=com.iwash.NoteApp,GEMINI_API_SECRET_ID=GEMINI_API_KEY,OPENAI_API_SECRET_ID=OPENAI_API_KEY,GOOGLE_CSE_API_SECRET_ID=GOOGLE_CSE_API_KEY,GOOGLE_OAUTH_REDIRECT_URI=https://api.noteapp.iwamaki.app/api/auth/google/callback,API_DOMAIN=api.noteapp.iwamaki.app,OAUTH_STATE_STORAGE=memory,USE_REDIS_FOR_TOKEN_BLACKLIST=false'
+      # OAuth State: hmac (ステートレス、マルチインスタンス対応)
+      # Token Blacklist: postgres (PostgreSQL使用、マルチインスタンス対応)
+      - 'ENVIRONMENT=production,LOG_LEVEL=INFO,LOG_FORMAT=json,GCP_PROJECT_ID=$PROJECT_ID,ALLOWED_ORIGINS=https://noteapp.iwamaki.app,GOOGLE_CSE_ID=2682c97053a18473c,ANDROID_PACKAGE_NAME=com.iwash.NoteApp,GEMINI_API_SECRET_ID=GEMINI_API_KEY,OPENAI_API_SECRET_ID=OPENAI_API_KEY,ANTHROPIC_API_SECRET_ID=ANTHROPIC_API_KEY,GOOGLE_CSE_API_SECRET_ID=GOOGLE_CSE_API_KEY,GOOGLE_OAUTH_REDIRECT_URI=https://api.noteapp.iwamaki.app/api/auth/google/callback,API_DOMAIN=api.noteapp.iwamaki.app,OAUTH_STATE_STORAGE=hmac,TOKEN_BLACKLIST_STORAGE=postgres'
+      - '--session-affinity'  # WebSocket用のSession Affinity (マルチインスタンス時にも同一クライアントを同一インスタンスへルーティング)
       - '--set-secrets'
-      - 'GEMINI_API_KEY=GEMINI_API_KEY:latest,OPENAI_API_KEY=OPENAI_API_KEY:latest,GOOGLE_CSE_API_KEY=GOOGLE_CSE_API_KEY:latest,JWT_SECRET_KEY=JWT_SECRET_KEY:latest,GOOGLE_WEB_CLIENT_ID=GOOGLE_WEB_CLIENT_ID:latest,GOOGLE_WEB_CLIENT_SECRET=GOOGLE_WEB_CLIENT_SECRET:latest,DATABASE_URL=DATABASE_URL:latest'
+      - 'GEMINI_API_KEY=GEMINI_API_KEY:latest,OPENAI_API_KEY=OPENAI_API_KEY:latest,ANTHROPIC_API_KEY=ANTHROPIC_API_KEY:latest,GOOGLE_CSE_API_KEY=GOOGLE_CSE_API_KEY:latest,JWT_SECRET_KEY=JWT_SECRET_KEY:latest,GOOGLE_WEB_CLIENT_ID=GOOGLE_WEB_CLIENT_ID:latest,GOOGLE_WEB_CLIENT_SECRET=GOOGLE_WEB_CLIENT_SECRET:latest,DATABASE_URL=DATABASE_URL:latest'
       - '--service-account'
       - 'note-app-sa@strategic-haven-450402-p6.iam.gserviceaccount.com'
 

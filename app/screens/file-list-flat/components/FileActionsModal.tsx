@@ -40,14 +40,6 @@ export const FileActionsModal: React.FC<FileActionsModalProps> = ({
       },
     },
     {
-      icon: 'share-outline',
-      label: t('modals.fileActions.export'),
-      onPress: () => {
-        onExport(file);
-        onClose();
-      },
-    },
-    {
       icon: 'create-outline',
       label: t('modals.fileActions.rename'),
       onPress: () => {
@@ -84,6 +76,14 @@ export const FileActionsModal: React.FC<FileActionsModalProps> = ({
       label: t('modals.fileActions.copy'),
       onPress: () => {
         onCopy(file);
+        onClose();
+      },
+    },
+    {
+      icon: 'share-outline',
+      label: t('modals.fileActions.export'),
+      onPress: () => {
+        onExport(file);
         onClose();
       },
     },

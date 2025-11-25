@@ -1,14 +1,26 @@
 """Token Counter Utilities (Compatibility Layer)
 
+DEPRECATED: This module is deprecated and will be removed in a future version.
+Please use TokenCounterFactory from infrastructure.token_counting instead.
+
 This module provides utility functions for token counting that maintain
 compatibility with existing code while using the Clean Architecture implementation.
 """
+import warnings
 from typing import Any
 
 from src.core.config import settings
 from src.core.logger import logger
 
 from ..infrastructure.token_counting.gemini_token_counter import GeminiTokenCounter
+
+# Deprecation warning
+warnings.warn(
+    "utils.token_counter is deprecated. Use TokenCounterFactory from "
+    "infrastructure.token_counting instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 # Cache token counter instances
 _token_counter_cache: dict[str, GeminiTokenCounter] = {}
@@ -37,7 +49,10 @@ def _get_token_counter(provider: str = "gemini", model: str | None = None) -> Ge
                 default_model=default_model
             )
         else:
-            logger.warning(f"Unsupported provider for token counting: {provider}")
+            logger.warning(
+                f"Unsupported provider for token counting: {provider}",
+                extra={"category": "llm"}
+            )
             return None
 
     return _token_counter_cache.get(cache_key)
@@ -55,13 +70,16 @@ def count_tokens(text: str) -> int:
     try:
         counter = _get_token_counter("gemini")
         if not counter:
-            logger.warning("Token counter not available, using character-based estimation")
+            logger.warning(
+                "Token counter not available, using character-based estimation",
+                extra={"category": "llm"}
+            )
             return len(text) // 4
 
         return counter.count_tokens(text)
 
     except Exception as e:
-        logger.error(f"Error counting tokens: {e}")
+        logger.error(f"Error counting tokens: {e}", extra={"category": "llm"})
         return len(text) // 4
 
 
@@ -88,7 +106,10 @@ def count_message_tokens(
         counter = _get_token_counter(provider, model)
 
         if not counter:
-            logger.warning("Token counter not available, using character-based estimation")
+            logger.warning(
+                "Token counter not available, using character-based estimation",
+                extra={"category": "llm"}
+            )
             total_chars = sum(len(str(m.get("content", ""))) for m in messages)
             return total_chars // 4
 
@@ -98,7 +119,7 @@ def count_message_tokens(
         return counter.count_message_tokens(messages, model)
 
     except Exception as e:
-        logger.error(f"Error counting message tokens: {e}")
+        logger.error(f"Error counting message tokens: {e}", extra={"category": "llm"})
         total_chars = sum(len(str(m.get("content", ""))) for m in messages)
         return total_chars // 4
 
@@ -143,7 +164,8 @@ def estimate_compression_needed(
 
     logger.info(
         f"Token estimate: {current_tokens}/{max_tokens} "
-        f"({usage_ratio:.1%}) - Compression needed: {needs_compression}"
+        f"({usage_ratio:.1%}) - Compression needed: {needs_compression}",
+        extra={"category": "llm"}
     )
 
     return needs_compression, current_tokens, usage_ratio

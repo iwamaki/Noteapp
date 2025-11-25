@@ -58,7 +58,8 @@ async def web_search_with_rag(
     """
     logger.info(
         f"web_search_with_rag tool called: query={query}, "
-        f"max_results={max_results}, ttl={collection_ttl_hours}h"
+        f"max_results={max_results}, ttl={collection_ttl_hours}h",
+        extra={"category": "tool"}
     )
 
     # パラメータの範囲チェック
@@ -73,7 +74,8 @@ async def web_search_with_rag(
         error_msg = "Google Custom Search APIの設定が不足しています。"
         logger.error(
             f"Missing API credentials: api_key={bool(api_key)}, "
-            f"search_engine_id={bool(search_engine_id)}"
+            f"search_engine_id={bool(search_engine_id)}",
+            extra={"category": "tool"}
         )
         return (
             f"エラー: {error_msg}\n\n"
@@ -103,7 +105,10 @@ async def web_search_with_rag(
 
             # 2. 全ページの内容を並列取得
             search_results = data["items"][:max_results]
-            logger.info(f"Fetching full content from {len(search_results)} URLs")
+            logger.info(
+                f"Fetching full content from {len(search_results)} URLs",
+                extra={"category": "tool"}
+            )
 
             # URLとメタデータを準備
             fetch_tasks = []
@@ -131,7 +136,8 @@ async def web_search_with_rag(
                     successful_pages.append(page_data)
                     logger.info(
                         f"Successfully fetched and extracted: {page_data['metadata']['url']} "
-                        f"({len(page_data['text'])} chars)"
+                        f"({len(page_data['text'])} chars)",
+                        extra={"category": "tool"}
                     )
 
             if not successful_pages:
@@ -152,8 +158,8 @@ async def web_search_with_rag(
             )
 
             logger.info(
-                f"Created temporary collection: {collection_name} "
-                f"(TTL: {collection_ttl_hours}h)"
+                f"Created temporary collection: {collection_name} (TTL: {collection_ttl_hours}h)",
+                extra={"category": "tool"}
             )
 
             # 4. DocumentProcessorでテキストを処理
@@ -169,7 +175,8 @@ async def web_search_with_rag(
                 all_chunks.extend(chunks)
 
                 logger.debug(
-                    f"Processed {metadata['url']}: {len(chunks)} chunks created"
+                    f"Processed {metadata['url']}: {len(chunks)} chunks created",
+                    extra={"category": "tool"}
                 )
 
             # 5. VectorStoreに追加
@@ -177,7 +184,8 @@ async def web_search_with_rag(
 
             logger.info(
                 f"Added {len(all_chunks)} chunks from {len(successful_pages)} pages "
-                f"to collection '{collection_name}'"
+                f"to collection '{collection_name}'",
+                extra={"category": "tool"}
             )
 
             # 6. 結果サマリーを返す
@@ -192,20 +200,21 @@ async def web_search_with_rag(
 
             # 応答の長さをログ出力
             logger.info(
-                f"web_search_with_rag response generated: "
-                f"collection={collection_name}, "
-                f"query={query}, "
-                f"pages={len(successful_pages)}, "
-                f"chunks={len(all_chunks)}, "
-                f"response_length={len(result_text)} chars"
+                f"web_search_with_rag response generated: collection={collection_name}, "
+                f"query={query}, pages={len(successful_pages)}, chunks={len(all_chunks)}, "
+                f"response_length={len(result_text)} chars",
+                extra={"category": "tool"}
             )
-            logger.debug(f"Full response:\n{result_text}")
+            logger.debug(f"Full response:\n{result_text}", extra={"category": "tool"})
 
             return result_text
 
     except httpx.HTTPStatusError as e:
         error_msg = f"HTTP {e.response.status_code}: {e.response.text}"
-        logger.error(f"HTTP error in web_search_with_rag: query={query}, error={error_msg}")
+        logger.error(
+            f"HTTP error in web_search_with_rag: query={query}, error={error_msg}",
+            extra={"category": "tool"}
+        )
 
         if e.response.status_code == 429:
             return "エラー: 検索のレート制限に達しました。しばらく待ってから再試行してください。"
@@ -215,12 +224,15 @@ async def web_search_with_rag(
             return f"エラー: Web検索に失敗しました (HTTP {e.response.status_code})"
 
     except httpx.TimeoutException:
-        logger.error(f"Timeout in web_search_with_rag: query={query}")
+        logger.error(f"Timeout in web_search_with_rag: query={query}", extra={"category": "tool"})
         return "エラー: 検索がタイムアウトしました。後でもう一度お試しください。"
 
     except Exception as e:
         error_msg = str(e)
-        logger.error(f"Error in web_search_with_rag: query={query}, error={error_msg}")
+        logger.error(
+            f"Error in web_search_with_rag: query={query}, error={error_msg}",
+            extra={"category": "tool"}
+        )
         return f"エラー: Web検索RAG化に失敗しました: {error_msg}"
 
 
@@ -247,7 +259,7 @@ async def _fetch_and_extract(url: str, metadata: dict) -> dict:
         text = _extract_text_from_html(html, max_length=None)
 
         if not text:
-            logger.warning(f"No text extracted from {url}")
+            logger.warning(f"No text extracted from {url}", extra={"category": "tool"})
             return {}
 
         return {
@@ -256,13 +268,19 @@ async def _fetch_and_extract(url: str, metadata: dict) -> dict:
         }
 
     except httpx.TimeoutException:
-        logger.warning(f"Timeout fetching URL: {url}")
+        logger.warning(f"Timeout fetching URL: {url}", extra={"category": "tool"})
         return {}
     except httpx.HTTPStatusError as e:
-        logger.warning(f"HTTP error {e.response.status_code} fetching URL: {url}")
+        logger.warning(
+            f"HTTP error {e.response.status_code} fetching URL: {url}",
+            extra={"category": "tool"}
+        )
         return {}
     except Exception as e:
-        logger.warning(f"Error fetching and extracting {url}: {str(e)}")
+        logger.warning(
+            f"Error fetching and extracting {url}: {str(e)}",
+            extra={"category": "tool"}
+        )
         return {}
 
 
@@ -305,7 +323,7 @@ def _extract_text_from_html(html: str, max_length: int | None = None) -> str:
         return text
 
     except Exception as e:
-        logger.warning(f"Error extracting text from HTML: {str(e)}")
+        logger.warning(f"Error extracting text from HTML: {str(e)}", extra={"category": "tool"})
         return ""
 
 

@@ -100,7 +100,8 @@ def estimate_chat_request_tokens(
     total_tokens = input_tokens + output_tokens
 
     logger.debug(
-        f"Token estimation: input={input_tokens}, output={output_tokens}, total={total_tokens}"
+        f"Token estimation: input={input_tokens}, output={output_tokens}, total={total_tokens}",
+        extra={"category": "billing"}
     )
 
     return {
@@ -133,6 +134,7 @@ def check_token_balance_sufficient(
         shortage = required_with_margin - available_tokens
         logger.warning(
             f"Insufficient token balance: required={required_with_margin}, "
-            f"available={available_tokens}, shortage={shortage}"
+            f"available={available_tokens}, shortage={shortage}",
+            extra={"category": "billing"}
         )
         return False, shortage

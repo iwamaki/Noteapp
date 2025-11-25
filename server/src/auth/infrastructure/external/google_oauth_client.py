@@ -61,7 +61,8 @@ class GoogleOAuthClient:
 
         logger.debug(
             f"Generated Google auth URL: client_id={self.client_id[:20]}..., "
-            f"redirect_uri={self.redirect_uri}"
+            f"redirect_uri={self.redirect_uri}",
+            extra={"category": "auth"}
         )
 
         return auth_url
@@ -96,7 +97,10 @@ class GoogleOAuthClient:
         }
 
         try:
-            logger.debug("Exchanging authorization code for tokens...")
+            logger.debug(
+                "Exchanging authorization code for tokens...",
+                extra={"category": "auth"}
+            )
 
             response = requests.post(
                 TOKEN_URI,
@@ -107,12 +111,18 @@ class GoogleOAuthClient:
             response.raise_for_status()
             tokens = response.json()
 
-            logger.info("Successfully exchanged authorization code for tokens")
+            logger.info(
+                "Successfully exchanged authorization code for tokens",
+                extra={"category": "auth"}
+            )
 
             return tokens
 
         except requests.exceptions.RequestException as e:
-            logger.error(f"Failed to exchange authorization code: {e}")
+            logger.error(
+                f"Failed to exchange authorization code: {e}",
+                extra={"category": "auth"}
+            )
             raise GoogleOAuthClientError(f"Token exchange failed: {str(e)}") from e
 
     def get_user_info(self, access_token: str) -> dict[str, Any]:
@@ -135,7 +145,7 @@ class GoogleOAuthClient:
             GoogleOAuthClientError: ユーザー情報取得失敗
         """
         try:
-            logger.debug("Fetching user info from Google...")
+            logger.debug("Fetching user info from Google...", extra={"category": "auth"})
 
             response = requests.get(
                 USERINFO_URI,
@@ -147,11 +157,12 @@ class GoogleOAuthClient:
             user_info = response.json()
 
             logger.info(
-                f"Successfully fetched user info: email={user_info.get('email', '')[:20]}..."
+                f"Successfully fetched user info: email={user_info.get('email', '')[:20]}...",
+                extra={"category": "auth"}
             )
 
             return user_info
 
         except requests.exceptions.RequestException as e:
-            logger.error(f"Failed to fetch user info: {e}")
+            logger.error(f"Failed to fetch user info: {e}", extra={"category": "auth"})
             raise GoogleOAuthClientError(f"User info fetch failed: {str(e)}") from e

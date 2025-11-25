@@ -65,6 +65,7 @@ def verify_purchase(product_id: str, purchase_token: str) -> dict[str, Any]:
         logger.info(
             "Purchase verified successfully",
             extra={
+                "category": "billing",
                 "product_id": product_id,
                 "purchase_token": purchase_token[:20] + "...",
                 "order_id": result.get('orderId')
@@ -77,6 +78,7 @@ def verify_purchase(product_id: str, purchase_token: str) -> dict[str, Any]:
         logger.error(
             f"Purchase verification failed: {e}",
             extra={
+                "category": "billing",
                 "product_id": product_id,
                 "purchase_token": purchase_token[:20] + "..." if purchase_token else "None"
             }
@@ -107,7 +109,10 @@ def acknowledge_purchase(product_id: str, purchase_token: str):
         else:
             # 開発環境: サービスアカウントファイルから認証情報を読み込む
             if not os.path.exists(SERVICE_ACCOUNT_FILE):
-                logger.warning(f"Service account file not found: {SERVICE_ACCOUNT_FILE}, skipping acknowledgment")
+                logger.warning(
+                    f"Service account file not found: {SERVICE_ACCOUNT_FILE}, skipping acknowledgment",
+                    extra={"category": "billing"}
+                )
                 return
             credentials = service_account.Credentials.from_service_account_file(
                 SERVICE_ACCOUNT_FILE, scopes=SCOPES
@@ -122,8 +127,8 @@ def acknowledge_purchase(product_id: str, purchase_token: str):
             body={}
         ).execute()
 
-        logger.info(f"Purchase acknowledged: {product_id}")
+        logger.info(f"Purchase acknowledged: {product_id}", extra={"category": "billing"})
 
     except Exception as e:
-        logger.error(f"Purchase acknowledgment failed: {e}")
+        logger.error(f"Purchase acknowledgment failed: {e}", extra={"category": "billing"})
         # エラーでも処理を続行（ユーザーはクレジットを受け取るべき）

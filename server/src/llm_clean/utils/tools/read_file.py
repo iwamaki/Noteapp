@@ -14,25 +14,25 @@ from src.llm_clean.utils.tools.context_manager import (
 @tool
 async def read_file(title: str) -> str:
     """
-    指定されたファイルの内容を読み取ります（フラット構造、WebSocket経由）。
+    Read file content in flat structure via WebSocket.
 
-    このツールは、ファイル名（title）を指定してファイルの内容を動的に取得します。
+    This tool dynamically fetches file content by filename (title).
 
-    動作フロー:
-    1. まず、現在開いているファイルかチェック（編集画面のコンテキスト）
-    2. そうでない場合、WebSocket経由でフロントエンドにファイル内容をリクエスト
-    3. フロントエンドはExpo FileSystemからファイルを読み取り、レスポンスを返す
-    4. バックエンドはレスポンスを受け取り、LLMに内容を返す
+    Workflow:
+    1. Check if file is currently open (editing screen context)
+    2. If not, request file content from frontend via WebSocket
+    3. Frontend reads file from Expo FileSystem and returns response
+    4. Backend receives response and returns content to LLM
 
-    これにより、LLMが必要なファイルだけを動的に取得できます（効率的）。
+    This allows LLM to fetch only needed files efficiently.
 
     Args:
-        title: 読み取るファイルの名前（例: "会議メモ", "新しいドキュメント"）
+        title: File name to read (e.g., "Meeting Notes", "Document")
 
     Returns:
-        ファイルの内容、またはファイルが見つからない/取得できない場合はエラーメッセージ
+        File content, or error message if file not found or inaccessible
     """
-    logger.info(f"read_file tool called: title={title}")
+    logger.info(f"read_file tool called: title={title}", extra={"category": "tool"})
 
     # 1. まず、現在開いているファイルかチェック（編集画面）
     current_file_context = get_file_context()
@@ -42,7 +42,7 @@ async def read_file(title: str) -> str:
 
         # ファイル名の比較
         if title.strip() == current_filename.strip():
-            logger.info(f"File content found in current context: {title}")
+            logger.info(f"File content found in current context: {title}", extra={"category": "tool"})
             if current_content:
                 return f"ファイル '{current_filename}' の内容:\n\n{current_content}"
             else:
@@ -70,11 +70,14 @@ async def read_file(title: str) -> str:
     # 3. WebSocket経由でフロントエンドにファイル内容をリクエスト
     client_id = get_client_id()
     if not client_id:
-        logger.error("No client_id available for WebSocket request")
+        logger.error("No client_id available for WebSocket request", extra={"category": "tool"})
         return f"エラー: WebSocket接続が確立されていません。ファイル '{title}' を読み取れません。アプリを再起動してください。"
 
     try:
-        logger.info(f"Requesting file content via WebSocket: title={title}, client_id={client_id}")
+        logger.info(
+            f"Requesting file content via WebSocket: title={title}, client_id={client_id}",
+            extra={"category": "tool"}
+        )
 
         # フロントエンドにリクエスト（30秒タイムアウト）
         content = await manager.request_file_content(client_id, title, timeout=30)
@@ -94,12 +97,18 @@ async def read_file(title: str) -> str:
 
         result_parts.append(f"\n\n{content}")
 
-        logger.info(f"File content successfully retrieved: title={title}, length={len(content)}")
+        logger.info(
+            f"File content successfully retrieved: title={title}, length={len(content)}",
+            extra={"category": "tool"}
+        )
         return "".join(result_parts)
 
     except Exception as e:
         error_msg = str(e)
-        logger.error(f"Error requesting file content: title={title}, error={error_msg}")
+        logger.error(
+            f"Error requesting file content: title={title}, error={error_msg}",
+            extra={"category": "tool"}
+        )
 
         # エラーメッセージをユーザーフレンドリーに変換
         if "is not connected" in error_msg:

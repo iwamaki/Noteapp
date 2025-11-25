@@ -20,6 +20,8 @@ export const CHAT_CONFIG = {
     chatAreaMaxHeight: 400,
     /** チャットエリアの初期高さ（px） */
     chatAreaInitialHeight: 250,
+    /** ChatInputBarの基本高さ（折りたたみ時、px） */
+    chatInputBarBaseHeight: 70,
   },
 
   /**

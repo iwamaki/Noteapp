@@ -62,8 +62,9 @@ class ProcessChatUseCase:
             Exception: If LLM provider error occurs
         """
         logger.info(
-            f"[ProcessChatUseCase] Starting chat processing: "
-            f"user={user_id}, provider={request.provider}, model={request.model}"
+            f"Starting chat processing: user={user_id}, "
+            f"provider={request.provider}, model={request.model}",
+            extra={"category": "llm"}
         )
 
         # Step 1: Validate token balance
@@ -71,14 +72,16 @@ class ProcessChatUseCase:
         estimated_tokens = await self._estimate_tokens(request)
 
         logger.info(
-            f"[ProcessChatUseCase] Estimated tokens: {estimated_tokens}"
+            f"Estimated tokens: {estimated_tokens}",
+            extra={"category": "llm"}
         )
 
         try:
             self.billing.validate_token_balance(request.model, estimated_tokens)
         except ValueError as e:
             logger.warning(
-                f"[ProcessChatUseCase] Token validation failed: {str(e)}"
+                f"Token validation failed: {str(e)}",
+                extra={"category": "llm"}
             )
             return ChatResponseDTO(
                 message="",
@@ -103,16 +106,17 @@ class ProcessChatUseCase:
             )
 
             logger.info(
-                f"[ProcessChatUseCase] LLM response received: "
-                f"{len(llm_response.get('message', ''))} chars"
+                f"LLM response received: {len(llm_response.get('message', ''))} chars",
+                extra={"category": "llm"}
             )
 
         except Exception as e:
             import traceback
             logger.error(
-                f"[ProcessChatUseCase] LLM provider error: {str(e)}"
+                f"LLM provider error: {str(e)}",
+                extra={"category": "llm"}
             )
-            logger.error(f"[ProcessChatUseCase] Traceback: {traceback.format_exc()}")
+            logger.error(traceback.format_exc(), extra={"category": "llm"})
             return ChatResponseDTO(
                 message="",
                 error=f"LLMエラーが発生しました: {str(e)}",
@@ -137,12 +141,13 @@ class ProcessChatUseCase:
                     }
                 )
                 logger.info(
-                    f"[ProcessChatUseCase] Token consumption recorded: "
-                    f"input={input_tokens}, output={output_tokens}"
+                    f"Token consumption recorded: input={input_tokens}, output={output_tokens}",
+                    extra={"category": "llm"}
                 )
             except Exception as e:
                 logger.error(
-                    f"[ProcessChatUseCase] Failed to record token consumption: {str(e)}"
+                    f"Failed to record token consumption: {str(e)}",
+                    extra={"category": "llm"}
                 )
 
         # Step 5: Extract commands
@@ -158,7 +163,10 @@ class ProcessChatUseCase:
                     cmd_dict = legacy_cmd if isinstance(legacy_cmd, dict) else legacy_cmd.dict()
                     action = cmd_dict.get("action")
                     if not action:
-                        logger.warning("[ProcessChatUseCase] Skipping command without action")
+                        logger.warning(
+                            "Skipping command without action",
+                            extra={"category": "llm"}
+                        )
                         continue
                     commands.append(LLMCommandDTO(
                         action=action,
@@ -171,11 +179,13 @@ class ProcessChatUseCase:
                         end_line=cmd_dict.get("end_line")
                     ))
                 logger.info(
-                    f"[ProcessChatUseCase] Extracted {len(commands)} commands"
+                    f"Extracted {len(commands)} commands",
+                    extra={"category": "llm"}
                 )
             except Exception as e:
                 logger.error(
-                    f"[ProcessChatUseCase] Command extraction error: {str(e)}"
+                    f"Command extraction error: {str(e)}",
+                    extra={"category": "llm"}
                 )
 
         # Step 6: Convert token usage to DTO
@@ -206,7 +216,8 @@ class ProcessChatUseCase:
         )
 
         logger.info(
-            "[ProcessChatUseCase] Chat processing completed successfully"
+            "Chat processing completed successfully",
+            extra={"category": "llm"}
         )
 
         return response

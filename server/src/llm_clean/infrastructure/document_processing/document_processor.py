@@ -47,7 +47,8 @@ class DocumentProcessor:
 
         logger.info(
             f"DocumentProcessor initialized: "
-            f"chunk_size={chunk_size}, chunk_overlap={chunk_overlap}"
+            f"chunk_size={chunk_size}, chunk_overlap={chunk_overlap}",
+            extra={"category": "document"}
         )
 
     def load_from_text(
@@ -65,7 +66,7 @@ class DocumentProcessor:
             分割されたドキュメントのリスト
         """
         if not text.strip():
-            logger.warning("Empty text provided")
+            logger.warning("Empty text provided", extra={"category": "document"})
             return []
 
         # メタデータのデフォルト値
@@ -85,11 +86,11 @@ class DocumentProcessor:
                 chunk.metadata["chunk_index"] = i
                 chunk.metadata["total_chunks"] = len(chunks)
 
-            logger.info(f"Processed text into {len(chunks)} chunks")
+            logger.info(f"Processed text into {len(chunks)} chunks", extra={"category": "document"})
             return chunks
 
         except Exception as e:
-            logger.error(f"Error processing text: {e}")
+            logger.error(f"Error processing text: {e}", extra={"category": "document"})
             raise
 
     def load_from_file(
@@ -121,7 +122,7 @@ class DocumentProcessor:
                 documents = self._load_text_file(file_path)
             else:
                 # デフォルトでテキストとして読み込みを試みる
-                logger.warning(f"Unknown file type: {file_extension}. Trying as text file.")
+                logger.warning(f"Unknown file type: {file_extension}. Trying as text file.", extra={"category": "document"})
                 documents = self._load_text_file(file_path)
 
             # 追加メタデータを付与
@@ -146,13 +147,14 @@ class DocumentProcessor:
 
             logger.info(
                 f"Loaded and processed file: {path.name} "
-                f"({len(documents)} pages/sections -> {len(chunks)} chunks)"
+                f"({len(documents)} pages/sections -> {len(chunks)} chunks)",
+                extra={"category": "document"}
             )
 
             return chunks
 
         except Exception as e:
-            logger.error(f"Error loading file {file_path}: {e}")
+            logger.error(f"Error loading file {file_path}: {e}", extra={"category": "document"})
             raise
 
     def _load_text_file(self, file_path: str) -> list[Document]:
@@ -169,7 +171,7 @@ class DocumentProcessor:
             return loader.load()
         except UnicodeDecodeError:
             # UTF-8で失敗した場合、他のエンコーディングを試す
-            logger.warning(f"UTF-8 decoding failed for {file_path}, trying other encodings")
+            logger.warning(f"UTF-8 decoding failed for {file_path}, trying other encodings", extra={"category": "document"})
             for encoding in ["cp932", "shift-jis", "euc-jp", "latin-1"]:
                 try:
                     loader = TextLoader(file_path, encoding=encoding)
@@ -217,11 +219,12 @@ class DocumentProcessor:
                 chunks = self.load_from_file(file_path, additional_metadata)
                 all_chunks.extend(chunks)
             except Exception as e:
-                logger.error(f"Failed to process file {file_path}: {e}")
+                logger.error(f"Failed to process file {file_path}: {e}", extra={"category": "document"})
                 # エラーがあっても続行
 
         logger.info(
-            f"Processed {len(file_paths)} files into {len(all_chunks)} total chunks"
+            f"Processed {len(file_paths)} files into {len(all_chunks)} total chunks",
+            extra={"category": "document"}
         )
 
         return all_chunks

@@ -88,6 +88,7 @@ async def register_device(
         logger.info(
             "Tokens issued for user",
             extra={
+                "category": "auth",
                 "user_id": user_id,
                 "is_new_user": is_new_user,
                 "device_id": body.device_id[:20] + "..."
@@ -104,13 +105,13 @@ async def register_device(
         )
 
     except AuthenticationError as e:
-        logger.error(f"Device registration failed: {e}")
+        logger.error(f"Device registration failed: {e}", extra={"category": "auth"})
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         ) from e
     except Exception as e:
-        logger.error(f"Unexpected error in device registration: {e}")
+        logger.error(f"Unexpected error in device registration: {e}", extra={"category": "auth"})
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error"
@@ -146,13 +147,13 @@ async def verify_device(
         )
 
     except DeviceNotFoundError as e:
-        logger.warning(f"Device verification failed: {e}")
+        logger.warning(f"Device verification failed: {e}", extra={"category": "auth"})
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e)
         ) from e
     except Exception as e:
-        logger.error(f"Unexpected error in device verification: {e}")
+        logger.error(f"Unexpected error in device verification: {e}", extra={"category": "auth"})
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error"
@@ -193,7 +194,7 @@ async def get_devices(
 
         logger.info(
             "Device list retrieved successfully",
-            extra={"user_id": user_id, "device_count": len(device_list)}
+            extra={"category": "auth", "user_id": user_id, "device_count": len(device_list)}
         )
 
         return DeviceListResponse(
@@ -202,13 +203,13 @@ async def get_devices(
         )
 
     except AuthenticationError as e:
-        logger.error(f"Failed to get device list: {e}")
+        logger.error(f"Failed to get device list: {e}", extra={"category": "auth"})
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
         ) from e
     except Exception as e:
-        logger.error(f"Unexpected error in get devices: {e}")
+        logger.error(f"Unexpected error in get devices: {e}", extra={"category": "auth"})
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error"
@@ -237,7 +238,7 @@ async def delete_device(
 
         logger.info(
             "Device deleted successfully",
-            extra={"user_id": user_id, "device_id": device_id[:20] + "..."}
+            extra={"category": "auth", "user_id": user_id, "device_id": device_id[:20] + "..."}
         )
 
         return DeleteDeviceResponse(
@@ -246,25 +247,25 @@ async def delete_device(
         )
 
     except DeviceNotFoundError as e:
-        logger.warning(f"Device deletion failed: {e}")
+        logger.warning(f"Device deletion failed: {e}", extra={"category": "auth"})
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e)
         ) from e
     except DeviceAccessDeniedError as e:
-        logger.warning(f"Device deletion denied: {e}")
+        logger.warning(f"Device deletion denied: {e}", extra={"category": "auth"})
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=str(e)
         ) from e
     except AuthenticationError as e:
-        logger.error(f"Failed to delete device: {e}")
+        logger.error(f"Failed to delete device: {e}", extra={"category": "auth"})
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         ) from e
     except Exception as e:
-        logger.error(f"Unexpected error in delete device: {e}")
+        logger.error(f"Unexpected error in delete device: {e}", extra={"category": "auth"})
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error"
@@ -296,7 +297,7 @@ async def refresh_token(
         device_id = get_device_id_from_token(body.refresh_token, TokenType.REFRESH)
 
         if not user_id or not device_id:
-            logger.warning("Refresh token validation failed")
+            logger.warning("Refresh token validation failed", extra={"category": "auth"})
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid or expired refresh token"
@@ -308,7 +309,7 @@ async def refresh_token(
 
         logger.info(
             "Tokens refreshed successfully",
-            extra={"user_id": user_id, "device_id": device_id[:20] + "..."}
+            extra={"category": "auth", "user_id": user_id, "device_id": device_id[:20] + "..."}
         )
 
         return RefreshTokenResponse(
@@ -320,7 +321,7 @@ async def refresh_token(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Unexpected error in token refresh: {e}")
+        logger.error(f"Unexpected error in token refresh: {e}", extra={"category": "auth"})
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error"
@@ -346,7 +347,7 @@ async def logout(
         auth_service = AuthService(db)
         auth_service.logout(body.access_token, body.refresh_token)
 
-        logger.info("User logged out successfully")
+        logger.info("User logged out successfully", extra={"category": "auth"})
 
         return LogoutResponse(
             message="Logged out successfully",
@@ -354,13 +355,13 @@ async def logout(
         )
 
     except AuthenticationError as e:
-        logger.error(f"Logout failed: {e}")
+        logger.error(f"Logout failed: {e}", extra={"category": "auth"})
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         ) from e
     except Exception as e:
-        logger.error(f"Unexpected error in logout: {e}")
+        logger.error(f"Unexpected error in logout: {e}", extra={"category": "auth"})
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error"
@@ -398,7 +399,7 @@ async def google_auth_start(
 
         logger.info(
             "Google OAuth started",
-            extra={"device_id": body.device_id[:20] + "...", "state": state[:10] + "..."}
+            extra={"category": "auth", "device_id": body.device_id[:20] + "...", "state": state[:10] + "..."}
         )
 
         return GoogleAuthStartResponse(
@@ -407,13 +408,13 @@ async def google_auth_start(
         )
 
     except OAuthServiceError as e:
-        logger.error(f"Failed to start Google OAuth: {e}")
+        logger.error(f"Failed to start Google OAuth: {e}", extra={"category": "auth"})
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
         ) from e
     except Exception as e:
-        logger.error(f"Unexpected error in Google OAuth start: {e}")
+        logger.error(f"Unexpected error in Google OAuth start: {e}", extra={"category": "auth"})
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error"
@@ -437,7 +438,10 @@ async def google_callback(
         # Get base URL for App Links
         oauth_redirect_uri = os.getenv("GOOGLE_OAUTH_REDIRECT_URI", "")
         if not oauth_redirect_uri:
-            logger.error("GOOGLE_OAUTH_REDIRECT_URI environment variable not configured")
+            logger.error(
+                "GOOGLE_OAUTH_REDIRECT_URI environment variable not configured",
+                extra={"category": "auth"}
+            )
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="OAuth redirect URI not configured"
@@ -446,12 +450,12 @@ async def google_callback(
 
         # エラーチェック
         if error:
-            logger.warning(f"Google OAuth error: {error}")
+            logger.warning(f"Google OAuth error: {error}", extra={"category": "auth"})
             error_url = f"{base_url}/api/auth/callback?error={error}"
             return RedirectResponse(error_url)
 
         if not code or not state:
-            logger.warning("Missing code or state in callback")
+            logger.warning("Missing code or state in callback", extra={"category": "auth"})
             error_url = f"{base_url}/api/auth/callback?error=missing_parameters"
             return RedirectResponse(error_url)
 
@@ -460,7 +464,10 @@ async def google_callback(
         device_id = state_manager.verify_state(state)
 
         if not device_id:
-            logger.warning(f"Invalid or expired state: {state[:10]}...")
+            logger.warning(
+                f"Invalid or expired state: {state[:10]}...",
+                extra={"category": "auth"}
+            )
             error_url = f"{base_url}/api/auth/callback?error=invalid_state"
             return RedirectResponse(error_url)
 
@@ -471,7 +478,7 @@ async def google_callback(
         id_token = tokens.get("id_token")
 
         if not access_token or not id_token:
-            logger.error("Missing tokens in Google response")
+            logger.error("Missing tokens in Google response", extra={"category": "auth"})
             error_url = f"{base_url}/api/auth/callback?error=token_exchange_failed"
             return RedirectResponse(error_url)
 
@@ -483,7 +490,7 @@ async def google_callback(
         profile_picture_url = user_info.get("picture")
 
         if not google_id or not email:
-            logger.error("Missing user info in Google response")
+            logger.error("Missing user info in Google response", extra={"category": "auth"})
             error_url = f"{base_url}/auth/callback?error=user_info_failed"
             return RedirectResponse(error_url)
 
@@ -509,7 +516,10 @@ async def google_callback(
                 existing_user.profile_picture_url = profile_picture_url
                 db.commit()
 
-                logger.info(f"Existing Google user logged in: user_id={user_id}")
+                logger.info(
+                    f"Existing Google user logged in: user_id={user_id}",
+                    extra={"category": "auth"}
+                )
 
             else:
                 # 新規ユーザー
@@ -534,7 +544,10 @@ async def google_callback(
 
                 db.commit()
 
-                logger.info(f"New Google user created: user_id={user_id}")
+                logger.info(
+                    f"New Google user created: user_id={user_id}",
+                    extra={"category": "auth"}
+                )
 
             # デバイス認証レコードを作成または更新
             existing_device = db.query(DeviceAuth).filter_by(device_id=device_id).first()
@@ -544,6 +557,7 @@ async def google_callback(
                     logger.warning(
                         "Device reassignment detected during OAuth login",
                         extra={
+                            "category": "auth",
                             "device_id": device_id[:20] + "...",
                             "old_user_id": existing_device.user_id,
                             "new_user_id": user_id
@@ -561,7 +575,10 @@ async def google_callback(
             jwt_access_token = create_access_token(user_id, device_id)
             jwt_refresh_token = create_refresh_token(user_id, device_id)
 
-            logger.info(f"Google OAuth successful: user_id={user_id}, device_id={device_id[:20]}...")
+            logger.info(
+                f"Google OAuth successful: user_id={user_id}, device_id={device_id[:20]}...",
+                extra={"category": "auth"}
+            )
 
             # Deep Link でアプリにリダイレクト
             params = urlencode({
@@ -578,7 +595,10 @@ async def google_callback(
             # Construct App Links URL (Android Intent Filter will intercept this)
             app_links_url = f"{base_url}/api/auth/callback?{params}"
 
-            logger.debug(f"Redirecting to App Links URL: {app_links_url[:100]}...")
+            logger.debug(
+                f"Redirecting to App Links URL: {app_links_url[:100]}...",
+                extra={"category": "auth"}
+            )
 
             # Redirect to HTTPS URL
             return RedirectResponse(url=app_links_url, status_code=307)
@@ -587,7 +607,7 @@ async def google_callback(
             db.close()
 
     except OAuthServiceError as e:
-        logger.error(f"Google OAuth flow error: {e}")
+        logger.error(f"Google OAuth flow error: {e}", extra={"category": "auth"})
         oauth_redirect_uri = os.getenv("GOOGLE_OAUTH_REDIRECT_URI", "")
         if oauth_redirect_uri:
             base_url = oauth_redirect_uri.replace("/api/auth/google/callback", "")
@@ -597,7 +617,7 @@ async def google_callback(
         html_content = _generate_error_html("認証エラー", "認証中にエラーが発生しました。", error_url)
         return HTMLResponse(content=html_content, status_code=200)
     except Exception as e:
-        logger.error(f"Unexpected error in Google callback: {e}")
+        logger.error(f"Unexpected error in Google callback: {e}", extra={"category": "auth"})
         oauth_redirect_uri = os.getenv("GOOGLE_OAUTH_REDIRECT_URI", "")
         if oauth_redirect_uri:
             base_url = oauth_redirect_uri.replace("/api/auth/google/callback", "")
@@ -624,7 +644,10 @@ async def app_links_callback(request: Request):
     params_str = urlencode(query_params)
     deep_link = f"noteapp://auth?{params_str}"
 
-    logger.debug(f"App Links callback received: {len(query_params)} params")
+    logger.debug(
+        f"App Links callback received: {len(query_params)} params",
+        extra={"category": "auth"}
+    )
 
     # HTML ページを返す（App Links が機能しない場合のフォールバック）
     html_content = f"""

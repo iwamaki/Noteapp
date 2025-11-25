@@ -58,7 +58,10 @@ class AuthService:
                 self.db.commit()
                 user_id = existing_device.user_id
                 assert user_id is not None, "user_id should not be None"
-                logger.info(f"Device login: device_id={device_id}, user_id={user_id}")
+                logger.info(
+                    f"Device login: device_id={device_id}, user_id={user_id}",
+                    extra={"category": "auth"}
+                )
                 return user_id, False
 
             # 新規ユーザー作成
@@ -80,12 +83,15 @@ class AuthService:
             self.db.add(new_device_auth)
 
             self.db.commit()
-            logger.info(f"New device registered: device_id={device_id}, user_id={user_id}")
+            logger.info(
+                f"New device registered: device_id={device_id}, user_id={user_id}",
+                extra={"category": "auth"}
+            )
             return user_id, True
 
         except Exception as e:
             self.db.rollback()
-            logger.error(f"Failed to register device: {e}")
+            logger.error(f"Failed to register device: {e}", extra={"category": "auth"})
             raise AuthenticationError(f"Device registration failed: {e}") from e
 
     def get_user_id_by_device(self, device_id: str) -> str | None:
@@ -133,6 +139,7 @@ class AuthService:
             logger.warning(
                 "Unregistered device access attempt",
                 extra={
+                    "category": "auth",
                     "event_type": "security",
                     "event": "device_not_found",
                     "device_id": device_id[:8] + "...",
@@ -153,6 +160,7 @@ class AuthService:
             logger.warning(
                 "User ID mismatch detected - possible account takeover attempt",
                 extra={
+                    "category": "auth",
                     "event_type": "security",
                     "event": "user_id_mismatch",
                     "device_id": device_id[:8] + "...",
@@ -164,7 +172,8 @@ class AuthService:
 
         # 一致している場合
         logger.info(
-            f"Device verification successful - device_id: {device_id}, user_id: {server_user_id}"
+            f"Device verification successful - device_id: {device_id}, user_id: {server_user_id}",
+            extra={"category": "auth"}
         )
         return True, server_user_id, "Device and user verified successfully"
 
@@ -197,11 +206,17 @@ class AuthService:
             # ブラックリストに追加（有効期限が切れるまで保持）
             if access_expires_in > 0:
                 blacklist_manager.add_to_blacklist(access_token, access_expires_in)
-                logger.debug(f"Access token blacklisted: expires_in={access_expires_in}s")
+                logger.debug(
+                    f"Access token blacklisted: expires_in={access_expires_in}s",
+                    extra={"category": "auth"}
+                )
 
             if refresh_expires_in > 0:
                 blacklist_manager.add_to_blacklist(refresh_token, refresh_expires_in)
-                logger.debug(f"Refresh token blacklisted: expires_in={refresh_expires_in}s")
+                logger.debug(
+                    f"Refresh token blacklisted: expires_in={refresh_expires_in}s",
+                    extra={"category": "auth"}
+                )
 
             user_id = access_payload.get("sub")
             device_id = access_payload.get("device_id")
@@ -209,13 +224,14 @@ class AuthService:
             logger.info(
                 "User logged out successfully",
                 extra={
+                    "category": "auth",
                     "user_id": user_id,
                     "device_id": device_id[:20] + "..." if device_id else "unknown",
                 },
             )
 
         except Exception as e:
-            logger.error(f"Failed to logout: {e}")
+            logger.error(f"Failed to logout: {e}", extra={"category": "auth"})
             raise AuthenticationError(f"Logout failed: {e}") from e
 
     def _generate_unique_user_id(self) -> str:
@@ -252,10 +268,13 @@ class AuthService:
         """
         try:
             devices = self.db.query(DeviceAuth).filter_by(user_id=user_id).all()
-            logger.info(f"Retrieved {len(devices)} devices for user_id={user_id}")
+            logger.info(
+                f"Retrieved {len(devices)} devices for user_id={user_id}",
+                extra={"category": "auth"}
+            )
             return devices
         except Exception as e:
-            logger.error(f"Failed to get user devices: {e}")
+            logger.error(f"Failed to get user devices: {e}", extra={"category": "auth"})
             raise AuthenticationError(f"Failed to get user devices: {e}") from e
 
     def delete_device(self, user_id: str, device_id: str) -> None:
@@ -283,6 +302,7 @@ class AuthService:
                 logger.warning(
                     "Unauthorized device deletion attempt",
                     extra={
+                        "category": "auth",
                         "event_type": "security",
                         "event": "unauthorized_device_access",
                         "requester_user_id": user_id,
@@ -296,13 +316,16 @@ class AuthService:
             device.is_active = False
             self.db.commit()
 
-            logger.info(f"Device deleted: user_id={user_id}, device_id={device_id}")
+            logger.info(
+                f"Device deleted: user_id={user_id}, device_id={device_id}",
+                extra={"category": "auth"}
+            )
 
         except (DeviceNotFoundError, DeviceAccessDeniedError):
             raise
         except Exception as e:
             self.db.rollback()
-            logger.error(f"Failed to delete device: {e}")
+            logger.error(f"Failed to delete device: {e}", extra={"category": "auth"})
             raise AuthenticationError(f"Failed to delete device: {e}") from e
 
     def update_device_info(
@@ -336,12 +359,13 @@ class AuthService:
 
             logger.info(
                 f"Device info updated: device_id={device_id}, "
-                f"name={device_name}, type={device_type}"
+                f"name={device_name}, type={device_type}",
+                extra={"category": "auth"}
             )
 
         except DeviceNotFoundError:
             raise
         except Exception as e:
             self.db.rollback()
-            logger.error(f"Failed to update device info: {e}")
+            logger.error(f"Failed to update device info: {e}", extra={"category": "auth"})
             raise AuthenticationError(f"Failed to update device info: {e}") from e

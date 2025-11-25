@@ -13,40 +13,46 @@ async def search_files(
     search_type: Literal["title", "content", "tag", "category"] = "title"
 ) -> str:
     """
-    ファイルを検索します（WebSocket経由）。
+    Search files via WebSocket.
 
-    このツールは、指定されたクエリでファイルを検索します。
-    検索タイプによって、タイトル、内容、タグ、カテゴリーで検索できます。
+    This tool searches files by specified query.
+    Search type determines whether to search by title, content, tag, or category.
 
-    動作フロー:
-    1. WebSocket経由でフロントエンドに検索リクエストを送信
-    2. フロントエンドはExpo FileSystemから全ファイルをスキャンして検索
-    3. マッチしたファイルのリストを返す
-    4. バックエンドは結果を整形してLLMに返す
+    Workflow:
+    1. Send search request to frontend via WebSocket
+    2. Frontend scans all files from Expo FileSystem
+    3. Return list of matching files
+    4. Backend formats results and returns to LLM
 
-    これにより、LLMがファイル横断的に情報を検索できます。
+    This allows LLM to search across files efficiently.
 
     Args:
-        query: 検索クエリ（例: "会議", "TODO", "重要"）
-        search_type: 検索タイプ
-            - "title": ファイル名で検索（デフォルト）
-            - "content": ファイル内容で検索
-            - "tag": タグで検索
-            - "category": カテゴリーで検索
+        query: Search query (e.g., "meeting", "TODO", "important")
+        search_type: Search type
+            - "title": Search by file name (default)
+            - "content": Search by file content
+            - "tag": Search by tag
+            - "category": Search by category
 
     Returns:
-        検索結果のリスト、またはエラーメッセージ
+        List of search results, or error message
     """
-    logger.info(f"search_files tool called: query={query}, search_type={search_type}")
+    logger.info(
+        f"search_files tool called: query={query}, search_type={search_type}",
+        extra={"category": "tool"}
+    )
 
     # WebSocket接続のクライアントIDを取得
     client_id = get_client_id()
     if not client_id:
-        logger.error("No client_id available for WebSocket request")
+        logger.error("No client_id available for WebSocket request", extra={"category": "tool"})
         return "エラー: WebSocket接続が確立されていません。検索を実行できません。アプリを再起動してください。"
 
     try:
-        logger.info(f"Requesting search via WebSocket: query={query}, search_type={search_type}, client_id={client_id}")
+        logger.info(
+            f"Requesting search via WebSocket: query={query}, search_type={search_type}, client_id={client_id}",
+            extra={"category": "tool"}
+        )
 
         # フロントエンドに検索リクエスト（30秒タイムアウト）
         results = await manager.request_search_results(
@@ -85,12 +91,18 @@ async def search_files(
 
         result_parts.append("\n\n特定のファイルの内容を読むには、read_file ツールを使用してください。")
 
-        logger.info(f"Search completed: query={query}, results_count={len(results)}")
+        logger.info(
+            f"Search completed: query={query}, results_count={len(results)}",
+            extra={"category": "tool"}
+        )
         return "".join(result_parts)
 
     except Exception as e:
         error_msg = str(e)
-        logger.error(f"Error requesting search: query={query}, error={error_msg}")
+        logger.error(
+            f"Error requesting search: query={query}, error={error_msg}",
+            extra={"category": "tool"}
+        )
 
         # エラーメッセージをユーザーフレンドリーに変換
         if "is not connected" in error_msg:

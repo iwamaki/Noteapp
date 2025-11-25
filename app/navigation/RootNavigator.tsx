@@ -5,7 +5,7 @@
  */
 
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Platform } from 'react-native';
+import { KeyboardAvoidingView, Platform, View, StyleSheet } from 'react-native';
 import {
   NavigationContainer,
   useNavigationContainerRef,
@@ -22,6 +22,7 @@ import { useTheme } from '../design/theme/ThemeContext';
 import { ChatInputBar } from '../features/chat/components/ChatInputBar';
 import { useLLMSettingsStore } from '../settings/settingsStore';
 import { logger } from '../utils/logger';
+import { CHAT_CONFIG } from '../features/chat/config/chatConfig';
 
 
 // スタックナビゲーターの作成
@@ -40,8 +41,11 @@ function RootNavigatorContent() {
 
   const shouldShowChat = (currentRouteName === 'FileList' || currentRouteName === 'FileEdit') && settings.llmEnabled;
 
+  // ChatInputBarの高さ分のパディング（LLM有効時のみ）
+  const chatPadding = settings.llmEnabled ? CHAT_CONFIG.ui.chatInputBarBaseHeight : 0;
+
   return (
-    <>
+    <View style={styles.container}>
       <NavigationContainer
         ref={navigationRef}
         onReady={() => {
@@ -92,9 +96,29 @@ function RootNavigatorContent() {
             gestureDirection: 'horizontal',
           }}
         >
-          {/* メイン画面 */}
-          <Stack.Screen name="FileList" component={FileListScreen} options={{ title: 'Files' }} />
-          <Stack.Screen name="FileEdit" component={FileEditScreen} options={{ title: 'Edit File' }} />
+          {/* メイン画面（ChatInputBarの高さ分だけ下部にパディング） */}
+          <Stack.Screen
+            name="FileList"
+            component={FileListScreen}
+            options={{
+              title: 'Files',
+              cardStyle: {
+                backgroundColor: colors.background,
+                paddingBottom: chatPadding,
+              },
+            }}
+          />
+          <Stack.Screen
+            name="FileEdit"
+            component={FileEditScreen}
+            options={{
+              title: 'Edit File',
+              cardStyle: {
+                backgroundColor: colors.background,
+                paddingBottom: chatPadding,
+              },
+            }}
+          />
 
           {/* 設定関連画面 */}
           <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
@@ -103,17 +127,31 @@ function RootNavigatorContent() {
         </Stack.Navigator>
       </NavigationContainer>
 
-      {/* ChatInputBar (LLM有効 & 対象画面でのみ表示) */}
+      {/* ChatInputBar (LLM有効 & 対象画面でのみ表示) - 絶対配置でオーバーレイ */}
       {shouldShowChat && (
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           keyboardVerticalOffset={0}
+          style={styles.chatOverlay}
+          pointerEvents="box-none"
         >
           <ChatInputBar />
         </KeyboardAvoidingView>
       )}
-    </>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  chatOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
+});
 
 export default RootNavigatorContent;
