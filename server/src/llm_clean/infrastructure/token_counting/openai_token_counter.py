@@ -5,6 +5,7 @@ Infrastructure implementation of token counting for OpenAI models.
 from typing import Any
 
 from langchain_openai import ChatOpenAI
+from pydantic import SecretStr
 
 from ...domain.interfaces.token_counter import ITokenCounter
 
@@ -55,7 +56,7 @@ class OpenAITokenCounter(ITokenCounter):
         """
         if model not in self._llm_cache:
             self._llm_cache[model] = ChatOpenAI(
-                api_key=self._api_key,
+                api_key=SecretStr(self._api_key),
                 model=model
             )
         return self._llm_cache[model]

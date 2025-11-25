@@ -2,6 +2,7 @@
 """Calculate token counts for system prompt, message, and tools"""
 
 import sys
+
 sys.path.insert(0, '/app/src')
 
 from src.core.config import settings
@@ -51,7 +52,7 @@ print(f"Number of tools: {len(AVAILABLE_TOOLS)}")
 # 4. Total
 total_estimated = system_tokens + message_tokens + tools_tokens
 print(f"\nTotal estimated: {total_estimated}")
-print(f"Claude reported: 9217")
+print("Claude reported: 9217")
 print(f"Difference: {9217 - total_estimated}")
 
 # Also print each tool's description length

@@ -5,6 +5,7 @@ Infrastructure implementation of token counting for Anthropic Claude models.
 from typing import Any
 
 from langchain_anthropic import ChatAnthropic
+from pydantic import SecretStr
 
 from ...domain.interfaces.token_counter import ITokenCounter
 
@@ -54,8 +55,10 @@ class AnthropicTokenCounter(ITokenCounter):
         """
         if model not in self._llm_cache:
             self._llm_cache[model] = ChatAnthropic(
-                api_key=self._api_key,
-                model_name=model
+                api_key=SecretStr(self._api_key),
+                model_name=model,
+                timeout=None,
+                stop=None
             )
         return self._llm_cache[model]
 
