@@ -12,7 +12,7 @@ import { ActiveScreenContextProvider, ActiveScreenContext } from './types';
 import { ChatAttachmentService } from './services/chatAttachmentService';
 import { TokenManagementService } from '../llmService/services/TokenManagementService';
 import { CommandService } from '../llmService/services/CommandService';
-import { useLLMSettingsStore } from '../../settings/settingsStore';
+import { useLLMSettingsStore } from '../settings/settingsStore';
 import { useChatStore } from './store/chatStore';
 import { UnifiedErrorHandler } from './utils/errorHandler';
 import { ChatWebSocketManager } from './services/chatWebSocketManager';
@@ -391,7 +391,7 @@ class ChatService {
     // ローカル統計を更新（トークン消費はバックエンドで既に実行済み）
     // /api/chat がバックエンドでトークンを消費するため、ここではローカルキャッシュと統計の更新のみ
     if (tokenUsage.inputTokens && tokenUsage.outputTokens && model) {
-      const { updateLocalTokenStats } = await import('../../billing/utils/tokenBalance');
+      const { updateLocalTokenStats } = await import('../billing/utils/tokenBalance');
       await updateLocalTokenStats(
         tokenUsage.inputTokens,
         tokenUsage.outputTokens,

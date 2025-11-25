@@ -23,11 +23,11 @@ import { useTheme } from '../../design/theme/ThemeContext';
 import { CustomHeader } from '../../components/CustomHeader';
 import { MainContainer } from '../../components/MainContainer';
 import { RootStackParamList } from '../../navigation/types';
-import { useTokenBalanceStore, TOKEN_CAPACITY_LIMITS } from '../../settings/settingsStore';
+import { useTokenBalanceStore, TOKEN_CAPACITY_LIMITS } from '../../features/settings/settingsStore';
 import { convertProvidersToModelInfo, type ModelInfo } from './constants';
 import APIService from '../../features/llmService/api';
 import { CreditAllocationModal } from './components/CreditAllocationModal';
-import { useModelSwitch } from '../../settings/hooks/useModelSwitch';
+import { useModelSwitch } from '../../features/settings/hooks/useModelSwitch';
 import { logger } from '../../utils/logger';
 
 type ModelSelectionScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ModelSelection'>;

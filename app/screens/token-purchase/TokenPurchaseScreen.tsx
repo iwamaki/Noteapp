@@ -26,7 +26,7 @@ import { usePurchaseHandlers } from './hooks/usePurchaseHandlers';
 import { useTokenPurchaseHeader } from './hooks/useTokenPurchaseHeader';
 
 // Types
-import type { TokenPackage } from '../../billing/constants/tokenPackages';
+import type { TokenPackage } from '../../features/billing/constants/tokenPackages';
 
 export default function TokenPurchaseScreen() {
   const { t } = useTranslation();

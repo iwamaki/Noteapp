@@ -7,9 +7,9 @@
 import { useState, useEffect } from 'react';
 import { Alert } from 'react-native';
 import type { Product } from 'react-native-iap';
-import { initializeTokenIAP, getAvailableTokenPackages } from '../../../billing/services/tokenIapService';
-import { TOKEN_PACKAGES } from '../../../billing/constants/tokenPackages';
-import type { TokenPackage } from '../../../billing/constants/tokenPackages';
+import { initializeTokenIAP, getAvailableTokenPackages } from '../../../features/billing/services/tokenIapService';
+import { TOKEN_PACKAGES } from '../../../features/billing/constants/tokenPackages';
+import type { TokenPackage } from '../../../features/billing/constants/tokenPackages';
 import { logger } from '../../../utils/logger';
 
 interface UseProductLoaderReturn {

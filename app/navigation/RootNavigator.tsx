@@ -14,13 +14,13 @@ import { createStackNavigator, CardStyleInterpolators } from '@react-navigation/
 import { RootStackParamList } from './types';
 import FileListScreen from '../screens/file-list-flat/FileListScreenFlat';
 import FileEditScreen from '../screens/file-edit/FileEditScreen';
-import SettingsScreen from '../settings/SettingsScreen';
+import SettingsScreen from '../features/settings/SettingsScreen';
 import { TokenPurchaseScreen } from '../screens/token-purchase';
 import { ModelSelectionScreen } from '../screens/model-selection/ModelSelectionScreen';
 
 import { useTheme } from '../design/theme/ThemeContext';
 import { ChatInputBar } from '../features/chat/components/ChatInputBar';
-import { useLLMSettingsStore } from '../settings/settingsStore';
+import { useLLMSettingsStore } from '../features/settings/settingsStore';
 import { logger } from '../utils/logger';
 import { CHAT_CONFIG } from '../features/chat/config/chatConfig';
 

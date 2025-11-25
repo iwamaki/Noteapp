@@ -7,10 +7,10 @@
 import { useState } from 'react';
 import { Alert } from 'react-native';
 import type { Product, Purchase } from 'react-native-iap';
-import { useTokenBalanceStore } from '../../../settings/settingsStore';
-import type { PurchaseRecord } from '../../../settings/types/tokenBalance.types';
-import { purchaseTokenPackage, isUserCancelledError } from '../../../billing/services/tokenIapService';
-import type { TokenPackage } from '../../../billing/constants/tokenPackages';
+import { useTokenBalanceStore } from '../../../features/settings/settingsStore';
+import type { PurchaseRecord } from '../../../features/settings/types/tokenBalance.types';
+import { purchaseTokenPackage, isUserCancelledError } from '../../../features/billing/services/tokenIapService';
+import type { TokenPackage } from '../../../features/billing/constants/tokenPackages';
 import { logger } from '../../../utils/logger';
 
 interface UsePurchaseHandlersProps {
@@ -65,7 +65,7 @@ export const usePurchaseHandlers = ({
           try {
             // バックエンドにクレジットを追加
             logger.info('billing', 'Sending credits to backend', { credits: pkg.credits });
-            const { getBillingApiService } = await import('../../../billing/services/billingApiService');
+            const { getBillingApiService } = await import('../../../features/billing/services/billingApiService');
             const billingService = getBillingApiService();
             await billingService.addCredits(pkg.credits, purchaseRecord);
             logger.info('billing', 'Backend verification successful');
@@ -103,7 +103,7 @@ export const usePurchaseHandlers = ({
             const retryBackendVerification = async () => {
               setPurchasing(true);
               try {
-                const { getBillingApiService } = await import('../../../billing/services/billingApiService');
+                const { getBillingApiService } = await import('../../../features/billing/services/billingApiService');
                 const billingService = getBillingApiService();
                 await billingService.addCredits(pkg.credits, purchaseRecord);
                 logger.info('billing', 'Backend verification successful on retry');

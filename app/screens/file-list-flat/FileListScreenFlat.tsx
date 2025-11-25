@@ -29,7 +29,7 @@ import { RootStackParamList } from '../../navigation/types';
 // ===== Contexts & Stores =====
 import { useTheme } from '../../design/theme/ThemeContext';
 import { useFlatListStore } from './stores/useFlatListStore';
-import { useUISettingsStore, useEditorSettingsStore } from '../../settings/settingsStore';
+import { useUISettingsStore, useEditorSettingsStore } from '../../features/settings/settingsStore';
 
 // ===== Shared Components =====
 import { MainContainer } from '../../components/MainContainer';
