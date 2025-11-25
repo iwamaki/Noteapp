@@ -75,12 +75,13 @@ class Logger {
     }
 
     // 全てのログレベルでJSON形式で出力
+    // 順番: level → category → message → data → timestamp
     const logEntry = {
-      timestamp: new Date().toISOString(),
       level: level.toUpperCase(),
       category: category,
       message: message,
       ...(args.length > 0 && { data: args }),
+      timestamp: new Date().toISOString(),
     };
     console.log(JSON.stringify(logEntry));
   }

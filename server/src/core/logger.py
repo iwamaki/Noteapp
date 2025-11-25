@@ -58,19 +58,19 @@ class JsonFormatter(logging.Formatter):
         return str(obj)
 
     def format(self, record):
-        log_data = {
-            "timestamp": datetime.utcnow().isoformat(),
-            "level": record.levelname,
-            "logger": record.name
-        }
-
+        # 順番: level → category → message → ... → timestamp
         # extraパラメータからcategoryを取得（デフォルトは"default"）
         category = getattr(record, 'category', 'default')
-        log_data["category"] = category
+
+        log_data = {
+            "level": record.levelname,
+            "category": category,
+        }
 
         # メッセージがすでにdict型ならそのままマージ
         if isinstance(record.msg, dict):
-            log_data.update(record.msg)
+            log_data["message"] = record.msg.get("message", "")
+            log_data.update({k: v for k, v in record.msg.items() if k != "message"})
         else:
             log_data["message"] = record.getMessage()
 
@@ -86,6 +86,9 @@ class JsonFormatter(logging.Formatter):
         for key, value in record.__dict__.items():
             if key not in excluded_attrs and not key.startswith('_'):
                 log_data[key] = value
+
+        # timestampを最後に追加
+        log_data["timestamp"] = datetime.utcnow().isoformat()
 
         # JSON形式で出力（1行1JSON形式でjq解析を容易に）
         return json.dumps(log_data, ensure_ascii=False, default=self.default_serializer)
