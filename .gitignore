@@ -66,4 +66,4 @@ build/
 scripts/
 server/billing.db
 .env.*.bak
-.claude
+.claude/settings.local.json
