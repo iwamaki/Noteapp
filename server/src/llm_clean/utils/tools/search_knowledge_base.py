@@ -51,8 +51,14 @@ async def search_knowledge_base(
 
     db = SessionLocal()
     try:
-        # PgVectorStoreを取得（user_id=Noneで一時コレクションも検索可能）
-        vector_store = get_pgvector_store(db, user_id=None)
+        # user_idを決定（knowledge_base_routerと同じロジック）
+        # persistent コレクションの場合は default_user を使用
+        if collection_name.startswith("web_") or collection_name.startswith("temp_"):
+            user_id = None
+        else:
+            user_id = "default_user"  # TODO: 認証機能追加後、実際のuser_idを使用
+
+        vector_store = get_pgvector_store(db, user_id=user_id)
 
         # コレクションの存在確認
         exists = await vector_store.collection_exists(collection_name)

@@ -6,7 +6,7 @@ Domain Interfaces と Application Ports を実装します。
 
 Components:
 - llm_providers: LLMプロバイダーの実装（Gemini, OpenAI）
-- vector_stores: FAISSベクトルストアの実装
+- vector_stores: PostgreSQL/pgvectorベクトルストアの実装
 - document_processing: ドキュメント処理の実装
 - token_counting: トークンカウンターの実装
 """
@@ -26,15 +26,11 @@ from .llm_providers import (
 )
 from .token_counting import GeminiTokenCounter, TokenCounterFactory
 from .vector_stores import (
-    CollectionManager,
     PgVectorCleanupJob,
     PgVectorStore,
     PgVectorStoreAdapter,
-    VectorStoreManager,
     get_pgvector_store,
-    start_cleanup_job,
     start_pgvector_cleanup_job,
-    stop_cleanup_job,
     stop_pgvector_cleanup_job,
 )
 
@@ -55,19 +51,13 @@ __all__ = [
     "GeminiTokenCounter",
     "TokenCounterFactory",
 
-    # Vector Stores (PostgreSQL/pgvector - 推奨)
+    # Vector Stores (PostgreSQL/pgvector)
     "PgVectorStore",
     "PgVectorStoreAdapter",
     "PgVectorCleanupJob",
     "get_pgvector_store",
     "start_pgvector_cleanup_job",
     "stop_pgvector_cleanup_job",
-
-    # Vector Stores (FAISS - レガシー)
-    "VectorStoreManager",
-    "CollectionManager",
-    "start_cleanup_job",
-    "stop_cleanup_job",
 
     # Document Processing
     "DocumentProcessor",

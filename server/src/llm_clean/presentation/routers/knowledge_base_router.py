@@ -1,21 +1,22 @@
 # @file knowledge_base_router.py
 # @summary 知識ベース（RAG）管理用のAPIエンドポイント
 # @responsibility ドキュメントのアップロード、統計情報取得、削除を提供します
+# @note PgVectorStore を使用（FAISSから移行済み）
 
 import shutil
 import tempfile
 from pathlib import Path
+from typing import Literal
 
 from fastapi import APIRouter, File, HTTPException, Query, UploadFile
 from fastapi.responses import JSONResponse
 
 from src.core.logger import logger
+from src.data import SessionLocal
 from src.llm_clean.infrastructure.vector_stores import (
-    get_collection_manager,
     get_document_processor,
+    get_pgvector_store,
 )
-from src.llm_clean.infrastructure.vector_stores.collection_manager import CollectionType
-from src.llm_clean.infrastructure.vector_stores.faiss_vector_store import VectorStoreManager
 from src.llm_clean.presentation.middleware.error_handler import handle_route_errors
 from src.llm_clean.presentation.schemas.api_schemas import (
     CreateCollectionRequest,
@@ -24,39 +25,11 @@ from src.llm_clean.presentation.schemas.api_schemas import (
 
 router = APIRouter()
 
+# TODO: 認証機能追加後、リクエストからuser_idを取得するように変更
+# 現在は暫定的に固定値を使用（マルチユーザー対応時に要修正）
+DEFAULT_USER_ID = "default_user"
 
-def get_vector_store(collection_name: str = "default", create_if_missing: bool = False) -> VectorStoreManager:
-    """ベクトルストアを取得（コレクション名を指定可能）
-
-    Args:
-        collection_name: コレクション名
-        create_if_missing: 存在しない場合に自動作成するかどうか
-
-    Returns:
-        VectorStoreManager
-
-    Raises:
-        HTTPException: コレクションが見つからない場合（create_if_missing=Falseの場合）
-    """
-    manager = get_collection_manager()
-    vector_store = manager.get_collection(collection_name)
-
-    if vector_store is None:
-        if create_if_missing:
-            # 永久保存コレクションとして作成
-            logger.info(f"Creating new persistent collection: {collection_name}", extra={"category": "api"})
-            vector_store = manager.create_collection(
-                name=collection_name,
-                collection_type="persistent",
-                description=f"Auto-created collection for {collection_name}"
-            )
-        else:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Collection '{collection_name}' not found or expired"
-            )
-
-    return vector_store
+CollectionType = Literal["temp", "persistent"]
 
 
 @router.post("/api/knowledge-base/documents/upload")
@@ -79,13 +52,18 @@ async def upload_document(
     Returns:
         アップロード結果とドキュメント情報
     """
-    logger.info(f"Document upload requested: {file.filename} to collection '{collection_name}'", extra={"category": "api"})
+    logger.info(
+        f"Document upload requested: {file.filename} to collection '{collection_name}'",
+        extra={"category": "api"}
+    )
 
     if not file.filename:
         raise HTTPException(status_code=400, detail="ファイル名が指定されていません")
 
     # 一時ファイルに保存
     temp_file_path = None
+    db = SessionLocal()
+
     try:
         # 一時ファイルを作成
         suffix = Path(file.filename).suffix
@@ -111,12 +89,24 @@ async def upload_document(
         if not chunks:
             raise HTTPException(status_code=400, detail="ドキュメントの処理に失敗しました")
 
-        # ベクトルストアに追加（存在しない場合は自動作成）
-        vector_store = get_vector_store(collection_name, create_if_missing=True)
-        vector_store.add_documents(chunks, save_after_add=True)
+        # コレクションタイプとuser_idを決定
+        collection_type, user_id = _determine_collection_params(collection_name)
+
+        # PgVectorStoreでドキュメントを追加
+        vector_store = get_pgvector_store(db, user_id=user_id)
+        documents = [chunk.page_content for chunk in chunks]
+        metadatas = [chunk.metadata for chunk in chunks]
+
+        await vector_store._store.add_documents(
+            collection_name=collection_name,
+            documents=documents,
+            metadatas=metadatas,
+            collection_type=collection_type,
+            user_id=user_id
+        )
 
         # 統計情報を取得
-        stats = vector_store.get_stats()
+        info = await vector_store.get_collection_info(collection_name)
         doc_summary = processor.get_document_summary(chunks)
 
         logger.info(
@@ -135,8 +125,8 @@ async def upload_document(
                 "average_chunk_size": doc_summary["average_chunk_size"]
             },
             "knowledge_base": {
-                "total_documents": stats["document_count"],
-                "collection_name": stats["collection_name"]
+                "total_documents": info["document_count"] if info else len(chunks),
+                "collection_name": collection_name
             }
         })
 
@@ -144,6 +134,7 @@ async def upload_document(
         # 一時ファイルを削除
         if temp_file_path and Path(temp_file_path).exists():
             Path(temp_file_path).unlink()
+        db.close()
 
 
 @router.get("/api/knowledge-base/documents/stats")
@@ -160,18 +151,35 @@ async def get_knowledge_base_stats(
     Returns:
         ドキュメント数、ストレージパスなどの統計情報
     """
-    vector_store = get_vector_store(collection_name)
-    stats = vector_store.get_stats()
+    db = SessionLocal()
+    try:
+        _, user_id = _determine_collection_params(collection_name)
+        vector_store = get_pgvector_store(db, user_id=user_id)
 
-    # コレクションメタデータも含める
-    manager = get_collection_manager()
-    metadata = manager.get_metadata(collection_name)
+        info = await vector_store.get_collection_info(collection_name)
 
-    return JSONResponse(content={
-        "success": True,
-        "stats": stats,
-        "metadata": metadata.model_dump(mode="json") if metadata else None
-    })
+        if info is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Collection '{collection_name}' not found or expired"
+            )
+
+        return JSONResponse(content={
+            "success": True,
+            "stats": {
+                "document_count": info["document_count"],
+                "collection_name": info["collection_name"],
+                "collection_type": info["collection_type"]
+            },
+            "metadata": {
+                "name": info["collection_name"],
+                "collection_type": info["collection_type"],
+                "created_at": info.get("created_at"),
+                "expires_at": info.get("expires_at")
+            }
+        })
+    finally:
+        db.close()
 
 
 @router.delete("/api/knowledge-base/documents/clear")
@@ -188,15 +196,27 @@ async def clear_knowledge_base(
     Returns:
         削除結果
     """
-    vector_store = get_vector_store(collection_name)
-    vector_store.clear()
+    db = SessionLocal()
+    try:
+        _, user_id = _determine_collection_params(collection_name)
+        vector_store = get_pgvector_store(db, user_id=user_id)
 
-    logger.info(f"Knowledge base cleared: {collection_name}", extra={"category": "api"})
+        success = await vector_store.delete_collection(collection_name)
 
-    return JSONResponse(content={
-        "success": True,
-        "message": f"コレクション '{collection_name}' をクリアしました"
-    })
+        if not success:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Collection '{collection_name}' not found"
+            )
+
+        logger.info(f"Knowledge base cleared: {collection_name}", extra={"category": "api"})
+
+        return JSONResponse(content={
+            "success": True,
+            "message": f"コレクション '{collection_name}' をクリアしました"
+        })
+    finally:
+        db.close()
 
 
 @router.post("/api/knowledge-base/documents/upload-text")
@@ -220,53 +240,72 @@ async def upload_text(
         アップロード結果とドキュメント情報
     """
     text = request.text
-    logger.info(f"Text upload requested: {len(text)} characters to collection '{collection_name}'", extra={"category": "api"})
+    logger.info(
+        f"Text upload requested: {len(text)} characters to collection '{collection_name}'",
+        extra={"category": "api"}
+    )
 
     if not text.strip():
         raise HTTPException(status_code=400, detail="テキストが空です")
 
-    # ドキュメントを処理
-    processor = get_document_processor()
+    db = SessionLocal()
+    try:
+        # ドキュメントを処理
+        processor = get_document_processor()
 
-    # 追加メタデータ
-    metadata = {}
-    if metadata_title:
-        metadata["title"] = metadata_title
-    if metadata_description:
-        metadata["description"] = metadata_description
+        # 追加メタデータ
+        metadata = {}
+        if metadata_title:
+            metadata["title"] = metadata_title
+        if metadata_description:
+            metadata["description"] = metadata_description
 
-    chunks = processor.load_from_text(text, metadata=metadata)
+        chunks = processor.load_from_text(text, metadata=metadata)
 
-    if not chunks:
-        raise HTTPException(status_code=400, detail="テキストの処理に失敗しました")
+        if not chunks:
+            raise HTTPException(status_code=400, detail="テキストの処理に失敗しました")
 
-    # ベクトルストアに追加（存在しない場合は自動作成）
-    vector_store = get_vector_store(collection_name, create_if_missing=True)
-    vector_store.add_documents(chunks, save_after_add=True)
+        # コレクションタイプとuser_idを決定
+        collection_type, user_id = _determine_collection_params(collection_name)
 
-    # 統計情報を取得
-    stats = vector_store.get_stats()
-    doc_summary = processor.get_document_summary(chunks)
+        # PgVectorStoreでドキュメントを追加
+        vector_store = get_pgvector_store(db, user_id=user_id)
+        documents = [chunk.page_content for chunk in chunks]
+        metadatas = [chunk.metadata for chunk in chunks]
 
-    logger.info(
-        f"Text uploaded successfully to '{collection_name}': "
-        f"{len(chunks)} chunks, {doc_summary['total_characters']} chars",
-        extra={"category": "api"}
-    )
+        await vector_store._store.add_documents(
+            collection_name=collection_name,
+            documents=documents,
+            metadatas=metadatas,
+            collection_type=collection_type,
+            user_id=user_id
+        )
 
-    return JSONResponse(content={
-        "success": True,
-        "message": f"テキストをコレクション '{collection_name}' に追加しました",
-        "document": {
-            "chunks_created": len(chunks),
-            "total_characters": doc_summary["total_characters"],
-            "average_chunk_size": doc_summary["average_chunk_size"]
-        },
-        "knowledge_base": {
-            "total_documents": stats["document_count"],
-            "collection_name": stats["collection_name"]
-        }
-    })
+        # 統計情報を取得
+        info = await vector_store.get_collection_info(collection_name)
+        doc_summary = processor.get_document_summary(chunks)
+
+        logger.info(
+            f"Text uploaded successfully to '{collection_name}': "
+            f"{len(chunks)} chunks, {doc_summary['total_characters']} chars",
+            extra={"category": "api"}
+        )
+
+        return JSONResponse(content={
+            "success": True,
+            "message": f"テキストをコレクション '{collection_name}' に追加しました",
+            "document": {
+                "chunks_created": len(chunks),
+                "total_characters": doc_summary["total_characters"],
+                "average_chunk_size": doc_summary["average_chunk_size"]
+            },
+            "knowledge_base": {
+                "total_documents": info["document_count"] if info else len(chunks),
+                "collection_name": collection_name
+            }
+        })
+    finally:
+        db.close()
 
 
 # === コレクション管理エンドポイント ===
@@ -287,32 +326,35 @@ async def create_temp_collection(request: CreateCollectionRequest):
     Returns:
         作成されたコレクション情報
     """
-    manager = get_collection_manager()
+    db = SessionLocal()
+    try:
+        vector_store = get_pgvector_store(db, user_id=None)
 
-    # コレクション名の決定
-    if request.name:
-        collection_name = request.name
-    else:
-        collection_name = manager.generate_temp_collection_name(request.prefix)
+        # コレクション名の決定
+        if request.name:
+            collection_name = request.name
+        else:
+            collection_name = vector_store.generate_temp_collection_name(request.prefix)
 
-    # コレクション作成
-    manager.create_collection(
-        name=collection_name,
-        collection_type="temp",
-        ttl_hours=request.ttl_hours,
-        description=request.description
-    )
+        # PgVectorStoreでは、ドキュメント追加時にコレクションが作成される
+        # ここでは空のコレクション情報を返す
+        logger.info(
+            f"Temp collection created: {collection_name} (TTL: {request.ttl_hours}h)",
+            extra={"category": "api"}
+        )
 
-    # メタデータ取得
-    metadata = manager.get_metadata(collection_name)
-
-    logger.info(f"Temp collection created: {collection_name}", extra={"category": "api"})
-
-    return JSONResponse(content={
-        "success": True,
-        "message": f"一時コレクション '{collection_name}' を作成しました",
-        "collection": metadata.model_dump(mode="json") if metadata else None
-    })
+        return JSONResponse(content={
+            "success": True,
+            "message": f"一時コレクション '{collection_name}' を作成しました",
+            "collection": {
+                "name": collection_name,
+                "collection_type": "temp",
+                "ttl_hours": request.ttl_hours,
+                "description": request.description
+            }
+        })
+    finally:
+        db.close()
 
 
 @router.get("/api/knowledge-base/collections")
@@ -327,24 +369,28 @@ async def list_collections(
     Args:
         collection_type: フィルタするコレクションタイプ（temp/persistent、デフォルト: 全て）
         include_expired: 期限切れコレクションを含めるか（デフォルト: False）
+            ※ PgVectorStoreでは期限切れは自動的に除外されます
 
     Returns:
         コレクション一覧
     """
-    manager = get_collection_manager()
-    collections = manager.list_collections(
-        collection_type=collection_type,
-        include_expired=include_expired
-    )
+    db = SessionLocal()
+    try:
+        # 全コレクションを取得するためuser_id=Noneで初期化
+        vector_store = get_pgvector_store(db, user_id=DEFAULT_USER_ID)
 
-    # モデルを辞書に変換
-    collections_data = [col.model_dump(mode="json") for col in collections]
+        collections = await vector_store._store.list_collections(
+            user_id=DEFAULT_USER_ID,
+            collection_type=collection_type
+        )
 
-    return JSONResponse(content={
-        "success": True,
-        "count": len(collections_data),
-        "collections": collections_data
-    })
+        return JSONResponse(content={
+            "success": True,
+            "count": len(collections),
+            "collections": collections
+        })
+    finally:
+        db.close()
 
 
 @router.delete("/api/knowledge-base/collections/{name}")
@@ -362,8 +408,6 @@ async def delete_collection(name: str):
     Notes:
         - デフォルトコレクションは削除できません
     """
-    manager = get_collection_manager()
-
     # デフォルトコレクションの削除を防止
     if name == "default":
         raise HTTPException(
@@ -371,19 +415,34 @@ async def delete_collection(name: str):
             detail="デフォルトコレクションは削除できません"
         )
 
-    success = manager.delete_collection(name)
+    db = SessionLocal()
+    try:
+        _, user_id = _determine_collection_params(name)
+        vector_store = get_pgvector_store(db, user_id=user_id)
 
-    if success:
-        logger.info(f"Collection deleted: {name}", extra={"category": "api"})
-        return JSONResponse(content={
-            "success": True,
-            "message": f"コレクション '{name}' を削除しました"
-        })
-    else:
-        raise HTTPException(
-            status_code=404,
-            detail=f"コレクション '{name}' が見つかりません"
-        )
+        # 存在確認
+        exists = await vector_store.collection_exists(name)
+        if not exists:
+            raise HTTPException(
+                status_code=404,
+                detail=f"コレクション '{name}' が見つかりません"
+            )
+
+        success = await vector_store.delete_collection(name)
+
+        if success:
+            logger.info(f"Collection deleted: {name}", extra={"category": "api"})
+            return JSONResponse(content={
+                "success": True,
+                "message": f"コレクション '{name}' を削除しました"
+            })
+        else:
+            raise HTTPException(
+                status_code=500,
+                detail=f"コレクション '{name}' の削除に失敗しました"
+            )
+    finally:
+        db.close()
 
 
 @router.post("/api/knowledge-base/collections/cleanup")
@@ -395,13 +454,41 @@ async def cleanup_expired_collections():
     Returns:
         削除されたコレクション数
     """
-    manager = get_collection_manager()
-    deleted_count = manager.cleanup_expired()
+    db = SessionLocal()
+    try:
+        vector_store = get_pgvector_store(db, user_id=None)
+        deleted_count = await vector_store.cleanup_expired()
 
-    logger.info(f"Cleanup completed: {deleted_count} collections deleted", extra={"category": "api"})
+        logger.info(
+            f"Cleanup completed: {deleted_count} documents deleted",
+            extra={"category": "api"}
+        )
 
-    return JSONResponse(content={
-        "success": True,
-        "message": f"{deleted_count}個の期限切れコレクションを削除しました",
-        "deleted_count": deleted_count
-    })
+        return JSONResponse(content={
+            "success": True,
+            "message": f"{deleted_count}個の期限切れドキュメントを削除しました",
+            "deleted_count": deleted_count
+        })
+    finally:
+        db.close()
+
+
+def _determine_collection_params(collection_name: str) -> tuple[CollectionType, str | None]:
+    """コレクション名からタイプとuser_idを決定
+
+    Args:
+        collection_name: コレクション名
+
+    Returns:
+        (collection_type, user_id) のタプル
+
+    命名規則:
+        - web_*, temp_* → temp (TTL付き、user_id不要)
+        - category_*, default, その他 → persistent (永続、user_id必要)
+    """
+    if collection_name.startswith("web_") or collection_name.startswith("temp_"):
+        return "temp", None
+    else:
+        # persistent の場合は user_id が必要
+        # TODO: 認証機能追加後、リクエストからuser_idを取得
+        return "persistent", DEFAULT_USER_ID

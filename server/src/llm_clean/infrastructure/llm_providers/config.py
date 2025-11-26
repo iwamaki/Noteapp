@@ -61,7 +61,7 @@ TOOLS_ENABLED: Final[dict[str, bool]] = {
     "rename_file": True,          # ファイルリネームツール
     "search_files": True,         # ファイル検索ツール
     "web_search": True,           # Web検索ツール
-    "web_search_with_rag": False,  # Web検索+RAGツール
-    "search_knowledge_base": False # ナレッジベース検索ツール
+    "web_search_with_rag": True,  # Web検索+RAGツール
+    "search_knowledge_base": True # ナレッジベース検索ツール
 }
 """各ツールの有効/無効設定。Falseに設定するとLLMがそのツールを認識できなくなります。"""

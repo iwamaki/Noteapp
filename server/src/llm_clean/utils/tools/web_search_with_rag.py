@@ -10,6 +10,7 @@ import httpx
 from bs4 import BeautifulSoup  # type: ignore
 from langchain.tools import tool
 
+from src.core.config import settings
 from src.core.logger import logger
 from src.data import SessionLocal
 from src.llm_clean.infrastructure.vector_stores import (
@@ -68,7 +69,8 @@ async def web_search_with_rag(
     collection_ttl_hours = max(0.1, min(24.0, collection_ttl_hours))
 
     # Google Custom Search APIのキー確認
-    api_key = os.getenv("GOOGLE_API_KEY")
+    # Secret Managerから取得したAPIキーを使用
+    api_key = settings.google_cse_api_key
     search_engine_id = os.getenv("GOOGLE_CSE_ID")
 
     if not api_key or not search_engine_id:
@@ -80,9 +82,9 @@ async def web_search_with_rag(
         )
         return (
             f"エラー: {error_msg}\n\n"
-            ".envファイルに以下の環境変数を設定してください:\n"
-            "- GOOGLE_API_KEY: Google API Key\n"
-            "- GOOGLE_CSE_ID: Custom Search Engine ID"
+            "必要な設定:\n"
+            "- GOOGLE_CSE_API_KEY: Secret Managerに登録済みであることを確認してください\n"
+            "- GOOGLE_CSE_ID: .envファイルに設定してください (Custom Search Engine ID)"
         )
 
     try:

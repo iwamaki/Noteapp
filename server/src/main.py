@@ -19,10 +19,7 @@ from src.core.logger import logger
 from src.error_log import error_log_router
 from src.feedback import feedback_router
 from src.llm_clean.infrastructure import (
-    CollectionManager,
-    start_cleanup_job,
     start_pgvector_cleanup_job,
-    stop_cleanup_job,
     stop_pgvector_cleanup_job,
 )
 
@@ -64,24 +61,13 @@ async def lifespan(app: FastAPI):
             extra={"category": "startup", "component": "database"}
         )
 
-    # PostgreSQL版クリーンアップジョブを開始（推奨）
+    # PostgreSQL版クリーンアップジョブを開始
     try:
         await start_pgvector_cleanup_job(interval_minutes=10)
         logger.info("pgvector cleanup job started", extra={"category": "startup"})
     except Exception as e:
         logger.warning(
             f"pgvector cleanup job initialization skipped: {e}",
-            extra={"category": "startup", "component": "cleanup_job"}
-        )
-
-    # FAISS版クリーンアップジョブ（レガシー - 将来的に削除予定）
-    try:
-        collection_manager = CollectionManager()
-        await start_cleanup_job(collection_manager, interval_minutes=10)
-        logger.info("FAISS cleanup job started (legacy)", extra={"category": "startup"})
-    except Exception as e:
-        logger.warning(
-            f"FAISS cleanup job initialization skipped: {e}",
             extra={"category": "startup", "component": "cleanup_job"}
         )
 
@@ -96,13 +82,6 @@ async def lifespan(app: FastAPI):
         logger.info("pgvector cleanup job stopped", extra={"category": "startup"})
     except Exception as e:
         logger.warning(f"pgvector cleanup job stop skipped: {e}", extra={"category": "startup"})
-
-    # FAISS版クリーンアップジョブを停止（レガシー）
-    try:
-        await stop_cleanup_job()
-        logger.info("FAISS cleanup job stopped (legacy)", extra={"category": "startup"})
-    except Exception as e:
-        logger.warning(f"FAISS cleanup job stop skipped: {e}", extra={"category": "startup"})
 
 
 app = FastAPI(title="LLM File App API", lifespan=lifespan)

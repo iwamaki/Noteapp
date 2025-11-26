@@ -169,7 +169,7 @@ export const FILE_LIST_FLAT_CONFIG = {
   // ========================================
   features: {
     /** RAG機能（Q&A作成など）の有効/無効 */
-    ragEnabled: false, // TODO: RAGが安定したらtrueに変更
+    ragEnabled: true,
   },
 } as const;
 
