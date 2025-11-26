@@ -23,9 +23,10 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({ message, tokenUsage,
   const styles = StyleSheet.create({
     aiMessage: {
       backgroundColor: colors.secondary,
-      borderBottomLeftRadius: CHAT_CONFIG.components.border.radius.small,
       borderWidth: CHAT_CONFIG.components.border.width,
       borderColor: colors.border,
+      marginLeft: 5,
+      marginRight: 5,
     },
     aiMessageWrapper: {
       position: 'relative',
@@ -54,9 +55,9 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({ message, tokenUsage,
     userMessage: {
       alignSelf: 'flex-end',
       backgroundColor: colors.primary,
-      borderBottomRightRadius: CHAT_CONFIG.components.border.radius.small,
       marginVertical: CHAT_CONFIG.components.spacing.md,
       marginLeft: iconSizes.medium + 12,
+      marginRight: 5,
     },
 
     attachedFileContainer: {
@@ -73,9 +74,12 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({ message, tokenUsage,
     },
     attachedFileContainerUser: {
       alignSelf: 'flex-end',
+      marginRight: 5,
     },
     attachedFileContainerAI: {
       alignSelf: 'flex-start',
+      marginLeft: 5,
+      marginRight: 5,
     },
     attachedFileIcon: {
       marginRight: CHAT_CONFIG.components.spacing.sm,

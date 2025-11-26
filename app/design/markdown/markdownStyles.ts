@@ -190,11 +190,13 @@ export const getMarkdownStyles = (options: MarkdownStyleOptions) => {
     // 順序なしリスト
     bullet_list: {
       marginVertical: 4,
+      paddingLeft: 0,
     } as TextStyle,
 
     // 順序付きリスト
     ordered_list: {
       marginVertical: 4,
+      paddingLeft: 0,
     } as TextStyle,
 
     // 引用ブロック
