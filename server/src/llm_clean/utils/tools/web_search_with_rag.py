@@ -11,9 +11,10 @@ from bs4 import BeautifulSoup  # type: ignore
 from langchain.tools import tool
 
 from src.core.logger import logger
+from src.data import SessionLocal
 from src.llm_clean.infrastructure.vector_stores import (
-    get_collection_manager,
     get_document_processor,
+    get_pgvector_store,
 )
 
 
@@ -147,67 +148,77 @@ async def web_search_with_rag(
                     "すべてのページでアクセスエラーまたはコンテンツ抽出エラーが発生しました。"
                 )
 
-            # 3. 一時コレクションを作成
-            manager = get_collection_manager()
-            collection_name = manager.generate_temp_collection_name("web")
-            vector_store = manager.create_collection(
-                name=collection_name,
-                collection_type="temp",
-                ttl_hours=collection_ttl_hours,
-                description=f"Web search results for: {query}"
-            )
+            # 3. DBセッションを取得してPgVectorStoreを使用
+            db = SessionLocal()
+            try:
+                vector_store = get_pgvector_store(db, user_id=None)  # 一時データはuser_id不要
+                collection_name = vector_store.generate_temp_collection_name("web")
 
-            logger.info(
-                f"Created temporary collection: {collection_name} (TTL: {collection_ttl_hours}h)",
-                extra={"category": "tool"}
-            )
-
-            # 4. DocumentProcessorでテキストを処理
-            processor = get_document_processor()
-            all_chunks = []
-
-            for page_data in successful_pages:
-                text = page_data["text"]
-                metadata = page_data["metadata"]
-
-                # テキストをチャンク化
-                chunks = processor.load_from_text(text, metadata=metadata)
-                all_chunks.extend(chunks)
-
-                logger.debug(
-                    f"Processed {metadata['url']}: {len(chunks)} chunks created",
+                logger.info(
+                    f"Creating temporary collection: {collection_name} (TTL: {collection_ttl_hours}h)",
                     extra={"category": "tool"}
                 )
 
-            # 5. VectorStoreに追加
-            vector_store.add_documents(all_chunks, save_after_add=True)
+                # 4. DocumentProcessorでテキストを処理
+                processor = get_document_processor()
+                all_documents: list[str] = []
+                all_metadatas: list[dict] = []
 
-            logger.info(
-                f"Added {len(all_chunks)} chunks from {len(successful_pages)} pages "
-                f"to collection '{collection_name}'",
-                extra={"category": "tool"}
-            )
+                for page_data in successful_pages:
+                    text = page_data["text"]
+                    metadata = page_data["metadata"]
 
-            # 6. 結果サマリーを返す
-            result_text = _format_rag_result(
-                query=query,
-                collection_name=collection_name,
-                pages_count=len(successful_pages),
-                chunks_count=len(all_chunks),
-                ttl_hours=collection_ttl_hours,
-                search_results=search_results[:len(successful_pages)]
-            )
+                    # テキストをチャンク化
+                    chunks = processor.load_from_text(text, metadata=metadata)
 
-            # 応答の長さをログ出力
-            logger.info(
-                f"web_search_with_rag response generated: collection={collection_name}, "
-                f"query={query}, pages={len(successful_pages)}, chunks={len(all_chunks)}, "
-                f"response_length={len(result_text)} chars",
-                extra={"category": "tool"}
-            )
-            logger.debug(f"Full response:\n{result_text}", extra={"category": "tool"})
+                    for chunk in chunks:
+                        all_documents.append(chunk.page_content)
+                        all_metadatas.append(chunk.metadata)
 
-            return result_text
+                    logger.debug(
+                        f"Processed {metadata['url']}: {len(chunks)} chunks created",
+                        extra={"category": "tool"}
+                    )
+
+                # 5. PgVectorStoreに追加
+                await vector_store._store.add_documents(
+                    collection_name=collection_name,
+                    documents=all_documents,
+                    metadatas=all_metadatas,
+                    collection_type="temp",
+                    user_id=None,
+                    ttl_hours=collection_ttl_hours
+                )
+
+                logger.info(
+                    f"Added {len(all_documents)} chunks from {len(successful_pages)} pages "
+                    f"to collection '{collection_name}'",
+                    extra={"category": "tool"}
+                )
+
+                # 6. 結果サマリーを返す
+                result_text = _format_rag_result(
+                    query=query,
+                    collection_name=collection_name,
+                    pages_count=len(successful_pages),
+                    chunks_count=len(all_documents),
+                    ttl_hours=collection_ttl_hours,
+                    search_results=search_results[:len(successful_pages)]
+                )
+
+                # 応答の長さをログ出力
+                logger.info(
+                    f"web_search_with_rag response generated: collection={collection_name}, "
+                    f"query={query}, pages={len(successful_pages)}, chunks={len(all_documents)}, "
+                    f"response_length={len(result_text)} chars",
+                    extra={"category": "tool"}
+                )
+                logger.debug(f"Full response:\n{result_text}", extra={"category": "tool"})
+
+                return result_text
+
+            finally:
+                db.close()
 
     except httpx.HTTPStatusError as e:
         error_msg = f"HTTP {e.response.status_code}: {e.response.text}"

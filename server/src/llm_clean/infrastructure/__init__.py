@@ -27,9 +27,15 @@ from .llm_providers import (
 from .token_counting import GeminiTokenCounter, TokenCounterFactory
 from .vector_stores import (
     CollectionManager,
+    PgVectorCleanupJob,
+    PgVectorStore,
+    PgVectorStoreAdapter,
     VectorStoreManager,
+    get_pgvector_store,
     start_cleanup_job,
+    start_pgvector_cleanup_job,
     stop_cleanup_job,
+    stop_pgvector_cleanup_job,
 )
 
 __all__ = [
@@ -49,7 +55,15 @@ __all__ = [
     "GeminiTokenCounter",
     "TokenCounterFactory",
 
-    # Vector Stores
+    # Vector Stores (PostgreSQL/pgvector - 推奨)
+    "PgVectorStore",
+    "PgVectorStoreAdapter",
+    "PgVectorCleanupJob",
+    "get_pgvector_store",
+    "start_pgvector_cleanup_job",
+    "stop_pgvector_cleanup_job",
+
+    # Vector Stores (FAISS - レガシー)
     "VectorStoreManager",
     "CollectionManager",
     "start_cleanup_job",

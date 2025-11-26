@@ -18,7 +18,7 @@ services:
     command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
 
   postgres:
-    image: postgres:15-alpine
+    image: pgvector/pgvector:pg15  # pgvector拡張を含むPostgreSQLイメージ
     container_name: noteapp-postgres-dev
     environment:
       POSTGRES_USER: noteapp_user
