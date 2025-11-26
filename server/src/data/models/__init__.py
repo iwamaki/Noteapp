@@ -2,6 +2,7 @@
 from .auth import TokenBlacklist
 from .base import Base
 from .billing import Credit, TokenBalance, TokenPricing, Transaction
+from .collection_sharing import CollectionSharing
 from .error_log import ErrorLog
 from .feedback import Feedback
 from .user import DeviceAuth, User
@@ -19,4 +20,5 @@ __all__ = [
     'ErrorLog',
     'Feedback',
     'VectorDocument',
+    'CollectionSharing',
 ]

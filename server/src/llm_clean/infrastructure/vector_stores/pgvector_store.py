@@ -8,7 +8,7 @@ from typing import Any, Literal
 
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from pydantic import SecretStr
-from sqlalchemy import delete, select, text
+from sqlalchemy import delete, text
 from sqlalchemy.orm import Session
 
 from src.core.config import settings
@@ -187,15 +187,26 @@ class PgVectorStore:
                 collection_type,
                 user_id,
                 embedding <=> CAST(:query_embedding AS vector) AS distance
-            FROM vector_documents
+            FROM vector_documents vd
             WHERE collection_name = :collection_name
               AND (expires_at IS NULL OR expires_at > :now)
               AND (
                   -- temp collection: user_id制限なし
                   (collection_type = 'temp')
                   OR
-                  -- persistent collection: user_idが一致
+                  -- persistent collection: user_idが一致（所有者）
                   (collection_type = 'persistent' AND user_id = :user_id)
+                  OR
+                  -- persistent collection: 共有されている場合
+                  (
+                      collection_type = 'persistent'
+                      AND EXISTS (
+                          SELECT 1 FROM collection_sharing cs
+                          WHERE cs.owner_user_id = vd.user_id
+                            AND cs.collection_name = vd.collection_name
+                            AND cs.shared_with_user_id = :user_id
+                      )
+                  )
               )
             ORDER BY distance
             LIMIT :top_k
@@ -283,24 +294,45 @@ class PgVectorStore:
             user_id: ユーザーID（オプション）
 
         Returns:
-            存在する場合True
+            存在する場合True（所有者、temp、または共有されている場合）
         """
         now = datetime.now(UTC)
 
-        stmt = select(VectorDocument.id).where(
-            VectorDocument.collection_name == collection_name
-        ).where(
-            (VectorDocument.expires_at == None) |  # noqa: E711
-            (VectorDocument.expires_at > now)
-        )
+        # Raw SQLで共有チェックを含む存在確認
+        sql = text("""
+            SELECT 1 FROM vector_documents vd
+            WHERE vd.collection_name = :collection_name
+              AND (vd.expires_at IS NULL OR vd.expires_at > :now)
+              AND (
+                  -- temp collection: 誰でもアクセス可能
+                  (vd.collection_type = 'temp')
+                  OR
+                  -- persistent collection: 所有者
+                  (vd.collection_type = 'persistent' AND vd.user_id = :user_id)
+                  OR
+                  -- persistent collection: 共有されている場合
+                  (
+                      vd.collection_type = 'persistent'
+                      AND EXISTS (
+                          SELECT 1 FROM collection_sharing cs
+                          WHERE cs.owner_user_id = vd.user_id
+                            AND cs.collection_name = vd.collection_name
+                            AND cs.shared_with_user_id = :user_id
+                      )
+                  )
+              )
+            LIMIT 1
+        """)
 
-        if user_id:
-            stmt = stmt.where(
-                (VectorDocument.user_id == user_id) |
-                (VectorDocument.collection_type == "temp")
-            )
+        result = self.db.execute(
+            sql,
+            {
+                "collection_name": collection_name,
+                "now": now,
+                "user_id": user_id
+            }
+        ).first()
 
-        result = self.db.execute(stmt.limit(1)).first()
         return result is not None
 
     async def get_collection_info(
@@ -315,39 +347,65 @@ class PgVectorStore:
             user_id: ユーザーID（オプション）
 
         Returns:
-            コレクション情報、存在しない場合はNone
+            コレクション情報、存在しない場合はNone（所有者、temp、または共有されている場合のみ取得可能）
         """
         now = datetime.now(UTC)
 
-        # ドキュメント数をカウント
-        stmt = select(VectorDocument).where(
-            VectorDocument.collection_name == collection_name
-        ).where(
-            (VectorDocument.expires_at == None) |  # noqa: E711
-            (VectorDocument.expires_at > now)
-        )
+        # Raw SQLで共有チェックを含むコレクション情報取得
+        sql = text("""
+            SELECT
+                vd.collection_name,
+                vd.collection_type,
+                vd.user_id,
+                vd.created_at,
+                vd.expires_at,
+                COUNT(*) as document_count
+            FROM vector_documents vd
+            WHERE vd.collection_name = :collection_name
+              AND (vd.expires_at IS NULL OR vd.expires_at > :now)
+              AND (
+                  -- temp collection: 誰でもアクセス可能
+                  (vd.collection_type = 'temp')
+                  OR
+                  -- persistent collection: 所有者
+                  (vd.collection_type = 'persistent' AND vd.user_id = :user_id)
+                  OR
+                  -- persistent collection: 共有されている場合
+                  (
+                      vd.collection_type = 'persistent'
+                      AND EXISTS (
+                          SELECT 1 FROM collection_sharing cs
+                          WHERE cs.owner_user_id = vd.user_id
+                            AND cs.collection_name = vd.collection_name
+                            AND cs.shared_with_user_id = :user_id
+                      )
+                  )
+              )
+            GROUP BY vd.collection_name, vd.collection_type, vd.user_id,
+                     vd.created_at, vd.expires_at
+            ORDER BY vd.created_at DESC
+            LIMIT 1
+        """)
 
-        if user_id:
-            stmt = stmt.where(
-                (VectorDocument.user_id == user_id) |
-                (VectorDocument.collection_type == "temp")
-            )
+        result = self.db.execute(
+            sql,
+            {
+                "collection_name": collection_name,
+                "now": now,
+                "user_id": user_id
+            }
+        ).first()
 
-        docs = self.db.execute(stmt).scalars().all()
-
-        if not docs:
+        if not result:
             return None
 
-        # 最初のドキュメントから情報を取得
-        first_doc = docs[0]
-
         return {
-            "collection_name": collection_name,
-            "collection_type": first_doc.collection_type,
-            "user_id": first_doc.user_id,
-            "document_count": len(docs),
-            "created_at": first_doc.created_at.isoformat() if first_doc.created_at else None,
-            "expires_at": first_doc.expires_at.isoformat() if first_doc.expires_at else None
+            "collection_name": result.collection_name,
+            "collection_type": result.collection_type,
+            "user_id": result.user_id,
+            "document_count": result.document_count,
+            "created_at": result.created_at.isoformat() if result.created_at else None,
+            "expires_at": result.expires_at.isoformat() if result.expires_at else None
         }
 
     async def list_collections(

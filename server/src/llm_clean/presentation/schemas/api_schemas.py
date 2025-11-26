@@ -3,7 +3,7 @@
 # @responsibility 知識ベースAPIで使用する共通のスキーマを提供
 
 
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, Field
 
 
 class CreateCollectionRequest(BaseModel):
@@ -17,3 +17,11 @@ class CreateCollectionRequest(BaseModel):
 class UploadTextRequest(BaseModel):
     """テキストアップロードリクエスト"""
     text: str
+
+
+class ShareCollectionRequest(BaseModel):
+    """コレクション共有リクエスト"""
+    target_email: EmailStr = Field(
+        ...,
+        description="共有先ユーザーのメールアドレス"
+    )

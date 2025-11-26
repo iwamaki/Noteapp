@@ -5,6 +5,7 @@
 
 import shutil
 import tempfile
+from datetime import UTC, datetime
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
@@ -13,6 +14,7 @@ from fastapi.responses import JSONResponse
 from src.auth import verify_token_auth
 from src.core.logger import logger
 from src.data import SessionLocal
+from src.data.models import CollectionSharing, User, VectorDocument
 from src.llm_clean.domain.value_objects import (
     CollectionType,
     RAGContext,
@@ -24,6 +26,7 @@ from src.llm_clean.infrastructure.vector_stores import (
 from src.llm_clean.presentation.middleware.error_handler import handle_route_errors
 from src.llm_clean.presentation.schemas.api_schemas import (
     CreateCollectionRequest,
+    ShareCollectionRequest,
     UploadTextRequest,
 )
 
@@ -474,5 +477,290 @@ async def cleanup_expired_collections():
             "message": f"{deleted_count}個の期限切れドキュメントを削除しました",
             "deleted_count": deleted_count
         })
+    finally:
+        db.close()
+
+
+# === コレクション共有エンドポイント ===
+
+@router.post("/api/knowledge-base/collections/{name}/share")
+@handle_route_errors
+async def share_collection(
+    name: str,
+    request: ShareCollectionRequest,
+    user_id: str = Depends(verify_token_auth)
+):
+    """
+    コレクションを他ユーザーと共有
+
+    Args:
+        name: コレクション名
+        request: 共有リクエスト（target_email）
+        user_id: 認証済みユーザーID（リクエスト者 = 所有者であること）
+
+    Returns:
+        共有結果
+
+    Notes:
+        - persistentコレクションのみ共有可能
+        - 所有者のみ共有設定可能
+        - 自分自身への共有は不可
+    """
+    db = SessionLocal()
+    try:
+        # 1. 対象コレクションの存在確認と所有者確認
+        vector_store = get_pgvector_store(db, user_id=user_id)
+        info = await vector_store.get_collection_info(name)
+
+        if info is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"コレクション '{name}' が見つかりません"
+            )
+
+        # 2. persistentコレクションのみ共有可能
+        if info["collection_type"] != "persistent":
+            raise HTTPException(
+                status_code=400,
+                detail="一時コレクションは共有できません"
+            )
+
+        # 3. 所有者確認
+        if info["user_id"] != user_id:
+            raise HTTPException(
+                status_code=403,
+                detail="コレクションの所有者のみ共有設定できます"
+            )
+
+        # 4. 共有先ユーザーをメールアドレスから検索
+        target_user = db.query(User).filter(
+            User.email == request.target_email
+        ).first()
+
+        if not target_user:
+            raise HTTPException(
+                status_code=404,
+                detail=f"ユーザー '{request.target_email}' が見つかりません"
+            )
+
+        # 5. 自分自身への共有禁止
+        if target_user.user_id == user_id:
+            raise HTTPException(
+                status_code=400,
+                detail="自分自身には共有できません"
+            )
+
+        # 6. 既存共有の重複チェック
+        existing = db.query(CollectionSharing).filter(
+            CollectionSharing.owner_user_id == user_id,
+            CollectionSharing.collection_name == name,
+            CollectionSharing.shared_with_user_id == target_user.user_id
+        ).first()
+
+        if existing:
+            raise HTTPException(
+                status_code=409,
+                detail="既に共有済みです"
+            )
+
+        # 7. 共有レコード作成
+        sharing = CollectionSharing(
+            owner_user_id=user_id,
+            collection_name=name,
+            shared_with_user_id=target_user.user_id
+        )  # type: ignore[call-arg]
+        db.add(sharing)
+        db.commit()
+
+        logger.info(
+            f"Collection shared: {name} -> {target_user.user_id} ({request.target_email})",
+            extra={"category": "api", "user_id": user_id}
+        )
+
+        return JSONResponse(content={
+            "success": True,
+            "message": f"コレクション '{name}' を共有しました",
+            "share": {
+                "collection_name": name,
+                "shared_with_user_id": target_user.user_id,
+                "shared_with_email": target_user.email,
+                "shared_with_display_name": target_user.display_name
+            }
+        })
+
+    finally:
+        db.close()
+
+
+@router.delete("/api/knowledge-base/collections/{name}/share/{target_user_id}")
+@handle_route_errors
+async def unshare_collection(
+    name: str,
+    target_user_id: str,
+    user_id: str = Depends(verify_token_auth)
+):
+    """
+    コレクション共有を解除
+
+    Args:
+        name: コレクション名
+        target_user_id: 共有解除するユーザーID
+        user_id: 認証済みユーザーID（所有者）
+
+    Returns:
+        解除結果
+    """
+    db = SessionLocal()
+    try:
+        # 共有レコードを検索（所有者確認も兼ねる）
+        sharing = db.query(CollectionSharing).filter(
+            CollectionSharing.owner_user_id == user_id,
+            CollectionSharing.collection_name == name,
+            CollectionSharing.shared_with_user_id == target_user_id
+        ).first()
+
+        if not sharing:
+            raise HTTPException(
+                status_code=404,
+                detail="共有設定が見つかりません"
+            )
+
+        db.delete(sharing)
+        db.commit()
+
+        logger.info(
+            f"Collection unshared: {name} x {target_user_id}",
+            extra={"category": "api", "user_id": user_id}
+        )
+
+        return JSONResponse(content={
+            "success": True,
+            "message": f"コレクション '{name}' の共有を解除しました"
+        })
+
+    finally:
+        db.close()
+
+
+@router.get("/api/knowledge-base/collections/{name}/shares")
+@handle_route_errors
+async def list_collection_shares(
+    name: str,
+    user_id: str = Depends(verify_token_auth)
+):
+    """
+    コレクションの共有一覧を取得
+
+    Args:
+        name: コレクション名
+        user_id: 認証済みユーザーID（所有者）
+
+    Returns:
+        共有ユーザー一覧
+    """
+    db = SessionLocal()
+    try:
+        # 所有者確認
+        vector_store = get_pgvector_store(db, user_id=user_id)
+        info = await vector_store.get_collection_info(name)
+
+        if info is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"コレクション '{name}' が見つかりません"
+            )
+
+        if info["user_id"] != user_id:
+            raise HTTPException(
+                status_code=403,
+                detail="コレクションの所有者のみ共有一覧を確認できます"
+            )
+
+        # 共有一覧を取得（ユーザー情報を結合）
+        shares = db.query(
+            CollectionSharing, User
+        ).join(
+            User, CollectionSharing.shared_with_user_id == User.user_id
+        ).filter(
+            CollectionSharing.owner_user_id == user_id,
+            CollectionSharing.collection_name == name
+        ).all()
+
+        share_list = [
+            {
+                "shared_with_user_id": sharing.shared_with_user_id,
+                "shared_with_email": u.email,
+                "shared_with_display_name": u.display_name,
+                "created_at": sharing.created_at.isoformat()
+            }
+            for sharing, u in shares
+        ]
+
+        return JSONResponse(content={
+            "success": True,
+            "collection_name": name,
+            "owner_user_id": user_id,
+            "shares": share_list,
+            "count": len(share_list)
+        })
+
+    finally:
+        db.close()
+
+
+@router.get("/api/knowledge-base/shared-with-me")
+@handle_route_errors
+async def list_shared_with_me(
+    user_id: str = Depends(verify_token_auth)
+):
+    """
+    自分に共有されたコレクション一覧を取得
+
+    Args:
+        user_id: 認証済みユーザーID
+
+    Returns:
+        自分に共有されたコレクション一覧
+    """
+    db = SessionLocal()
+    try:
+        # 自分に共有されているコレクションを取得
+        shares = db.query(
+            CollectionSharing, User
+        ).join(
+            User, CollectionSharing.owner_user_id == User.user_id
+        ).filter(
+            CollectionSharing.shared_with_user_id == user_id
+        ).all()
+
+        # 各コレクションのドキュメント数を取得
+        collections = []
+        now = datetime.now(UTC)
+
+        for sharing, owner in shares:
+            # ドキュメント数をカウント
+            doc_count = db.query(VectorDocument).filter(
+                VectorDocument.user_id == sharing.owner_user_id,
+                VectorDocument.collection_name == sharing.collection_name,
+                VectorDocument.collection_type == "persistent",
+                (VectorDocument.expires_at == None) |  # noqa: E711
+                (VectorDocument.expires_at > now)
+            ).count()
+
+            collections.append({
+                "collection_name": sharing.collection_name,
+                "owner_user_id": sharing.owner_user_id,
+                "owner_email": owner.email,
+                "owner_display_name": owner.display_name,
+                "document_count": doc_count,
+                "shared_at": sharing.created_at.isoformat()
+            })
+
+        return JSONResponse(content={
+            "success": True,
+            "collections": collections,
+            "count": len(collections)
+        })
+
     finally:
         db.close()
