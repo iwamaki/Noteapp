@@ -7,13 +7,13 @@ import shutil
 import tempfile
 from pathlib import Path
 
-from fastapi import APIRouter, File, HTTPException, Query, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from fastapi.responses import JSONResponse
 
+from src.auth import verify_token_auth
 from src.core.logger import logger
 from src.data import SessionLocal
 from src.llm_clean.domain.value_objects import (
-    DEFAULT_USER_ID,
     CollectionType,
     RAGContext,
 )
@@ -36,7 +36,8 @@ async def upload_document(
     file: UploadFile = File(...),
     collection_name: str = Query(default="default"),
     metadata_title: str | None = None,
-    metadata_description: str | None = None
+    metadata_description: str | None = None,
+    user_id: str = Depends(verify_token_auth)
 ):
     """
     ドキュメントをアップロードして知識ベースに追加
@@ -88,7 +89,7 @@ async def upload_document(
             raise HTTPException(status_code=400, detail="ドキュメントの処理に失敗しました")
 
         # コレクションタイプとuser_idを決定
-        ctx = RAGContext.from_collection_name(collection_name)
+        ctx = RAGContext.from_collection_name(collection_name, auth_user_id=user_id)
 
         # PgVectorStoreでドキュメントを追加
         vector_store = get_pgvector_store(db, user_id=ctx.user_id)
@@ -138,7 +139,8 @@ async def upload_document(
 @router.get("/api/knowledge-base/documents/stats")
 @handle_route_errors
 async def get_knowledge_base_stats(
-    collection_name: str = Query(default="default")
+    collection_name: str = Query(default="default"),
+    user_id: str = Depends(verify_token_auth)
 ):
     """
     知識ベースの統計情報を取得
@@ -151,7 +153,7 @@ async def get_knowledge_base_stats(
     """
     db = SessionLocal()
     try:
-        ctx = RAGContext.from_collection_name(collection_name)
+        ctx = RAGContext.from_collection_name(collection_name, auth_user_id=user_id)
         vector_store = get_pgvector_store(db, user_id=ctx.user_id)
 
         info = await vector_store.get_collection_info(collection_name)
@@ -183,7 +185,8 @@ async def get_knowledge_base_stats(
 @router.delete("/api/knowledge-base/documents/clear")
 @handle_route_errors
 async def clear_knowledge_base(
-    collection_name: str = Query(default="default")
+    collection_name: str = Query(default="default"),
+    user_id: str = Depends(verify_token_auth)
 ):
     """
     知識ベースをクリア（全ドキュメントを削除）
@@ -196,7 +199,7 @@ async def clear_knowledge_base(
     """
     db = SessionLocal()
     try:
-        ctx = RAGContext.from_collection_name(collection_name)
+        ctx = RAGContext.from_collection_name(collection_name, auth_user_id=user_id)
         vector_store = get_pgvector_store(db, user_id=ctx.user_id)
 
         success = await vector_store.delete_collection(collection_name)
@@ -223,7 +226,8 @@ async def upload_text(
     request: UploadTextRequest,
     collection_name: str = Query(default="default"),
     metadata_title: str | None = Query(default=None),
-    metadata_description: str | None = Query(default=None)
+    metadata_description: str | None = Query(default=None),
+    user_id: str = Depends(verify_token_auth)
 ):
     """
     テキストを直接アップロードして知識ベースに追加
@@ -264,7 +268,7 @@ async def upload_text(
             raise HTTPException(status_code=400, detail="テキストの処理に失敗しました")
 
         # コレクションタイプとuser_idを決定
-        ctx = RAGContext.from_collection_name(collection_name)
+        ctx = RAGContext.from_collection_name(collection_name, auth_user_id=user_id)
 
         # PgVectorStoreでドキュメントを追加
         vector_store = get_pgvector_store(db, user_id=ctx.user_id)
@@ -359,7 +363,8 @@ async def create_temp_collection(request: CreateCollectionRequest):
 @handle_route_errors
 async def list_collections(
     collection_type: CollectionType | None = Query(default=None),
-    include_expired: bool = Query(default=False)
+    include_expired: bool = Query(default=False),
+    user_id: str = Depends(verify_token_auth)
 ):
     """
     コレクション一覧を取得
@@ -374,11 +379,10 @@ async def list_collections(
     """
     db = SessionLocal()
     try:
-        # 全コレクションを取得するためuser_id=Noneで初期化
-        vector_store = get_pgvector_store(db, user_id=DEFAULT_USER_ID)
+        vector_store = get_pgvector_store(db, user_id=user_id)
 
         collections = await vector_store._store.list_collections(
-            user_id=DEFAULT_USER_ID,
+            user_id=user_id,
             collection_type=collection_type
         )
 
@@ -393,7 +397,10 @@ async def list_collections(
 
 @router.delete("/api/knowledge-base/collections/{name}")
 @handle_route_errors
-async def delete_collection(name: str):
+async def delete_collection(
+    name: str,
+    user_id: str = Depends(verify_token_auth)
+):
     """
     コレクションを削除
 
@@ -415,7 +422,7 @@ async def delete_collection(name: str):
 
     db = SessionLocal()
     try:
-        ctx = RAGContext.from_collection_name(name)
+        ctx = RAGContext.from_collection_name(name, auth_user_id=user_id)
         vector_store = get_pgvector_store(db, user_id=ctx.user_id)
 
         # 存在確認
