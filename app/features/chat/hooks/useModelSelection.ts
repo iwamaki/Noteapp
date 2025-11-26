@@ -6,10 +6,10 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useTokenBalanceStore } from '../../../settings/settingsStore';
+import { useTokenBalanceStore } from '../../settings/settingsStore';
 import { convertProvidersToModelInfo, type ModelInfo } from '../../../screens/model-selection/constants';
 import APIService from '../../llmService/api';
-import { useModelSwitch } from '../../../settings/hooks/useModelSwitch';
+import { useModelSwitch } from '../../settings/hooks/useModelSwitch';
 import { logger } from '../../../utils/logger';
 
 interface UseModelSelectionProps {

@@ -5,7 +5,7 @@
  */
 
 import { InitializationTask, InitializationStage, TaskPriority } from '../types';
-import { useUISettingsStore } from '../../settings/settingsStore';
+import { useUISettingsStore } from '../../features/settings/settingsStore';
 import { changeLanguage } from '../../i18n';
 import { logger } from '../../utils/logger';
 

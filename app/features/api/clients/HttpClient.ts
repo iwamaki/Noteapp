@@ -5,8 +5,8 @@
  */
 
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
-import { getAuthHeaders } from '../../../auth/authHeaders';
-import { getRefreshToken, saveTokens, clearTokens } from '../../../auth/tokenService';
+import { getAuthHeaders } from '../../auth/authHeaders';
+import { getRefreshToken, saveTokens, clearTokens } from '../../auth/tokenService';
 import { logger } from '../../../utils/logger';
 import { ApiRequestConfig, ApiResponse } from '../types';
 import { withRetry } from '../utils/retry';
@@ -263,7 +263,7 @@ export class HttpClient {
         }
 
         // refreshAccessToken を遅延ロード（循環参照回避）
-        const { refreshAccessToken } = await import('../../../auth/authApiClient');
+        const { refreshAccessToken } = await import('../../auth/authApiClient');
 
         // 新しいトークンを取得
         const response = await refreshAccessToken(refreshToken);

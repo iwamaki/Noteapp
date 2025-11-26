@@ -6,8 +6,8 @@
  */
 
 import { InitializationTask, InitializationStage, TaskPriority } from '../types';
-import { initBillingApiService } from '../../billing/services/billingApiService';
-import { useTokenBalanceStore } from '../../settings/settingsStore';
+import { initBillingApiService } from '../../features/billing/services/billingApiService';
+import { useTokenBalanceStore } from '../../features/settings/settingsStore';
 import { logger } from '../../utils/logger';
 
 /**

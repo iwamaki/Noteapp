@@ -9,11 +9,11 @@
  */
 
 import { InitializationTask, InitializationStage, TaskPriority } from '../types';
-import { getOrCreateDeviceId, saveUserId, getUserId } from '../../auth/deviceIdService';
-import { registerDevice, verifyDevice } from '../../auth/authApiClient';
-import { saveTokens } from '../../auth/tokenService';
+import { getOrCreateDeviceId, saveUserId, getUserId } from '../../features/auth/deviceIdService';
+import { registerDevice, verifyDevice } from '../../features/auth/authApiClient';
+import { saveTokens } from '../../features/auth/tokenService';
 import { logger } from '../../utils/logger';
-import { useAuthStore } from '../../auth/authStore';
+import { useAuthStore } from '../../features/auth/authStore';
 
 export const authenticateDevice: InitializationTask = {
   id: 'authenticate_device',

@@ -1,7 +1,8 @@
 from langchain.tools import tool
 
 from src.core.logger import logger
-from src.llm_clean.infrastructure.vector_stores import get_collection_manager
+from src.data import SessionLocal
+from src.llm_clean.infrastructure.vector_stores import get_pgvector_store
 
 
 @tool
@@ -35,6 +36,7 @@ async def search_knowledge_base(
         collection_name: 検索対象のコレクション名
             - デフォルト: "default"（一般的なドキュメント）
             - カテゴリー別: "category_<カテゴリー名>"
+            - Web検索結果: "web_<タイムスタンプ>"
 
     Returns:
         検索結果と詳細内容、またはエラーメッセージ
@@ -47,24 +49,24 @@ async def search_knowledge_base(
     # パラメータの範囲チェック
     max_results = max(1, min(10, max_results))
 
+    db = SessionLocal()
     try:
-        # コレクションマネージャーを取得
-        manager = get_collection_manager()
+        # PgVectorStoreを取得（user_id=Noneで一時コレクションも検索可能）
+        vector_store = get_pgvector_store(db, user_id=None)
 
-        # 指定されたコレクションを取得
-        vector_store = manager.get_collection(collection_name)
-
-        if vector_store is None:
+        # コレクションの存在確認
+        exists = await vector_store.collection_exists(collection_name)
+        if not exists:
             return (
                 f"コレクション '{collection_name}' が見つかりません。\n\n"
                 "コレクションが存在しないか、期限切れで削除された可能性があります。\n"
                 "別のコレクションを指定するか、新しいドキュメントをアップロードしてください。"
             )
 
-        # ベクトルストアの統計情報を取得
-        stats = vector_store.get_stats()
+        # コレクション情報を取得
+        collection_info = await vector_store.get_collection_info(collection_name)
 
-        if not stats["exists"] or stats["document_count"] == 0:
+        if collection_info is None or collection_info.get("document_count", 0) == 0:
             return (
                 f"コレクション '{collection_name}' は空です。\n\n"
                 "まだドキュメントがアップロードされていません。\n"
@@ -72,9 +74,10 @@ async def search_knowledge_base(
             )
 
         # 類似度検索を実行
-        results = vector_store.similarity_search(
+        results = await vector_store.search(
+            collection_name=collection_name,
             query=query,
-            k=max_results
+            top_k=max_results
         )
 
         if not results:
@@ -83,12 +86,16 @@ async def search_knowledge_base(
             return response
 
         # 結果を整形
+        stats = {
+            "collection_name": collection_name,
+            "document_count": collection_info.get("document_count", 0)
+        }
         response = _format_search_results(query, results, stats)
 
         # 応答の長さをログ出力
         logger.info(
             f"search_knowledge_base response generated: "
-            f"collection={stats.get('collection_name', 'unknown')}, "
+            f"collection={collection_name}, "
             f"query={query}, results_count={len(results)}, response_length={len(response)} chars",
             extra={"category": "tool"}
         )
@@ -103,6 +110,9 @@ async def search_knowledge_base(
             extra={"category": "tool"}
         )
         return f"エラー: 知識ベースの検索に失敗しました: {error_msg}"
+
+    finally:
+        db.close()
 
 
 def _format_search_results(query: str, results: list, stats: dict) -> str:

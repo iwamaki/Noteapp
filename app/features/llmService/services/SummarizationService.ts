@@ -118,7 +118,7 @@ export class SummarizationService {
       // ローカル統計を更新（トークン消費はバックエンドで既に実行済み）
       if (result.tokenUsage?.inputTokens && result.tokenUsage?.outputTokens && result.model) {
         try {
-          const { updateLocalTokenStats } = await import('../../../billing/utils/tokenBalance');
+          const { updateLocalTokenStats } = await import('../../billing/utils/tokenBalance');
           await updateLocalTokenStats(
             result.tokenUsage.inputTokens,
             result.tokenUsage.outputTokens,

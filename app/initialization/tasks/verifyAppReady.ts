@@ -9,7 +9,7 @@ import {
   useUISettingsStore,
   useTokenBalanceStore,
   useUsageTrackingStore
-} from '../../settings/settingsStore';
+} from '../../features/settings/settingsStore';
 import { logger } from '../../utils/logger';
 
 /**

@@ -7,9 +7,9 @@
 import type { Purchase, PurchaseError } from 'react-native-iap';
 import { purchaseUpdatedListener, purchaseErrorListener, getAvailablePurchases } from 'react-native-iap';
 import { InitializationTask, InitializationStage, TaskPriority } from '../types';
-import { initializeTokenIAP } from '../../billing/services/tokenIapService';
-import { processPendingPurchase } from '../../billing/services/purchaseRestoration';
-import { TOKEN_PACKAGES } from '../../billing/constants/tokenPackages';
+import { initializeTokenIAP } from '../../features/billing/services/tokenIapService';
+import { processPendingPurchase } from '../../features/billing/services/purchaseRestoration';
+import { TOKEN_PACKAGES } from '../../features/billing/constants/tokenPackages';
 import { logger } from '../../utils/logger';
 
 /**

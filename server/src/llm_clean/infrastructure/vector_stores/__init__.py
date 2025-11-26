@@ -1,10 +1,12 @@
 """
 Vector Stores Infrastructure
 
-FAISSベクトルストアの実装を提供します。
+ベクトルストアの実装を提供します。
+- PgVectorStore: PostgreSQL + pgvector（推奨）
+- VectorStoreManager: FAISSベース（レガシー）
 """
 
-from typing import Optional
+from sqlalchemy.orm import Session
 
 from src.core.logger import logger
 
@@ -12,6 +14,13 @@ from ..document_processing.document_processor import DocumentProcessor
 from .cleanup_job import start_cleanup_job, stop_cleanup_job
 from .collection_manager import CollectionManager
 from .faiss_vector_store import VectorStoreManager
+from .pgvector_adapter import PgVectorStoreAdapter
+from .pgvector_cleanup_job import (
+    PgVectorCleanupJob,
+    start_pgvector_cleanup_job,
+    stop_pgvector_cleanup_job,
+)
+from .pgvector_store import PgVectorStore
 
 # Singleton instances
 _collection_manager: CollectionManager | None = None
@@ -19,7 +28,10 @@ _document_processor: DocumentProcessor | None = None
 
 
 def get_collection_manager() -> CollectionManager:
-    """Get singleton instance of CollectionManager
+    """Get singleton instance of CollectionManager (FAISS版)
+
+    注意: このメソッドはレガシーFAISS用です。
+    PostgreSQL版は get_pgvector_store() を使用してください。
 
     Returns:
         CollectionManager instance
@@ -58,12 +70,34 @@ def get_document_processor(
     return _document_processor
 
 
+def get_pgvector_store(db: Session, user_id: str | None = None) -> PgVectorStoreAdapter:
+    """PgVectorStoreAdapterのインスタンスを取得
+
+    Args:
+        db: SQLAlchemy Session
+        user_id: ユーザーID（永続コレクション操作時に必要）
+
+    Returns:
+        PgVectorStoreAdapter instance
+    """
+    return PgVectorStoreAdapter(db, user_id)
+
+
 __all__ = [
+    # PostgreSQL/pgvector（推奨）
+    "PgVectorStore",
+    "PgVectorStoreAdapter",
+    "PgVectorCleanupJob",
+    "get_pgvector_store",
+    "start_pgvector_cleanup_job",
+    "stop_pgvector_cleanup_job",
+    # FAISS（レガシー）
     "VectorStoreManager",
     "CollectionManager",
-    "DocumentProcessor",
+    "get_collection_manager",
     "start_cleanup_job",
     "stop_cleanup_job",
-    "get_collection_manager",
+    # 共通
+    "DocumentProcessor",
     "get_document_processor",
 ]

@@ -5,6 +5,7 @@
       "account": "Account",
       "display": "Display",
       "ai": "AI Features",
+      "feedback": "Feedback",
       "debug": "Debug"
     },
     "account": {
@@ -54,6 +55,24 @@
     "debug": {
       "resetTokenUsage": "Reset Token Usage",
       "resetSettings": "Reset Settings"
+    },
+    "feedback": {
+      "sendButton": "Send Feedback",
+      "modalTitle": "Send Feedback",
+      "categoryLabel": "Category",
+      "category": {
+        "bug": "Bug Report",
+        "feature": "Feature Request",
+        "improvement": "Improvement",
+        "other": "Other"
+      },
+      "contentLabel": "Content",
+      "contentPlaceholder": "Please enter your feedback...",
+      "send": "Send",
+      "sendSuccess": "Feedback sent successfully. Thank you!",
+      "sendFailed": "Failed to send feedback",
+      "contentRequired": "Please enter feedback content",
+      "loginRequired": "Please log in to send feedback"
     },
     "comingSoon": "More settings will be added in future updates."
   },

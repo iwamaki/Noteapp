@@ -14,6 +14,7 @@ import { preloadLLMProvidersTask } from './preloadLLMProviders';
 import { configureChatServiceTask } from './configureChatService';
 import { initializeWebSocketTask } from './initializeWebSocket';
 import { initializeBillingServiceTask } from './initializeBillingService';
+import { initializeErrorLogServiceTask } from './initializeErrorLogService';
 import { verifyAppReadyTask } from './verifyAppReady';
 import { loadIconFontsTask } from './loadIconFonts';
 import { loadToolDefinitionsTask } from './loadToolDefinitions';
@@ -45,6 +46,7 @@ export const allInitializationTasks: InitializationTask[] = [
   configureChatServiceTask,
   initializeWebSocketTask,  // WebSocket接続の初期化
   initializeBillingServiceTask,  // Billing APIの初期化
+  initializeErrorLogServiceTask,  // エラーログAPIの初期化
   restorePendingPurchasesTask,  // 未完了購入の復元（Billing初期化後に実行）
   loadToolDefinitionsTask,
 
@@ -82,6 +84,7 @@ export const backgroundInitializationTasks: InitializationTask[] = [
   configureChatServiceTask,      // チャット開始時に必要
   initializeWebSocketTask,       // チャット開始時に必要
   initializeBillingServiceTask,  // 購入画面で必要
+  initializeErrorLogServiceTask, // エラーログ送信用
   restorePendingPurchasesTask,   // バックグラウンドで復元
   loadToolDefinitionsTask,       // チャット開始時に必要
 ];
@@ -99,6 +102,7 @@ export {
   configureChatServiceTask,
   initializeWebSocketTask,
   initializeBillingServiceTask,
+  initializeErrorLogServiceTask,
   loadToolDefinitionsTask,
   verifyAppReadyTask,
 };

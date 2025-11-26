@@ -1,8 +1,19 @@
 // app/utils/logger.ts
 import { AppState, AppStateStatus } from 'react-native';
 
-type LogCategory = 'chat' | 'chatService' | 'system' | 'file' | 'diff' | 'llm' | 'rag' | 'default' | 'tree' | 'platformInfo' | 'toolService' | 'editFileHandler' | 'createDirectoryHandler' | 'deleteItemHandler' | 'moveItemHandler' | 'itemResolver' | 'websocket' | 'clientId' | 'subscriptionSync' | 'billingApi' | 'billing' | 'auth' | 'api' | 'httpClient' | 'init' | string;
+type LogCategory = 'chat' | 'chatService' | 'system' | 'file' | 'diff' | 'llm' | 'rag' | 'default' | 'tree' | 'platformInfo' | 'toolService' | 'editFileHandler' | 'createDirectoryHandler' | 'deleteItemHandler' | 'moveItemHandler' | 'itemResolver' | 'websocket' | 'clientId' | 'subscriptionSync' | 'billingApi' | 'billing' | 'auth' | 'api' | 'httpClient' | 'init' | 'errorLogApi' | string;
 type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'none';
+
+// エラーログサービスの型（循環参照を避けるため）
+interface ErrorLogService {
+  sendErrorLog(entry: {
+    level: 'error' | 'warn';
+    category: string;
+    message: string;
+    stackTrace?: string;
+    additionalData?: string;
+  }): Promise<void>;
+}
 
 const LOG_LEVELS: Record<LogLevel, number> = {
   debug: 0,
@@ -16,6 +27,8 @@ class Logger {
   private enabledCategories: LogCategory[] | 'all' = 'all';
   private currentLevel: LogLevel = 'debug';
   private appState = AppState.currentState;
+  private errorLogService: ErrorLogService | null = null;
+  private sendToBackend = false;
 
   constructor() {
     // 環境変数からログレベルを取得
@@ -59,6 +72,28 @@ class Logger {
     return this.currentLevel;
   }
 
+  /**
+   * エラーログサービスを設定（バックエンド送信を有効化）
+   */
+  setErrorLogService(service: ErrorLogService): void {
+    this.errorLogService = service;
+    this.sendToBackend = true;
+  }
+
+  /**
+   * バックエンド送信を有効/無効化
+   */
+  setSendToBackend(enabled: boolean): void {
+    this.sendToBackend = enabled;
+  }
+
+  /**
+   * バックエンド送信が有効かどうか
+   */
+  isSendToBackendEnabled(): boolean {
+    return this.sendToBackend && this.errorLogService !== null;
+  }
+
   private shouldLog(level: LogLevel): boolean {
     return LOG_LEVELS[level] >= LOG_LEVELS[this.currentLevel];
   }
@@ -84,6 +119,47 @@ class Logger {
       timestamp: new Date().toISOString(),
     };
     console.log(JSON.stringify(logEntry));
+
+    // error/warnレベルはバックエンドに送信
+    // 無限ループを防ぐため、errorLogApi自身のログは送信しない
+    if (
+      this.sendToBackend &&
+      this.errorLogService &&
+      (level === 'error' || level === 'warn') &&
+      category !== 'errorLogApi'
+    ) {
+      // スタックトレースを取得
+      let stackTrace: string | undefined;
+      if (level === 'error') {
+        const error = args.find((arg) => arg instanceof Error);
+        if (error) {
+          stackTrace = error.stack;
+        }
+      }
+
+      // 追加データをJSON文字列に変換
+      let additionalData: string | undefined;
+      if (args.length > 0) {
+        try {
+          additionalData = JSON.stringify(args);
+        } catch {
+          additionalData = String(args);
+        }
+      }
+
+      // 非同期で送信（結果を待たない）
+      this.errorLogService
+        .sendErrorLog({
+          level,
+          category,
+          message,
+          stackTrace,
+          additionalData,
+        })
+        .catch(() => {
+          // 送信失敗は無視（無限ループ防止）
+        });
+    }
   }
 
   debug(category: LogCategory, message: string, ...args: any[]) {

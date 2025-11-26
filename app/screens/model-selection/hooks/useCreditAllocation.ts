@@ -5,8 +5,8 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { Alert } from 'react-native';
-import { useTokenBalanceStore, TOKEN_CAPACITY_LIMITS } from '../../../settings/settingsStore';
-import { creditsToTokens, getTokenPrice } from '../../../billing/constants/tokenPricing';
+import { useTokenBalanceStore, TOKEN_CAPACITY_LIMITS } from '../../../features/settings/settingsStore';
+import { creditsToTokens, getTokenPrice } from '../../../features/billing/constants/tokenPricing';
 import APIService from '../../../features/llmService/api';
 import { convertProvidersToModelInfo, type ModelInfo } from '../constants';
 import { logger } from '../../../utils/logger';
@@ -137,7 +137,7 @@ export const useCreditAllocation = ({
 
     try {
       // バックエンドにクレジットを配分
-      const { getBillingApiService } = await import('../../../billing/services/billingApiService');
+      const { getBillingApiService } = await import('../../../features/billing/services/billingApiService');
       const billingService = getBillingApiService();
       await billingService.allocateCredits([
         {

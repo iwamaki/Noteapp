@@ -12,9 +12,9 @@ import { CustomInlineInput } from '../../../components/CustomInlineInput';
 import { useTheme } from '../../../design/theme/ThemeContext';
 import { useChat } from '../hooks/useChat';
 import { CHAT_CONFIG } from '../config/chatConfig';
-import { useTokenBalanceStore } from '../../../settings/settingsStore';
-import { useModelSwitch } from '../../../settings/hooks/useModelSwitch';
-import { useAuth } from '../../../auth/authStore';
+import { useTokenBalanceStore } from '../../settings/settingsStore';
+import { useModelSwitch } from '../../settings/hooks/useModelSwitch';
+import { useAuth } from '../../auth/authStore';
 
 interface MessageInputProps {
   inputText: string;

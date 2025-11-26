@@ -8,7 +8,7 @@ import { useEffect, useRef } from 'react';
 import { ActiveScreenContextProvider, ActiveScreenContext } from '../types';
 import ChatService from '../index';
 import { logger } from '../../../utils/logger';
-import { useLLMSettingsStore } from '../../../settings/settingsStore';
+import { useLLMSettingsStore } from '../../settings/settingsStore';
 import { editFileHandler } from '../handlers/editFileHandler';
 import { editFileLinesHandler } from '../handlers/editFileLinesHandler';
 import { CommandHandlerContext } from '../handlers/types';

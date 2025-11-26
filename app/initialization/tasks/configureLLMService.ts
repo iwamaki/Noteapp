@@ -5,7 +5,7 @@
  */
 
 import { InitializationTask, InitializationStage, TaskPriority } from '../types';
-import { useTokenBalanceStore } from '../../settings/settingsStore';
+import { useTokenBalanceStore } from '../../features/settings/settingsStore';
 import APIService from '../../features/llmService/api';
 import { logger } from '../../utils/logger';
 

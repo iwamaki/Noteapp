@@ -5,8 +5,8 @@
  */
 
 import { logger } from '../../../utils/logger';
-import { getAccessToken, saveTokens, clearTokens } from '../../../auth/tokenService';
-import { getJwtTimeToExpiry } from '../../../auth/jwtUtils';
+import { getAccessToken, saveTokens, clearTokens } from '../../auth/tokenService';
+import { getJwtTimeToExpiry } from '../../auth/jwtUtils';
 import {
   WebSocketState,
   WebSocketConfig,
@@ -529,8 +529,8 @@ export class WebSocketClient<T = any> {
       logger.info(this.logContext, 'Starting WebSocket token refresh');
 
       // refreshAccessToken を遅延ロード（循環参照回避）
-      const { refreshAccessToken } = await import('../../../auth/authApiClient');
-      const { getRefreshToken } = await import('../../../auth/tokenService');
+      const { refreshAccessToken } = await import('../../auth/authApiClient');
+      const { getRefreshToken } = await import('../../auth/tokenService');
 
       // リフレッシュトークンを取得
       const refreshToken = await getRefreshToken();
