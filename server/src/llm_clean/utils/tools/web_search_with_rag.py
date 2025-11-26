@@ -13,6 +13,7 @@ from langchain.tools import tool
 from src.core.config import settings
 from src.core.logger import logger
 from src.data import SessionLocal
+from src.llm_clean.domain.value_objects import RAGContext
 from src.llm_clean.infrastructure.vector_stores import (
     get_document_processor,
     get_pgvector_store,
@@ -153,7 +154,8 @@ async def web_search_with_rag(
             # 3. DBセッションを取得してPgVectorStoreを使用
             db = SessionLocal()
             try:
-                vector_store = get_pgvector_store(db, user_id=None)  # 一時データはuser_id不要
+                ctx = RAGContext.for_temp_collection()
+                vector_store = get_pgvector_store(db, user_id=ctx.user_id)
                 collection_name = vector_store.generate_temp_collection_name("web")
 
                 logger.info(
@@ -187,8 +189,8 @@ async def web_search_with_rag(
                     collection_name=collection_name,
                     documents=all_documents,
                     metadatas=all_metadatas,
-                    collection_type="temp",
-                    user_id=None,
+                    collection_type=ctx.collection_type,
+                    user_id=ctx.user_id,
                     ttl_hours=collection_ttl_hours
                 )
 

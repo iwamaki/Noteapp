@@ -6,13 +6,17 @@
 import shutil
 import tempfile
 from pathlib import Path
-from typing import Literal
 
 from fastapi import APIRouter, File, HTTPException, Query, UploadFile
 from fastapi.responses import JSONResponse
 
 from src.core.logger import logger
 from src.data import SessionLocal
+from src.llm_clean.domain.value_objects import (
+    DEFAULT_USER_ID,
+    CollectionType,
+    RAGContext,
+)
 from src.llm_clean.infrastructure.vector_stores import (
     get_document_processor,
     get_pgvector_store,
@@ -24,12 +28,6 @@ from src.llm_clean.presentation.schemas.api_schemas import (
 )
 
 router = APIRouter()
-
-# TODO: 認証機能追加後、リクエストからuser_idを取得するように変更
-# 現在は暫定的に固定値を使用（マルチユーザー対応時に要修正）
-DEFAULT_USER_ID = "default_user"
-
-CollectionType = Literal["temp", "persistent"]
 
 
 @router.post("/api/knowledge-base/documents/upload")
@@ -90,10 +88,10 @@ async def upload_document(
             raise HTTPException(status_code=400, detail="ドキュメントの処理に失敗しました")
 
         # コレクションタイプとuser_idを決定
-        collection_type, user_id = _determine_collection_params(collection_name)
+        ctx = RAGContext.from_collection_name(collection_name)
 
         # PgVectorStoreでドキュメントを追加
-        vector_store = get_pgvector_store(db, user_id=user_id)
+        vector_store = get_pgvector_store(db, user_id=ctx.user_id)
         documents = [chunk.page_content for chunk in chunks]
         metadatas = [chunk.metadata for chunk in chunks]
 
@@ -101,8 +99,8 @@ async def upload_document(
             collection_name=collection_name,
             documents=documents,
             metadatas=metadatas,
-            collection_type=collection_type,
-            user_id=user_id
+            collection_type=ctx.collection_type,
+            user_id=ctx.user_id
         )
 
         # 統計情報を取得
@@ -153,8 +151,8 @@ async def get_knowledge_base_stats(
     """
     db = SessionLocal()
     try:
-        _, user_id = _determine_collection_params(collection_name)
-        vector_store = get_pgvector_store(db, user_id=user_id)
+        ctx = RAGContext.from_collection_name(collection_name)
+        vector_store = get_pgvector_store(db, user_id=ctx.user_id)
 
         info = await vector_store.get_collection_info(collection_name)
 
@@ -198,8 +196,8 @@ async def clear_knowledge_base(
     """
     db = SessionLocal()
     try:
-        _, user_id = _determine_collection_params(collection_name)
-        vector_store = get_pgvector_store(db, user_id=user_id)
+        ctx = RAGContext.from_collection_name(collection_name)
+        vector_store = get_pgvector_store(db, user_id=ctx.user_id)
 
         success = await vector_store.delete_collection(collection_name)
 
@@ -266,10 +264,10 @@ async def upload_text(
             raise HTTPException(status_code=400, detail="テキストの処理に失敗しました")
 
         # コレクションタイプとuser_idを決定
-        collection_type, user_id = _determine_collection_params(collection_name)
+        ctx = RAGContext.from_collection_name(collection_name)
 
         # PgVectorStoreでドキュメントを追加
-        vector_store = get_pgvector_store(db, user_id=user_id)
+        vector_store = get_pgvector_store(db, user_id=ctx.user_id)
         documents = [chunk.page_content for chunk in chunks]
         metadatas = [chunk.metadata for chunk in chunks]
 
@@ -277,8 +275,8 @@ async def upload_text(
             collection_name=collection_name,
             documents=documents,
             metadatas=metadatas,
-            collection_type=collection_type,
-            user_id=user_id
+            collection_type=ctx.collection_type,
+            user_id=ctx.user_id
         )
 
         # 統計情報を取得
@@ -417,8 +415,8 @@ async def delete_collection(name: str):
 
     db = SessionLocal()
     try:
-        _, user_id = _determine_collection_params(name)
-        vector_store = get_pgvector_store(db, user_id=user_id)
+        ctx = RAGContext.from_collection_name(name)
+        vector_store = get_pgvector_store(db, user_id=ctx.user_id)
 
         # 存在確認
         exists = await vector_store.collection_exists(name)
@@ -471,24 +469,3 @@ async def cleanup_expired_collections():
         })
     finally:
         db.close()
-
-
-def _determine_collection_params(collection_name: str) -> tuple[CollectionType, str | None]:
-    """コレクション名からタイプとuser_idを決定
-
-    Args:
-        collection_name: コレクション名
-
-    Returns:
-        (collection_type, user_id) のタプル
-
-    命名規則:
-        - web_*, temp_* → temp (TTL付き、user_id不要)
-        - category_*, default, その他 → persistent (永続、user_id必要)
-    """
-    if collection_name.startswith("web_") or collection_name.startswith("temp_"):
-        return "temp", None
-    else:
-        # persistent の場合は user_id が必要
-        # TODO: 認証機能追加後、リクエストからuser_idを取得
-        return "persistent", DEFAULT_USER_ID

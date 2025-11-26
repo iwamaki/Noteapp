@@ -2,6 +2,7 @@ from langchain.tools import tool
 
 from src.core.logger import logger
 from src.data import SessionLocal
+from src.llm_clean.domain.value_objects import RAGContext
 from src.llm_clean.infrastructure.vector_stores import get_pgvector_store
 
 
@@ -9,7 +10,8 @@ from src.llm_clean.infrastructure.vector_stores import get_pgvector_store
 async def search_knowledge_base(
     query: str,
     max_results: int = 4,
-    collection_name: str = "default"
+    collection_name: str = "default",
+    similarity_threshold: float = 0.0
 ) -> str:
     """
     ローカル知識ベース（ベクトルデータベース）から関連情報を検索します。
@@ -37,28 +39,29 @@ async def search_knowledge_base(
             - デフォルト: "default"（一般的なドキュメント）
             - カテゴリー別: "category_<カテゴリー名>"
             - Web検索結果: "web_<タイムスタンプ>"
+        similarity_threshold: 類似度の閾値（0.0-1.0、デフォルト: 0.0）
+            - 0.0: フィルタリングなし（全結果を返す）
+            - 0.5以上: 中程度以上の類似度のみ
+            - 0.7以上: 高い類似度のみ
 
     Returns:
         検索結果と詳細内容、またはエラーメッセージ
     """
     logger.info(
-        f"search_knowledge_base tool called: query={query}, max_results={max_results}, collection={collection_name}",
+        f"search_knowledge_base tool called: query={query}, max_results={max_results}, "
+        f"collection={collection_name}, threshold={similarity_threshold}",
         extra={"category": "tool"}
     )
 
     # パラメータの範囲チェック
     max_results = max(1, min(10, max_results))
+    similarity_threshold = max(0.0, min(1.0, similarity_threshold))
 
     db = SessionLocal()
     try:
-        # user_idを決定（knowledge_base_routerと同じロジック）
-        # persistent コレクションの場合は default_user を使用
-        if collection_name.startswith("web_") or collection_name.startswith("temp_"):
-            user_id = None
-        else:
-            user_id = "default_user"  # TODO: 認証機能追加後、実際のuser_idを使用
-
-        vector_store = get_pgvector_store(db, user_id=user_id)
+        # RAGContextで user_id を決定
+        ctx = RAGContext.from_collection_name(collection_name)
+        vector_store = get_pgvector_store(db, user_id=ctx.user_id)
 
         # コレクションの存在確認
         exists = await vector_store.collection_exists(collection_name)
@@ -79,15 +82,31 @@ async def search_knowledge_base(
                 "ドキュメントを追加してから検索を実行してください。"
             )
 
-        # 類似度検索を実行
+        # 類似度検索を実行（フィルタリング用に多めに取得）
+        fetch_count = max_results * 2 if similarity_threshold > 0 else max_results
         results = await vector_store.search(
             collection_name=collection_name,
             query=query,
-            top_k=max_results
+            top_k=fetch_count
         )
+
+        # similarity_threshold でフィルタリング
+        if similarity_threshold > 0 and results:
+            original_count = len(results)
+            results = [r for r in results if r.get("score", 0) >= similarity_threshold]
+            logger.info(
+                f"Filtered results by threshold {similarity_threshold}: "
+                f"{original_count} -> {len(results)}",
+                extra={"category": "tool"}
+            )
+
+        # max_results に制限
+        results = results[:max_results]
 
         if not results:
             response = f"検索結果: クエリ '{query}' に一致する情報が見つかりませんでした。"
+            if similarity_threshold > 0:
+                response += f"\n（類似度閾値 {similarity_threshold} を下回る結果は除外されました）"
             logger.info(f"search_knowledge_base response: {response}", extra={"category": "tool"})
             return response
 

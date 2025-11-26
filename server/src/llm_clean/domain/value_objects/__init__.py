@@ -5,6 +5,7 @@ These objects have no identity - they are equal if their values are equal.
 """
 from .chat_context import ChatContext, EditScreenContext, FilelistScreenContext
 from .model_metadata import CostInfo, ModelMetadata, PricingInfo
+from .rag_context import DEFAULT_USER_ID, CollectionType, RAGContext
 from .token_usage import TokenUsageInfo
 
 __all__ = [
@@ -18,4 +19,8 @@ __all__ = [
     "ChatContext",
     "FilelistScreenContext",
     "EditScreenContext",
+    # RAG context
+    "RAGContext",
+    "DEFAULT_USER_ID",
+    "CollectionType",
 ]

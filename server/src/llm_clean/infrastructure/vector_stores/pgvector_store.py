@@ -178,6 +178,7 @@ class PgVectorStore:
         now = datetime.now(UTC)
 
         # Raw SQLで検索（pgvectorの<=>演算子使用）
+        # 重要: クエリ埋め込みをvector型に明示的キャストする
         sql = text("""
             SELECT
                 id,
@@ -185,7 +186,7 @@ class PgVectorStore:
                 metadata,
                 collection_type,
                 user_id,
-                embedding <=> :query_embedding AS distance
+                embedding <=> CAST(:query_embedding AS vector) AS distance
             FROM vector_documents
             WHERE collection_name = :collection_name
               AND (expires_at IS NULL OR expires_at > :now)
@@ -211,13 +212,13 @@ class PgVectorStore:
             }
         )
 
-        # 結果を整形
+        # 結果を整形（距離を類似度に変換: similarity = 1 - distance）
         formatted_results = []
         for row in result:
             formatted_results.append({
                 "content": row.content,
                 "metadata": row.metadata or {},
-                "score": float(row.distance)  # cosine距離
+                "score": 1.0 - float(row.distance)  # cosine距離 → 類似度
             })
 
         logger.info(
