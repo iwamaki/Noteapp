@@ -28,15 +28,16 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({ message, tokenUsage,
       borderColor: colors.border,
     },
     aiMessageWrapper: {
-      flexDirection: 'row',
-      alignItems: 'flex-end',
+      position: 'relative',
       alignSelf: 'flex-start',
-      marginVertical: CHAT_CONFIG.components.spacing.sm,
-      maxWidth: CHAT_CONFIG.components.message.maxWidth,
+      maxWidth: '100%',
+      marginVertical: CHAT_CONFIG.components.spacing.md,
     },
     aiIcon: {
-      marginRight: CHAT_CONFIG.components.spacing.md,
-      marginBottom: CHAT_CONFIG.components.spacing.sm,
+      position: 'absolute',
+      top: '100%',
+      marginTop: 4,
+      left: 4,
     },
     message: {
       borderRadius: CHAT_CONFIG.components.border.radius.large,
@@ -54,9 +55,8 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({ message, tokenUsage,
       alignSelf: 'flex-end',
       backgroundColor: colors.primary,
       borderBottomRightRadius: CHAT_CONFIG.components.border.radius.small,
-      marginVertical: CHAT_CONFIG.components.spacing.sm,
-      marginRight: 4,
-      maxWidth: CHAT_CONFIG.components.message.maxWidth,
+      marginVertical: CHAT_CONFIG.components.spacing.md,
+      marginLeft: iconSizes.medium + 12,
     },
 
     attachedFileContainer: {
@@ -116,15 +116,15 @@ const MessageItemComponent: React.FC<MessageItemProps> = ({ message, tokenUsage,
     return (
       <>
         <View style={[styles.aiMessageWrapper, summarizedStyle]}>
+          <View style={containerStyle}>
+            <MarkdownRenderer content={message.content} textColor={textColor} />
+          </View>
           <MaterialCommunityIcons
             name={aiIconName as any}
             size={iconSizes.medium}
             color={colors.primary}
             style={styles.aiIcon}
           />
-          <View style={containerStyle}>
-            <MarkdownRenderer content={message.content} textColor={textColor} />
-          </View>
         </View>
         {message.attachedFiles && message.attachedFiles.length > 0 && (
           <>

@@ -128,7 +128,8 @@ const ChatHistoryComponent: React.FC<ChatHistoryProps> = ({
       },
       messagesContent: {
         paddingHorizontal: 8,
-        paddingVertical: 8,
+        paddingTop: 8,
+        paddingBottom: 32,
       },
       messagesHeader: {
         position: 'relative' as const,
