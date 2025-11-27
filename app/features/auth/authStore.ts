@@ -485,10 +485,14 @@ export const useAuthStore = create<AuthState>((set) => ({
     } catch (error) {
       logger.error('auth', 'Failed to refresh tokens', error);
 
-      // リフレッシュ失敗時はログアウト状態にする
+      // リフレッシュ失敗時はトークンをクリアしてログアウト状態にする
+      await clearTokens();
+      await clearGoogleUserInfo();
+
       set({
         isAuthenticated: false,
         userId: null,
+        googleUser: null,
         error: 'Token refresh failed',
       });
 

@@ -22,7 +22,7 @@ function getAuthClient(): any {
     const { createHttpClient } = require('../api');
     authClient = createHttpClient({
       baseUrl: API_BASE_URL,
-      timeout: 10000,
+      timeout: 30000, // コールドスタート対応（22秒程度かかる場合あり）
       includeAuth: false,
       logContext: 'auth',
     });
