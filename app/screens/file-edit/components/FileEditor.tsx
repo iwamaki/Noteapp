@@ -2,6 +2,7 @@
  * @file FileEditor.tsx
  * @summary このファイルは、アプリケーションのファイルエディタコンポーネントを定義します。
  * @responsibility ユーザーがファイルのコンテンツを編集、プレビュー、または差分表示できるインターフェースを提供し、異なる表示モード間の切り替えを管理する責任があります。
+ * テキスト/バイナリ両対応。
  */
 
 import React, { useCallback } from 'react';
@@ -10,6 +11,8 @@ import { useTheme } from '../../../design/theme/ThemeContext';
 
 import { MarkdownPreview } from './MarkdownPreview';
 import { TextEditor } from './TextEditor';
+import { BinaryContentViewer } from './BinaryContentViewer';
+import { ContentType, SupportedMimeType } from '@data/core/typesFlat';
 
 // 表示モードの型定義
 export type ViewMode = 'content' | 'edit' | 'preview';
@@ -18,6 +21,8 @@ export type ViewMode = 'content' | 'edit' | 'preview';
 interface FileEditorProps {
   filename: string;
   initialContent: string;
+  contentType?: ContentType;
+  mimeType?: SupportedMimeType;
   mode: ViewMode;
   onModeChange: (mode: ViewMode) => void;
   onContentChange?: (content: string) => void;
@@ -26,10 +31,15 @@ interface FileEditorProps {
 // ファイルエディタコンポーネント
 export const FileEditor: React.FC<FileEditorProps> = ({
   initialContent,
+  contentType,
+  mimeType,
   mode,
   onContentChange,
 }) => {
   const { colors, typography } = useTheme();
+
+  // バイナリコンテンツかどうか
+  const isBinary = contentType === 'binary';
 
   // コンテンツ変更のハンドラ
   const handleContentChange = useCallback((text: string) => {
@@ -52,6 +62,17 @@ export const FileEditor: React.FC<FileEditorProps> = ({
 
   // コンテンツのレンダリング
   const renderContent = () => {
+    // バイナリファイルの場合は専用ビューアで表示
+    if (isBinary) {
+      return (
+        <BinaryContentViewer
+          content={initialContent}
+          mimeType={mimeType}
+        />
+      );
+    }
+
+    // テキストファイルの場合
     switch (mode) {
       case 'content':
         return (

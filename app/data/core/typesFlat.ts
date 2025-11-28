@@ -17,14 +17,39 @@
 // =============================================================================
 
 /**
+ * コンテンツタイプ（テキスト or バイナリ）
+ */
+export type ContentType = 'text' | 'binary';
+
+/**
+ * サポートされるMIMEタイプ
+ */
+export type SupportedMimeType =
+  | 'text/plain'
+  | 'text/markdown'
+  | 'text/html'
+  | 'image/png'
+  | 'image/jpeg'
+  | 'image/gif'
+  | 'image/webp'
+  | 'image/svg+xml'
+  | 'application/pdf'
+  | 'application/octet-stream';
+
+/**
  * ファイル（フラット構造版）
  * - 全ファイルが同一階層に配置
  * - メタデータで意味づけ・整理
+ * - テキスト/バイナリ両対応
  */
 export interface FileFlat {
   id: string;
   title: string;
-  content: string;        // 実行時のみ保持（保存時は分離）
+  content: string;        // 実行時のみ保持（保存時は分離）。バイナリはbase64エンコード
+
+  // コンテンツタイプ情報
+  contentType?: ContentType;      // 'text' | 'binary'（デフォルト: 'text'）
+  mimeType?: SupportedMimeType;   // MIMEタイプ（例: 'image/png'）
 
   // ユーザー管理のメタデータ
   tags: string[];         // ユーザー指定のタグ（例: ["重要", "TODO"]）
@@ -52,6 +77,8 @@ export interface FileFlat {
 export interface FileMetadataFlat {
   id: string;
   title: string;
+  contentType?: ContentType;      // 'text' | 'binary'
+  mimeType?: SupportedMimeType;   // MIMEタイプ
   tags: string[];
   category: string;
   order?: number;
@@ -71,7 +98,9 @@ export interface FileMetadataFlat {
  */
 export interface CreateFileDataFlat {
   title: string;
-  content: string;
+  content: string;            // バイナリの場合はbase64エンコード済み
+  contentType?: ContentType;  // 'text' | 'binary'（デフォルト: 'text'）
+  mimeType?: SupportedMimeType;
   tags?: string[];
   category?: string;
   summary?: string;           // 手動指定も可能（LLM生成を上書き）
@@ -83,7 +112,9 @@ export interface CreateFileDataFlat {
  */
 export interface UpdateFileDataFlat {
   title?: string;
-  content?: string;
+  content?: string;           // バイナリの場合はbase64エンコード済み
+  contentType?: ContentType;  // 'text' | 'binary'
+  mimeType?: SupportedMimeType;
   tags?: string[];
   category?: string;
   order?: number;
@@ -179,3 +210,63 @@ export interface FileContentLines {
   totalLines: number;     // 総行数
   lines: FileLine[];      // 行の配列
 }
+
+// =============================================================================
+// Content Type Utilities
+// =============================================================================
+
+/**
+ * 拡張子からMIMEタイプを推定
+ */
+export const getMimeTypeFromExtension = (filename: string): SupportedMimeType => {
+  const ext = filename.toLowerCase().split('.').pop() || '';
+  const mimeMap: Record<string, SupportedMimeType> = {
+    // テキスト系
+    'txt': 'text/plain',
+    'md': 'text/markdown',
+    'markdown': 'text/markdown',
+    'html': 'text/html',
+    'htm': 'text/html',
+    // 画像系
+    'png': 'image/png',
+    'jpg': 'image/jpeg',
+    'jpeg': 'image/jpeg',
+    'gif': 'image/gif',
+    'webp': 'image/webp',
+    'svg': 'image/svg+xml',
+    // その他
+    'pdf': 'application/pdf',
+  };
+  return mimeMap[ext] || 'application/octet-stream';
+};
+
+/**
+ * MIMEタイプからコンテンツタイプを判定
+ */
+export const getContentTypeFromMime = (mimeType: SupportedMimeType): ContentType => {
+  if (mimeType.startsWith('text/')) {
+    return 'text';
+  }
+  return 'binary';
+};
+
+/**
+ * ファイルがテキストコンテンツかどうかを判定
+ */
+export const isTextContent = (file: FileFlat): boolean => {
+  return file.contentType !== 'binary';
+};
+
+/**
+ * ファイルが画像かどうかを判定
+ */
+export const isImageContent = (file: FileFlat): boolean => {
+  return file.mimeType?.startsWith('image/') ?? false;
+};
+
+/**
+ * ファイルがPDFかどうかを判定
+ */
+export const isPdfContent = (file: FileFlat): boolean => {
+  return file.mimeType === 'application/pdf';
+};

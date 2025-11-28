@@ -10,7 +10,7 @@ import React, { useMemo } from 'react';
 import { StyleSheet, View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../design/theme/ThemeContext';
-import { FileFlat } from '@data/core/typesFlat';
+import { FileFlat, isTextContent, isImageContent, isPdfContent } from '@data/core/typesFlat';
 import { ListItem } from '../../../components/ListItem';
 import { FILE_LIST_FLAT_CONFIG } from '../config';
 
@@ -56,14 +56,22 @@ const FlatListItemComponent: React.FC<FlatListItemProps> = ({
   }), [colors.primary, spacing.xs]);
   const contentTextStyle = useMemo(() => [typography.caption, { color: colors.textSecondary }], [typography.caption, colors.textSecondary]);
 
-  // 左側要素：ファイルアイコン
+  // ファイルタイプに応じたアイコン名を取得
+  const getIconName = (): keyof typeof Ionicons.glyphMap => {
+    if (isImageContent(file)) return 'image-outline';
+    if (isPdfContent(file)) return 'document-attach-outline';
+    if (!isTextContent(file)) return 'document-outline';
+    return 'document-text-outline';
+  };
+
+  // 左側要素：ファイルアイコン（タイプに応じて変化）
   const leftElement = useMemo(() => (
     <Ionicons
-      name="document-text-outline"
+      name={getIconName()}
       size={iconSize}
       color={colors.text}
     />
-  ), [iconSize, colors.text]);
+  ), [iconSize, colors.text, file.contentType, file.mimeType]);
 
   return (
     <View style={containerStyle}>
@@ -77,13 +85,22 @@ const FlatListItemComponent: React.FC<FlatListItemProps> = ({
       <ListItem.Title>{file.title}</ListItem.Title>
 
       {/* 本文コンテナ */}
-      {file.content && (
+      {file.content && isTextContent(file) && (
         <View style={contentContainerStyle}>
           <Text
             style={contentTextStyle}
             numberOfLines={FILE_LIST_FLAT_CONFIG.constraints.contentPreviewMaxLines}
           >
             {file.content}
+          </Text>
+        </View>
+      )}
+
+      {/* バイナリファイルの場合はタイプラベル表示 */}
+      {file.content && !isTextContent(file) && (
+        <View style={contentContainerStyle}>
+          <Text style={contentTextStyle}>
+            {isImageContent(file) ? '画像ファイル' : isPdfContent(file) ? 'PDFファイル' : 'バイナリファイル'}
           </Text>
         </View>
       )}

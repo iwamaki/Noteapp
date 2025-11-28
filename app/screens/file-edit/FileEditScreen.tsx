@@ -28,6 +28,7 @@ function FileEditScreen() {
   const { fileId, initialViewMode } = route.params || {};
 
   const {
+    file,
     title,
     category,
     content,
@@ -139,6 +140,8 @@ function FileEditScreen() {
         <FileEditor
           filename={title}
           initialContent={content}
+          contentType={file?.contentType}
+          mimeType={file?.mimeType}
           mode={mapViewModeToFileEditor(viewMode)}
           onModeChange={handleViewModeChange}
           onContentChange={setContent}

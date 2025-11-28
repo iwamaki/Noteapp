@@ -2,8 +2,9 @@
  * @file useImportExport.tsx
  * @summary インポート/エクスポート機能を提供するフック
  * @description
- * ファイルのインポート（JSONファイルから読み込み）とエクスポート（ZIPにまとめたMarkdownファイル）を行う。
+ * ファイルのインポート（JSON/ZIP/テキスト/画像など）とエクスポート（ZIPにまとめたファイル）を行う。
  * エクスポート時はシステム共有ダイアログを表示し、インポート時は未分類として新規ファイルを作成する。
+ * バイナリファイル（画像等）はbase64エンコードして保存。
  */
 
 import { useState, useCallback } from 'react';
@@ -14,7 +15,12 @@ import { Paths, Directory, File as FSFile } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import JSZip from 'jszip';
 import { FileRepository } from '@data/repositories/fileRepository';
-import { CreateFileDataFlat, FileFlat } from '@data/core/typesFlat';
+import {
+  CreateFileDataFlat,
+  FileFlat,
+  getMimeTypeFromExtension,
+  getContentTypeFromMime,
+} from '@data/core/typesFlat';
 import { logger } from '../../../utils/logger';
 import {
   sanitizeFilename,
@@ -37,6 +43,18 @@ interface ImportFileData {
   category?: string;
   tags?: string[];
 }
+
+/**
+ * Uint8ArrayをBase64文字列に変換
+ */
+const uint8ArrayToBase64 = (bytes: Uint8Array): string => {
+  let binary = '';
+  const len = bytes.byteLength;
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+};
 
 /**
  * インポート/エクスポート機能を提供するフック
@@ -162,8 +180,20 @@ export const useImportExport = (): UseImportExportReturn => {
       if (zipEntry.dir) continue;
 
       try {
-        // ファイル内容を取得（生テキスト）
-        const content = await zipEntry.async('text');
+        // MIMEタイプとコンテンツタイプを判定
+        const mimeType = getMimeTypeFromExtension(filename);
+        const contentType = getContentTypeFromMime(mimeType);
+
+        let content: string;
+
+        if (contentType === 'binary') {
+          // バイナリファイルはbase64エンコード
+          const binaryData = await zipEntry.async('uint8array');
+          content = uint8ArrayToBase64(binaryData);
+        } else {
+          // テキストファイルはそのまま
+          content = await zipEntry.async('text');
+        }
 
         // ファイルパスからカテゴリとタイトルを抽出
         const pathParts = filename.split('/');
@@ -186,6 +216,8 @@ export const useImportExport = (): UseImportExportReturn => {
         const createData: CreateFileDataFlat = {
           title: finalTitle,
           content: content,
+          contentType: contentType,
+          mimeType: mimeType,
           category: category,
           tags: [],
         };
@@ -193,7 +225,7 @@ export const useImportExport = (): UseImportExportReturn => {
         await FileRepository.create(createData);
         existingTitles.add(generateUniqueKey(category, finalTitle));
         successCount++;
-        logger.debug('file', `Imported from ZIP: ${category ? category + '/' : ''}${finalTitle}`);
+        logger.debug('file', `Imported from ZIP: ${category ? category + '/' : ''}${finalTitle} (${contentType})`);
       } catch (error: any) {
         logger.error('file', `Failed to import ${filename}: ${error.message}`, error);
         errorCount++;
@@ -266,11 +298,25 @@ export const useImportExport = (): UseImportExportReturn => {
   };
 
   /**
-   * 単一テキストファイルからインポート（.md, .txt, .html など）
+   * 単一ファイルからインポート（テキスト・バイナリ両対応）
    */
-  const importFromTextFile = async (fileUri: string, filename: string, existingTitles: Set<string>) => {
+  const importFromFile = async (fileUri: string, filename: string, existingTitles: Set<string>) => {
     const fsFile = new FSFile(fileUri);
-    const content = await fsFile.text();
+
+    // MIMEタイプとコンテンツタイプを判定
+    const mimeType = getMimeTypeFromExtension(filename);
+    const contentType = getContentTypeFromMime(mimeType);
+
+    let content: string;
+
+    if (contentType === 'binary') {
+      // バイナリファイルはbase64エンコード
+      const binaryData = await fsFile.bytes();
+      content = uint8ArrayToBase64(binaryData);
+    } else {
+      // テキストファイルはそのまま
+      content = await fsFile.text();
+    }
 
     // 未分類カテゴリとして扱う
     const category = '';
@@ -281,17 +327,19 @@ export const useImportExport = (): UseImportExportReturn => {
       finalTitle = resolveDuplicateTitle(filename, existingTitles);
     }
 
-    // 新規ファイル作成（内容は一切変換しない）
+    // 新規ファイル作成
     const createData: CreateFileDataFlat = {
       title: finalTitle,
       content: content,
+      contentType: contentType,
+      mimeType: mimeType,
       category: category,
       tags: [],
     };
 
     await FileRepository.create(createData);
     existingTitles.add(generateUniqueKey(category, finalTitle));
-    logger.debug('file', `Imported text file: ${finalTitle}`);
+    logger.debug('file', `Imported file: ${finalTitle} (${contentType}, ${mimeType})`);
 
     return { successCount: 1, errorCount: 0 };
   };
@@ -336,9 +384,9 @@ export const useImportExport = (): UseImportExportReturn => {
         logger.info('file', 'Importing from JSON file');
         result_stats = await importFromJson(pickedFile.uri, existingTitles);
       } else {
-        // その他のテキストファイル（.md, .txt, .html など）
-        logger.info('file', 'Importing as text file');
-        result_stats = await importFromTextFile(pickedFile.uri, pickedFile.name, existingTitles);
+        // その他のファイル（テキスト・画像・PDFなど）
+        logger.info('file', 'Importing as single file');
+        result_stats = await importFromFile(pickedFile.uri, pickedFile.name, existingTitles);
       }
 
       // 結果を表示

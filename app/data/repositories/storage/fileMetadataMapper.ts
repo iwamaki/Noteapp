@@ -20,6 +20,8 @@ export const metadataToFile = (metadata: FileMetadataFlat, content: string): Fil
     id: metadata.id,
     title: metadata.title,
     content,
+    contentType: metadata.contentType,
+    mimeType: metadata.mimeType,
     tags: metadata.tags,
     category: metadata.category,
     order: metadata.order,
@@ -41,6 +43,8 @@ export const fileToMetadata = (file: FileFlat): FileMetadataFlat => {
   return {
     id: file.id,
     title: file.title,
+    contentType: file.contentType,
+    mimeType: file.mimeType,
     tags: file.tags,
     category: file.category,
     order: file.order,
