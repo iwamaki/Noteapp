@@ -6,6 +6,8 @@
  * マジックナンバーを排除し、保守性とカスタマイズ性を向上。
  */
 
+import { isLLMFeatureAvailable } from '../../../features/settings/settingsStore';
+
 export const FILE_LIST_FLAT_CONFIG = {
   // ========================================
   // スペーシング設定
@@ -168,10 +170,12 @@ export const FILE_LIST_FLAT_CONFIG = {
   // 機能フラグ（開発時にON/OFF切り替え）
   // ========================================
   features: {
-    /** RAG機能（Q&A作成など）の有効/無効 */
-    ragEnabled: true,
+    /** RAG機能（Q&A作成など）の有効/無効 - LLM機能と連動 */
+    ragEnabled: isLLMFeatureAvailable,
+    /** チャット添付機能の有効/無効 - LLM機能と連動 */
+    chatAttachEnabled: isLLMFeatureAvailable,
   },
-} as const;
+};
 
 // 型エクスポート（型安全性のため）
 export type FileListFlatConfig = typeof FILE_LIST_FLAT_CONFIG;

@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { ActionsListModal, ActionItem } from '../../../components/ActionsListModal';
 import { getMetadataText } from '../utils';
 import { FileActionsModalProps } from '../types';
+import { FILE_LIST_FLAT_CONFIG } from '../config';
 
 export const FileActionsModal: React.FC<FileActionsModalProps> = ({
   visible,
@@ -30,15 +31,23 @@ export const FileActionsModal: React.FC<FileActionsModalProps> = ({
 
   if (!file) return null;
 
-  const actions: ActionItem[] = [
-    {
+  // 機能フラグに基づいてアクションリストを構築
+  const actions: ActionItem[] = [];
+
+  // チャット添付機能が有効な場合のみ表示
+  if (FILE_LIST_FLAT_CONFIG.features.chatAttachEnabled) {
+    actions.push({
       icon: 'chatbubble-outline',
       label: t('modals.fileActions.attachToChat'),
       onPress: () => {
         onAttachToChat(file);
         onClose();
       },
-    },
+    });
+  }
+
+  // 常に表示するアクション
+  actions.push(
     {
       icon: 'create-outline',
       label: t('modals.fileActions.rename'),
@@ -95,8 +104,8 @@ export const FileActionsModal: React.FC<FileActionsModalProps> = ({
         onClose();
       },
       destructive: true,
-    },
-  ];
+    }
+  );
 
   return (
     <ActionsListModal

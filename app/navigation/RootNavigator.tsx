@@ -20,7 +20,7 @@ import { ModelSelectionScreen } from '../screens/model-selection/ModelSelectionS
 
 import { useTheme } from '../design/theme/ThemeContext';
 import { ChatInputBar } from '../features/chat/components/ChatInputBar';
-import { useLLMSettingsStore } from '../features/settings/settingsStore';
+import { useLLMSettingsStore, isLLMFeatureAvailable } from '../features/settings/settingsStore';
 import { logger } from '../utils/logger';
 import { CHAT_CONFIG } from '../features/chat/config/chatConfig';
 
@@ -39,10 +39,12 @@ function RootNavigatorContent() {
     logger.info('init', '📱 RootNavigator mounted');
   }, []);
 
-  const shouldShowChat = (currentRouteName === 'FileList' || currentRouteName === 'FileEdit') && settings.llmEnabled;
+  // LLM機能の有効判定（環境変数 AND ユーザー設定）
+  const isLLMEnabled = isLLMFeatureAvailable && settings.llmEnabled;
+  const shouldShowChat = (currentRouteName === 'FileList' || currentRouteName === 'FileEdit') && isLLMEnabled;
 
   // ChatInputBarの高さ分のパディング（LLM有効時のみ）
-  const chatPadding = settings.llmEnabled ? CHAT_CONFIG.ui.chatInputBarBaseHeight : 0;
+  const chatPadding = isLLMEnabled ? CHAT_CONFIG.ui.chatInputBarBaseHeight : 0;
 
   return (
     <View style={styles.container}>
@@ -122,8 +124,14 @@ function RootNavigatorContent() {
 
           {/* 設定関連画面 */}
           <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
-          <Stack.Screen name="TokenPurchase" component={TokenPurchaseScreen} />
-          <Stack.Screen name="ModelSelection" component={ModelSelectionScreen} options={{ headerShown: false }} />
+
+          {/* LLM関連画面（環境変数で機能が無効の場合はスタックから除外） */}
+          {isLLMFeatureAvailable && (
+            <>
+              <Stack.Screen name="TokenPurchase" component={TokenPurchaseScreen} />
+              <Stack.Screen name="ModelSelection" component={ModelSelectionScreen} options={{ headerShown: false }} />
+            </>
+          )}
         </Stack.Navigator>
       </NavigationContainer>
 

@@ -21,7 +21,8 @@ import {
   useEditorSettingsStore,
   useLLMSettingsStore,
   useUsageTrackingStore,
-  useTokenBalanceStore
+  useTokenBalanceStore,
+  isLLMFeatureAvailable,
 } from './settingsStore';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { useSettingsHeader } from './hooks/useSettingsHeader';
@@ -496,20 +497,23 @@ function SettingsScreen() {
           (value) => uiSettings.updateSettings({ fileSortMethod: value as 'updatedAt' | 'name' })
         )}
 
-        {renderSection(t('settings.sections.ai'))}
+        {/* AI機能セクション（環境変数で機能が無効の場合は非表示） */}
+        {isLLMFeatureAvailable && (
+          <>
+            {renderSection(t('settings.sections.ai'))}
 
-        <ListItem.Container>
-          <ListItem.Title>{t('settings.ai.enable')}</ListItem.Title>
-          <Switch
-            value={llmSettings.settings.llmEnabled}
-            onValueChange={(value: boolean) => llmSettings.updateSettings({ llmEnabled: value })}
-          />
-        </ListItem.Container>
+            <ListItem.Container>
+              <ListItem.Title>{t('settings.ai.enable')}</ListItem.Title>
+              <Switch
+                value={llmSettings.settings.llmEnabled}
+                onValueChange={(value: boolean) => llmSettings.updateSettings({ llmEnabled: value })}
+              />
+            </ListItem.Container>
 
-        {/* LLMプロバイダーとモデルの切り替えはLLMモデル設定画面で行うため、ここでは非表示 */}
-
-        {/* トークン残高・使用量セクション（LLM機能のオン/オフに関係なく常に表示） */}
-        <TokenUsageSection />
+            {/* トークン残高・使用量セクション（AI機能有効時のみ表示） */}
+            <TokenUsageSection />
+          </>
+        )}
 
         <Text style={styles.infoText}>
           {t('settings.comingSoon')}
