@@ -3,6 +3,7 @@
  * @summary Backend feedback API service layer
  * @description
  * Sends user feedback to the backend for product improvement.
+ * Supports both authenticated and anonymous feedback submission.
  */
 
 import { createHttpClient, HttpClient } from '../../api';
@@ -33,10 +34,12 @@ interface FeedbackResponse {
 
 export class FeedbackApiService {
   private client: HttpClient;
+  private anonymousClient: HttpClient;
   private readonly appVersion: string;
   private readonly platform: string;
 
   constructor(baseUrl: string) {
+    // 認証付きクライアント（ログイン済みユーザー用）
     this.client = createHttpClient({
       baseUrl: `${baseUrl}/api/feedback`,
       timeout: 10000,
@@ -44,15 +47,40 @@ export class FeedbackApiService {
       logContext: 'feedbackApi',
     });
 
+    // 認証なしクライアント（匿名フィードバック用）
+    this.anonymousClient = createHttpClient({
+      baseUrl: `${baseUrl}/api/feedback`,
+      timeout: 10000,
+      includeAuth: false,
+      logContext: 'feedbackApiAnonymous',
+    });
+
     this.appVersion = Constants.expoConfig?.version || 'unknown';
     this.platform = Platform.OS;
   }
 
   /**
-   * フィードバックを送信
+   * フィードバックを送信（認証必要）
    */
   async sendFeedback(entry: FeedbackEntry): Promise<FeedbackResponse> {
     const response = await this.client.post<FeedbackResponse>('', {
+      category: entry.category,
+      content: entry.content,
+      rating: entry.rating,
+      app_version: this.appVersion,
+      platform: this.platform,
+      device_id: entry.deviceId,
+    });
+
+    return response.data;
+  }
+
+  /**
+   * 匿名フィードバックを送信（認証不要）
+   * LLM機能オフ時やログインなしで利用可能
+   */
+  async sendAnonymousFeedback(entry: FeedbackEntry): Promise<FeedbackResponse> {
+    const response = await this.anonymousClient.post<FeedbackResponse>('/anonymous', {
       category: entry.category,
       content: entry.content,
       rating: entry.rating,

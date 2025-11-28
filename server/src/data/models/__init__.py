@@ -1,4 +1,5 @@
 """データモデルのエクスポート"""
+from .anonymous_feedback import AnonymousFeedback
 from .auth import TokenBlacklist
 from .base import Base
 from .billing import Credit, TokenBalance, TokenPricing, Transaction
@@ -19,6 +20,7 @@ __all__ = [
     'TokenBlacklist',
     'ErrorLog',
     'Feedback',
+    'AnonymousFeedback',
     'VectorDocument',
     'CollectionSharing',
 ]

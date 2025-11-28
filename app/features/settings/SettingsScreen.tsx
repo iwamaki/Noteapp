@@ -151,11 +151,6 @@ function SettingsScreen() {
       return;
     }
 
-    if (!googleUser) {
-      Alert.alert(t('common.error'), t('settings.feedback.loginRequired'));
-      return;
-    }
-
     setIsSendingFeedback(true);
 
     try {
@@ -165,10 +160,19 @@ function SettingsScreen() {
       }
 
       const feedbackService = new FeedbackApiService(backendUrl);
-      await feedbackService.sendFeedback({
-        category: feedbackCategory,
-        content: feedbackContent.trim(),
-      });
+
+      // ログイン済みなら認証付きフィードバック、そうでなければ匿名フィードバック
+      if (googleUser) {
+        await feedbackService.sendFeedback({
+          category: feedbackCategory,
+          content: feedbackContent.trim(),
+        });
+      } else {
+        await feedbackService.sendAnonymousFeedback({
+          category: feedbackCategory,
+          content: feedbackContent.trim(),
+        });
+      }
 
       Alert.alert(t('common.done'), t('settings.feedback.sendSuccess'));
       setFeedbackModalVisible(false);
@@ -392,44 +396,49 @@ function SettingsScreen() {
     <MainContainer isLoading={isLoading}>
       <ScrollView style={styles.scrollView}>
       <View style={styles.content}>
-        {renderSection(t('settings.sections.account'))}
-
-        {googleUser ? (
-          // ログイン済み - アカウント情報を表示
+        {/* アカウントセクション（LLM機能が有効な場合のみ表示） */}
+        {isLLMFeatureAvailable && (
           <>
-            <View style={styles.accountInfo}>
-              <Text style={styles.accountEmail}>{googleUser.email}</Text>
-              {googleUser.displayName && (
-                <Text style={styles.accountName}>{googleUser.displayName}</Text>
-              )}
-            </View>
-            <TouchableOpacity
-              style={styles.logoutButton}
-              onPress={handleGoogleLogout}
-              disabled={isLoggingOut}
-            >
-              {isLoggingOut ? (
-                <ActivityIndicator color={colors.background} />
-              ) : (
-                <Text style={styles.logoutButtonText}>{t('settings.account.logout')}</Text>
-              )}
-            </TouchableOpacity>
-          </>
-        ) : (
-          // 未ログイン - Googleログインボタンを表示
-          <TouchableOpacity
-            style={styles.googleButton}
-            onPress={handleGoogleLogin}
-            disabled={isGoogleAuthLoading || isLoggingIn}
-          >
-            {isGoogleAuthLoading || isLoggingIn ? (
-              <ActivityIndicator color={colors.background} />
-            ) : (
+            {renderSection(t('settings.sections.account'))}
+
+            {googleUser ? (
+              // ログイン済み - アカウント情報を表示
               <>
-                <Text style={styles.googleButtonText}>{t('settings.account.googleLogin')}</Text>
+                <View style={styles.accountInfo}>
+                  <Text style={styles.accountEmail}>{googleUser.email}</Text>
+                  {googleUser.displayName && (
+                    <Text style={styles.accountName}>{googleUser.displayName}</Text>
+                  )}
+                </View>
+                <TouchableOpacity
+                  style={styles.logoutButton}
+                  onPress={handleGoogleLogout}
+                  disabled={isLoggingOut}
+                >
+                  {isLoggingOut ? (
+                    <ActivityIndicator color={colors.background} />
+                  ) : (
+                    <Text style={styles.logoutButtonText}>{t('settings.account.logout')}</Text>
+                  )}
+                </TouchableOpacity>
               </>
+            ) : (
+              // 未ログイン - Googleログインボタンを表示
+              <TouchableOpacity
+                style={styles.googleButton}
+                onPress={handleGoogleLogin}
+                disabled={isGoogleAuthLoading || isLoggingIn}
+              >
+                {isGoogleAuthLoading || isLoggingIn ? (
+                  <ActivityIndicator color={colors.background} />
+                ) : (
+                  <>
+                    <Text style={styles.googleButtonText}>{t('settings.account.googleLogin')}</Text>
+                  </>
+                )}
+              </TouchableOpacity>
             )}
-          </TouchableOpacity>
+          </>
         )}
 
         {renderSection(t('settings.sections.display'))}
