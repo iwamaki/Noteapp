@@ -59,6 +59,9 @@ export class WebSocketClient<T = any> {
   // ステート変更リスナー
   private stateListeners: Set<(state: WebSocketState) => void> = new Set();
 
+  // エラー発生時に一時的に保持（oncloseで判断するため）
+  private pendingError: Event | null = null;
+
   constructor(
     url: string,
     config: Partial<WebSocketConfig> = {},
@@ -260,13 +263,17 @@ export class WebSocketClient<T = any> {
 
   /**
    * WebSocketエラー発生時のハンドラ
+   *
+   * onerrorイベントだけでは詳細が分からないため、
+   * エラーを保持してoncloseで判断する
    */
   private handleError(error: Event): void {
-    logger.error(this.logContext, 'WebSocket error:', error);
+    // エラーを保持（oncloseで判断するため）
+    this.pendingError = error;
     this.setState(WebSocketState.ERROR);
     this.stopTokenExpiryCheck();
 
-    // カスタムハンドラーを呼び出し
+    // カスタムハンドラーは引き続き呼び出す（UI更新等のため）
     if (this.eventHandlers.onError) {
       try {
         this.eventHandlers.onError(error);
@@ -280,10 +287,30 @@ export class WebSocketClient<T = any> {
    * WebSocket接続が閉じられた時のハンドラ
    */
   private handleClose(event: CloseEvent): void {
-    logger.info(
-      this.logContext,
-      `WebSocket closed: code=${event.code}, reason=${event.reason}`
-    );
+    // pendingErrorがある場合、closeイベントの情報と組み合わせてログレベルを判断
+    if (this.pendingError) {
+      if (event.code === 1000 || event.code === 1001) {
+        // 正常終了コード（1000: Normal Closure, 1001: Going Away）
+        // サーバーによる意図的な切断（stale connection等）はwarnにダウングレード
+        logger.warn(
+          this.logContext,
+          `WebSocket closed by server: code=${event.code}, reason=${event.reason || 'none'}`
+        );
+      } else {
+        // 異常終了コードは本当のエラーとしてログ
+        logger.error(
+          this.logContext,
+          `WebSocket error: code=${event.code}, reason=${event.reason || 'none'}`
+        );
+      }
+      this.pendingError = null;
+    } else {
+      logger.info(
+        this.logContext,
+        `WebSocket closed: code=${event.code}, reason=${event.reason || 'none'}`
+      );
+    }
+
     this.setState(WebSocketState.DISCONNECTED);
     this.ws = null;
     this.stopTokenExpiryCheck();

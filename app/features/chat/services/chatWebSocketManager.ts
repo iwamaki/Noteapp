@@ -63,8 +63,9 @@ export class ChatWebSocketManager {
           onStateChange: (state) => {
             logger.info('chatService', `WebSocket state changed: ${state}`);
           },
-          onError: (error) => {
-            logger.error('chatService', 'WebSocket error:', error);
+          onError: () => {
+            // WebSocketClient.tsのhandleCloseで適切なログレベルで出力するため、
+            // ここでは追加のログ出力は不要
           },
         }
       );
