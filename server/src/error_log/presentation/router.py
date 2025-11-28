@@ -7,7 +7,7 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from src.auth import verify_token_auth
+from src.auth import verify_token_auth_optional
 from src.billing.infrastructure import get_db
 from src.core.logger import logger
 from src.data.models import ErrorLog
@@ -24,12 +24,13 @@ router = APIRouter(prefix="/api/error-logs", tags=["error-logs"])
 @router.post("", response_model=ErrorLogResponse)
 async def create_error_log(
     request: ErrorLogRequest,
-    user_id: str = Depends(verify_token_auth),
+    user_id: str | None = Depends(verify_token_auth_optional),
     db: Session = Depends(get_db)
 ):
-    """エラーログ送信
+    """エラーログ送信（認証オプショナル）
 
     フロントエンドで発生したエラーを保存。
+    認証がある場合はuser_idを紐付け、ない場合は匿名で保存。
 
     Args:
         request: ErrorLogRequest
@@ -39,7 +40,7 @@ async def create_error_log(
     """
     try:
         error_log = ErrorLog(
-            user_id=user_id,
+            user_id=user_id,  # 認証がない場合はNone
             device_id=request.device_id,
             level=request.level,
             category=request.category,
@@ -62,7 +63,7 @@ async def create_error_log(
             f"Client error logged: [{request.level}] {request.category}",
             extra={
                 "category": "error_log",
-                "user_id": user_id,
+                "user_id": user_id or "anonymous",
                 "log_id": log_id
             }
         )
@@ -80,12 +81,13 @@ async def create_error_log(
 @router.post("/batch", response_model=ErrorLogBatchResponse)
 async def create_error_logs_batch(
     request: ErrorLogBatchRequest,
-    user_id: str = Depends(verify_token_auth),
+    user_id: str | None = Depends(verify_token_auth_optional),
     db: Session = Depends(get_db)
 ):
-    """エラーログ一括送信
+    """エラーログ一括送信（認証オプショナル）
 
     オフライン時に蓄積されたエラーを一括で送信。
+    認証がある場合はuser_idを紐付け、ない場合は匿名で保存。
 
     Args:
         request: ErrorLogBatchRequest
@@ -97,7 +99,7 @@ async def create_error_logs_batch(
         now = datetime.now()
         error_logs = [
             ErrorLog(
-                user_id=user_id,
+                user_id=user_id,  # 認証がない場合はNone
                 device_id=log.device_id,
                 level=log.level,
                 category=log.category,
@@ -118,7 +120,7 @@ async def create_error_logs_batch(
             f"Batch error logs saved: {len(error_logs)} logs",
             extra={
                 "category": "error_log",
-                "user_id": user_id,
+                "user_id": user_id or "anonymous",
                 "count": len(error_logs)
             }
         )

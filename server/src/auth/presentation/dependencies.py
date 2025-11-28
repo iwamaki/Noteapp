@@ -15,6 +15,8 @@ from src.core.logger import logger
 
 # HTTPベアラー認証のスキーマ
 security = HTTPBearer()
+# オプショナル認証用（トークンがなくてもエラーにならない）
+security_optional = HTTPBearer(auto_error=False)
 
 
 async def verify_token_auth(
@@ -74,6 +76,68 @@ async def verify_token_auth(
 
     logger.debug(
         "Token authentication successful",
+        extra={"category": "auth", "user_id": user_id}
+    )
+
+    return user_id
+
+
+async def verify_token_auth_optional(
+    credentials: HTTPAuthorizationCredentials | None = Depends(security_optional),
+    db: Session = Depends(get_db)
+) -> str | None:
+    """
+    JWTトークンを検証し、user_idを返す（オプショナル認証）
+
+    トークンがない場合やトークンが無効な場合はNoneを返す（エラーにならない）。
+    エラーログなど、認証がある場合はuser_idを紐付けたいが、
+    認証がない場合でも動作させたいAPIで使用。
+
+    Args:
+        credentials: Authorizationヘッダーから取得したトークン（なくてもOK）
+        db: データベースセッション
+
+    Returns:
+        user_id: 認証されたユーザーID、または認証がない場合はNone
+    """
+    if not credentials:
+        logger.debug(
+            "Optional auth: No credentials provided",
+            extra={"category": "auth"}
+        )
+        return None
+
+    token = credentials.credentials
+
+    # トークンがブラックリストに含まれているかチェック
+    blacklist_manager = get_blacklist_manager()
+    if blacklist_manager.is_blacklisted(token):
+        logger.debug(
+            "Optional auth: Token has been revoked",
+            extra={"category": "auth"}
+        )
+        return None
+
+    # トークン検証
+    payload = verify_token(token, TokenType.ACCESS)
+
+    if not payload:
+        logger.debug(
+            "Optional auth: Invalid or expired token",
+            extra={"category": "auth"}
+        )
+        return None
+
+    user_id = payload.get("sub")
+    if not user_id:
+        logger.debug(
+            "Optional auth: Missing user_id in token",
+            extra={"category": "auth"}
+        )
+        return None
+
+    logger.debug(
+        "Optional auth: Token authentication successful",
         extra={"category": "auth", "user_id": user_id}
     )
 

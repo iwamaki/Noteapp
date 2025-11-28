@@ -12,13 +12,14 @@ from .base import Base
 class ErrorLog(Base):
     """クライアントエラーログテーブル
 
-    フロントエンドで発生したエラーをユーザーと紐付けて保存。
+    フロントエンドで発生したエラーを保存。
     ユーザー対応やデバッグに活用。
+    user_idは認証済みの場合のみ設定される（匿名ログも受け付ける）。
     """
     __tablename__ = 'error_logs'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(String, ForeignKey('users.user_id'), nullable=False, index=True)
+    user_id = Column(String, ForeignKey('users.user_id'), nullable=True, index=True)
     device_id = Column(String, nullable=True, index=True)
     level = Column(String, nullable=False)  # 'error', 'warn'
     category = Column(String, nullable=False, index=True)  # ログカテゴリ

@@ -28,7 +28,7 @@ from .infrastructure import (
 
 # Presentation layer
 from .presentation import router
-from .presentation.dependencies import verify_token_auth, verify_user
+from .presentation.dependencies import verify_token_auth, verify_token_auth_optional, verify_user
 
 __all__ = [
     # Domain
@@ -54,5 +54,6 @@ __all__ = [
     # Presentation
     "router",
     "verify_token_auth",
+    "verify_token_auth_optional",
     "verify_user",
 ]
