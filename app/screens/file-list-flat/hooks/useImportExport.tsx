@@ -57,6 +57,19 @@ const uint8ArrayToBase64 = (bytes: Uint8Array): string => {
 };
 
 /**
+ * Base64文字列をUint8Arrayに変換
+ */
+const base64ToUint8Array = (base64: string): Uint8Array => {
+  const binary = atob(base64);
+  const len = binary.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+};
+
+/**
  * インポート/エクスポート機能を提供するフック
  */
 export const useImportExport = (): UseImportExportReturn => {
@@ -106,8 +119,19 @@ export const useImportExport = (): UseImportExportReturn => {
       const fullFilename = `${categoryPath}${filename}`;
 
       // ZIPにファイルを追加（カテゴリフォルダ構造を含む）
-      zip.file(fullFilename, file.content);
-      logger.debug('file', `Added to ZIP: ${fullFilename}`);
+      // バイナリファイルの場合はbase64デコードして書き込む
+      // contentTypeまたはmimeTypeから判定（既存データの後方互換性のため）
+      const isBinaryFile = file.contentType === 'binary' ||
+        (file.mimeType && !file.mimeType.startsWith('text/'));
+
+      if (isBinaryFile) {
+        const binaryData = base64ToUint8Array(file.content);
+        zip.file(fullFilename, binaryData);
+        logger.debug('file', `Added binary to ZIP: ${fullFilename} (${binaryData.length} bytes)`);
+      } else {
+        zip.file(fullFilename, file.content);
+        logger.debug('file', `Added text to ZIP: ${fullFilename}`);
+      }
     }
 
     // ZIPファイルを生成（Uint8Arrayとして）
