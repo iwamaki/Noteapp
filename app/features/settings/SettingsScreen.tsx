@@ -15,15 +15,18 @@ import {
   ActivityIndicator,
   Modal,
   TextInput,
+  Linking,
 } from 'react-native';
 import {
   useUISettingsStore,
   useEditorSettingsStore,
   useLLMSettingsStore,
+  useSystemSettingsStore,
   useUsageTrackingStore,
   useTokenBalanceStore,
   isLLMFeatureAvailable,
 } from './settingsStore';
+import Constants from 'expo-constants';
 import { useTheme } from '../../design/theme/ThemeContext';
 import { useSettingsHeader } from './hooks/useSettingsHeader';
 import { ListItem } from '../../components/ListItem';
@@ -46,8 +49,13 @@ function SettingsScreen() {
   const uiSettings = useUISettingsStore();
   const editorSettings = useEditorSettingsStore();
   const llmSettings = useLLMSettingsStore();
+  const systemSettings = useSystemSettingsStore();
   const { checkAndResetMonthlyUsageIfNeeded } = useUsageTrackingStore();
   const tokenBalanceStore = useTokenBalanceStore();
+
+  // app.jsonからURLを取得
+  const privacyPolicyUrl = Constants.expoConfig?.extra?.privacyPolicyUrl;
+  const termsOfServiceUrl = Constants.expoConfig?.extra?.termsOfServiceUrl;
 
   // ローディング状態は各ストアを統合
   const isLoading = uiSettings.isLoading || editorSettings.isLoading || llmSettings.isLoading;
@@ -70,9 +78,15 @@ function SettingsScreen() {
     uiSettings.loadSettings();
     editorSettings.loadSettings();
     llmSettings.loadSettings();
+    systemSettings.loadSettings();
     // 月次使用量のリセットチェック（月が変わったらリセット）
     checkAndResetMonthlyUsageIfNeeded();
   }, []);
+
+  // システム設定のdiagnosticDataEnabledが変更されたらloggerに反映
+  useEffect(() => {
+    logger.setSendToBackend(systemSettings.settings.diagnosticDataEnabled);
+  }, [systemSettings.settings.diagnosticDataEnabled]);
 
   // Google認証結果を処理
   useEffect(() => {
@@ -291,6 +305,31 @@ function SettingsScreen() {
       feedbackButtonText: {
         ...typography.subtitle,
         color: colors.background,
+      },
+      privacyToggleContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+      },
+      privacyDescription: {
+        ...typography.caption,
+        color: colors.textSecondary,
+        marginTop: spacing.sm,
+      },
+      linkButton: {
+        padding: spacing.md,
+        marginTop: spacing.sm,
+      },
+      linkButtonText: {
+        ...typography.body,
+        color: colors.primary,
+        textDecorationLine: 'underline',
+      },
+      feedbackPrivacyNotice: {
+        ...typography.caption,
+        color: colors.textSecondary,
+        marginBottom: spacing.lg,
+        textAlign: 'center',
       },
       modalOverlay: {
         flex: 1,
@@ -528,6 +567,42 @@ function SettingsScreen() {
           {t('settings.comingSoon')}
         </Text>
 
+        {/* プライバシーとデータセクション */}
+        {renderSection(t('settings.sections.privacy'))}
+
+        <ListItem.Container>
+          <View style={styles.privacyToggleContainer}>
+            <ListItem.Title>{t('settings.privacy.errorLogTitle')}</ListItem.Title>
+            <Switch
+              value={systemSettings.settings.diagnosticDataEnabled}
+              onValueChange={(value: boolean) => {
+                systemSettings.updateSettings({ diagnosticDataEnabled: value });
+              }}
+            />
+          </View>
+          <Text style={styles.privacyDescription}>
+            {t('settings.privacy.errorLogDescription')}
+          </Text>
+        </ListItem.Container>
+
+        {privacyPolicyUrl && (
+          <TouchableOpacity
+            style={styles.linkButton}
+            onPress={() => Linking.openURL(privacyPolicyUrl)}
+          >
+            <Text style={styles.linkButtonText}>{t('settings.privacy.privacyPolicy')}</Text>
+          </TouchableOpacity>
+        )}
+
+        {termsOfServiceUrl && (
+          <TouchableOpacity
+            style={styles.linkButton}
+            onPress={() => Linking.openURL(termsOfServiceUrl)}
+          >
+            <Text style={styles.linkButtonText}>{t('settings.privacy.termsOfService')}</Text>
+          </TouchableOpacity>
+        )}
+
         {/* フィードバックセクション */}
         {renderSection(t('settings.sections.feedback'))}
         <TouchableOpacity
@@ -615,6 +690,11 @@ function SettingsScreen() {
               multiline
               textAlignVertical="top"
             />
+
+            {/* プライバシー通知 */}
+            <Text style={styles.feedbackPrivacyNotice}>
+              {t('settings.feedback.privacyNotice')}
+            </Text>
 
             {/* ボタン */}
             <View style={styles.modalButtonsContainer}>

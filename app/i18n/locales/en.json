@@ -5,6 +5,7 @@
       "account": "Account",
       "display": "Display",
       "ai": "AI Features",
+      "privacy": "Privacy & Data",
       "feedback": "Feedback",
       "debug": "Debug"
     },
@@ -52,6 +53,12 @@
     "ai": {
       "enable": "Enable AI Features"
     },
+    "privacy": {
+      "errorLogTitle": "Send Error Reports",
+      "errorLogDescription": "Help improve the app by sending anonymous error information. Data sent: error details, app version, device type (no personally identifiable information)",
+      "privacyPolicy": "Privacy Policy",
+      "termsOfService": "Terms of Service"
+    },
     "debug": {
       "resetTokenUsage": "Reset Token Usage",
       "resetSettings": "Reset Settings"
@@ -72,7 +79,8 @@
       "sendSuccess": "Feedback sent successfully. Thank you!",
       "sendFailed": "Failed to send feedback",
       "contentRequired": "Please enter feedback content",
-      "loginRequired": "Please log in to send feedback"
+      "loginRequired": "Please log in to send feedback",
+      "privacyNotice": "Data sent: category, feedback content, app version, device type. No personally identifiable information is collected."
     },
     "comingSoon": "More settings will be added in future updates."
   },
@@ -286,11 +294,14 @@
       "sharingUnavailable": "Sharing is unavailable",
       "failed": "Export failed",
       "fileFailed": "Failed to export file",
-      "categoryFailed": "Failed to export category"
+      "categoryFailed": "Failed to export category",
+      "successMessage": "Exported {{count}} file(s)"
     },
     "import": {
       "completed": "Import completed",
-      "failed": "Import failed"
+      "failed": "Import failed",
+      "successMessage": "Imported {{successCount}} file(s)",
+      "successWithErrors": "Imported {{successCount}} file(s)\n({{errorCount}} failed)"
     },
     "error": {
       "fileNotFound": "File not found"

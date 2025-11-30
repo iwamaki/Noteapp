@@ -10,6 +10,7 @@ import {
   initErrorLogApiService,
   getErrorLogApiService,
 } from '../../features/errorLog/services/errorLogApiService';
+import { useSystemSettingsStore } from '../../features/settings/settingsStore';
 import { logger } from '../../utils/logger';
 
 /**
@@ -45,7 +46,15 @@ export const initializeErrorLogServiceTask: InitializationTask = {
       const errorLogService = getErrorLogApiService();
       if (errorLogService) {
         logger.setErrorLogService(errorLogService);
-        logger.info('init', 'ErrorLogApiService initialized and connected to Logger');
+
+        // ユーザー設定に基づいてバックエンド送信を有効/無効化
+        const systemSettings = useSystemSettingsStore.getState();
+        const diagnosticDataEnabled = systemSettings.settings.diagnosticDataEnabled;
+        logger.setSendToBackend(diagnosticDataEnabled);
+
+        logger.info('init', 'ErrorLogApiService initialized and connected to Logger', {
+          diagnosticDataEnabled,
+        });
       }
     } catch (error) {
       // エラーログ初期化の失敗は致命的ではない

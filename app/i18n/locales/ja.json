@@ -5,6 +5,7 @@
       "account": "アカウント",
       "display": "表示設定",
       "ai": "AI機能",
+      "privacy": "プライバシーとデータ",
       "feedback": "フィードバック",
       "debug": "デバッグ機能"
     },
@@ -52,6 +53,12 @@
     "ai": {
       "enable": "AI機能を有効にする"
     },
+    "privacy": {
+      "errorLogTitle": "エラーレポートを送信",
+      "errorLogDescription": "アプリの改善のため、エラー情報を匿名で送信します。送信されるデータ: エラー内容、アプリバージョン、デバイス種別（個人を特定する情報は含まれません）",
+      "privacyPolicy": "プライバシーポリシー",
+      "termsOfService": "利用規約"
+    },
     "debug": {
       "resetTokenUsage": "トークンと使用量をリセット",
       "resetSettings": "設定をリセット"
@@ -72,7 +79,8 @@
       "sendSuccess": "フィードバックを送信しました。ありがとうございます！",
       "sendFailed": "フィードバックの送信に失敗しました",
       "contentRequired": "フィードバックの内容を入力してください",
-      "loginRequired": "フィードバックを送信するにはログインが必要です"
+      "loginRequired": "フィードバックを送信するにはログインが必要です",
+      "privacyNotice": "送信されるデータ: カテゴリ、フィードバック内容、アプリバージョン、デバイス種別。個人を特定する情報は収集されません。"
     },
     "comingSoon": "その他の設定項目は今後のアップデートで追加予定です。"
   },
@@ -286,11 +294,14 @@
       "sharingUnavailable": "共有機能が利用できません",
       "failed": "エクスポートに失敗しました",
       "fileFailed": "ファイルのエクスポートに失敗しました",
-      "categoryFailed": "カテゴリーのエクスポートに失敗しました"
+      "categoryFailed": "カテゴリーのエクスポートに失敗しました",
+      "successMessage": "{{count}}件のファイルをエクスポートしました"
     },
     "import": {
       "completed": "インポート完了",
-      "failed": "インポートに失敗しました"
+      "failed": "インポートに失敗しました",
+      "successMessage": "{{successCount}}件のファイルをインポートしました",
+      "successWithErrors": "{{successCount}}件のファイルをインポートしました\n（{{errorCount}}件失敗）"
     },
     "error": {
       "fileNotFound": "ファイルが見つかりません"
