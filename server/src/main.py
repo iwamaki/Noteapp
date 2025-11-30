@@ -4,9 +4,11 @@
 import os
 from contextlib import asynccontextmanager
 
+from pathlib import Path
+
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
@@ -154,16 +156,25 @@ async def add_security_headers(request: Request, call_next):
     response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
 
     # Content Security Policy
-    # API サーバーなので、主にdefault-srcとconnect-srcを制限
-    api_domain = os.getenv("API_DOMAIN", "api.noteapp.iwamaki.app")
-    response.headers["Content-Security-Policy"] = (
-        "default-src 'none'; "
-        "script-src 'none'; "
-        "style-src 'none'; "
-        "img-src 'none'; "
-        "font-src 'none'; "
-        f"connect-src 'self' https://{api_domain}"
-    )
+    # 静的HTMLページ（/privacy, /terms）はインラインスタイルを許可
+    if request.url.path in ["/privacy", "/terms"]:
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'none'; "
+            "style-src 'unsafe-inline'; "
+            "img-src 'none'; "
+            "font-src 'none'"
+        )
+    else:
+        # API サーバーなので、主にdefault-srcとconnect-srcを制限
+        api_domain = os.getenv("API_DOMAIN", "api.noteapp.iwamaki.app")
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'none'; "
+            "script-src 'none'; "
+            "style-src 'none'; "
+            "img-src 'none'; "
+            "font-src 'none'; "
+            f"connect-src 'self' https://{api_domain}"
+        )
 
     return response
 
@@ -272,6 +283,24 @@ async def assetlinks():
         ],
         media_type="application/json",
     )
+
+
+# 静的ファイルのディレクトリパス
+STATIC_DIR = Path(__file__).parent / "static"
+
+
+@app.get("/privacy", response_class=HTMLResponse)
+async def privacy_policy():
+    """プライバシーポリシーページ"""
+    html_file = STATIC_DIR / "privacy.html"
+    return HTMLResponse(content=html_file.read_text(encoding="utf-8"))
+
+
+@app.get("/terms", response_class=HTMLResponse)
+async def terms_of_service():
+    """利用規約ページ"""
+    html_file = STATIC_DIR / "terms.html"
+    return HTMLResponse(content=html_file.read_text(encoding="utf-8"))
 
 
 # WebSocketエンドポイント
