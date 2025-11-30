@@ -415,10 +415,15 @@ export const useImportExport = (): UseImportExportReturn => {
 
       // 結果を表示
       if (result_stats.successCount > 0) {
-        Alert.alert(
-          t('importExport.import.completed'),
-          `${result_stats.successCount}件のファイルをインポートしました${result_stats.errorCount > 0 ? `\n（${result_stats.errorCount}件失敗）` : ''}`
-        );
+        const message = result_stats.errorCount > 0
+          ? t('importExport.import.successWithErrors', {
+              successCount: result_stats.successCount,
+              errorCount: result_stats.errorCount,
+            })
+          : t('importExport.import.successMessage', {
+              successCount: result_stats.successCount,
+            });
+        Alert.alert(t('importExport.import.completed'), message);
         logger.info('file', `Import completed: ${result_stats.successCount} success, ${result_stats.errorCount} errors`);
       } else {
         Alert.alert(t('common.error'), t('importExport.import.failed'));
