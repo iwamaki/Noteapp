@@ -19,8 +19,24 @@
         "buildType": "apk"
       }
     },
+    "store-review": {
+      "extends": "production",
+      "autoIncrement": true,
+      "node": "22.11.0",
+      "env": {
+        "NODE_OPTIONS": "--max-old-space-size=4096",
+        "EXPO_PUBLIC_LLM_ENABLED": "false"
+      },
+      "android": {
+        "buildType": "app-bundle"
+      }
+    },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "node": "22.11.0",
+      "env": {
+        "NODE_OPTIONS": "--max-old-space-size=4096"
+      }
     }
   },
   "submit": {

@@ -33,7 +33,7 @@
           "data": [
             {
               "scheme": "https",
-              "host": "iwamaki.tail80450d.ts.net",
+              "host": "api.noteapp.iwamaki.app",
               "pathPrefix": "/auth"
             }
           ]
@@ -43,7 +43,10 @@
     "extra": {
       "eas": {
         "projectId": "c5669bf9-b79f-4c76-8047-dde543b814b4"
-      }
+      },
+      "privacyPolicyUrl": "https://api.noteapp.iwamaki.app/privacy",
+      "termsOfServiceUrl": "https://api.noteapp.iwamaki.app/terms",
+      "supportEmail": "noteapp@iwamaki.app"
     },
     "plugins": [
       "expo-font"
